@@ -1,0 +1,208 @@
+use super::*;
+
+#[test]
+fn computer_control_output_schema_has_closed_native_platforms() {
+    let schema = crate::tool_runtime::registry::output_schema_for_tool("computer_control");
+    let validate = |value: &Value| {
+        crate::tool_runtime::startup_brief::validate_schema_instance_for_test(value, &schema)
+    };
+    let application_id = "application_iavN7wEjRWeJq83v";
+    for platform in ["windows", "macos"] {
+        let output =
+            serde_json::to_value(crate::tool_runtime::tool_result::ToolResult::ok(json!({
+                "platform": platform,
+                "application_id": application_id,
+                "success": true,
+            })))
+            .unwrap();
+        validate(&output).unwrap_or_else(|error| panic!("{platform}: {error}"));
+    }
+
+    let stale = serde_json::to_value(
+        crate::tool_runtime::tool_result::ToolResult::err_with_output(
+            "stale application",
+            json!({
+                "error_kind": "stale_application",
+                "message": "application identity is stale",
+                "application_id": application_id,
+                "state_changed": false,
+                "execution_state": "not_started",
+                "suggested_call": {
+                    "tool": "computer_observe",
+                    "arguments": {"action": "applications", "client_id": "msi"}
+                }
+            }),
+        ),
+    )
+    .unwrap();
+    validate(&stale).unwrap();
+    let mut legacy_recovery_tool = stale.clone();
+    legacy_recovery_tool["output"]["recovery_tool"] = json!("computer_observe");
+    assert!(validate(&legacy_recovery_tool).is_err());
+    assert!(schema["properties"]["output"]["properties"]
+        .get("recovery_tool")
+        .is_none());
+    let serialized_schema = serde_json::to_string(&schema).unwrap();
+    assert!(serialized_schema.contains("suggested_call"));
+    assert!(serialized_schema.contains("reconcile_with"));
+    assert!(serialized_schema.contains("recovery_tool"));
+    assert!(serialized_schema.contains("not"));
+    let mut inferred_argument = stale.clone();
+    inferred_argument["output"]["suggested_call"]["arguments"]["surface_id"] =
+        json!("surface_should_not_be_inferred");
+    assert!(validate(&inferred_argument).is_err());
+    let mut duplicate_kind = stale.clone();
+    duplicate_kind["output"]["recovery_kind"] = json!("reobserve");
+    assert!(validate(&duplicate_kind).is_err());
+
+    let mut recovery_on_success =
+        serde_json::to_value(crate::tool_runtime::tool_result::ToolResult::ok(json!({
+            "platform": "macos",
+            "application_id": application_id,
+            "success": true,
+        })))
+        .unwrap();
+    recovery_on_success["output"]["recovery_kind"] = json!("none");
+    assert!(validate(&recovery_on_success).is_err());
+
+    let unsupported =
+        serde_json::to_value(crate::tool_runtime::tool_result::ToolResult::ok(json!({
+            "platform": "linux",
+            "application_id": application_id,
+            "success": true,
+        })))
+        .unwrap();
+    assert!(validate(&unsupported).is_err());
+
+    let extra = serde_json::to_value(crate::tool_runtime::tool_result::ToolResult::ok(json!({
+        "platform": "macos",
+        "application_id": application_id,
+        "success": true,
+        "bundle_url": "PRIVATE",
+    })))
+    .unwrap();
+    assert!(validate(&extra).is_err());
+}
+
+#[test]
+fn browser_output_schemas_accept_canonical_results_and_reject_leaked_fields() {
+    let observe_schema = crate::tool_runtime::registry::output_schema_for_tool("browser_observe");
+    let act_schema = crate::tool_runtime::registry::output_schema_for_tool("browser_act");
+    let validate_observe = |value: &Value| {
+        crate::tool_runtime::startup_brief::validate_schema_instance_for_test(
+            value,
+            &observe_schema,
+        )
+    };
+    let validate_act = |value: &Value| {
+        crate::tool_runtime::startup_brief::validate_schema_instance_for_test(value, &act_schema)
+    };
+
+    let snapshot = serde_json::to_value(crate::tool_runtime::tool_result::ToolResult::ok(json!({
+        "execution_state": "completed",
+        "state_changed": false,
+        "browser_id": "browser_abcdefghijklmnop",
+        "page_id": "page_abcdefghijklmnop",
+        "snapshot_generation": 1,
+        "node_count": 1,
+        "truncated": false,
+        "nodes": [{
+            "role": "button",
+            "name": "Continue",
+            "value": null,
+            "element_id": "element_abcdefghijklmnop",
+            "actionable": true
+        }]
+    })))
+    .unwrap();
+    validate_observe(&snapshot).unwrap();
+
+    let screenshot =
+        serde_json::to_value(crate::tool_runtime::tool_result::ToolResult::ok(json!({
+            "execution_state": "completed",
+            "state_changed": false,
+            "browser_id": "browser_abcdefghijklmnop",
+            "page_id": "page_abcdefghijklmnop",
+            "content_base64": "iVBORw0KGgo=",
+            "mime_type": "image/png",
+            "width": 1024,
+            "height": 768,
+            "file_bytes": 8,
+            "sha256": "a".repeat(64)
+        })))
+        .unwrap();
+    validate_observe(&screenshot).unwrap();
+
+    let launch = serde_json::to_value(crate::tool_runtime::tool_result::ToolResult::ok(json!({
+        "execution_state": "completed",
+        "state_changed": true,
+        "browser_id": "browser_abcdefghijklmnop",
+        "page_count": 1
+    })))
+    .unwrap();
+    validate_act(&launch).unwrap();
+
+    let stale = serde_json::to_value(
+        crate::tool_runtime::tool_result::ToolResult::err_with_output(
+            "stale element",
+            json!({
+                "execution_state": "not_started",
+                "state_changed": false,
+                "error_kind": "stale_element",
+                "message": "element identity is stale",
+                "recovery": {
+                    "reason": "re-observe before acting",
+                    "suggested_call": {
+                        "tool": "browser_observe",
+                        "arguments": {
+                            "action": "snapshot",
+                            "client_id": "msi",
+                            "browser_id": "browser_abcdefghijklmnop",
+                            "page_id": "page_abcdefghijklmnop"
+                        }
+                    }
+                }
+            }),
+        ),
+    )
+    .unwrap();
+    validate_act(&stale).unwrap();
+
+    let mut leaked = snapshot;
+    leaked["output"]["target_id"] = json!("private-cdp-target");
+    assert!(validate_observe(&leaked).is_err());
+    let mut leaked = launch;
+    leaked["output"]["debug_endpoint"] = json!("private-endpoint");
+    assert!(validate_act(&leaked).is_err());
+}
+
+#[test]
+fn read_files_output_schema_rejects_sparse_item_over_default_limit() {
+    let schema = crate::tool_runtime::registry::output_schema_for_tool("read_files");
+    let default_limit = webcodex_workspace::file_read_range::EffectiveRange::new(None, None).limit;
+    let sparse_batch_over_default_limit = json!({
+        "success": true,
+        "output": {
+            "items": [{
+                "index": 0,
+                "path": "src/lib.rs",
+                "success": true,
+                "output": {
+                    "text": "hello",
+                    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                    "total_lines": default_limit + 1
+                },
+                "error": null
+            }]
+        },
+        "error": null
+    });
+    assert!(
+        crate::tool_runtime::startup_brief::validate_schema_instance_for_test(
+            &sparse_batch_over_default_limit,
+            &schema,
+        )
+        .is_err(),
+        "complete sparse read_files item cannot claim more lines than the default range can return"
+    );
+}
