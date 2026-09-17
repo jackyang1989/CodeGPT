@@ -1,4 +1,3 @@
-import brandIcon from "./assets/brand.png";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { listen } from "@tauri-apps/api/event";
 import { open } from "@tauri-apps/plugin-dialog";
@@ -16,17 +15,59 @@ import { ActivityPanel } from "./features/activity/ActivityPanel";
 import { SettingsPanel } from "./features/settings/SettingsPanel";
 import { LANGUAGES, useLocale } from "./i18n/locale";
 import { desktopErrorPresentation, normalizeDesktopError, runtimeLabel, operationLabel } from "./i18n/presentation";
+import { ThemeProvider, useTheme } from "./theme/theme";
 
 type Navigation = "home" | "projects" | "connection" | "activity" | "settings";
 
 const NAVIGATION: Navigation[] = ["home", "projects", "connection", "activity", "settings"];
 
+function renderNavIcon(item: Navigation) {
+  switch (item) {
+    case "home":
+      return (
+        <svg className="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+          <polyline points="9 22 9 12 15 12 15 22" />
+        </svg>
+      );
+    case "projects":
+      return (
+        <svg className="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z" />
+        </svg>
+      );
+    case "connection":
+      return (
+        <svg className="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M5 12.55a11 11 0 0 1 14.08 0" />
+          <path d="M1.42 9a16 16 0 0 1 21.16 0" />
+          <path d="M8.53 16.11a6 6 0 0 1 6.95 0" />
+          <line x1="12" y1="20" x2="12.01" y2="20" />
+        </svg>
+      );
+    case "activity":
+      return (
+        <svg className="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+        </svg>
+      );
+    case "settings":
+      return (
+        <svg className="nav-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="3" />
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+        </svg>
+      );
+  }
+}
+
 const REGULAR_TUNNEL_OBSERVATION_INTERVAL_MS = 1_500;
 const CHATGPT_ACTIVITY_OBSERVATION_INTERVAL_MS = 30_000;
 const ACTIVE_OPERATION_OBSERVATION_INTERVAL_MS = 1_000;
 
-export default function App() {
+function AppContent() {
   const { locale, setLocale, t } = useLocale();
+  const { resolvedTheme, toggleTheme } = useTheme();
   const [state, setState] = useState<DesktopState | null>(null);
   const [activity, setActivity] = useState<ActivityEntry[]>([]);
   const [navigation, setNavigation] = useState<Navigation>("home");
@@ -325,7 +366,7 @@ export default function App() {
   if (!state) {
     return (
       <main className="splash">
-        <img className="brand-mark" src={brandIcon} alt="" />
+        <div className="splash-brand"><span className="splash-title">CodeGPT</span></div>
         {error ? (
           <section className="startup-error" aria-label="CodeGPT">
             <AppError error={error} />
@@ -351,43 +392,81 @@ export default function App() {
   const needsSetup = !state.topology || showSetup;
 
   return (
-    <div className="app-shell">
-      <aside className="sidebar">
-        <div className="brand"><img className="brand-mark" src={brandIcon} alt="" /><div><strong>CodeGPT</strong><span>Desktop</span></div></div>
-        <nav aria-label={t("nav.main")}>
-          {NAVIGATION.map((item, index) => (
-            <button
-              key={item}
-              className={navigation === item ? "active" : ""}
-              onClick={() => setNavigation(item)}
-              aria-current={navigation === item ? "page" : undefined}
-              aria-keyshortcuts={`Control+${index + 1} Meta+${index + 1}`}
-              title={`${t(`nav.${item}`)} (⌘ / Ctrl + ${index + 1})`}
-              data-codegpt-action={`navigate-${item}`}
-            >
-              <span className={`nav-icon nav-${item}`} aria-hidden="true" />
-              {t(`nav.${item}`)}
-              <kbd aria-hidden="true">{index + 1}</kbd>
-            </button>
-          ))}
-        </nav>
-        <div className="sidebar-locale">
-          <label htmlFor="desktop-sidebar-locale">{t("locale.label")}</label>
-          <select
-            id="desktop-sidebar-locale"
-            aria-label={t("locale.label")}
-            value={locale}
-            onChange={(event) => setLocale(event.target.value as typeof locale)}
-            data-codegpt-control="locale"
+    <div className="app-shell app-layout-top">
+      <header className="app-top-header" data-tauri-drag-region>
+        <div className="header-left" data-tauri-drag-region>
+          <div className="brand" aria-label="CodeGPT">
+            <span className="brand-name">Code<span className="brand-accent">GPT</span></span>
+          </div>
+        </div>
+
+        <div className="header-center" data-tauri-drag-region>
+          <nav aria-label={t("nav.main")} className="top-nav">
+            {NAVIGATION.map((item, index) => (
+              <button
+                key={item}
+                className={`top-nav-btn ${navigation === item ? "active" : ""}`}
+                onClick={() => setNavigation(item)}
+                aria-current={navigation === item ? "page" : undefined}
+                aria-keyshortcuts={`Control+${index + 1} Meta+${index + 1}`}
+                title={`${t(`nav.${item}`)} (⌘ / Ctrl + ${index + 1})`}
+                data-codegpt-action={`navigate-${item}`}
+              >
+                <span className="nav-icon-wrapper" aria-hidden="true">
+                  {renderNavIcon(item)}
+                </span>
+                <span className="nav-label-text">{t(`nav.${item}`)}</span>
+              </button>
+            ))}
+          </nav>
+        </div>
+
+        <div className="header-right">
+          <div
+            className={`header-status-chip ${state.readiness.runtime_ready ? "is-ready" : "is-pending"}`}
+            title={`${runtimeLabel(state, t)} · ${sidebarConnectionLabel(state, t)}`}
           >
-            {LANGUAGES.map((language) => <option key={language.value} value={language.value}>{language.label}</option>)}
-          </select>
+            <i className={`status-dot ${state.readiness.runtime_ready ? "ready" : "unknown"}`} aria-hidden="true" />
+            <span className="header-status-detail">{sidebarConnectionLabel(state, t)}</span>
+          </div>
+
+          <div className="header-divider" aria-hidden="true" />
+
+          <button
+            type="button"
+            className="header-theme-toggle"
+            onClick={toggleTheme}
+            aria-label={resolvedTheme === "dark" ? t("theme.toggleLight") : t("theme.toggleDark")}
+            title={resolvedTheme === "dark" ? t("theme.toggleLight") : t("theme.toggleDark")}
+            data-codegpt-control="theme-toggle"
+          >
+            {resolvedTheme === "dark" ? (
+              <svg className="theme-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="4" />
+                <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
+              </svg>
+            ) : (
+              <svg className="theme-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+              </svg>
+            )}
+          </button>
+
+          <div className="header-locale">
+            <label htmlFor="desktop-sidebar-locale" className="sr-only">{t("locale.label")}</label>
+            <select
+              id="desktop-sidebar-locale"
+              aria-label={t("locale.label")}
+              value={locale}
+              onChange={(event) => setLocale(event.target.value as typeof locale)}
+              data-codegpt-control="locale"
+              className="top-locale-select"
+            >
+              {LANGUAGES.map((language) => <option key={language.value} value={language.value}>{language.label}</option>)}
+            </select>
+          </div>
         </div>
-        <div className="sidebar-status">
-          <i className={`status-dot ${state.readiness.runtime_ready ? "ready" : "unknown"}`} aria-hidden="true" />
-          <div><strong>{runtimeLabel(state, t)}</strong><span>{sidebarConnectionLabel(state, t)}</span></div>
-        </div>
-      </aside>
+      </header>
 
       <main className="main-content" ref={mainRef} tabIndex={-1}>
         {navigation === "home" && showSetup && state.topology && (
@@ -453,7 +532,11 @@ export default function App() {
           />
         ))}
         {navigation === "projects" && (
-          <ProjectsPanel state={state} onChooseProject={() => void chooseLocalProject()} />
+          <ProjectsPanel
+            state={state}
+            onChooseProject={() => void chooseLocalProject()}
+            onState={commitState}
+          />
         )}
         {navigation === "connection" && <ConnectionPanel state={state} onState={commitState} />}
         {navigation === "activity" && <ActivityPanel activity={activity} />}
@@ -495,5 +578,13 @@ function AppError({ error }: { error: DesktopError }) {
         <p>{error.message}</p>
       </details>
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <ThemeProvider>
+      <AppContent />
+    </ThemeProvider>
   );
 }

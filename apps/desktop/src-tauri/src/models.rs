@@ -235,6 +235,17 @@ pub struct ProjectSelection {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct DesktopProjectEntry {
+    pub id: String,
+    pub name: String,
+    pub path: String,
+    pub allowed_root: String,
+    pub is_git_repository: bool,
+    pub is_active: bool,
+    pub disabled: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct BinaryInfo {
     pub directory: String,
     pub version: String,
@@ -415,6 +426,8 @@ pub struct DesktopStateSnapshot {
     pub runtime_autostart: bool,
     pub preferred_connection: RegularConnectionPreference,
     pub tunnel_proxy: TunnelProxySnapshot,
+    #[serde(default)]
+    pub projects: Vec<DesktopProjectEntry>,
 }
 
 impl Default for DesktopStateSnapshot {
@@ -423,6 +436,7 @@ impl Default for DesktopStateSnapshot {
             topology: None,
             readiness: ReadinessSnapshot::default(),
             project: None,
+            projects: Vec::new(),
             binaries: None,
             powershell_runtime: None,
             chatgpt_activity: None,

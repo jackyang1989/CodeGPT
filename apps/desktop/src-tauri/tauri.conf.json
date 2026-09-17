@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "CodeGPT Desktop",
+  "productName": "CodeGPT",
   "mainBinaryName": "CodeGPT",
   "version": "0.4.1",
   "identifier": "dev.codegpt.desktop",
@@ -22,7 +22,9 @@
         "resizable": true,
         "fullscreen": false,
         "center": true,
-        "visible": false
+        "visible": false,
+        "titleBarStyle": "Overlay",
+        "hiddenTitle": true
       }
     ],
     "security": {

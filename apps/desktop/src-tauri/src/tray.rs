@@ -86,9 +86,10 @@ impl TrayProjection {
         } else {
             RuntimeStatus::NeedsAttention
         };
-        let tunnel_error = snapshot.regular_tunnel.as_ref().is_some_and(|tunnel| {
-            tunnel.status == crate::models::RegularTunnelStatus::Error
-        });
+        let tunnel_error = snapshot
+            .regular_tunnel
+            .as_ref()
+            .is_some_and(|tunnel| tunnel.status == crate::models::RegularTunnelStatus::Error);
         let observed_use = snapshot.readiness.runtime_ready
             && snapshot
                 .chatgpt_activity
@@ -167,7 +168,7 @@ pub fn setup(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
     let menu = build_menu(app, &projection)?;
     let mut builder = TrayIconBuilder::with_id(TRAY_ID)
         .menu(&menu)
-        .tooltip("CodeGPT Desktop")
+        .tooltip("CodeGPT")
         .icon_as_template(cfg!(target_os = "macos"))
         .show_menu_on_left_click(cfg!(target_os = "macos"))
         .on_menu_event(|app, event| handle_menu_event(app, event.id().as_ref()))
@@ -526,7 +527,10 @@ mod tests {
         });
         let projection = TrayProjection::from_snapshot(&snapshot, Some(false));
         assert_eq!(projection.connection_status, ConnectionStatus::ObservedUse);
-        assert_eq!(projection.connection_action, Some(ConnectionAction::Disconnect));
+        assert_eq!(
+            projection.connection_action,
+            Some(ConnectionAction::Disconnect)
+        );
     }
 
     #[test]

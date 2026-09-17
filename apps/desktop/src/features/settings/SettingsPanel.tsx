@@ -4,6 +4,7 @@ import type { DesktopError, DesktopState, TunnelProxyMode } from "../../models/t
 import { LANGUAGES, useLocale } from "../../i18n/locale";
 import { desktopErrorPresentation, normalizeDesktopError } from "../../i18n/presentation";
 import { PowerShellInstallGuidance } from "./PowerShellInstallGuidance";
+import { useTheme, type Theme } from "../../theme/theme";
 
 export function SettingsPanel({
   state,
@@ -13,6 +14,7 @@ export function SettingsPanel({
   onState: (state: DesktopState) => void;
 }) {
   const { locale, setLocale, t } = useLocale();
+  const { theme, setTheme } = useTheme();
   const [proxyMode, setProxyMode] = useState<TunnelProxyMode>(state.tunnel_proxy.mode);
   const [customProxy, setCustomProxy] = useState(state.tunnel_proxy.custom_url ?? "");
   const [savingProxy, setSavingProxy] = useState(false);
@@ -61,22 +63,37 @@ export function SettingsPanel({
   };
   return (
     <section className="page-section" aria-labelledby="settings-title" data-codegpt-page="settings">
-      <div className="eyebrow">{t("settings.eyebrow")}</div>
       <h1 id="settings-title">{t("settings.title")}</h1>
       <p className="lede">{t("settings.description")}</p>
 
       <section className="settings-section" aria-labelledby="settings-interface-title">
         <h2 id="settings-interface-title">{t("settings.interface")}</h2>
-        <div className="detail-card setting-row">
-          <label htmlFor="desktop-settings-locale">{t("locale.label")}</label>
-          <select
-            id="desktop-settings-locale"
-            value={locale}
-            onChange={(event) => setLocale(event.target.value as typeof locale)}
-            data-codegpt-control="locale"
-          >
-            {LANGUAGES.map((language) => <option key={language.value} value={language.value}>{language.label}</option>)}
-          </select>
+        <div className="detail-card settings-group">
+          <div className="setting-row">
+            <label htmlFor="desktop-settings-theme">{t("theme.label")}</label>
+            <select
+              id="desktop-settings-theme"
+              value={theme}
+              onChange={(event) => setTheme(event.target.value as Theme)}
+              data-codegpt-control="theme"
+            >
+              <option value="system">{t("theme.system")}</option>
+              <option value="dark">{t("theme.dark")}</option>
+              <option value="light">{t("theme.light")}</option>
+            </select>
+          </div>
+          <div className="setting-row-divider" aria-hidden="true" />
+          <div className="setting-row">
+            <label htmlFor="desktop-settings-locale">{t("locale.label")}</label>
+            <select
+              id="desktop-settings-locale"
+              value={locale}
+              onChange={(event) => setLocale(event.target.value as typeof locale)}
+              data-codegpt-control="locale"
+            >
+              {LANGUAGES.map((language) => <option key={language.value} value={language.value}>{language.label}</option>)}
+            </select>
+          </div>
         </div>
       </section>
 
@@ -161,19 +178,17 @@ export function SettingsPanel({
         <summary>{t("settings.diagnostics")}</summary>
         <PowerShellInstallGuidance state={state} onState={onState} />
         <article className="detail-card">
-        {state.binaries ? (
-          <dl className="detail-list">
-            <div><dt>{t("settings.version")}</dt><dd>{state.binaries.version}</dd></div>
-            <div><dt>{t("settings.sourceRevision")}</dt><dd>{state.binaries.git_commit}</dd></div>
-            <div><dt>{t("settings.binaryDirectory")}</dt><dd>{state.binaries.directory}</dd></div>
-            <div><dt>{t("settings.binaryResolution")}</dt><dd>{state.binaries.source}</dd></div>
-          </dl>
-        ) : (
-          <p>{t("settings.binariesPending")}</p>
-        )}
-        </article>
-
-        <article className="detail-card">
+          {state.binaries ? (
+            <dl className="detail-list">
+              <div><dt>{t("settings.version")}</dt><dd>{state.binaries.version}</dd></div>
+              <div><dt>{t("settings.sourceRevision")}</dt><dd>{state.binaries.git_commit}</dd></div>
+              <div><dt>{t("settings.binaryDirectory")}</dt><dd>{state.binaries.directory}</dd></div>
+              <div><dt>{t("settings.binaryResolution")}</dt><dd>{state.binaries.source}</dd></div>
+            </dl>
+          ) : (
+            <p>{t("settings.binariesPending")}</p>
+          )}
+          <div className="card-divider" />
           <dl className="detail-list">
             <div><dt>{t("settings.runtimeProjectId")}</dt><dd>{state.project?.runtime_project_id ?? t("settings.notEstablished")}</dd></div>
           </dl>

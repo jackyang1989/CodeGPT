@@ -3,7 +3,7 @@ mod cli;
 mod models;
 
 pub use adapter::{
-    inspect_project_path, validate_server_url, ProjectRuntimeIdentity, CodeGPTAdapter,
+    inspect_project_path, validate_server_url, CodeGPTAdapter, ProjectRuntimeIdentity,
 };
 #[cfg(test)]
 pub(crate) use cli::run_test_bounded;

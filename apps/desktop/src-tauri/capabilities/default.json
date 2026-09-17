@@ -3,6 +3,6 @@
   "identifier": "desktop-default",
   "description": "Minimal CodeGPT Desktop window permissions",
   "windows": ["main"],
-  "permissions": ["core:default", "dialog:allow-open", "clipboard-manager:allow-write-text"]
+  "permissions": ["core:default", "core:window:allow-start-dragging", "dialog:allow-open", "clipboard-manager:allow-write-text"]
 }
 

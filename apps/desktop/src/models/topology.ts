@@ -174,10 +174,21 @@ export interface ChatGptActivitySnapshot {
   last_meaningful_activity_at_ms?: number | null;
 }
 
+export interface DesktopProjectEntry {
+  id: string;
+  name: string;
+  path: string;
+  allowed_root: string;
+  is_git_repository: boolean;
+  is_active: boolean;
+  disabled: boolean;
+}
+
 export interface DesktopState {
   topology?: RuntimeTopology | null;
   readiness: ReadinessSnapshot;
   project?: ProjectSelection | null;
+  projects?: DesktopProjectEntry[];
   binaries?: BinaryInfo | null;
   powershell_runtime?: PowerShellRuntimeSnapshot | null;
   chatgpt_activity?: ChatGptActivitySnapshot | null;

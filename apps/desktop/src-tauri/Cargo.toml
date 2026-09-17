@@ -8,6 +8,10 @@ publish = false
 # Keep Tauri/WebView dependencies out of the root CodeGPT Cargo workspace.
 [workspace]
 
+[[bin]]
+name = "CodeGPT"
+path = "src/main.rs"
+
 [lib]
 name = "codegpt_desktop_lib"
 crate-type = ["lib", "cdylib", "staticlib"]
@@ -27,6 +31,7 @@ tokio = { version = "1", features = ["fs", "io-util", "macros", "process", "rt-m
 url = "2"
 codegpt-process = { path = "../../../crates/codegpt-process" }
 codegpt-runner-config = { path = "../../../crates/codegpt-runner-config" }
+toml = "0.8"
 
 [target.'cfg(unix)'.dependencies]
 libc = "0.2"

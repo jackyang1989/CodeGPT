@@ -1,4 +1,5 @@
 mod activity;
+mod codegpt;
 mod commands;
 mod deadline;
 mod desktop_shell;
@@ -10,7 +11,6 @@ mod process;
 mod state;
 mod tray;
 mod tunnel_config;
-mod codegpt;
 
 use state::AppState;
 use tauri::Manager;
@@ -57,6 +57,9 @@ pub fn run() {
             commands::inspect_project,
             commands::configure_local_setup,
             commands::activate_local_project,
+            commands::toggle_project_enabled,
+            commands::remove_project,
+            commands::open_project_folder,
             commands::configure_remote_setup,
             commands::start_quick_share,
             commands::stop_quick_share,

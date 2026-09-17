@@ -97,93 +97,202 @@ export function ConnectionPanel({
 
   return (
     <section
-      className="page-section"
+      className="page-section connection-page"
       aria-labelledby="connection-title"
       aria-busy={mutationBusy}
       data-codegpt-page="connection"
     >
       <PageHeading />
 
-      <article className="connection-current detail-card" aria-labelledby="connection-current-title">
-        <h2 id="connection-current-title" className="section-title">{t("connection.current")}</h2>
-        <div className="status-value">
-          <i className={`status-dot ${chatgptObserved ? "ready" : tunnelLocallyReady ? "ready" : tunnelError ? "error" : state.regular_tunnel ? "pending" : "unknown"}`} aria-hidden="true" />
-          <strong>{!state.readiness.runtime_ready ? runtimeLabel(state, t) : chatgptObserved ? t("connection.observed") : tunnelLocallyReady ? t("connection.tunnelReady") : currentConnection(state, t)}</strong>
+      <div className="connection-pipeline-hero" aria-hidden="true">
+        <div className="pipeline-node node-local">
+          <div className="node-icon-bubble">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="node-svg">
+              <rect x="2" y="3" width="20" height="14" rx="2" />
+              <line x1="8" y1="21" x2="16" y2="21" />
+              <line x1="12" y1="17" x2="12" y2="21" />
+            </svg>
+          </div>
+          <div className="node-meta">
+            <span className="node-label">本地代码工程</span>
+            <span className="node-value">{state.project?.path.split(/[\\/]/).filter(Boolean).pop() ?? "Local Repo"}</span>
+          </div>
         </div>
-        <p>{!state.readiness.runtime_ready ? t("workspace.afterStart") : chatgptObserved ? t("connection.observedDescription") : tunnelLocallyReady ? t("connection.waitingForChatGpt") : tunnelEstablished ? t("connection.tunnelHandoffNeedsAction") : t("connection.notVerified")}</p>
-      </article>
+
+        <div className={`pipeline-pipe ${tunnelEstablished ? "active" : ""}`}>
+          <div className="pipe-line">
+            <span className="pipe-pulse" />
+          </div>
+          <span className="pipe-badge">
+            {tunnelEstablished ? "🔒 TLS E2E 加密" : "⚡ 待命中"}
+          </span>
+        </div>
+
+        <div className={`pipeline-node node-tunnel ${tunnelEstablished ? "active" : ""}`}>
+          <div className="node-icon-bubble">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="node-svg">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            </svg>
+          </div>
+          <div className="node-meta">
+            <span className="node-label">OpenAI Secure Tunnel</span>
+            <span className="node-value">{tunnelId ? `${tunnelId.slice(0, 10)}…` : "待配置"}</span>
+          </div>
+        </div>
+
+        <div className={`pipeline-pipe ${chatgptObserved ? "active" : ""}`}>
+          <div className="pipe-line">
+            <span className="pipe-pulse" />
+          </div>
+          <span className="pipe-badge">
+            {chatgptObserved ? "🟢 协同活跃" : "等待 ChatGPT"}
+          </span>
+        </div>
+
+        <div className={`pipeline-node node-chatgpt ${chatgptObserved ? "active" : ""}`}>
+          <div className="node-icon-bubble">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="node-svg">
+              <circle cx="12" cy="12" r="10" />
+              <path d="M8 14s1.5 2 4 2 4-2 4-2" />
+              <line x1="9" y1="9" x2="9.01" y2="9" />
+              <line x1="15" y1="9" x2="15.01" y2="9" />
+            </svg>
+          </div>
+          <div className="node-meta">
+            <span className="node-label">ChatGPT Web</span>
+            <span className="node-value">{chatgptObserved ? "已连通" : "待接入"}</span>
+          </div>
+        </div>
+      </div>
 
       {error && <LocalizedError error={error} />}
 
-      {state.regular_tunnel ? (
-        <article className="handoff-card" aria-label="OpenAI Secure Tunnel">
-          <div>
-            <span className="section-kicker">OpenAI Secure Tunnel</span>
-            <span>{tunnelError ? t("workspace.stopToRetry") : !tunnelEstablished ? t("connection.tunnelStarting") : null}</span>
-          </div>
-          <button
-            className="danger-button"
-            disabled={mutationBusy}
-            onClick={() => void run(desktopApi.stopRegularTunnel)}
-            data-codegpt-action="stop-regular-tunnel"
-          >
-            {mutationBusy ? t("common.checking") : t("connection.stopTunnel")}
-          </button>
-        </article>
-      ) : (
-        <div
-          className="connection-form"
-        >
-          <fieldset className="provider-row provider-fieldset" role="radiogroup" aria-labelledby="regular-provider-legend">
-            <legend id="regular-provider-legend">{t("connection.methods")}</legend>
-            <ProviderOption
-              id="regular-provider-local"
-              value="local"
-              checked={provider === "local"}
-              onChange={chooseProvider}
-              title={t("connection.noDesktopTunnel")}
-              description={t("connection.localDescription")}
-              disabled={mutationBusy}
-            />
-            <ProviderOption
-              id="regular-provider-openai"
-              value="openai"
-              checked={provider === "openai"}
-              onChange={chooseProvider}
-              title="OpenAI Secure Tunnel"
-              description={state.openai_tunnel_configured ? t("connection.openaiDescription") : t("connection.openaiNotConfigured")}
-              disabled={mutationBusy || !state.openai_tunnel_configured}
-            />
-          </fieldset>
+      <div className="connection-grid">
+        <div className="connection-col connection-col-primary">
+          <article className="connection-current detail-card" aria-labelledby="connection-current-title">
+            <div className="card-header-row">
+              <h2 id="connection-current-title" className="section-title">{t("connection.current")}</h2>
+              <span className={`status-pill ${chatgptObserved ? "ready" : tunnelLocallyReady ? "ready" : tunnelError ? "error" : state.regular_tunnel ? "pending" : "unknown"}`}>
+                <i className={`status-dot ${chatgptObserved ? "ready" : tunnelLocallyReady ? "ready" : tunnelError ? "error" : state.regular_tunnel ? "pending" : "unknown"}`} aria-hidden="true" />
+                {chatgptObserved ? t("connection.observed") : tunnelLocallyReady ? t("connection.tunnelReady") : currentConnection(state, t)}
+              </span>
+            </div>
+            <p className="card-lead-text">
+              {!state.readiness.runtime_ready ? t("workspace.afterStart") : chatgptObserved ? t("connection.observedDescription") : tunnelLocallyReady ? t("connection.waitingForChatGpt") : tunnelEstablished ? t("connection.tunnelHandoffNeedsAction") : t("connection.notVerified")}
+            </p>
 
-          {!state.readiness.runtime_ready && <p className="inline-note">{t("connection.runtimeRequired")}</p>}
+            {state.regular_tunnel ? (
+              <div className="handoff-card" aria-label="OpenAI Secure Tunnel">
+                <div className="handoff-card-info">
+                  <span className="section-kicker">OpenAI Secure Tunnel</span>
+                  <span className="handoff-sub">{tunnelError ? t("workspace.stopToRetry") : !tunnelEstablished ? t("connection.tunnelStarting") : "端到端通道保持连通"}</span>
+                </div>
+                <button
+                  className="danger-button"
+                  disabled={mutationBusy}
+                  onClick={() => void run(desktopApi.stopRegularTunnel)}
+                  data-codegpt-action="stop-regular-tunnel"
+                >
+                  {mutationBusy ? t("common.checking") : t("connection.stopTunnel")}
+                </button>
+              </div>
+            ) : (
+              <div className="connection-form">
+                <fieldset className="provider-row provider-fieldset" role="radiogroup" aria-labelledby="regular-provider-legend">
+                  <legend id="regular-provider-legend">{t("connection.methods")}</legend>
+                  <ProviderOption
+                    id="regular-provider-local"
+                    value="local"
+                    checked={provider === "local"}
+                    onChange={chooseProvider}
+                    title={t("connection.noDesktopTunnel")}
+                    description={t("connection.localDescription")}
+                    disabled={mutationBusy}
+                  />
+                  <ProviderOption
+                    id="regular-provider-openai"
+                    value="openai"
+                    checked={provider === "openai"}
+                    onChange={chooseProvider}
+                    title="OpenAI Secure Tunnel"
+                    description={state.openai_tunnel_configured ? t("connection.openaiDescription") : t("connection.openaiNotConfigured")}
+                    disabled={mutationBusy || !state.openai_tunnel_configured}
+                  />
+                </fieldset>
 
-          {provider === "openai" && (
-            <button className="primary-button" disabled={mutationBusy || !canStart} onClick={() => void run(desktopApi.startRegularTunnel)} data-codegpt-action="start-regular-tunnel">
-              {mutationBusy ? t("connection.tunnelStarting") : t("home.connectChatGpt")}
-            </button>
+                {!state.readiness.runtime_ready && <p className="inline-note">{t("connection.runtimeRequired")}</p>}
+
+                {provider === "openai" && (
+                  <button className="primary-button full-width-action" disabled={mutationBusy || !canStart} onClick={() => void run(desktopApi.startRegularTunnel)} data-codegpt-action="start-regular-tunnel">
+                    {mutationBusy ? t("connection.tunnelStarting") : t("home.connectChatGpt")}
+                  </button>
+                )}
+              </div>
+            )}
+          </article>
+
+          {tunnelId && (
+            <article className="detail-card tunnel-copy">
+              <div className="card-header-row">
+                <label htmlFor="active-tunnel-id">Tunnel ID</label>
+                {copyStatus === "copied" && <span className="copy-badge-success" role="status">{t("connection.clipboardReady")}</span>}
+                {copyStatus === "failed" && <span className="copy-badge-error" role="status">{t("connection.copyFailed")}</span>}
+              </div>
+              <div className="tunnel-input-action-row">
+                <input id="active-tunnel-id" readOnly value={tunnelId} onFocus={(event) => event.target.select()} className="tunnel-code-input" />
+                <button className="secondary-button copy-tunnel-btn" onClick={() => void copyTunnelId()}>{t("connection.copyTunnelId")}</button>
+              </div>
+            </article>
           )}
         </div>
-      )}
-      {tunnelId && (
-        <article className="detail-card tunnel-copy">
-          <label htmlFor="active-tunnel-id">Tunnel ID</label>
-          <input id="active-tunnel-id" readOnly value={tunnelId} onFocus={(event) => event.target.select()} />
-          <button className="secondary-button" onClick={() => void copyTunnelId()}>{t("connection.copyTunnelId")}</button>
-          <span role="status">{copyStatus === "copied" ? t("connection.clipboardReady") : copyStatus === "failed" ? t("connection.copyFailed") : ""}</span>
-        </article>
-      )}
-      <article className="connection-instructions detail-card">
-        <h2>{t("workspace.handoffTitle")}</h2>
-        <ol>
-          <li>{t("workspace.handoffOne")}</li>
-          <li>{t("workspace.handoffTwo")}</li>
-          <li>{t("workspace.verifyHint")}</li>
-        </ol>
-      </article>
-      <details className="setup-tunnel-details" open={!state.openai_tunnel_configured}>
+
+        <div className="connection-col connection-col-secondary">
+          <article className="connection-instructions detail-card">
+            <h2 className="section-title">{t("workspace.handoffTitle")}</h2>
+            <div className="handoff-steps-cards">
+              <div className="handoff-step-card">
+                <span className="step-badge">01</span>
+                <div className="step-body">
+                  <strong>在 ChatGPT 打开设置</strong>
+                  <p>{t("workspace.handoffOne")}</p>
+                </div>
+              </div>
+              <div className="handoff-step-card">
+                <span className="step-badge">02</span>
+                <div className="step-body">
+                  <strong>填写 Tunnel ID 凭据</strong>
+                  <p>{t("workspace.handoffTwo")}</p>
+                </div>
+              </div>
+              <div className="handoff-step-card">
+                <span className="step-badge">03</span>
+                <div className="step-body">
+                  <strong>在会话中发起验证</strong>
+                  <p>{t("workspace.verifyHint")}</p>
+                </div>
+              </div>
+            </div>
+            <div className="chatgpt-prompt-helper">
+              <span className="helper-title">💡 ChatGPT 验证指令模板</span>
+              <p className="helper-text">"请列出当前工作区的目录结构，并读取 README.md 的概要内容。"</p>
+              <button
+                className="secondary-button btn-mini"
+                type="button"
+                onClick={() => {
+                  void writeText("请列出当前工作区的目录结构，并读取 README.md 的概要内容。");
+                  setCopyStatus("copied");
+                }}
+              >
+                复制指令
+              </button>
+            </div>
+          </article>
+        </div>
+      </div>
+
+      <details className="setup-tunnel-details">
         <summary>{t("workspace.optionalTunnel")}</summary>
-        <p>{t("connection.description")}</p>
+        <p className="details-intro">{t("connection.description")}</p>
         <TunnelConfigDiagnostics state={state} onState={onState} />
       </details>
     </section>
@@ -193,10 +302,7 @@ export function ConnectionPanel({
 function PageHeading() {
   const { t } = useLocale();
   return (
-    <>
-      <div className="eyebrow">{t("connection.eyebrow")}</div>
-      <h1 id="connection-title">{t("connection.title")}</h1>
-    </>
+    <h1 id="connection-title">{t("connection.title")}</h1>
   );
 }
 

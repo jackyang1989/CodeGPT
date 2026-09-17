@@ -53,6 +53,59 @@ pub fn open_powershell_install_guide() -> DesktopResult<()> {
     }
 }
 
+pub fn open_folder_path(path: &str) -> DesktopResult<()> {
+    let path_ref = std::path::Path::new(path);
+    if !path_ref.exists() {
+        return Err(DesktopError::new(
+            "path_not_found",
+            format!("Folder path does not exist: {path}"),
+            "Ensure the folder exists on your computer.",
+        ));
+    }
+    #[cfg(target_os = "macos")]
+    {
+        std::process::Command::new("open")
+            .arg(path)
+            .spawn()
+            .map_err(|error| {
+                DesktopError::new(
+                    "open_folder_failed",
+                    format!("Failed to open folder: {error}"),
+                    "Open the folder directly in Finder.",
+                )
+            })?;
+        Ok(())
+    }
+    #[cfg(target_os = "windows")]
+    {
+        std::process::Command::new("explorer")
+            .arg(path)
+            .spawn()
+            .map_err(|error| {
+                DesktopError::new(
+                    "open_folder_failed",
+                    format!("Failed to open folder: {error}"),
+                    "Open the folder directly in File Explorer.",
+                )
+            })?;
+        Ok(())
+    }
+    #[cfg(not(any(target_os = "macos", target_os = "windows")))]
+    {
+        std::process::Command::new("xdg-open")
+            .arg(path)
+            .spawn()
+            .map_err(|error| {
+                DesktopError::new(
+                    "open_folder_failed",
+                    format!("Failed to open folder: {error}"),
+                    "Open the folder directly.",
+                )
+            })?;
+        Ok(())
+    }
+}
+
 pub fn current_username() -> String {
     std::env::var("USERNAME")
         .or_else(|_| std::env::var("USER"))

@@ -2,6 +2,7 @@ use crate::activity::{sanitize_message, ActivityEventKind, ActivityLevel, Activi
 use crate::deadline::Deadline;
 use crate::error::{DesktopError, DesktopResult};
 use crate::platform;
+use codegpt_process::{GracefulTermination, ManagedChild};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::{HashMap, VecDeque};
@@ -10,7 +11,6 @@ use std::process::{Command, Stdio};
 use std::sync::{Arc, Mutex};
 use tokio::sync::Notify;
 use tokio::task::JoinHandle;
-use codegpt_process::{GracefulTermination, ManagedChild};
 
 const LOG_LINES: usize = 80;
 const LOG_LINE_BYTES: usize = 2048;

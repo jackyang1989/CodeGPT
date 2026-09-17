@@ -118,28 +118,113 @@ export function FirstRun({ state, onState, chooseModeFirst = false, onComplete }
   if (!mode) {
     return (
       <section className="first-run" aria-labelledby="first-run-title" data-codegpt-page="first-run">
-        <div className="eyebrow">{t("first.welcome")}</div>
         <h1 id="first-run-title">{t("first.title")}</h1>
         <p className="lede">{t("first.description")}</p>
         <ol className="setup-overview" aria-label={t("workspace.progress")}>
-          <li><span>01</span>{t("workspace.prepare")}</li>
-          <li><span>02</span>{t("workspace.connect")}</li>
-          <li><span>03</span>{t("workspace.verify")}</li>
+          <li><span className="step-num-pill">01</span><span className="step-num-label">{t("workspace.prepare")}</span></li>
+          <li className="step-arrow-item" aria-hidden="true">→</li>
+          <li><span className="step-num-pill">02</span><span className="step-num-label">{t("workspace.connect")}</span></li>
+          <li className="step-arrow-item" aria-hidden="true">→</li>
+          <li><span className="step-num-pill">03</span><span className="step-num-label">{t("workspace.verify")}</span></li>
         </ol>
+
         <div className="entry-grid">
-          <button className="entry-card recommended" onClick={() => setMode("local")} data-codegpt-action="choose-local-setup">
-            <span className="entry-badge">{t("first.recommended")}</span>
-            <strong>{t("first.localTitle")}</strong>
-            <span>{t("first.localDescription")}</span>
+          <button className="entry-card recommended hero-entry-card" onClick={() => setMode("local")} data-codegpt-action="choose-local-setup">
+            <div className="hero-card-header">
+              <span className="entry-badge">{t("first.recommended")}</span>
+              <div className="entry-icon-bubble" aria-hidden="true">
+                <svg className="entry-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="2" y="3" width="20" height="14" rx="2" />
+                  <line x1="8" y1="21" x2="16" y2="21" />
+                  <line x1="12" y1="17" x2="12" y2="21" />
+                </svg>
+              </div>
+            </div>
+            <div className="hero-card-content">
+              <strong>{t("first.localTitle")}</strong>
+              <span>{t("first.localDescription")}</span>
+            </div>
+            <div className="hero-card-footer">
+              <span className="hero-card-action primary-cta-pill">
+                <span>{t("first.startLocalAction")}</span>
+              </span>
+            </div>
           </button>
-          <button className="entry-card" onClick={() => setMode("remote")} data-codegpt-action="choose-remote-setup">
-            <strong>{t("first.remoteTitle")}</strong>
-            <span>{t("first.remoteDescription")}</span>
-          </button>
-          <button className="entry-card" onClick={() => setMode("share")} data-codegpt-action="choose-quick-share-setup">
-            <strong>{t("first.shareTitle")}</strong>
-            <span>{t("first.shareDescription")}</span>
-          </button>
+
+          <div className="secondary-entries-group">
+            <span className="secondary-group-label">{t("first.otherModes")}</span>
+            <div className="secondary-cards-row">
+              <button className="entry-card secondary-card" onClick={() => setMode("remote")} data-codegpt-action="choose-remote-setup">
+                <div className="entry-icon-bubble-sm" aria-hidden="true">
+                  <svg className="entry-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="2" y1="12" x2="22" y2="12" />
+                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                  </svg>
+                </div>
+                <div className="secondary-card-text">
+                  <strong>{t("first.remoteTitle")}</strong>
+                  <span>{t("first.remoteDescription")}</span>
+                  <span className="secondary-card-link">{t("first.remoteAction")}</span>
+                </div>
+              </button>
+              <button className="entry-card secondary-card" onClick={() => setMode("share")} data-codegpt-action="choose-quick-share-setup">
+                <div className="entry-icon-bubble-sm" aria-hidden="true">
+                  <svg className="entry-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+                  </svg>
+                </div>
+                <div className="secondary-card-text">
+                  <strong>{t("first.shareTitle")}</strong>
+                  <span>{t("first.shareDescription")}</span>
+                  <span className="secondary-card-link">{t("first.shareAction")}</span>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <div className="first-run-trust-panel">
+            <div className="trust-panel-header">
+              <span className="section-kicker">{t("first.featuresLabel")}</span>
+            </div>
+            <div className="trust-columns">
+              <div className="trust-col">
+                <div className="trust-icon-box" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                  </svg>
+                </div>
+                <div className="trust-col-body">
+                  <strong>{t("first.featIsolationTitle")}</strong>
+                  <p>{t("first.featIsolationDesc")}</p>
+                </div>
+              </div>
+              <div className="trust-col">
+                <div className="trust-icon-box" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                  </svg>
+                </div>
+                <div className="trust-col-body">
+                  <strong>{t("first.featSecurityTitle")}</strong>
+                  <p>{t("first.featSecurityDesc")}</p>
+                </div>
+              </div>
+              <div className="trust-col">
+                <div className="trust-icon-box" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="16 18 22 12 16 6" />
+                    <polyline points="8 6 2 12 8 18" />
+                  </svg>
+                </div>
+                <div className="trust-col-body">
+                  <strong>{t("first.featProtocolsTitle")}</strong>
+                  <p>{t("first.featProtocolsDesc")}</p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
     );
@@ -163,7 +248,6 @@ export function FirstRun({ state, onState, chooseModeFirst = false, onComplete }
       <button type="button" className="back-button" onClick={() => setMode(null)} data-codegpt-action="show-setup-options">
         {t("setup.back")}
       </button>
-      <div className="eyebrow">{modeLabel(mode, t)}</div>
       <h1 id="setup-title">{setupTitle(mode, t)}</h1>
       <p className="lede">{setupDescription(mode, t)}</p>
       <div className="project-picker-card">

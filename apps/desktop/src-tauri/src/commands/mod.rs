@@ -62,6 +62,25 @@ pub struct LaunchAtLoginRequest {
     pub enabled: bool,
 }
 
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ToggleProjectRequest {
+    pub project_id: String,
+    pub enabled: bool,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RemoveProjectRequest {
+    pub project_id: String,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct OpenFolderRequest {
+    pub path: String,
+}
+
 fn project_state_result(
     app: &AppHandle,
     result: Result<DesktopStateSnapshot, DesktopError>,
@@ -187,6 +206,34 @@ pub async fn activate_local_project(
         &app,
         state.activate_local_project(&request.project_path).await,
     )
+}
+
+#[tauri::command]
+pub async fn toggle_project_enabled(
+    request: ToggleProjectRequest,
+    app: AppHandle,
+    state: State<'_, AppState>,
+) -> Result<DesktopStateSnapshot, DesktopError> {
+    project_state_result(
+        &app,
+        state
+            .toggle_project_enabled(&request.project_id, request.enabled)
+            .await,
+    )
+}
+
+#[tauri::command]
+pub async fn remove_project(
+    request: RemoveProjectRequest,
+    app: AppHandle,
+    state: State<'_, AppState>,
+) -> Result<DesktopStateSnapshot, DesktopError> {
+    project_state_result(&app, state.remove_project(&request.project_id).await)
+}
+
+#[tauri::command]
+pub fn open_project_folder(request: OpenFolderRequest) -> Result<(), DesktopError> {
+    crate::platform::open_folder_path(&request.path)
 }
 
 #[tauri::command]

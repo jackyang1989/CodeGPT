@@ -1,10 +1,10 @@
 use super::{normalize_proxy_server, SystemProxyCandidate};
 use crate::models::PowerShellRuntimeSnapshot;
+use codegpt_process::SpawnOptions;
 use std::ffi::OsStr;
 use std::io;
 use std::path::PathBuf;
 use std::process::Command;
-use codegpt_process::SpawnOptions;
 use winreg::enums::HKEY_CURRENT_USER;
 use winreg::RegKey;
 

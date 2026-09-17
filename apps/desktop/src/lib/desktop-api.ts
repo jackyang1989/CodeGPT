@@ -33,6 +33,18 @@ export const desktopApi = {
     invoke<DesktopState>("activate_local_project", {
       request: { projectPath },
     }),
+  toggleProjectEnabled: (projectId: string, enabled: boolean) =>
+    invoke<DesktopState>("toggle_project_enabled", {
+      request: { projectId, enabled },
+    }),
+  removeProject: (projectId: string) =>
+    invoke<DesktopState>("remove_project", {
+      request: { projectId },
+    }),
+  openProjectFolder: (path: string) =>
+    invoke<void>("open_project_folder", {
+      request: { path },
+    }),
   configureRemote: (
     serverUrl: string,
     pairingCode: string,

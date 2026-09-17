@@ -1,13 +1,17 @@
 use crate::activity::{ActivityEventKind, ActivityLevel, ActivityLog};
+use crate::codegpt::{
+    inspect_project_path, CodeGPTAdapter, ProjectRuntimeIdentity, QuickShareReadyEvent,
+    RegularTunnelReadyEvent,
+};
 use crate::deadline::Deadline;
 use crate::error::{DesktopError, DesktopResult};
 use crate::models::{
-    aggregate_readiness, ChatGptActivitySnapshot, DesktopOperationKind, DesktopStateSnapshot,
-    Enrollment, Experience, Exposure, ExposureReadiness, ProjectReadiness, ProjectSelection,
-    QuickShareState, ReadinessNextActionKind, ReadinessSummaryKind, RegularConnectionPreference,
-    RegularTunnelState, RegularTunnelStatus, RunnerReadiness, RunnerTopology, RuntimeTopology,
-    ServerReadiness, ServerTopology, StoredDesktopConfig, StoredRuntime, TunnelProxyConfig,
-    TunnelProxyMode, TunnelProxySnapshot,
+    aggregate_readiness, ChatGptActivitySnapshot, DesktopOperationKind, DesktopProjectEntry,
+    DesktopStateSnapshot, Enrollment, Experience, Exposure, ExposureReadiness, ProjectReadiness,
+    ProjectSelection, QuickShareState, ReadinessNextActionKind, ReadinessSummaryKind,
+    RegularConnectionPreference, RegularTunnelState, RegularTunnelStatus, RunnerReadiness,
+    RunnerTopology, RuntimeTopology, ServerReadiness, ServerTopology, StoredDesktopConfig,
+    StoredRuntime, TunnelProxyConfig, TunnelProxyMode, TunnelProxySnapshot,
 };
 use crate::operation::{
     cancelled_error, CancellationContext, CancellationSignal, OperationAdmission,
@@ -15,10 +19,6 @@ use crate::operation::{
 };
 use crate::process::{MachineEventReceiver, ProcessKind, ProcessPhase, ProcessSupervisor};
 use crate::tunnel_config::{TunnelConfig, TunnelConfigRequest};
-use crate::codegpt::{
-    inspect_project_path, ProjectRuntimeIdentity, QuickShareReadyEvent, RegularTunnelReadyEvent,
-    CodeGPTAdapter,
-};
 use serde_json::Value;
 #[cfg(unix)]
 use std::fs::File;
@@ -145,10 +145,8 @@ impl AppState {
         if self.operations.current().is_some() {
             return Ok(self.get_state());
         }
-        let cancellation = CancellationContext::new(
-            CancellationSignal::new(),
-            self.shutdown_signal.clone(),
-        );
+        let cancellation =
+            CancellationContext::new(CancellationSignal::new(), self.shutdown_signal.clone());
         let probe = {
             let slot = self.core.lock().await;
             let Some(core) = slot.as_ref() else {
@@ -259,6 +257,26 @@ impl AppState {
             .await;
         self.finish_operation(operation, cancellation, core, baseline, result)
             .await
+    }
+
+    pub async fn toggle_project_enabled(
+        &self,
+        project_id: &str,
+        enabled: bool,
+    ) -> DesktopResult<DesktopStateSnapshot> {
+        let mut slot = self.core.lock().await;
+        let Some(core) = slot.as_mut() else {
+            return Ok(self.get_state());
+        };
+        core.toggle_project_enabled(project_id, enabled).await
+    }
+
+    pub async fn remove_project(&self, project_id: &str) -> DesktopResult<DesktopStateSnapshot> {
+        let mut slot = self.core.lock().await;
+        let Some(core) = slot.as_mut() else {
+            return Ok(self.get_state());
+        };
+        core.remove_project(project_id).await
     }
 
     pub async fn configure_remote_setup(
@@ -581,6 +599,7 @@ impl DesktopCore {
         snapshot.regular_tunnel_available = true;
         snapshot.powershell_runtime = crate::platform::powershell_runtime_snapshot();
         apply_config_projection(&mut snapshot, &config);
+        snapshot.projects = load_desktop_projects(&data_dir, &config);
         let published = Arc::new(RwLock::new(snapshot.clone()));
         let supervisor = Arc::new(Mutex::new(ProcessSupervisor::new(activity.clone())));
         Ok(Self {
@@ -601,6 +620,7 @@ impl DesktopCore {
         apply_openai_tunnel_configuration(&mut self.snapshot, &self.tunnel_config);
         self.snapshot.regular_tunnel_available = true;
         apply_config_projection(&mut self.snapshot, &self.config);
+        self.snapshot.projects = load_desktop_projects(&self.data_dir, &self.config);
         if self.snapshot.regular_tunnel.is_some() {
             let active = self
                 .process_snapshot(ProcessKind::RegularTunnel)
@@ -760,19 +780,18 @@ impl DesktopCore {
             Err(_) => ProjectReadiness::Unknown,
         };
         cancellation.check()?;
-        self.snapshot.chatgpt_activity = if server == ServerReadiness::Ready
-            && project == ProjectReadiness::Ready
-        {
-            match self.adapter.chatgpt_activity(&identity, cancellation).await {
-                Ok(last_meaningful_activity_at_ms) => Some(ChatGptActivitySnapshot {
-                    observed: last_meaningful_activity_at_ms.is_some(),
-                    last_meaningful_activity_at_ms,
-                }),
-                Err(_) => None,
-            }
-        } else {
-            None
-        };
+        self.snapshot.chatgpt_activity =
+            if server == ServerReadiness::Ready && project == ProjectReadiness::Ready {
+                match self.adapter.chatgpt_activity(&identity, cancellation).await {
+                    Ok(last_meaningful_activity_at_ms) => Some(ChatGptActivitySnapshot {
+                        observed: last_meaningful_activity_at_ms.is_some(),
+                        last_meaningful_activity_at_ms,
+                    }),
+                    Err(_) => None,
+                }
+            } else {
+                None
+            };
         cancellation.check()?;
         let tunnel_active = self
             .process_snapshot(ProcessKind::RegularTunnel)
@@ -1066,6 +1085,134 @@ impl DesktopCore {
             self.snapshot.readiness.runner.clone(),
             self.snapshot.readiness.exposure.clone(),
             ProjectReadiness::Ready,
+        );
+        self.get_state().await
+    }
+
+    pub async fn toggle_project_enabled(
+        &mut self,
+        project_id: &str,
+        enabled: bool,
+    ) -> DesktopResult<DesktopStateSnapshot> {
+        let candidate_dirs = collect_project_registry_dirs(&self.data_dir, &self.config);
+        let mut updated = false;
+        for dir in candidate_dirs {
+            let entries = match std::fs::read_dir(&dir) {
+                Ok(entries) => entries,
+                Err(_) => continue,
+            };
+            for entry in entries.flatten() {
+                let file = entry.path();
+                if file.extension().and_then(|ext| ext.to_str()) != Some("toml") {
+                    continue;
+                }
+                let Ok(content) = std::fs::read_to_string(&file) else {
+                    continue;
+                };
+                let Ok(mut val) = toml::from_str::<toml::Value>(&content) else {
+                    continue;
+                };
+                let Some(table) = val.as_table_mut() else {
+                    continue;
+                };
+                let matches_id = table.get("id").and_then(|v| v.as_str()) == Some(project_id)
+                    || file.file_stem().and_then(|s| s.to_str()) == Some(project_id);
+                if matches_id {
+                    table.insert("disabled".to_string(), toml::Value::Boolean(!enabled));
+                    if let Ok(new_content) = toml::to_string_pretty(&val) {
+                        let _ = std::fs::write(&file, new_content);
+                        updated = true;
+                        break;
+                    }
+                }
+            }
+            if updated {
+                break;
+            }
+        }
+        self.activity.push(
+            ActivityEventKind::ProjectActivated,
+            "desktop",
+            ActivityLevel::Info,
+            format!(
+                "Project {project_id} ChatGPT access set to {}",
+                if enabled { "enabled" } else { "disabled" }
+            ),
+        );
+        self.get_state().await
+    }
+
+    pub async fn remove_project(
+        &mut self,
+        project_id: &str,
+    ) -> DesktopResult<DesktopStateSnapshot> {
+        let candidate_dirs = collect_project_registry_dirs(&self.data_dir, &self.config);
+        let mut removed_path: Option<String> = None;
+        for dir in candidate_dirs {
+            let entries = match std::fs::read_dir(&dir) {
+                Ok(entries) => entries,
+                Err(_) => continue,
+            };
+            for entry in entries.flatten() {
+                let file = entry.path();
+                if file.extension().and_then(|ext| ext.to_str()) != Some("toml") {
+                    continue;
+                }
+                let Ok(content) = std::fs::read_to_string(&file) else {
+                    continue;
+                };
+                let Ok(val) = toml::from_str::<toml::Value>(&content) else {
+                    continue;
+                };
+                let Some(table) = val.as_table() else {
+                    continue;
+                };
+                let matches_id = table.get("id").and_then(|v| v.as_str()) == Some(project_id)
+                    || file.file_stem().and_then(|s| s.to_str()) == Some(project_id);
+                if matches_id {
+                    if let Some(p) = table.get("path").and_then(|v| v.as_str()) {
+                        removed_path = Some(p.to_string());
+                    }
+                    let _ = std::fs::remove_file(&file);
+                    break;
+                }
+            }
+            if removed_path.is_some() {
+                break;
+            }
+        }
+
+        if let Some(ref removed_p) = removed_path {
+            if self
+                .config
+                .project
+                .as_ref()
+                .is_some_and(|cp| same_project_path(&cp.path, removed_p))
+            {
+                let remaining = load_desktop_projects(&self.data_dir, &self.config);
+                let next_candidate = remaining
+                    .into_iter()
+                    .find(|e| !same_project_path(&e.path, removed_p));
+                if let Some(next) = next_candidate {
+                    self.config.project = Some(ProjectSelection {
+                        path: next.path.clone(),
+                        allowed_root: next.allowed_root.clone(),
+                        is_git_repository: next.is_git_repository,
+                        runtime_project_id: Some(next.id.clone()),
+                    });
+                } else {
+                    self.config.project = None;
+                    self.snapshot.project = None;
+                }
+                let _ = self.save_config().await;
+            }
+        }
+
+        self.activity.push(
+            ActivityEventKind::ProjectActivated,
+            "desktop",
+            ActivityLevel::Info,
+            format!("Project {project_id} removed from Desktop"),
         );
         self.get_state().await
     }
@@ -2598,6 +2745,185 @@ fn local_enrollment_directory(data_dir: &Path, config: &StoredDesktopConfig) -> 
     }
 }
 
+fn collect_project_registry_dirs(data_dir: &Path, config: &StoredDesktopConfig) -> Vec<PathBuf> {
+    let mut dirs = Vec::new();
+    let mut seen = std::collections::HashSet::new();
+
+    let mut add_dir = |p: PathBuf| {
+        if p.is_dir() {
+            let canonical = p.canonicalize().unwrap_or_else(|_| p.clone());
+            if seen.insert(canonical) {
+                dirs.push(p);
+            }
+        }
+    };
+
+    if let Some(runtime) = config.runtime.as_ref() {
+        if let Some(runner_config) = runtime.runner_config.as_ref() {
+            if runner_config.is_file() {
+                if let Ok(content) = std::fs::read_to_string(runner_config) {
+                    if let Ok(val) = toml::from_str::<toml::Value>(&content) {
+                        if let Some(dir_str) =
+                            val.get("project_registry_dir").and_then(|v| v.as_str())
+                        {
+                            add_dir(PathBuf::from(dir_str));
+                        }
+                    }
+                }
+                if let Some(parent) = runner_config.parent() {
+                    add_dir(parent.join(codegpt_runner_config::paths::PROJECT_REGISTRY_DIR_NAME));
+                }
+            }
+        }
+    }
+
+    let root = data_dir.join("local-connections");
+    for slot in ["a", "b"] {
+        add_dir(
+            root.join(slot)
+                .join(codegpt_runner_config::paths::PROJECT_REGISTRY_DIR_NAME),
+        );
+    }
+
+    add_dir(
+        data_dir
+            .join("runtime")
+            .join("local")
+            .join(codegpt_runner_config::paths::PROJECT_REGISTRY_DIR_NAME),
+    );
+
+    if let Ok(base) = codegpt_runner_config::paths::default_client_config_base_dir() {
+        if let Ok(reg_dir) = codegpt_runner_config::paths::select_project_registry_dir(&base) {
+            add_dir(reg_dir);
+        }
+    }
+
+    dirs
+}
+
+fn same_project_path(left: &str, right: &str) -> bool {
+    let left_clean = left.trim_end_matches(['/', '\\']);
+    let right_clean = right.trim_end_matches(['/', '\\']);
+    if left_clean.eq_ignore_ascii_case(right_clean) {
+        return true;
+    }
+    match (
+        std::fs::canonicalize(left_clean),
+        std::fs::canonicalize(right_clean),
+    ) {
+        (Ok(a), Ok(b)) => a == b,
+        _ => false,
+    }
+}
+
+#[derive(serde::Deserialize)]
+struct RunnerProjectTomlEntry {
+    id: String,
+    path: String,
+    #[serde(default)]
+    name: Option<String>,
+    #[serde(default)]
+    disabled: bool,
+}
+
+fn load_desktop_projects(
+    data_dir: &Path,
+    config: &StoredDesktopConfig,
+) -> Vec<DesktopProjectEntry> {
+    let dirs = collect_project_registry_dirs(data_dir, config);
+    let mut projects = Vec::new();
+    let mut seen_ids = std::collections::HashSet::new();
+
+    for dir in dirs {
+        let entries = match std::fs::read_dir(&dir) {
+            Ok(entries) => entries,
+            Err(_) => continue,
+        };
+        let mut files = Vec::new();
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.extension().and_then(|ext| ext.to_str()) == Some("toml") {
+                files.push(path);
+            }
+        }
+        files.sort();
+        for file in files {
+            let content = match std::fs::read_to_string(&file) {
+                Ok(c) => c,
+                Err(_) => continue,
+            };
+            let parsed = match toml::from_str::<RunnerProjectTomlEntry>(&content) {
+                Ok(p) => p,
+                Err(_) => continue,
+            };
+            if !seen_ids.insert(parsed.id.clone()) {
+                continue;
+            }
+            let is_active = config
+                .project
+                .as_ref()
+                .is_some_and(|active| same_project_path(&active.path, &parsed.path));
+            let name = parsed.name.unwrap_or_else(|| {
+                std::path::Path::new(&parsed.path)
+                    .file_name()
+                    .map(|n| n.to_string_lossy().to_string())
+                    .unwrap_or_else(|| parsed.id.clone())
+            });
+            let is_git = std::path::Path::new(&parsed.path).join(".git").exists();
+            let allowed_root = if is_active {
+                config
+                    .project
+                    .as_ref()
+                    .map(|p| p.allowed_root.clone())
+                    .unwrap_or_else(|| parsed.path.clone())
+            } else {
+                parsed.path.clone()
+            };
+            projects.push(DesktopProjectEntry {
+                id: parsed.id,
+                name,
+                path: parsed.path,
+                allowed_root,
+                is_git_repository: is_git,
+                is_active,
+                disabled: parsed.disabled,
+            });
+        }
+    }
+
+    if let Some(ref current) = config.project {
+        if !projects
+            .iter()
+            .any(|p| same_project_path(&p.path, &current.path))
+        {
+            let name = std::path::Path::new(&current.path)
+                .file_name()
+                .map(|n| n.to_string_lossy().to_string())
+                .unwrap_or_else(|| "Project".to_string());
+            let id = current
+                .runtime_project_id
+                .clone()
+                .unwrap_or_else(|| "current".to_string());
+            projects.push(DesktopProjectEntry {
+                id,
+                name,
+                path: current.path.clone(),
+                allowed_root: current.allowed_root.clone(),
+                is_git_repository: current.is_git_repository,
+                is_active: true,
+                disabled: false,
+            });
+        }
+    }
+
+    projects.sort_by(|a, b| {
+        b.is_active
+            .cmp(&a.is_active)
+            .then_with(|| a.name.cmp(&b.name))
+    });
+    projects
+}
+
 fn project_snapshot(config: &StoredDesktopConfig) -> Option<ProjectSelection> {
     let mut project = config.project.clone()?;
     if identity_from_config(config).is_none() {
@@ -3243,7 +3569,8 @@ mod tests {
             runtime_project_id: Some("agent:desktop:project-b".to_string()),
         });
 
-        let current_identity = identity_from_config(&core.config).expect("current project identity");
+        let current_identity =
+            identity_from_config(&core.config).expect("current project identity");
         let mut stale_identity = current_identity.clone();
         stale_identity.project_id = "project-a".to_string();
         stale_identity.runtime_project_id = "agent:desktop:project-a".to_string();

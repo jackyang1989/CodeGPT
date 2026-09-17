@@ -3,6 +3,7 @@ use crate::error::{DesktopError, DesktopResult};
 use crate::models::BinaryInfo;
 use crate::operation::{cancelled_error, CancellationContext};
 use crate::platform;
+use codegpt_process::{GracefulTermination, ManagedChild};
 use serde::de::DeserializeOwned;
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
@@ -10,7 +11,6 @@ use std::process::{Command, ExitStatus, Stdio};
 use std::time::Duration;
 use tokio::task::JoinHandle;
 use tokio::time::Instant;
-use codegpt_process::{GracefulTermination, ManagedChild};
 
 const CLI_OUTPUT_BYTES: usize = 256 * 1024;
 const CLI_INPUT_BYTES: usize = 64 * 1024;
