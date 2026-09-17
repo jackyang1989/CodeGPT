@@ -248,28 +248,66 @@ export function FirstRun({ state, onState, chooseModeFirst = false, onComplete }
       <button type="button" className="back-button" onClick={() => setMode(null)} data-codegpt-action="show-setup-options">
         {t("setup.back")}
       </button>
-      <h1 id="setup-title">{setupTitle(mode, t)}</h1>
-      <p className="lede">{setupDescription(mode, t)}</p>
+      <div className="setup-header">
+        <h1 id="setup-title">{setupTitle(mode, t)}</h1>
+        <p className="lede">{setupDescription(mode, t)}</p>
+      </div>
+
       <div className="project-picker-card">
-        <div>
-          <span className="section-kicker">{t("setup.project")}</span>
-          <strong>{project ? project.path : t("setup.chooseProject")}</strong>
-          {mode === "local" && !project && (
-            <span className="project-meta">{t("setup.projectRequired")}</span>
-          )}
-          {project && (
-            <span className="project-meta">
-              {t("setup.allowedRoot", {
-                root: project.allowed_root,
-                kind: project.is_git_repository ? t("setup.gitRepository") : t("setup.folder"),
-              })}
-            </span>
-          )}
+        <div className="project-picker-main">
+          <div className="project-picker-icon-box" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+            </svg>
+          </div>
+          <div className="project-picker-info">
+            <span className="section-kicker">{t("setup.project")}</span>
+            <strong className="project-path-display">{project ? project.path : t("setup.chooseProject")}</strong>
+            {mode === "local" && !project && (
+              <span className="project-meta">{t("setup.projectRequired")}</span>
+            )}
+            {project && (
+              <span className="project-meta">
+                {t("setup.allowedRoot", {
+                  root: project.allowed_root,
+                  kind: project.is_git_repository ? t("setup.gitRepository") : t("setup.folder"),
+                })}
+              </span>
+            )}
+          </div>
         </div>
         <button type="button" className="secondary-button" onClick={chooseProject} disabled={mutationBusy} data-codegpt-action="choose-project">
           {project ? t("setup.changeFolder") : t("setup.chooseFolder")}
         </button>
       </div>
+
+      {mode === "local" && !project && (
+        <div className="setup-features-banner">
+          <div className="setup-feature-item">
+            <div className="setup-feature-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              </svg>
+            </div>
+            <div className="setup-feature-text">
+              <strong>{t("first.featIsolationTitle")}</strong>
+              <p>{t("first.featIsolationDesc")}</p>
+            </div>
+          </div>
+          <div className="setup-feature-item">
+            <div className="setup-feature-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+            </div>
+            <div className="setup-feature-text">
+              <strong>{t("first.featSecurityTitle")}</strong>
+              <p>{t("first.featSecurityDesc")}</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <PowerShellInstallGuidance state={state} onState={onState} />
 

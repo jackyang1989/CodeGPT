@@ -71,20 +71,29 @@ export function TunnelConfigDiagnostics({
         {config.source !== "environment" && <button type="button" className="secondary-button" disabled={busy} onClick={() => void save(true)}>{t("tunnelConfig.useEnvironment")}</button>}
       </div>
       {saved && <p className="tunnel-config-guidance" role="status">{t("tunnelConfig.saved")}</p>}
-      <p className="tunnel-config-guidance">{t(config.source === "file" ? "tunnelConfig.sourceFile" : config.source === "invalid" ? "tunnelConfig.sourceInvalid" : "tunnelConfig.sourceEnvironment")}</p>
+      <div className="tunnel-source-pill">
+        <span className="source-dot" aria-hidden="true"></span>
+        <span>{t(config.source === "file" ? "tunnelConfig.sourceFile" : config.source === "invalid" ? "tunnelConfig.sourceInvalid" : "tunnelConfig.sourceEnvironment")}</span>
+      </div>
       <dl className="detail-list">
-        <div>
+        <div className="detail-item">
           <dt>{t("tunnelConfig.tunnelId")}</dt>
-          <dd>{config.tunnel_id_present ? t("tunnelConfig.detected") : t("tunnelConfig.missing")}</dd>
+          <dd className={`status-badge ${config.tunnel_id_present ? "ready" : "missing"}`}>
+            {config.tunnel_id_present ? t("tunnelConfig.detected") : t("tunnelConfig.missing")}
+          </dd>
         </div>
-        <div>
+        <div className="detail-item">
           <dt>{t("tunnelConfig.apiKey")}</dt>
-          <dd>{config.api_key_present ? t("tunnelConfig.detected") : t("tunnelConfig.missing")}</dd>
+          <dd className={`status-badge ${config.api_key_present ? "ready" : "missing"}`}>
+            {config.api_key_present ? t("tunnelConfig.detected") : t("tunnelConfig.missing")}
+          </dd>
         </div>
       </dl>
-      <p className="tunnel-config-guidance">{t("tunnelConfig.processScope")}</p>
-      {!configured && config.source === "environment" && <p className="tunnel-config-guidance">{t("tunnelConfig.restartRequired")}</p>}
-      {!configured && config.source === "environment" && isMacOs() && <p className="tunnel-config-guidance">{t("tunnelConfig.macosShell")}</p>}
+      <div className="tunnel-troubleshoot-box">
+        <p className="tunnel-config-guidance">{t("tunnelConfig.processScope")}</p>
+        {!configured && config.source === "environment" && <p className="tunnel-config-guidance">{t("tunnelConfig.restartRequired")}</p>}
+        {!configured && config.source === "environment" && isMacOs() && <p className="tunnel-config-guidance">{t("tunnelConfig.macosShell")}</p>}
+      </div>
       {error && <p className="tunnel-config-guidance" role="alert">{desktopErrorPresentation(error, t).action}</p>}
       <div className="tunnel-config-actions">
         <button
