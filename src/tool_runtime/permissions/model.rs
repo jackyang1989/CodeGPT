@@ -8,10 +8,10 @@
 pub(crate) const DEFAULT_PERMISSION_RECENT_LIMIT: usize = 20;
 
 /// Environment variable for the canonical authority mode.
-pub(crate) const AUTHORITY_MODE_ENV: &str = "WEBCODEX_AUTHORITY_MODE";
+pub(crate) const AUTHORITY_MODE_ENV: &str = "CODEGPT_AUTHORITY_MODE";
 
 /// Legacy operator configuration; unambiguous values migrate to authority modes.
-pub(crate) const LEGACY_PERMISSION_MODE_ENV: &str = "WEBCODEX_PERMISSION_MODE";
+pub(crate) const LEGACY_PERMISSION_MODE_ENV: &str = "CODEGPT_PERMISSION_MODE";
 
 /// Canonical authority mode (soft policy; never overrides hard safety).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -80,7 +80,7 @@ impl std::fmt::Display for AuthorityModeParseError {
 
 impl std::error::Error for AuthorityModeParseError {}
 
-pub(crate) use webcodex_core::workflow_session_contract::{PermissionDecision, PermissionOutcome};
+pub(crate) use codegpt_core::workflow_session_contract::{PermissionDecision, PermissionOutcome};
 
 pub(crate) fn new_permission_decision(
     policy: impl Into<String>,
@@ -93,7 +93,7 @@ pub(crate) fn new_permission_decision(
     PermissionDecision {
         required: true,
         policy: policy.into(),
-        request_id: format!("wc_perm_{}", webcodex_core::compact::random_suffix::<12>()),
+        request_id: format!("wc_perm_{}", codegpt_core::compact::random_suffix::<12>()),
         status: outcome.as_str().to_string(),
         reason: reason.into(),
         risk: risk.into(),

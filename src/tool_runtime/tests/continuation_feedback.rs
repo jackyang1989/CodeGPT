@@ -1030,7 +1030,7 @@ fn check_output(errors: usize, passed: usize) -> Value {
         "stdout_truncated": false,
         "stderr_truncated": false,
         "failure_kind": if errors > 0 { json!("validation_failed") } else { Value::Null },
-        "cwd": "crates/webcodex",
+        "cwd": "crates/codegpt",
         "command_summary": "cargo check",
     })
 }
@@ -1062,7 +1062,7 @@ fn test_output(passed: u64, failed: u64, ignored: u64, failed_names: &[&str]) ->
         "stdout_truncated": false,
         "stderr_truncated": false,
         "failure_kind": if failed > 0 { json!("test_failure") } else { Value::Null },
-        "cwd": "crates/webcodex",
+        "cwd": "crates/codegpt",
         "command_summary": "cargo test --lib",
     })
 }

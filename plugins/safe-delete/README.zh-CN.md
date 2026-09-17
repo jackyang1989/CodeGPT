@@ -1,10 +1,10 @@
 # Safe Delete Native Plugin
 
-`safe_delete` 是一个使用 `@yyjeqhc/webcodex-plugin-sdk` 编写的 TypeScript WebCodex
+`safe_delete` 是一个使用 `@yyjeqhc/codegpt-plugin-sdk` 编写的 TypeScript CodeGPT
 Native Tool Plugin。它不会永久删除文件，而是把一个普通文件或目录移动到操作系统的
 Trash / Recycle Bin。
 
-它有意作为 Plugin 提供，而不是加入 WebCodex 内建文件系统工具。只有在你确实希望
+它有意作为 Plugin 提供，而不是加入 CodeGPT 内建文件系统工具。只有在你确实希望
 模型获得这项额外本机能力的 Runner 上才安装它。
 
 ## 安全契约
@@ -48,7 +48,7 @@ request_timeout_secs = 30
 id = "safe-delete"
 name = "Safe Delete"
 command = "node"
-args = ["/absolute/path/to/webcodex/plugins/safe-delete/dist/plugin.js"]
+args = ["/absolute/path/to/codegpt/plugins/safe-delete/dist/plugin.js"]
 cwd = "/absolute/path/to/project"
 timeout_secs = 30
 ```

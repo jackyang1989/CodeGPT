@@ -30,8 +30,8 @@ async fn mcp_2026_computer_app_is_minimal_handshake_and_snapshot_only() {
     let runtime = test_runtime_with_public_url(PUBLIC_URL);
     // The URI is a host cache key. Bump it whenever the App delivery contract
     // changes so a previously failed/blank iframe cannot pin the old resource.
-    assert_eq!(MCP_COMPUTER_UI_RESOURCE_URI, "ui://webcodex/computer/v12");
-    assert!(MCP_COMPUTER_UI_RESOURCE_LEGACY_URIS.contains(&"ui://webcodex/computer/v11"));
+    assert_eq!(MCP_COMPUTER_UI_RESOURCE_URI, "ui://codegpt/computer/v12");
+    assert!(MCP_COMPUTER_UI_RESOURCE_LEGACY_URIS.contains(&"ui://codegpt/computer/v11"));
     assert_eq!(MCP_COMPUTER_UI_RESOURCE_TTL_MS, 0);
     assert!(mcp_computer_app_resource_meta(None)["ui"]
         .get("domain")
@@ -239,7 +239,7 @@ async fn mcp_2026_computer_app_is_minimal_handshake_and_snapshot_only() {
         rpc(
             "resources/read",
             Some(json!(2105)),
-            mcp_2026_ui_params(json!({ "uri": "ui://webcodex/computer/unknown" })),
+            mcp_2026_ui_params(json!({ "uri": "ui://codegpt/computer/unknown" })),
         ),
         None,
     )

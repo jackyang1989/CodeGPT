@@ -1,7 +1,7 @@
 use serde_json::{json, Value};
-use webcodex_core::runner_job_lifecycle::RunnerJobLifecycle;
-use webcodex_core::runtime_contract::MAX_JOB_OBSERVATION_WAIT_SECS;
-use webcodex_core::workflow_session_contract::is_validation_like_execution_purpose;
+use codegpt_core::runner_job_lifecycle::RunnerJobLifecycle;
+use codegpt_core::runtime_contract::MAX_JOB_OBSERVATION_WAIT_SECS;
+use codegpt_core::workflow_session_contract::is_validation_like_execution_purpose;
 
 use super::helpers::{
     command_rejected_message, explicit_shell_dispatch_command, is_safe_job_id,
@@ -18,7 +18,7 @@ use crate::runner_protocol::{
 };
 
 pub(crate) fn is_blocking_active_job_status(status: &str) -> bool {
-    webcodex_runner_registry::job_status_is_active(status) && !is_stop_pending_job_status(status)
+    codegpt_runner_registry::job_status_is_active(status) && !is_stop_pending_job_status(status)
 }
 
 pub(crate) fn is_stop_pending_job_status(status: &str) -> bool {
@@ -189,7 +189,7 @@ pub(crate) fn detected_job_summary_with_activity(
         detected["tests_passed"] = json!(metadata.tests_passed);
         detected["tests_failed"] = json!(metadata.tests_failed);
         if cargo_test {
-            let diagnostics = webcodex_core::validation_evidence::parse_cargo_test_diagnostics(
+            let diagnostics = codegpt_core::validation_evidence::parse_cargo_test_diagnostics(
                 stdout,
                 stderr,
                 analysis_truncated,
@@ -233,7 +233,7 @@ mod detected_summary_tests {
         assert_eq!(detected["tests_failed"], 25);
         assert_eq!(
             detected["failed_test_details"].as_array().unwrap().len(),
-            webcodex_core::validation_evidence::MAX_FAILED_TESTS
+            codegpt_core::validation_evidence::MAX_FAILED_TESTS
         );
         assert_eq!(
             detected["failed_test_details"][0]["name"],
@@ -279,7 +279,7 @@ mod detected_summary_tests {
     #[test]
     fn cargo_progress_is_advisory_and_command_scoped() {
         let locked = detected_job_summary(
-            Some("cargo check -p webcodex"),
+            Some("cargo check -p codegpt"),
             Some("validation"),
             "running",
             None,
@@ -290,12 +290,12 @@ mod detected_summary_tests {
         assert_eq!(locked["progress"]["reason_code"], "cargo_build_lock");
 
         let compiling = detected_job_summary(
-            Some("cargo test -p webcodex"),
+            Some("cargo test -p codegpt"),
             Some("test"),
             "running",
             None,
             "",
-            "   Compiling webcodex v0.3.9\n",
+            "   Compiling codegpt v0.3.9\n",
         );
         assert_eq!(compiling["progress"]["reason_code"], "cargo_compiling");
 
@@ -318,12 +318,12 @@ mod detected_summary_tests {
             source: ShellJobActivitySource::CargoOutput,
         };
         let detected = detected_job_summary_with_activity(
-            Some("cargo check -p webcodex"),
+            Some("cargo check -p codegpt"),
             Some("validation"),
             "running",
             None,
             "",
-            "Checking webcodex v0.3.9\n",
+            "Checking codegpt v0.3.9\n",
             false,
             Some(&activity),
         );
@@ -1855,7 +1855,7 @@ impl ToolRuntime {
                 warnings,
             ));
         }
-        if !webcodex_runner_registry::job_status_is_active(&status_before) {
+        if !codegpt_runner_registry::job_status_is_active(&status_before) {
             return ToolResult::ok(stop_job_output(
                 &request_project,
                 &job_id,
@@ -1923,7 +1923,7 @@ impl ToolRuntime {
             )
             .await
         {
-            if !webcodex_runner_registry::job_status_is_active(&job.status) {
+            if !codegpt_runner_registry::job_status_is_active(&job.status) {
                 continue;
             }
             let summary = agent_job_summary_value(&job);
@@ -2056,7 +2056,7 @@ mod recovery_projection_tests {
     };
     use crate::runner_protocol::{ShellJobInfo, ShellJobTestCountEvidence};
     use serde_json::json;
-    use webcodex_core::validation_evidence::CargoTestCountEvidenceStatus;
+    use codegpt_core::validation_evidence::CargoTestCountEvidenceStatus;
 
     #[test]
     fn recovery_reason_text_recovering_explains_wait() {

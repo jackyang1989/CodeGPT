@@ -1,6 +1,6 @@
 # Architecture
 
-WebCodex is a self-hosted tool runtime that lets online AI clients operate
+CodeGPT is a self-hosted tool runtime that lets online AI clients operate
 private code through a Server and a local Runner, while the Server can also retain
 durable Agent/Conversation state independently of a browser window. This page is a
 conceptual overview; the [CLI](CLI.md), [Runner](RUNNER.md), [Deployment](DEPLOYMENT.md),
@@ -13,13 +13,13 @@ For a short definition of the terms, see the terminology sections in
 
 ```mermaid
 flowchart LR
-  C[AI client] -->|MCP or GPT Actions| S[WebCodex Server]
-  S -->|authenticated Runner connection| R[webcodex-runner]
+  C[AI client] -->|MCP or GPT Actions| S[CodeGPT Server]
+  S -->|authenticated Runner connection| R[codegpt-runner]
   R --> P[Registered Project]
   R --> G[Git / Tests / Shell / Jobs]
 ```
 
-The online client calls WebCodex over MCP or GPT Actions. The Server
+The online client calls CodeGPT over MCP or GPT Actions. The Server
 authenticates the caller, applies policy, and routes runtime tool calls to a
 connected Runner. The Runner owns the local project boundary and performs the
 file, Git, validation, shell, and Job work on the machine that has the code.
@@ -30,7 +30,7 @@ project id `agent:<client_id>:<project_id>`.
 
 ## Product surfaces
 
-WebCodex exposes the same Server/Runner runtime through several user-facing adapters:
+CodeGPT exposes the same Server/Runner runtime through several user-facing adapters:
 
 - **MCP** — the recommended model-facing integration for ChatGPT, Claude, and other MCP clients.
 - **GPT Actions** — the OpenAPI integration for Custom GPTs that do not use MCP directly.
@@ -38,7 +38,7 @@ WebCodex exposes the same Server/Runner runtime through several user-facing adap
 - **CLI** — operator/developer setup, lifecycle, and diagnostics.
 - **Console** — the Server-hosted operator browser surface.
 
-A regular Server + Runner and the local `webcodex share` / `webcodex run` lifecycle all expose the ordinary WebCodex runtime. `share` and `run` are deployment/auth/reachability conveniences around one locally registered Project; they do not define a second coding runtime or task model. Their project-scoped credentials restrict which Runner/Project is visible without changing ToolRuntime semantics.
+A regular Server + Runner and the local `codegpt share` / `codegpt run` lifecycle all expose the ordinary CodeGPT runtime. `share` and `run` are deployment/auth/reachability conveniences around one locally registered Project; they do not define a second coding runtime or task model. Their project-scoped credentials restrict which Runner/Project is visible without changing ToolRuntime semantics.
 
 Internal type names used to route these adapters are maintainer implementation details; ordinary users should follow the tools and connection instructions returned by the current Server.
 
@@ -107,7 +107,7 @@ The Runner is the trust boundary closest to the repository:
   fact: active Jobs enter a bounded `recovering` state and are restored from
   the Runner's inventory when the same instance reconnects.
 
-Runner Job wire lifecycle vocabulary is interpreted once by the canonical typed contract in `webcodex-core`; the Runner, Registry, Store, and Workflow Session then project that lifecycle into their own domain states. Server
+Runner Job wire lifecycle vocabulary is interpreted once by the canonical typed contract in `codegpt-core`; the Runner, Registry, Store, and Workflow Session then project that lifecycle into their own domain states. Server
 recovery remains an orthogonal Registry overlay, so `recovering` is an observed
 recovery state rather than a Runner wire lifecycle value.
 
@@ -115,7 +115,7 @@ recovery state rather than a Runner wire lifecycle value.
 
 ```mermaid
 flowchart TD
-  M[Online model] -->|tool calls only| S[WebCodex Server]
+  M[Online model] -->|tool calls only| S[CodeGPT Server]
   S -->|policy + auth + session ledger| R[Runner]
   R -->|allowed project dirs only| P[Private repo]
   M -. no direct filesystem access .- P
@@ -135,7 +135,7 @@ See [SECURITY.md](../SECURITY.md) and [AUTH_MODEL.md](AUTH_MODEL.md).
 
 ## Persistence and recovery
 
-The Server persists managed accounts, OAuth state, Workflow Session evidence, durable Agent/Conversation/Agent Task state, and durable Goal state. Workflow Session, Agent Task, and Goal continuity is restored from each domain's own durable identifiers; WebCodex does not invent continuity from a credential, current browser window, Project, or neighboring domain identity.
+The Server persists managed accounts, OAuth state, Workflow Session evidence, durable Agent/Conversation/Agent Task state, and durable Goal state. Workflow Session, Agent Task, and Goal continuity is restored from each domain's own durable identifiers; CodeGPT does not invent continuity from a credential, current browser window, Project, or neighboring domain identity.
 
 Runner Jobs are reconciled when the same live Runner process reconnects. Ordinary child processes cannot be adopted by an unrelated replacement Runner; specialized detached execution has its own explicit durable ownership path. The stable Runner `client_id` and the current process lease are separate, but the exact lease field is an internal wire detail.
 
@@ -174,7 +174,7 @@ Runtime Console -----------------------> canonical Server HTTP/kernel paths abov
   The shared workspace path policy stays compiled for `project_overview`.
 - `auth` / `oauth_http` / `db` — authentication, OAuth endpoints, and
   persistence.
-- `webcodex-runner` crates — the Runner binary: config, transport, project
+- `codegpt-runner` crates — the Runner binary: config, transport, project
   registry, file/patch/artifact handling, shell execution, and LSP
   navigation.
 
@@ -214,7 +214,7 @@ kept without a named consumer.
 Internal protocol taxonomies do not automatically belong on the model surface.
 Typed continuation kinds/carriers, absolute cursors, lifecycle bookkeeping,
 timestamps, derived counts, and forensic recovery metadata can remain canonical
-inside WebCodex while the normal model projection exposes only the business
+inside CodeGPT while the normal model projection exposes only the business
 result, correctness-critical identity/fence/completeness, and one unambiguous
 follow-up. Extra diagnostic detail is progressively disclosed when an exceptional
 state actually requires the model to reason about it. A field that cannot change
@@ -273,7 +273,7 @@ projector rather than becoming declaration-time request parsing.
 
 `ToolCall` remains the exhaustive typed authority for business requests and audit
 request sanitization. Validation target canonicalization and hashing remain in
-`webcodex-core`; ToolDefinition declares only the closed identity kind, so policy
+`codegpt-core`; ToolDefinition declares only the closed identity kind, so policy
 ownership does not move runtime decoders, Store types, callbacks, or request schema
 parsing into the contracts crate.
 
@@ -289,14 +289,14 @@ are separately pinned to declared development dependencies.
 
 The current layers are:
 
-- **leaf** — `webcodex-core`, `webcodex-process`, `webcodex-computer`, and
-  `webcodex-admin`; these do not depend on another workspace package.
+- **leaf** — `codegpt-core`, `codegpt-process`, `codegpt-computer`, and
+  `codegpt-admin`; these do not depend on another workspace package.
 - **domain** — Runner config/registry, Store, Workspace, Workflow Session,
   Tool contracts, Validation, Persistent Shell, and native LSP ownership.
-- **runtime** — `webcodex-runner` and `webcodex-tool-runtime-contracts`.
-- **composition** — the root `webcodex` package, which owns Server composition
+- **runtime** — `codegpt-runner` and `codegpt-tool-runtime-contracts`.
+- **composition** — the root `codegpt` package, which owns Server composition
   and protocol adapters rather than forcing those concerns into lower crates.
-- **entrypoint** — `webcodex-cli`, the user-facing executable over the lower
+- **entrypoint** — `codegpt-cli`, the user-facing executable over the lower
   composition and setup crates.
 
 CI validates this policy from `cargo metadata`; adding a workspace crate or a

@@ -17,22 +17,22 @@ waits, and the cost of each test lane.
 
 | Lane | Purpose | Default resources | Typical command |
 |---|---|---|---|
-| fast unit | Pure parsing, validation, helpers, local state machines, small fixtures. | No network, no global env mutation, no long sleeps. | `cargo test -p webcodex --lib tool_call` |
-| contract/schema | Keep metadata, registry, MCP `tools/list`, OpenAPI, and runtime tool names synchronized. | No external network; in-process services are preferred. | `cargo test -p webcodex --lib metadata`; `cargo test -p webcodex --lib mcp`; `cargo test -p webcodex --lib openapi` |
-| local integration | Exercise HTTP handlers, runtime dispatch, sessions, local agent registry, temp dirs, loopback listeners, and database fixtures. | Loopback only, isolated temp dirs, bounded waits, no shared mutable state without a lock. | `cargo test -p webcodex --lib runtime_http -- --nocapture`; `cargo test -p webcodex --lib session -- --nocapture` |
-| Runner/LSP real-process | Process-tree ownership, real shell timeout/stop, polling dispatch timing, Plugin startup, validation/Git `ManagedChild`, JobManager descendant cleanup, and native LSP child lifecycle. Runner coverage is gated by `runner-real-process-tests`, which also enables the LSP crate's `real-process-tests` feature; these tests are ignored by default execution and share the `runner_real_process_` name prefix. | Real local child processes only; no external network. Run serially because the assertions intentionally exercise OS scheduling and process teardown. | `cargo test --locked -p webcodex-runner -p webcodex-lsp --features runner-real-process-tests runner_real_process -- --ignored --test-threads=1` |
-| Process lifecycle real-process | `ManagedChild` ownership, graceful/forced termination, descendants, EOF, liveness, and reaping. Most lifecycle tests in the integration target are ignored; pure type/spawn-error smoke remains ordinary. | Real local helper processes and OS liveness probes. | `cargo test --locked -p webcodex-process --test managed_child -- --ignored --test-threads=1` |
-| Persistent-shell timing | Timeout, concurrent busy-state, close-vs-exec, idle expiry, descendant teardown, and heavy adversarial PowerShell timing/status coverage. Fast state/error/exit smoke remains ordinary. | Real shell processes; serial execution only. | `cargo test --locked -p webcodex-persistent-shell -- --ignored --test-threads=1` |
+| fast unit | Pure parsing, validation, helpers, local state machines, small fixtures. | No network, no global env mutation, no long sleeps. | `cargo test -p codegpt --lib tool_call` |
+| contract/schema | Keep metadata, registry, MCP `tools/list`, OpenAPI, and runtime tool names synchronized. | No external network; in-process services are preferred. | `cargo test -p codegpt --lib metadata`; `cargo test -p codegpt --lib mcp`; `cargo test -p codegpt --lib openapi` |
+| local integration | Exercise HTTP handlers, runtime dispatch, sessions, local agent registry, temp dirs, loopback listeners, and database fixtures. | Loopback only, isolated temp dirs, bounded waits, no shared mutable state without a lock. | `cargo test -p codegpt --lib runtime_http -- --nocapture`; `cargo test -p codegpt --lib session -- --nocapture` |
+| Runner/LSP real-process | Process-tree ownership, real shell timeout/stop, polling dispatch timing, Plugin startup, validation/Git `ManagedChild`, JobManager descendant cleanup, and native LSP child lifecycle. Runner coverage is gated by `runner-real-process-tests`, which also enables the LSP crate's `real-process-tests` feature; these tests are ignored by default execution and share the `runner_real_process_` name prefix. | Real local child processes only; no external network. Run serially because the assertions intentionally exercise OS scheduling and process teardown. | `cargo test --locked -p codegpt-runner -p codegpt-lsp --features runner-real-process-tests runner_real_process -- --ignored --test-threads=1` |
+| Process lifecycle real-process | `ManagedChild` ownership, graceful/forced termination, descendants, EOF, liveness, and reaping. Most lifecycle tests in the integration target are ignored; pure type/spawn-error smoke remains ordinary. | Real local helper processes and OS liveness probes. | `cargo test --locked -p codegpt-process --test managed_child -- --ignored --test-threads=1` |
+| Persistent-shell timing | Timeout, concurrent busy-state, close-vs-exec, idle expiry, descendant teardown, and heavy adversarial PowerShell timing/status coverage. Fast state/error/exit smoke remains ordinary. | Real shell processes; serial execution only. | `cargo test --locked -p codegpt-persistent-shell -- --ignored --test-threads=1` |
 | Desktop Windows real-process | Windows Desktop stdin-EOF shutdown and bounded-command process-tree reclamation. These tests are ignored by the ordinary Desktop suite and share the `desktop_real_process_windows_` name prefix. | Real local child processes only; no external network. Run serially so PowerShell startup and process teardown do not compete with the ordinary Desktop libtest pool. | `cargo test --locked --manifest-path apps/desktop/src-tauri/Cargo.toml desktop_real_process_windows_ -- --ignored --test-threads=1` |
 | slow/manual ignored | Valuable coverage that is local but slow, serial, large-input, or global-state-sensitive. | Explicit operator opt-in; often `--ignored` and `--test-threads=1`. | Run the specific ignored test/filter documented by its subsystem. |
 | e2e/deployment smoke | Prove that binaries, local services, GPT Actions schema, MCP, artifact transfer, and an agent can work together. | Temporary local services and loopback ports; real deployment only when explicitly requested. | `bash scripts/e2e_zero_config_ws.sh`; `bash scripts/smoke_deployment.sh`; `bash scripts/smoke_artifact_transfer.sh` |
-| reconnect continuity | Runner disconnect/reconnect layer independence, stale-not-ready observations, reconciliation-aware recovering/lost transitions, server-restart durable Session plus explicit-session continuity, meaningful-activity scoping, and version-mismatch diagnostics. | In-process fixtures, no external network. | `cargo test -p webcodex --lib reconnect` |
-| trusted smoke | Disposable git fixture full chain (start → edit → failing shell validation → fix → pass → git review → finish) asserting zero approval interruptions under `trusted_agent` authority, resolved failure evidence, dirty-worktree advisory-only, and bounded payloads; prints baseline counters. | Temp git fixture, no external network. | `cargo test -p webcodex --lib trusted_smoke` |
+| reconnect continuity | Runner disconnect/reconnect layer independence, stale-not-ready observations, reconciliation-aware recovering/lost transitions, server-restart durable Session plus explicit-session continuity, meaningful-activity scoping, and version-mismatch diagnostics. | In-process fixtures, no external network. | `cargo test -p codegpt --lib reconnect` |
+| trusted smoke | Disposable git fixture full chain (start → edit → failing shell validation → fix → pass → git review → finish) asserting zero approval interruptions under `trusted_agent` authority, resolved failure evidence, dirty-worktree advisory-only, and bounded payloads; prints baseline counters. | Temp git fixture, no external network. | `cargo test -p codegpt --lib trusted_smoke` |
 | real-process reconnect harness | Boot a real server plus reconciliation-capable runner, assert layered connection observations, crash the runner (layers degrade independently; running job enters `recovering`), restart with a new runner instance (old job is fenced to terminal `lost` with `runner_instance_replaced`, no server restart), then restart the server and verify runner auto-reconnect plus durable Session lookup and continuation by the original explicit `session_id`. It also prints post-deploy smoke facts (server version/commit, authority mode, version compatibility, runner shell dialect). | Local processes and loopback ports. | `bash scripts/e2e_reconnect_ws.sh` |
-| real-process hosted-connect harness | Build the real Server, Runner, and CLI; start a shared-key-enabled loopback Server; run `webcodex connect`; verify same-key project visibility and a read, cross-key isolation, detached Runner survival, repeated-connect PID reuse, hosted `runner status`, explicit stop, secret-safe output/log/state, and an untouched Git checkout. | Local processes, isolated XDG config/state roots, a temp Git project, bounded curl and outer timeout, trap cleanup; never production. | `bash scripts/e2e_hosted_connect.sh` |
+| real-process hosted-connect harness | Build the real Server, Runner, and CLI; start a shared-key-enabled loopback Server; run `codegpt connect`; verify same-key project visibility and a read, cross-key isolation, detached Runner survival, repeated-connect PID reuse, hosted `runner status`, explicit stop, secret-safe output/log/state, and an untouched Git checkout. | Local processes, isolated XDG config/state roots, a temp Git project, bounded curl and outer timeout, trap cleanup; never production. | `bash scripts/e2e_hosted_connect.sh` |
 | real-process job reconciliation harness | Boot a real server plus a WebSocket runner that advertises `job_state_reconciliation`. Scenario A keeps a raw async Job running across a SERVER-only restart and asserts the SAME runner instance, original `job_id`, preserved ownership/project/session, non-regressing sequence/log cursors, `recovered_after_server_restart`, original-process stop, and one side-effect set. Scenario B lets a Job complete while the Server is offline and reconciles the terminal result without duplicate logs or execution. Scenario C forces `run_process` past its synchronous grace window, then proves the handed-off structured Job survives a Server restart and an old Server-epoch observation token refreshes immediately for the same `job_id`. Scenario D uses a delayed Cargo fixture to force a real `cargo_check` validation handoff past its sync window, then proves the same restart/token-refresh/stop contract with the validation command started exactly once. Ordinary Runner-owned Jobs keep the Runner process alive for these scenarios; `run_detached_process` restart survival is a separate supervisor-ownership contract covered by its focused Runner suites and production dogfood. | Local processes, temp dirs/ports/tokens, and a temp project; no production services or QUIC certs. Scenario D intentionally takes roughly the validation sync window plus restart time. | `bash scripts/e2e_job_reconciliation_ws.sh` |
-| real-process job recovery failure/non-reconciliation harness | Cover the failure and non-reconciliation paths the happy-path reconciliation harness omits, using `WEBCODEX_JOB_RECOVERY_GRACE_SECS=10` (clamped, above the 5s floor) so the deadline is bounded without waiting the 120s default. Scenario C: kill the runner only (server stays up), let the job enter `recovering`, and assert the non-request-triggered recovery-timeout sweep transitions it to `lost` with `runner_recovery_deadline_exceeded`, `ended_at` set once, one list record, stop-on-lost stable, and the command never re-executes. Scenario D: instance B replaces instance A (same client_id, new `agent_instance_id`); A's job becomes `lost` with `runner_instance_replaced`, B starts its own new job, A's late update is rejected, first `ended_at`/reason preserved. Scenario E: a generation-2 Runner registered with `WEBCODEX_RUNNER_DISABLE_JOB_STATE_RECONCILIATION=1` (no capability, no inventory) dispatches a job and, on disconnect, deterministically fences it to `lost` with `runner_disconnected_without_reconciliation` (never `recovering`); after a server restart its public lost receipt remains observable within retention, and a same-client new no-reconciliation instance cannot revive execution. Scenario F: a long job across three server restarts keeps the same `job_id`, runs the command once, keeps `last_update_seq`/log cursors non-regressing and markers non-duplicating, and reaches a terminal `stopped` that survives a third restart with `ended_at` unchanged by terminal inventory replay. | Local processes, temp dirs/ports/tokens, and a temp project; no production services or QUIC certs. | `bash scripts/e2e_job_recovery_failures_ws.sh` |
-| security auth matrix | Cover OAuth, scope policy, shared-key behavior, token classes, read-only session guards, and denied mutations. | No external identity provider by default; use local fixtures and synthetic tokens. | `cargo test -p webcodex --lib oauth -- --nocapture`; `cargo test -p webcodex --lib scope -- --nocapture`; `cargo test -p webcodex --lib metadata -- --nocapture` |
+| real-process job recovery failure/non-reconciliation harness | Cover the failure and non-reconciliation paths the happy-path reconciliation harness omits, using `CODEGPT_JOB_RECOVERY_GRACE_SECS=10` (clamped, above the 5s floor) so the deadline is bounded without waiting the 120s default. Scenario C: kill the runner only (server stays up), let the job enter `recovering`, and assert the non-request-triggered recovery-timeout sweep transitions it to `lost` with `runner_recovery_deadline_exceeded`, `ended_at` set once, one list record, stop-on-lost stable, and the command never re-executes. Scenario D: instance B replaces instance A (same client_id, new `agent_instance_id`); A's job becomes `lost` with `runner_instance_replaced`, B starts its own new job, A's late update is rejected, first `ended_at`/reason preserved. Scenario E: a generation-2 Runner registered with `CODEGPT_RUNNER_DISABLE_JOB_STATE_RECONCILIATION=1` (no capability, no inventory) dispatches a job and, on disconnect, deterministically fences it to `lost` with `runner_disconnected_without_reconciliation` (never `recovering`); after a server restart its public lost receipt remains observable within retention, and a same-client new no-reconciliation instance cannot revive execution. Scenario F: a long job across three server restarts keeps the same `job_id`, runs the command once, keeps `last_update_seq`/log cursors non-regressing and markers non-duplicating, and reaches a terminal `stopped` that survives a third restart with `ended_at` unchanged by terminal inventory replay. | Local processes, temp dirs/ports/tokens, and a temp project; no production services or QUIC certs. | `bash scripts/e2e_job_recovery_failures_ws.sh` |
+| security auth matrix | Cover OAuth, scope policy, shared-key behavior, token classes, read-only session guards, and denied mutations. | No external identity provider by default; use local fixtures and synthetic tokens. | `cargo test -p codegpt --lib oauth -- --nocapture`; `cargo test -p codegpt --lib scope -- --nocapture`; `cargo test -p codegpt --lib metadata -- --nocapture` |
 | MCP conformance baseline | Exercise the real Salvo `/mcp` handlers through a disposable loopback fixture against a pinned upstream referee, then gate on check-level coverage/classification rather than process exit alone. | Loopback product fixture; immutable external referee source/dependencies fetched only by the explicit script/CI lane; no production credentials. | `bash scripts/mcp_conformance.sh`; see [`MCP_CONFORMANCE.md`](MCP_CONFORMANCE.md). |
 
 The MCP Apps' DOM/message-order regression tests run without browser or npm
@@ -40,9 +40,9 @@ dependencies: `node --test src/mcp_tests/*.test.mjs`. They execute the embedded
 HTML scripts with deterministic Host messages and timers, covering initialization
 ordering, terminal Goal convergence, foreground dispatch, finish retries, and
 successive continuation Attempts. Rust projection and capability tests use
-`cargo test --locked -p webcodex --lib result_app`,
-`cargo test --locked -p webcodex --lib goal`, and
-`cargo test --locked -p webcodex --lib agent_continuation`.
+`cargo test --locked -p codegpt --lib result_app`,
+`cargo test --locked -p codegpt --lib goal`, and
+`cargo test --locked -p codegpt --lib agent_continuation`.
 
 ## Explicit High-Cost Local Evidence
 
@@ -50,10 +50,10 @@ Ordinary `cargo test` and ordinary CI intentionally skip ignored timing/real-pro
 coverage. Run the smallest relevant group locally when changing one of these boundaries:
 
 ```bash
-cargo test --locked -p webcodex-runner -p webcodex-lsp --features runner-real-process-tests runner_real_process -- --ignored --test-threads=1
-cargo test --locked -p webcodex-process --test managed_child -- --ignored --test-threads=1
-cargo test --locked -p webcodex-persistent-shell -- --ignored --test-threads=1
-cargo test --locked -p webcodex --lib tool_runtime_real_process_ -- --ignored --test-threads=1
+cargo test --locked -p codegpt-runner -p codegpt-lsp --features runner-real-process-tests runner_real_process -- --ignored --test-threads=1
+cargo test --locked -p codegpt-process --test managed_child -- --ignored --test-threads=1
+cargo test --locked -p codegpt-persistent-shell -- --ignored --test-threads=1
+cargo test --locked -p codegpt --lib tool_runtime_real_process_ -- --ignored --test-threads=1
 cargo test --locked --manifest-path apps/desktop/src-tauri/Cargo.toml desktop_real_process_windows_ -- --ignored --test-threads=1
 ```
 
@@ -98,18 +98,18 @@ The lanes above define test semantics; workflows decide when to run them.
   required-check context that could leave branch protection pending.
 - MCP dated-revision evidence has its own bounded `mcp-conformance` lane. It pins
   and freshly builds the upstream referee, runs the `2026-07-28` and `2025-11-25`
-  server requirements against a test-only loopback WebCodex endpoint, validates
+  server requirements against a test-only loopback CodeGPT endpoint, validates
   the report gate itself, and uploads raw reports on success or failure.
   `test-native` requires this lane to succeed, so missing per-scenario verdicts,
   abnormal/infrastructure runs, stale or changed classifications, and unclassified
   new failures are merge-blocking. See [`MCP_CONFORMANCE.md`](MCP_CONFORMANCE.md)
   for baseline semantics.
-- Linux Rust execution remains package-sharded: the server package `webcodex`, the
+- Linux Rust execution remains package-sharded: the server package `codegpt`, the
   Runner/LSP packages, and the remaining workspace crates run in parallel. The
   Runner/LSP shard compiles with `--features runner-real-process-tests` to prevent
   bitrot while ordinary local runs skip compiling manual real-process test bodies;
   ordinary libtest execution does not execute ignored tests. The remainder shard uses
-  `--workspace --exclude webcodex --exclude webcodex-runner --exclude webcodex-lsp`,
+  `--workspace --exclude codegpt --exclude codegpt-runner --exclude codegpt-lsp`,
   so newly added workspace members enter CI automatically rather than depending on a
   hand-maintained package list. The split changes scheduling, not process-ownership coverage.
 - Linux tooling runs in parallel with the Rust shards and retains
@@ -147,13 +147,13 @@ The lanes above define test semantics; workflows decide when to run them.
   the end. Do not print token values while diagnosing these tests.
 - Tests that touch HTTP/auth behavior must use `AuthEnvGuard` or an equivalent
   `TEST_ENV_LOCK` guard for auth mode env, especially
-  `WEBCODEX_SHARED_KEY_ENABLED`, `WEBCODEX_ALLOW_ANONYMOUS`,
-  and `WEBCODEX_OAUTH2_SHARED_KEY_BRIDGE`. Managed-token rejection tests should
+  `CODEGPT_SHARED_KEY_ENABLED`, `CODEGPT_ALLOW_ANONYMOUS`,
+  and `CODEGPT_OAUTH2_SHARED_KEY_BRIDGE`. Managed-token rejection tests should
   explicitly disable direct shared-key fallback and open anonymous mode before
   asserting that an unknown or wrong bearer returns 401.
 - Keep the auth-mode semantics separate in tests:
-  `WEBCODEX_SHARED_KEY_ENABLED` is direct Bearer shared-key fallback, while
-  `WEBCODEX_OAUTH2_SHARED_KEY_BRIDGE` is only the OAuth authorize bridge.
+  `CODEGPT_SHARED_KEY_ENABLED` is direct Bearer shared-key fallback, while
+  `CODEGPT_OAUTH2_SHARED_KEY_BRIDGE` is only the OAuth authorize bridge.
   Quick-start shared-key mode intentionally accepts an unknown non-`wc_` Bearer
   as a lightweight shared-key principal, but invalid `wc_` managed-token
   prefixes and empty or whitespace Bearer values must still be rejected.
@@ -190,7 +190,7 @@ the workspace, so crate-local tests (including Runner tests) are included. Using
 the Git index as the source set excludes ordinary untracked `target/` output and
 scratch files without maintaining a second ignore list. It does not access the
 network or modify the workspace. The output includes a
-stable tab-separated area summary for the root `webcodex` package and each
+stable tab-separated area summary for the root `codegpt` package and each
 `crates/*` member, plus sanitized risk clues. Use
 `bash scripts/test_inventory.sh --details` for a full sanitized file/line list,
 and `bash scripts/test_inventory.sh --self-test` to exercise the inventory
@@ -203,7 +203,7 @@ Recent structure work moved large test groups out of production roots:
 - OAuth HTTP endpoint tests are rooted at `src/oauth_http/tests.rs` and grouped
   by endpoint/domain under `src/oauth_http/tests/*`.
 - CLI tests are grouped under
-  `crates/webcodex-cli/src/webcodex_cli/tests/*`.
+  `crates/codegpt-cli/src/codegpt_cli/tests/*`.
 - CLI help smoke coverage lives with the CLI test modules and covers common
   help entry points, so new command help should extend that smoke coverage.
 - Runtime HTTP tests live under `src/runtime_http/tests/*`; historical ignored
@@ -212,5 +212,5 @@ Recent structure work moved large test groups out of production roots:
 
 Do not add large ordinary test blocks to production facade files when one of
 these `tests/` module trees already exists. Exact full-suite pass counts should
-come from a fresh `cargo test -p webcodex --lib` run; this document should not be
+come from a fresh `cargo test -p codegpt --lib` run; this document should not be
 treated as the source of truth for exact counts.

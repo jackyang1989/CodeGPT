@@ -27,7 +27,7 @@ async fn wait_for_mcp_agent_request(
     }
 }
 
-// The compact switch is read per tools/list request, so `WEBCODEX_MCP_COMPACT_SCHEMAS`
+// The compact switch is read per tools/list request, so `CODEGPT_MCP_COMPACT_SCHEMAS`
 // must stay stable (and serialized against other env-mutating tests) for the whole
 // async body below. Adaptive Runtime is fixed; only schema projection varies.
 #[allow(clippy::await_holding_lock)]
@@ -37,7 +37,7 @@ async fn mcp_tools_list_uses_adaptive_inventory_in_both_schema_modes() {
     let runtime = test_runtime();
     for compact in [false, true] {
         env.set(
-            "WEBCODEX_MCP_COMPACT_SCHEMAS",
+            "CODEGPT_MCP_COMPACT_SCHEMAS",
             if compact { "true" } else { "false" },
         );
         let outcome = handle_mcp_request(
@@ -277,7 +277,7 @@ fn memory_tools_are_stateless_protocol_extensions_scope_filtered_and_schema_stat
     assert!(description.contains("retroactive precondition"));
     for key in [
         "project.instructions",
-        "webcodex.workflow",
+        "codegpt.workflow",
         "skills.catalog",
         "plugins.catalog",
         "memory.bootstrap",
@@ -974,7 +974,7 @@ fn stateless_invocation_metadata_stays_typed_and_business_arguments_stay_clean()
             "message_id": "wc_msg_abcd-efgh_ijklmn",
             "resolution": "handled"
         },
-        crate::tool_runtime::context_projection::TOOL_CALL_CONTEXT_REQUEST_FIELD: ["webcodex.workflow"],
+        crate::tool_runtime::context_projection::TOOL_CALL_CONTEXT_REQUEST_FIELD: ["codegpt.workflow"],
         crate::tool_runtime::sessions::TOOL_CALL_ACK_SESSION_CONTEXT_REVISION_FIELD: 7,
     });
     let recording_session_id = strip_recording_session_id(&mut arguments).unwrap();
@@ -997,7 +997,7 @@ fn stateless_invocation_metadata_stays_typed_and_business_arguments_stay_clean()
         metadata.ack_session_message_ids,
         vec!["wc_msg_abcd-efgh_ijklmn"]
     );
-    assert_eq!(metadata.context_request, vec!["webcodex.workflow"]);
+    assert_eq!(metadata.context_request, vec!["codegpt.workflow"]);
     assert_eq!(
         metadata.ack_session_context_revision,
         crate::tool_runtime::sessions::SessionContextRevisionAck::Revision(7)
@@ -1015,7 +1015,7 @@ fn stateless_invocation_metadata_stays_typed_and_business_arguments_stay_clean()
             "wrapper leaked into business args: {field}"
         );
     }
-    assert!(!arguments.to_string().contains("__webcodex_"));
+    assert!(!arguments.to_string().contains("__codegpt_"));
     crate::tool_runtime::ToolCall::from_tool_name("read_files", arguments)
         .expect("typed invocation metadata must not be required for concrete ToolCall parsing");
 }
@@ -1082,7 +1082,7 @@ fn mcp_tools_list_exposes_host_file_params_for_conversation_import() {
 fn mcp_file_params_keep_raw_object_shape_and_reject_model_mask_strings() {
     // ChatGPT masks openai/fileParams to string[] for the model, then rewrites
     // those selections back to the raw provided-file object[] below before the
-    // MCP request reaches WebCodex. WebCodex intentionally accepts only that
+    // MCP request reaches CodeGPT. CodeGPT intentionally accepts only that
     // post-host-rewrite object form; it never interprets model-facing strings.
     let _string_error = crate::tool_runtime::ToolCall::from_tool_name(
         "import_conversation_files_to_project",
@@ -1155,7 +1155,7 @@ fn mcp_file_import_trust_requires_exact_configured_active_client_id() {
         auth
     };
 
-    let trusted = make_client("ChatGPT WebCodex", CALLBACK);
+    let trusted = make_client("ChatGPT CodeGPT", CALLBACK);
     db.insert_oauth_client(&trusted).unwrap();
     config.oauth2.trusted_mcp_file_client_ids = vec![trusted.client_id.clone()];
     let trusted_auth = auth_for(&trusted.client_id);
@@ -1182,7 +1182,7 @@ fn mcp_file_import_trust_requires_exact_configured_active_client_id() {
         "multiple active clients sharing the callback must not revoke explicit client-ID trust"
     );
 
-    let same_name = make_client("ChatGPT WebCodex", "https://other.example/callback");
+    let same_name = make_client("ChatGPT CodeGPT", "https://other.example/callback");
     db.insert_oauth_client(&same_name).unwrap();
     assert_eq!(
         mcp_host_file_import_trust_from_state(&config, &db, Some(&auth_for(&same_name.client_id))),
@@ -1219,7 +1219,7 @@ fn mcp_file_import_trust_requires_exact_configured_active_client_id() {
         "revoked configured client registrations must fail closed"
     );
 
-    let replacement = make_client("ChatGPT WebCodex", CALLBACK);
+    let replacement = make_client("ChatGPT CodeGPT", CALLBACK);
     db.insert_oauth_client(&replacement).unwrap();
     assert_ne!(replacement.client_id, trusted.client_id);
     assert_eq!(
@@ -1612,13 +1612,13 @@ fn mcp_tools_list_compact_is_smaller_than_full_serialized() {
 }
 
 // The compact switch is the tested product behavior: `tools/call` must be
-// unaffected while `WEBCODEX_MCP_COMPACT_SCHEMAS` is set, so the env must stay
+// unaffected while `CODEGPT_MCP_COMPACT_SCHEMAS` is set, so the env must stay
 // stable (and serialized against other env-mutating tests) for the whole call.
 #[allow(clippy::await_holding_lock)]
 #[tokio::test]
 async fn mcp_tools_call_still_returns_structured_content_under_compact_flag() {
     let mut env = crate::test_support::TestEnvGuard::new();
-    env.set("WEBCODEX_MCP_COMPACT_SCHEMAS", "true");
+    env.set("CODEGPT_MCP_COMPACT_SCHEMAS", "true");
     let runtime = test_runtime();
     let outcome = handle_mcp_request(
         &runtime,
@@ -1839,7 +1839,7 @@ async fn mcp_read_files_ignores_inapplicable_context_ack_without_consuming_it() 
     use crate::runner_protocol::{
         RunnerCapabilities, RunnerProjectSummary, RunnerRegisterRequest, RunnerResultRequest,
     };
-    use webcodex_workspace::file_read_range::{self, EffectiveRange};
+    use codegpt_workspace::file_read_range::{self, EffectiveRange};
 
     let runtime = test_runtime();
     let client_id = "mcp-read-files-wrapper-metadata";
@@ -1938,7 +1938,7 @@ async fn mcp_read_files_ignores_inapplicable_context_ack_without_consuming_it() 
     let range = EffectiveRange::new(Some(start), Some(end - start + 1));
     let read = file_read_range::read_range_from(&b"small\n"[..], range).unwrap();
     let stdout = json!({
-        "format": "webcodex.file_read_range.v1",
+        "format": "codegpt.file_read_range.v1",
         "content": read.content,
         "sha256": read.sha256,
         "total_lines": read.total_lines,
@@ -2060,7 +2060,7 @@ async fn stateless_mcp_ack_wrapper_is_removed_before_concrete_dispatch_and_is_re
         .unwrap();
     let input = serde_json::to_string(&started.input_summary).unwrap();
     assert!(!input.contains("ack_session_message_ids"));
-    assert!(!input.contains("__webcodex_stateless_ack_session_message_ids"));
+    assert!(!input.contains("__codegpt_stateless_ack_session_message_ids"));
 }
 
 #[tokio::test]

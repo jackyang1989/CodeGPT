@@ -4,17 +4,17 @@
 
 Start with the goal that matches what you are trying to do.
 
-## I want to use WebCodex normally
+## I want to use CodeGPT normally
 
-- [README](../README.md) — what WebCodex does and the difference between full use and a temporary trial
+- [README](../README.md) — what CodeGPT does and the difference between full use and a temporary trial
 - [Desktop installation](desktop-install.md) — **recommended Windows/macOS entry**: Desktop + official OpenAI Secure Tunnel
 - [Full Setup](PERSONAL_SETUP.md) — CLI, existing Server, Linux, and advanced regular Server + Runner setup
-- [AI-assisted setup](AI_ONBOARDING.md) — have an AI agent configure WebCodex using ordinary user language
+- [AI-assisted setup](AI_ONBOARDING.md) — have an AI agent configure CodeGPT using ordinary user language
 - [MCP](MCP.md) — ChatGPT, Claude, and other MCP clients
 
 ## I only want to try it for a few minutes
 
-- [Quick Trial](QUICK_START.md) — temporarily try one repository with one `webcodex share` command
+- [Quick Trial](QUICK_START.md) — temporarily try one repository with one `codegpt share` command
 
 ## I need production deployment or deep troubleshooting
 
@@ -35,7 +35,7 @@ Start with the goal that matches what you are trying to do.
 - [Troubleshooting](TROUBLESHOOTING.md) — installation, connection, runtime, and Runner problems
 - [Security](../SECURITY.md) — safe operating guidance and security model
 
-## I want to understand or extend WebCodex
+## I want to understand or extend CodeGPT
 
 - [Architecture](ARCHITECTURE.md) — how the major components fit together
 - [Coding Workflow](CODING_WORKFLOW.md) — task bootstrap, guidance, validation, and closeout
@@ -43,7 +43,7 @@ Start with the goal that matches what you are trying to do.
 - [Computer Use roadmap](COMPUTER_USE.md) — semantic-first desktop automation direction and validation priorities
 - [Browser/CDP runtime architecture](architecture/browser-cdp-runtime.md) — first-class Browser domain, authority, lifecycle, stale fencing, and Phase 1 limits
 
-## I want to contribute or release WebCodex
+## I want to contribute or release CodeGPT
 
 The `docs/agent/` pages below are maintainer/internal contracts. They intentionally
 contain protocol fields, compatibility names, and implementation invariants that

@@ -7,12 +7,12 @@ use crate::runner_protocol::{
 };
 use std::sync::Arc;
 use std::time::Duration;
-use webcodex_core::runner_job_lifecycle::RunnerJobLifecycle;
-use webcodex_runner_registry::RunnerAccess;
+use codegpt_core::runner_job_lifecycle::RunnerJobLifecycle;
+use codegpt_runner_registry::RunnerAccess;
 
 pub(crate) const STRUCTURED_EXECUTION_SYNC_WAIT_SECS: u64 = 10;
 pub(crate) const INITIAL_JOB_HANDOFF_TAIL_LINES: usize = 40;
-pub(crate) use webcodex_core::runtime_contract::STRUCTURED_EXECUTION_SYNC_WAIT_MAX_SECS;
+pub(crate) use codegpt_core::runtime_contract::STRUCTURED_EXECUTION_SYNC_WAIT_MAX_SECS;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) struct StructuredExecutionBudget {

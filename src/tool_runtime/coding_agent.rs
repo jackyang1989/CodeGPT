@@ -14,7 +14,7 @@ use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::Mutex;
 use uuid::Uuid;
-use webcodex_core::coding_agent::{
+use codegpt_core::coding_agent::{
     merge_coding_agent_run_snapshot, validate_coding_agent_run_snapshot, CodingAgentCancelRequest,
     CodingAgentConfigValue, CodingAgentDispatchState, CodingAgentEvent, CodingAgentExecutionState,
     CodingAgentObservationMerge, CodingAgentObserveRequest, CodingAgentObserveResult,
@@ -181,7 +181,7 @@ impl Default for CodingAgentServerState {
 impl CodingAgentServerState {
     fn with_observation_mac_key(observation_mac_key: [u8; OBSERVATION_MAC_KEY_BYTES]) -> Self {
         Self {
-            epoch: webcodex_core::compact::random_bytes(),
+            epoch: codegpt_core::compact::random_bytes(),
             observation_mac_key,
             runs: Mutex::new(HashMap::new()),
         }
@@ -1230,7 +1230,7 @@ fn validate_start_input(
     config: Option<&BTreeMap<String, CodingAgentConfigValue>>,
     timeout_secs: Option<u64>,
 ) -> Result<(), String> {
-    webcodex_core::coding_agent::validate_provider_id(provider_id)?;
+    codegpt_core::coding_agent::validate_provider_id(provider_id)?;
     if idempotency_key.is_empty()
         || idempotency_key.len() > IDEMPOTENCY_KEY_MAX_BYTES
         || idempotency_key.contains(['\0', '\r', '\n'])
@@ -1240,7 +1240,7 @@ fn validate_start_input(
         ));
     }
     if instruction.is_empty()
-        || instruction.len() > webcodex_core::coding_agent::CODING_AGENT_MAX_INSTRUCTION_BYTES
+        || instruction.len() > codegpt_core::coding_agent::CODING_AGENT_MAX_INSTRUCTION_BYTES
         || instruction.contains('\0')
     {
         return Err("instruction is empty, too large, or contains NUL".to_string());
@@ -1304,20 +1304,20 @@ fn stable_principal(auth: Option<&AuthContext>) -> Result<String, String> {
 
 fn authority_fingerprint(principal: &str) -> String {
     let mut hasher = Sha256::new();
-    hasher.update(b"webcodex-coding-agent-authority-v1\0");
+    hasher.update(b"codegpt-coding-agent-authority-v1\0");
     hasher.update(principal.as_bytes());
     format!("auth_{:x}", hasher.finalize())
 }
 
 fn deterministic_run_id(principal: &str, key: &str) -> String {
     let mut hasher = Sha256::new();
-    hasher.update(b"webcodex-coding-agent-run-v1\0");
+    hasher.update(b"codegpt-coding-agent-run-v1\0");
     hasher.update(principal.as_bytes());
     hasher.update(b"\0");
     hasher.update(key.as_bytes());
     format!(
         "wc_agent_run_{}",
-        webcodex_core::compact::encode(hasher.finalize())
+        codegpt_core::compact::encode(hasher.finalize())
     )
 }
 
@@ -1328,7 +1328,7 @@ fn intent_fingerprint(
     config: &BTreeMap<String, CodingAgentConfigValue>,
     timeout_secs: u64,
 ) -> String {
-    const DOMAIN: &[u8] = b"webcodex-coding-agent-intent-v1\0";
+    const DOMAIN: &[u8] = b"codegpt-coding-agent-intent-v1\0";
     let canonical = json!({
         "project": project,
         "provider": provider,
@@ -1355,7 +1355,7 @@ enum TokenError {
 
 fn new_observation_mac_key() -> [u8; OBSERVATION_MAC_KEY_BYTES] {
     let mut hasher = Sha256::new();
-    hasher.update(b"webcodex.coding-agent.observation.mac-key.v2\0");
+    hasher.update(b"codegpt.coding-agent.observation.mac-key.v2\0");
     hasher.update(Uuid::new_v4().as_bytes());
     hasher.update(Uuid::new_v4().as_bytes());
     hasher.finalize().into()
@@ -1471,7 +1471,7 @@ fn observation_token(
     debug_assert_eq!(epoch.len(), PUBLIC_TOKEN_EPOCH_BYTES);
     let mask = observation_token_hmac(
         key,
-        b"webcodex.coding-agent.observation.sequence-mask.v3\0",
+        b"codegpt.coding-agent.observation.sequence-mask.v3\0",
         epoch,
         run_id,
         &[],
@@ -1483,7 +1483,7 @@ fn observation_token(
     }
     let tag = observation_token_hmac(
         key,
-        b"webcodex.coding-agent.observation.tag.v3\0",
+        b"codegpt.coding-agent.observation.tag.v3\0",
         epoch,
         run_id,
         &masked_sequence,
@@ -1526,7 +1526,7 @@ fn parse_observation_token(
         .map_err(|_| TokenError::Invalid)?;
     let expected_tag = observation_token_hmac(
         key,
-        b"webcodex.coding-agent.observation.tag.v3\0",
+        b"codegpt.coding-agent.observation.tag.v3\0",
         token_epoch,
         run_id,
         &masked_sequence,
@@ -1542,7 +1542,7 @@ fn parse_observation_token(
     }
     let mask = observation_token_hmac(
         key,
-        b"webcodex.coding-agent.observation.sequence-mask.v3\0",
+        b"codegpt.coding-agent.observation.sequence-mask.v3\0",
         token_epoch,
         run_id,
         &[],
@@ -2167,7 +2167,7 @@ mod tests {
             "timeout_secs": 30,
         });
         let mut buffered = Sha256::new();
-        buffered.update(b"webcodex-coding-agent-intent-v1\0");
+        buffered.update(b"codegpt-coding-agent-intent-v1\0");
         buffered.update(serde_json::to_vec(&canonical).unwrap());
         assert_eq!(a, format!("{:x}", buffered.finalize()));
     }

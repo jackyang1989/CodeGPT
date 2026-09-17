@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Dispatch and observe one exact-source WebCodex release-readiness workflow run."""
+"""Dispatch and observe one exact-source CodeGPT release-readiness workflow run."""
 
 from __future__ import annotations
 

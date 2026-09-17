@@ -2,21 +2,21 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-if [ -n "${WEBCODEX_RELEASE_VERSION:-}" ]; then
-    VERSION="$WEBCODEX_RELEASE_VERSION"
+if [ -n "${CODEGPT_RELEASE_VERSION:-}" ]; then
+    VERSION="$CODEGPT_RELEASE_VERSION"
 else
-    VERSION="$(node -e "process.stdout.write(require('$ROOT/npm/webcodex/package.json').version)")"
+    VERSION="$(node -e "process.stdout.write(require('$ROOT/npm/codegpt/package.json').version)")"
 fi
-PLATFORM="${WEBCODEX_RELEASE_PLATFORM:-linux-x64}"
-BIN_DIR="${WEBCODEX_RELEASE_BIN_DIR:-$ROOT/target/release}"
+PLATFORM="${CODEGPT_RELEASE_PLATFORM:-linux-x64}"
+BIN_DIR="${CODEGPT_RELEASE_BIN_DIR:-$ROOT/target/release}"
 OUT_DIR="${1:-$ROOT/dist}"
-ARCHIVE="$OUT_DIR/webcodex-v$VERSION-$PLATFORM.tar.gz"
+ARCHIVE="$OUT_DIR/codegpt-v$VERSION-$PLATFORM.tar.gz"
 TMP="$(mktemp -d)"
 cleanup() { rm -rf "$TMP"; }
 trap cleanup EXIT
 
 mkdir -p "$OUT_DIR" "$TMP/package"
-for name in webcodex webcodex-server webcodex-runner; do
+for name in codegpt codegpt-server codegpt-runner; do
     source="$BIN_DIR/$name"
     if [ ! -f "$source" ] || [ ! -x "$source" ]; then
         echo "missing executable release binary: $source" >&2
@@ -26,7 +26,7 @@ for name in webcodex webcodex-server webcodex-runner; do
 done
 
 identity=""
-for name in webcodex webcodex-server webcodex-runner; do
+for name in codegpt codegpt-server codegpt-runner; do
     output="$($TMP/package/$name --version)"
     case "$output" in
         "$name $VERSION "*|"$name $VERSION") ;;
@@ -39,7 +39,7 @@ for name in webcodex webcodex-server webcodex-runner; do
     fi
 done
 
-tar -czf "$ARCHIVE.tmp" -C "$TMP/package" webcodex webcodex-server webcodex-runner
+tar -czf "$ARCHIVE.tmp" -C "$TMP/package" codegpt codegpt-server codegpt-runner
 mv -f "$ARCHIVE.tmp" "$ARCHIVE"
 if command -v sha256sum >/dev/null 2>&1; then
     sha256sum "$ARCHIVE"

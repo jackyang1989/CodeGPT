@@ -27,11 +27,11 @@ use super::ToolRuntime;
 use crate::auth::AuthContext;
 use serde_json::{json, Value};
 use std::collections::HashSet;
-use webcodex_tool_contracts::{
+use codegpt_tool_contracts::{
     runtime_tool_session_evidence_policy, ToolFailureEvidence, ToolReviewEvidence,
 };
 
-pub(crate) use webcodex_workflow_session::closeout_work_projection;
+pub(crate) use codegpt_workflow_session::closeout_work_projection;
 
 pub(super) const DEFAULT_HANDOFF_LIMIT: usize = 20;
 const MAX_HANDOFF_LIMIT: usize = 100;

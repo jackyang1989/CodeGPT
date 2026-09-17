@@ -10,7 +10,7 @@ use super::support::*;
 use crate::runner_protocol::{RunnerCapabilities, RunnerResultPayload, RunnerResultRequest};
 use serde_json::{json, Value};
 use std::time::{Duration, Instant};
-use webcodex_core::plugin::{
+use codegpt_core::plugin::{
     PluginGatewayRequest, PluginGatewayResponse, PluginGatewayResponsePayload,
     PluginSelectionAnnotations, ProjectPluginCatalog, ProjectPluginCatalogEntry,
 };
@@ -57,7 +57,7 @@ async fn complete_plugin_catalog_request(
 
 fn plugin_catalog(entries: usize) -> ProjectPluginCatalog {
     ProjectPluginCatalog {
-        catalog_revision: format!("wc_plugcat_{}", webcodex_core::compact::encode([0xaa; 32])),
+        catalog_revision: format!("wc_plugcat_{}", codegpt_core::compact::encode([0xaa; 32])),
         total_count: entries,
         entries: (0..entries)
             .map(|index| ProjectPluginCatalogEntry {
@@ -160,9 +160,9 @@ async fn context_projection_is_explicit_deduped_open_ended_and_nonfatal() {
             None,
             true,
             vec![
-                "webcodex.workflow".to_string(),
+                "codegpt.workflow".to_string(),
                 "future.material".to_string(),
-                "webcodex.workflow".to_string(),
+                "codegpt.workflow".to_string(),
                 "project.instructions".to_string(),
             ],
             super::super::context_projection::ContextMaterialCapabilities::default(),
@@ -177,7 +177,7 @@ async fn context_projection_is_explicit_deduped_open_ended_and_nonfatal() {
         .as_array()
         .unwrap();
     assert_eq!(materials.len(), 3, "duplicates must be projected once");
-    assert_eq!(materials[0]["key"], "webcodex.workflow");
+    assert_eq!(materials[0]["key"], "codegpt.workflow");
     assert_eq!(
         materials[0]["projection"],
         crate::tool_runtime::startup_brief::builtin_coding_workflow_projection(),
@@ -186,7 +186,7 @@ async fn context_projection_is_explicit_deduped_open_ended_and_nonfatal() {
     assert_eq!(materials[0]["status"], "available");
     assert_eq!(
         materials[0]["projection"]["contract"],
-        "webcodex.coding_workflow"
+        "codegpt.coding_workflow"
     );
     assert_eq!(materials[1]["key"], "future.material");
     assert_eq!(materials[1]["status"], "unsupported");
@@ -220,7 +220,7 @@ async fn private_context_marker_requires_explicit_sidecar_capability() {
                 host_file_import_trust: HostFileImportTrust::Untrusted,
             },
             ToolInvocationMetadata {
-                context_request: vec!["webcodex.workflow".to_string()],
+                context_request: vec!["codegpt.workflow".to_string()],
                 ..Default::default()
             },
             ToolProtocolCapabilities {
@@ -271,7 +271,7 @@ async fn project_instructions_context_projection_is_authorized_scoped_and_bounde
         },
         vec![
             "project.instructions".to_string(),
-            "webcodex.workflow".to_string(),
+            "codegpt.workflow".to_string(),
         ],
     )
     .await;
@@ -285,8 +285,8 @@ async fn project_instructions_context_projection_is_authorized_scoped_and_bounde
     assert!(serialized.contains("BRAVO_SCOPED_RULE"));
     assert!(!serialized.contains("ALPHA_PRIVATE_RULE"));
     assert!(
-        context_material(&result, "webcodex.workflow")["projection"]["contract"]
-            == "webcodex.coding_workflow"
+        context_material(&result, "codegpt.workflow")["projection"]["contract"]
+            == "codegpt.coding_workflow"
     );
     assert!(
         serde_json::to_vec(&result.output["context_projection"])
@@ -770,7 +770,7 @@ async fn context_projection_coexists_with_session_continuity_and_attention() {
                 host_file_import_trust: HostFileImportTrust::Untrusted,
             },
             ToolInvocationMetadata {
-                context_request: vec!["webcodex.workflow".to_string()],
+                context_request: vec!["codegpt.workflow".to_string()],
                 ack_session_context_revision: SessionContextRevisionAck::Revision(0),
                 ..Default::default()
             },
@@ -788,7 +788,7 @@ async fn context_projection_coexists_with_session_continuity_and_attention() {
     assert!(result.output.get("session_recovery").is_none());
     assert!(result.output["session_attention"]["requires_ack"].as_bool() == Some(true));
     assert_eq!(
-        context_material(&result, "webcodex.workflow")["status"],
+        context_material(&result, "codegpt.workflow")["status"],
         "available"
     );
     let audit = serde_json::to_string(
@@ -800,7 +800,7 @@ async fn context_projection_coexists_with_session_continuity_and_attention() {
     )
     .unwrap();
     assert!(!audit.contains("context_request"));
-    assert!(!audit.contains("__webcodex_stateless_context_request"));
+    assert!(!audit.contains("__codegpt_stateless_context_request"));
     assert!(!audit.contains("context_projection"));
-    assert!(!audit.contains("webcodex.coding_workflow"));
+    assert!(!audit.contains("codegpt.coding_workflow"));
 }

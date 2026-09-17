@@ -3,7 +3,7 @@ import {
   defineTool,
   runPlugin,
   schema,
-} from "@yyjeqhc/webcodex-plugin-sdk";
+} from "@yyjeqhc/codegpt-plugin-sdk";
 
 import { MAX_PATH_CHARS, safeDelete } from "./domain.js";
 

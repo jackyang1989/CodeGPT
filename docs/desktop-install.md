@@ -1,8 +1,8 @@
-# WebCodex Desktop: quick install and ChatGPT connection
+# CodeGPT Desktop: quick install and ChatGPT connection
 
 [English](desktop-install.md) | [简体中文](desktop-install.zh-CN.md)
 
-For normal Windows or macOS personal use, **WebCodex Desktop + the official OpenAI Secure Tunnel is the recommended path**. It keeps the Server and Runner local, gives ChatGPT a private Tunnel connection, and avoids making first-time users configure reverse proxies, OAuth, system services, or a public WebCodex endpoint.
+For normal Windows or macOS personal use, **CodeGPT Desktop + the official OpenAI Secure Tunnel is the recommended path**. It keeps the Server and Runner local, gives ChatGPT a private Tunnel connection, and avoids making first-time users configure reverse proxies, OAuth, system services, or a public CodeGPT endpoint.
 
 The normal path is intentionally product-level; you do not need to understand the Runner registry, `runtime_project_id`, the internal MCP authorization file, or launchd internals:
 
@@ -21,18 +21,18 @@ install Desktop
 
 For everyday use after installation, see [Using Desktop](desktop-guide.md). Home now centers the current project and three usage steps; component details live under “View runtime diagnostics”. OpenAI Platform screenshots below are configuration references; follow the current Desktop control names in the text.
 
-## 1. Install WebCodex Desktop
+## 1. Install CodeGPT Desktop
 
-Download the matching Desktop artifact from the [GitHub Releases](https://github.com/yyjeqhc/webcodex/releases) page:
+Download the matching Desktop artifact from the [GitHub Releases](https://github.com/yyjeqhc/codegpt/releases) page:
 
 - **Windows:** use the Windows x64 installer.
 - **macOS:** use the DMG matching your Mac architecture, Intel or Apple Silicon.
 
 Current macOS builds are ad-hoc signed and are not notarized. If Gatekeeper blocks the first launch of a newly downloaded build, open **System Settings → Privacy & Security → Open Anyway**, then confirm **Open**. Do not disable Gatekeeper globally.
 
-Launch WebCodex Desktop after installation.
+Launch CodeGPT Desktop after installation.
 
-**Success looks like:** the main WebCodex window opens without a missing package/runtime error.
+**Success looks like:** the main CodeGPT window opens without a missing package/runtime error.
 
 **If it fails:** use **Open Anyway** for the Gatekeeper case above; if the packaged runtime is missing, reinstall the same Desktop version instead of manually assembling internal binaries.
 
@@ -40,15 +40,15 @@ Launch WebCodex Desktop after installation.
 
 ### Background lifecycle and Launch at Login
 
-WebCodex Desktop is a long-running local runtime controller. Closing the main window does **not** quit the application:
+CodeGPT Desktop is a long-running local runtime controller. Closing the main window does **not** quit the application:
 
-- On **macOS**, use the WebCodex menu-bar item to reopen the window.
-- On **Windows**, use the WebCodex system-tray icon to reopen the window.
+- On **macOS**, use the CodeGPT menu-bar item to reopen the window.
+- On **Windows**, use the CodeGPT system-tray icon to reopen the window.
 - The Desktop-owned local Server, Runner, regular OpenAI Secure Tunnel, and an active Quick Share session continue running while the window is hidden. Quick Share remains a temporary session; it is not converted into a permanent service by background residency.
 - **Stop local runtime** is a desired-state action: it stops the local runtime and changes the saved runtime preference. It is different from hiding the window.
-- **Quit WebCodex** is the application-exit action. Quit stops the Desktop-owned process tree before Desktop exits. It does not broadly terminate unrelated WebCodex processes that Desktop does not own.
+- **Quit CodeGPT** is the application-exit action. Quit stops the Desktop-owned process tree before Desktop exits. It does not broadly terminate unrelated CodeGPT processes that Desktop does not own.
 
-In **Settings → Background & startup**, **Launch WebCodex at login** registers Desktop with the operating system and starts it in the background without opening the main window. This setting is separate from the saved runtime preferences: `runtime_autostart` still decides whether the saved local runtime is restored, and the saved connection preference still decides whether the regular ChatGPT Tunnel is restored when appropriate.
+In **Settings → Background & startup**, **Launch CodeGPT at login** registers Desktop with the operating system and starts it in the background without opening the main window. This setting is separate from the saved runtime preferences: `runtime_autostart` still decides whether the saved local runtime is restored, and the saved connection preference still decides whether the regular ChatGPT Tunnel is restored when appropriate.
 
 ### Everyday controls
 
@@ -70,7 +70,7 @@ The Tunnel name is up to you. Record the Tunnel ID. A Restricted API key with on
 
 ![OpenAI API Keys page](desktop-install/image-20260906171633208.png)
 
-Do not commit or share real API keys, WebCodex tokens, or authorization values.
+Do not commit or share real API keys, CodeGPT tokens, or authorization values.
 
 ## 3. Save Tunnel configuration inside Desktop (recommended)
 
@@ -86,10 +86,10 @@ The same fields are available in the optional Tunnel section during local setup.
 
 The file is `secrets/tunnel-config.json` in Desktop's local application data directory:
 
-- macOS: `~/Library/Application Support/dev.webcodex.desktop/secrets/tunnel-config.json`.
-- Windows: `%LOCALAPPDATA%\dev.webcodex.desktop\secrets\tunnel-config.json`.
+- macOS: `~/Library/Application Support/dev.codegpt.desktop/secrets/tunnel-config.json`.
+- Windows: `%LOCALAPPDATA%\dev.codegpt.desktop\secrets\tunnel-config.json`.
 
-This file contains an **unencrypted API key**. Keep it out of projects, Git, tickets, and shared backups. macOS/Unix writes are owner-only (`0600`); Windows inherits access permissions from the current user's local application data directory. Saves use atomic replacement without retaining old secret backups. The `secrets` directory is excluded by WebCodex’s existing sensitive-path policy. Ordinary `desktop-state.json` remains non-secret runtime state.
+This file contains an **unencrypted API key**. Keep it out of projects, Git, tickets, and shared backups. macOS/Unix writes are owner-only (`0600`); Windows inherits access permissions from the current user's local application data directory. Saves use atomic replacement without retaining old secret backups. The `secrets` directory is excluded by CodeGPT’s existing sensitive-path policy. Ordinary `desktop-state.json` remains non-secret runtime state.
 
 **Clear saved configuration and use environment** clears the saved pair and restores environment fallback; the file records `null`. Invalid or unreadable saved configuration does not fall back automatically. Repair it by saving again in the UI or explicitly clear it. Manual file edits require restarting Desktop; in-app saves do not.
 
@@ -102,19 +102,19 @@ CONTROL_PLANE_TUNNEL_ID
 CONTROL_PLANE_API_KEY
 ```
 
-No additional `OPENAI_ADMIN_KEY` or `OPENAI_API_KEY` is needed. On first OpenAI Secure Tunnel use, WebCodex automatically downloads and verifies a pinned `tunnel-client`; manual installation is normally unnecessary. If download fails, check networking or proxies. Advanced users can set `WEBCODEX_TUNNEL_CLIENT_BIN`.
+No additional `OPENAI_ADMIN_KEY` or `OPENAI_API_KEY` is needed. On first OpenAI Secure Tunnel use, CodeGPT automatically downloads and verifies a pinned `tunnel-client`; manual installation is normally unnecessary. If download fails, check networking or proxies. Advanced users can set `CODEGPT_TUNNEL_CLIENT_BIN`.
 
-Windows users can set persistent variables for the current user. On macOS, Finder / Dock launches do not read `~/.zshrc`; launch from a Terminal that has loaded the variables or configure the login session environment. After changing variables through this advanced path, use **Quit WebCodex** in the tray and launch it again. Closing the window only hides it and cannot refresh its process environment. **Recheck configuration** neither executes shell startup scripts nor reloads manually edited configuration files.
+Windows users can set persistent variables for the current user. On macOS, Finder / Dock launches do not read `~/.zshrc`; launch from a Terminal that has loaded the variables or configure the login session environment. After changing variables through this advanced path, use **Quit CodeGPT** in the tray and launch it again. Closing the window only hides it and cannot refresh its process environment. **Recheck configuration** neither executes shell startup scripts nor reloads manually edited configuration files.
 
 ### macOS Computer Use permissions
 
-For screenshots, window observation, keyboard or pointer control, grant the relevant permissions under **System Settings → Privacy & Security** to the process actually running WebCodex Runner/Desktop. These include **Screen & System Audio Recording**, and **Accessibility** for UI control. Restart the affected process when macOS requires it.
+For screenshots, window observation, keyboard or pointer control, grant the relevant permissions under **System Settings → Privacy & Security** to the process actually running CodeGPT Runner/Desktop. These include **Screen & System Audio Recording**, and **Accessibility** for UI control. Restart the affected process when macOS requires it.
 
 **Success looks like:** the source is the local file and both presence checks pass. Next, select the actual project ChatGPT should use.
 
 ## 4. Start the local runtime and add your project
 
-On first use, choose **Local Full Runtime / Use WebCodex on this computer**, then select the **real repository directory you want ChatGPT to use**. Desktop prepares the local Service + Runner and makes the Runner load that exact project. Desktop's own default workspace is not a substitute for selecting your actual project.
+On first use, choose **Local Full Runtime / Use CodeGPT on this computer**, then select the **real repository directory you want ChatGPT to use**. Desktop prepares the local Service + Runner and makes the Runner load that exact project. Desktop's own default workspace is not a substitute for selecting your actual project.
 
 Setup remains disabled until you select a project. If project setup or the optional Tunnel start fails, the setup page keeps your selection and shows the error so you can retry.
 
@@ -172,7 +172,7 @@ Desktop must **not** promote daemon readiness or a successful clipboard copy to 
 
 **Next:** enter the Tunnel ID in ChatGPT.
 
-## 7. Add WebCodex to ChatGPT
+## 7. Add CodeGPT to ChatGPT
 
 When creating the custom connection/app in ChatGPT:
 
@@ -180,7 +180,7 @@ When creating the custom connection/app in ChatGPT:
 2. Enter the Tunnel ID from Desktop/OpenAI.
 3. Set **Authentication** to **None / No authentication**.
 
-You do not configure OAuth in ChatGPT for this path. WebCodex keeps the MCP authorization credential locally and the Tunnel client injects it; ChatGPT does not need the local credential.
+You do not configure OAuth in ChatGPT for this path. CodeGPT keeps the MCP authorization credential locally and the Tunnel client injects it; ChatGPT does not need the local credential.
 
 After saving the ChatGPT connection, return to Desktop. Saving a connection in ChatGPT does not magically upgrade local Tunnel evidence into an authoritative “connected” signal. If this Desktop version has no stable external-MCP-client observation signal, it intentionally continues to say that it is waiting for ChatGPT.
 
@@ -198,9 +198,9 @@ After saving the ChatGPT connection, return to Desktop. Saving a connection in C
 
 ## 8. Minimal acceptance check
 
-After connecting, start with **one minimal real project read**, for example: “List the WebCodex projects, then list the top-level files in the project I just selected; report an empty directory as empty.” Only this proves the full path is actually working:
+After connecting, start with **one minimal real project read**, for example: “List the CodeGPT projects, then list the top-level files in the project I just selected; report an empty directory as empty.” Only this proves the full path is actually working:
 
-- list the WebCodex projects;
+- list the CodeGPT projects;
 - read a file from the project you explicitly added;
 - create, read back, and remove one temporary file inside that project;
 - run a read-only command such as `git status`, `uname -a`, or `ver`;
@@ -222,4 +222,4 @@ If Desktop shows a healthy Service / Runner / Project / Tunnel but ChatGPT still
 
 **You see `project_not_loaded` / Project not ready:** use **Reload project**. Desktop retries the same project and manages only its own Runner; normal users do not need to edit or understand the internal project registry.
 
-**I closed the window and reopened it, but new environment variables are still missing:** since the background-lifecycle change, closing the window hides Desktop in the tray/menu bar. Use **Quit WebCodex** there, then start a new process.
+**I closed the window and reopened it, but new environment variables are still missing:** since the background-lifecycle change, closing the window hides Desktop in the tray/menu bar. Use **Quit CodeGPT** there, then start a new process.

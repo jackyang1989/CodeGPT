@@ -4677,7 +4677,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "webcodex-core"
+name = "codegpt-core"
 version = "0.4.1"
 dependencies = [
  "base64 0.22.1",
@@ -4690,7 +4690,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "webcodex-desktop"
+name = "codegpt-desktop"
 version = "0.4.1"
 dependencies = [
  "libc",
@@ -4704,14 +4704,14 @@ dependencies = [
  "tauri-plugin-single-instance",
  "tokio",
  "url",
- "webcodex-process",
- "webcodex-runner-config",
+ "codegpt-process",
+ "codegpt-runner-config",
  "windows-sys 0.61.2",
  "winreg 0.55.0",
 ]
 
 [[package]]
-name = "webcodex-process"
+name = "codegpt-process"
 version = "0.4.1"
 dependencies = [
  "libc",
@@ -4719,12 +4719,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "webcodex-runner-config"
+name = "codegpt-runner-config"
 version = "0.4.1"
 dependencies = [
  "serde",
  "toml 0.8.2",
- "webcodex-core",
+ "codegpt-core",
 ]
 
 [[package]]

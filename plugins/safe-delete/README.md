@@ -1,10 +1,10 @@
 # Safe Delete Native Plugin
 
-`safe_delete` is a TypeScript-authored WebCodex Native Tool Plugin built with
-`@yyjeqhc/webcodex-plugin-sdk`. It moves one ordinary file or directory to the
+`safe_delete` is a TypeScript-authored CodeGPT Native Tool Plugin built with
+`@yyjeqhc/codegpt-plugin-sdk`. It moves one ordinary file or directory to the
 operating system Trash/Recycle Bin instead of permanently deleting it.
 
-It is intentionally a Plugin rather than a built-in WebCodex filesystem tool.
+It is intentionally a Plugin rather than a built-in CodeGPT filesystem tool.
 Install it only on Runners where you want the model to have this additional
 local capability.
 
@@ -58,7 +58,7 @@ request_timeout_secs = 30
 id = "safe-delete"
 name = "Safe Delete"
 command = "node"
-args = ["/absolute/path/to/webcodex/plugins/safe-delete/dist/plugin.js"]
+args = ["/absolute/path/to/codegpt/plugins/safe-delete/dist/plugin.js"]
 cwd = "/absolute/path/to/project"
 timeout_secs = 30
 ```

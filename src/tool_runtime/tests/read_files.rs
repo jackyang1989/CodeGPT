@@ -1492,7 +1492,7 @@ async fn read_files_direct_session_overlay_pressure_keeps_final_response_under_h
     use crate::tool_runtime::sessions::{
         SessionContextRevisionAck, SessionTransport, ToolCallRecorderMetadata,
     };
-    use webcodex_core::runtime_contract::MODEL_INSPECTION_MAX_RESULT_BYTES as MAX_SERIALIZED_OUTPUT_BYTES;
+    use codegpt_core::runtime_contract::MODEL_INSPECTION_MAX_RESULT_BYTES as MAX_SERIALIZED_OUTPUT_BYTES;
 
     let root = tempfile::tempdir().unwrap();
     let runtime = ToolRuntime::new_for_tests();
@@ -1745,7 +1745,7 @@ async fn read_files_ignores_context_ack_and_preserves_bounded_attention() {
         PostSessionMessageInput, SessionContextRevisionAck, SessionMessageKind,
         SessionMessagePriority,
     };
-    use webcodex_workspace::file_read_range::MAX_SERIALIZED_OUTPUT_BYTES;
+    use codegpt_workspace::file_read_range::MAX_SERIALIZED_OUTPUT_BYTES;
 
     let root = tempfile::tempdir().unwrap();
     let runtime = ToolRuntime::new_for_tests();
@@ -1876,7 +1876,7 @@ async fn read_files_ignores_context_ack_and_preserves_bounded_attention() {
                         host_file_import_trust: HostFileImportTrust::Untrusted,
                     },
                     ToolInvocationMetadata {
-                        context_request: vec!["webcodex.workflow".to_string()],
+                        context_request: vec!["codegpt.workflow".to_string()],
                         ack_session_context_revision: SessionContextRevisionAck::Revision(0),
                         ..Default::default()
                     },
@@ -1911,7 +1911,7 @@ async fn read_files_ignores_context_ack_and_preserves_bounded_attention() {
     assert_eq!(result.output["session_attention"]["omitted_count"], 4);
     assert_eq!(
         result.output["context_projection"]["materials"][0]["key"],
-        "webcodex.workflow"
+        "codegpt.workflow"
     );
     assert!(result.output.get("output_truncated").is_none());
     assert_eq!(result.output["items"].as_array().unwrap().len(), 1);
@@ -1930,7 +1930,7 @@ async fn read_files_outer_recording_session_keeps_final_response_under_hard_cap(
         ToolProtocolCapabilities, ToolTransport,
     };
     use crate::tool_runtime::sessions::SessionContextRevisionAck;
-    use webcodex_core::runtime_contract::MODEL_INSPECTION_MAX_RESULT_BYTES as MAX_SERIALIZED_OUTPUT_BYTES;
+    use codegpt_core::runtime_contract::MODEL_INSPECTION_MAX_RESULT_BYTES as MAX_SERIALIZED_OUTPUT_BYTES;
 
     let root = tempfile::tempdir().unwrap();
     let runtime = ToolRuntime::new_for_tests();

@@ -14,7 +14,7 @@ use crate::tool_runtime::tool_definition::{lookup_tool_definition, RunnerCapabil
 use crate::tool_runtime::{RuntimeInfo, ToolCall, ToolRuntime};
 use serde_json::json;
 use std::sync::Arc;
-use webcodex_core::coding_agent::{
+use codegpt_core::coding_agent::{
     CodingAgentExecutionState, CodingAgentProvider, CodingAgentRequest, CodingAgentResponse,
     CodingAgentResponsePayload, CodingAgentRunInventory, CodingAgentRunSnapshot,
     CodingAgentRunState, CodingAgentTerminal,

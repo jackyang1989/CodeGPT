@@ -1,20 +1,20 @@
 //! Root-owned live validation adapter.
 //!
-//! Canonical validation planning/evidence semantics live in `webcodex-validation`;
+//! Canonical validation planning/evidence semantics live in `codegpt-validation`;
 //! this module retains only authorization, live Job materialization, SessionStore
 //! mutation, and model-facing ToolResult composition.
 
 use serde_json::{json, Value};
-use webcodex_core::runner_job_lifecycle::RunnerJobLifecycle;
-use webcodex_tool_runtime_contracts::tool_audit::{
+use codegpt_core::runner_job_lifecycle::RunnerJobLifecycle;
+use codegpt_tool_runtime_contracts::tool_audit::{
     assertion_validation_identity, is_structured_validation_target_identity,
     is_validation_execution_identity,
 };
-use webcodex_validation::{
+use codegpt_validation::{
     event_is_job_acceptance_only, validation_adapter_for_tool,
     validation_summary_for_session_events,
 };
-use webcodex_workflow_session::{
+use codegpt_workflow_session::{
     canonical_tool_call_finished_events, safe_model_facing_assertion_name, SessionEvent,
     SessionSummary,
 };
@@ -25,7 +25,7 @@ use super::session_context::{
 use super::{ToolResult, ToolRuntime};
 use crate::auth::AuthContext;
 
-pub(crate) use webcodex_validation::{
+pub(crate) use codegpt_validation::{
     current_validation_evidence_for_session, event_observes_validation_activity,
     skipped_validation_summary, validation_summary_from_events,
     CurrentValidationEvidenceProjection,

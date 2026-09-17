@@ -63,7 +63,7 @@ def _run(run_id: int = RUN_ID, source: str = SOURCE) -> dict:
         "head_branch": "main",
         "head_sha": source,
         "display_title": publication._build_run_name(TAG, REQUEST),
-        "html_url": f"https://github.com/yyjeqhc/webcodex/actions/runs/{run_id}",
+        "html_url": f"https://github.com/yyjeqhc/codegpt/actions/runs/{run_id}",
         "status": "in_progress",
         "conclusion": None,
     }
@@ -82,7 +82,7 @@ def _archive_bytes(platform: str) -> bytes:
 
 
 def _write_bundle(root: Path) -> dict:
-    stem = f"webcodex-v{VERSION}"
+    stem = f"codegpt-v{VERSION}"
     artifact_payload = {}
     checksum_lines = []
     for platform in collector.PLATFORMS:
@@ -265,7 +265,7 @@ class ReclaimTagTests(unittest.TestCase):
 
     def test_reclaim_rejects_successful_authoritative_build(self) -> None:
         with mock.patch.object(Path, "is_dir", return_value=True), mock.patch.object(
-            publication, "_git", side_effect=["", "https://github.com/yyjeqhc/webcodex.git", SOURCE, TAG, SOURCE]
+            publication, "_git", side_effect=["", "https://github.com/yyjeqhc/codegpt.git", SOURCE, TAG, SOURCE]
         ), mock.patch.object(publication, "_remote_main_source", return_value=SOURCE), mock.patch.object(
             publication, "_package_versions", return_value=_versions()
         ), mock.patch.object(
@@ -294,7 +294,7 @@ class ReclaimTagTests(unittest.TestCase):
             calls.append((list(argv), cwd))
 
         with mock.patch.object(Path, "is_dir", return_value=True), mock.patch.object(
-            publication, "_git", side_effect=["", "https://github.com/yyjeqhc/webcodex.git", SOURCE, TAG, SOURCE]
+            publication, "_git", side_effect=["", "https://github.com/yyjeqhc/codegpt.git", SOURCE, TAG, SOURCE]
         ), mock.patch.object(publication, "_remote_main_source", return_value=SOURCE), mock.patch.object(
             publication, "_package_versions", return_value=_versions()
         ), mock.patch.object(
@@ -342,7 +342,7 @@ class ReclaimTagTests(unittest.TestCase):
         with mock.patch.object(Path, "is_dir", return_value=True), mock.patch.object(
             publication,
             "_git",
-            side_effect=["", "https://github.com/yyjeqhc/webcodex.git", SOURCE, ""],
+            side_effect=["", "https://github.com/yyjeqhc/codegpt.git", SOURCE, ""],
         ), mock.patch.object(publication, "_remote_main_source", return_value=SOURCE), mock.patch.object(
             publication, "_package_versions", return_value=_versions()
         ), mock.patch.object(
@@ -489,7 +489,7 @@ class NpmStagingTests(unittest.TestCase):
             "built_at": 1234567890,
             "build_kind": "release",
             "workflow_run_id": RUN_ID,
-            "archive_stem": f"webcodex-v{VERSION}",
+            "archive_stem": f"codegpt-v{VERSION}",
             "artifacts": {platform: "a" * 64 for platform in collector.PLATFORMS},
             "desktop_artifacts": {
                 platform: {
@@ -610,7 +610,7 @@ class DraftVerificationTests(unittest.TestCase):
 
 class NpmPublicationContractTests(unittest.TestCase):
     def test_package_pins_public_npm_registry(self) -> None:
-        package = json.loads(Path("npm/webcodex/package.json").read_text(encoding="utf-8"))
+        package = json.loads(Path("npm/codegpt/package.json").read_text(encoding="utf-8"))
         self.assertEqual(package["publishConfig"]["access"], "public")
         self.assertEqual(package["publishConfig"]["registry"], publication.NPM_REGISTRY)
 
@@ -647,13 +647,13 @@ class WorkflowContractTests(unittest.TestCase):
         self.assertIn('"$($env:DESKTOP_INSTALLER_PATH).sha256"', workflow)
         self.assertIn('-Installer $env:DESKTOP_INSTALLER_PATH', workflow)
 
-        self.assertIn("dist/webcodex-desktop-*.dmg", workflow)
-        self.assertIn("dist/webcodex-desktop-*.dmg.sha256", workflow)
-        self.assertIn("dist/webcodex-desktop-*.dmg.evidence.json", workflow)
-        self.assertIn("dist/webcodex-desktop-*-${{ matrix.platform }}-setup.exe", workflow)
-        self.assertIn("dist/webcodex-desktop-*-${{ matrix.platform }}-setup.exe.sha256", workflow)
-        self.assertIn("webcodex-desktop-v$env:VERSION-$env:WEBCODEX_RELEASE_PLATFORM-setup.exe", workflow)
-        self.assertIn("-Platform $env:WEBCODEX_RELEASE_PLATFORM", workflow)
+        self.assertIn("dist/codegpt-desktop-*.dmg", workflow)
+        self.assertIn("dist/codegpt-desktop-*.dmg.sha256", workflow)
+        self.assertIn("dist/codegpt-desktop-*.dmg.evidence.json", workflow)
+        self.assertIn("dist/codegpt-desktop-*-${{ matrix.platform }}-setup.exe", workflow)
+        self.assertIn("dist/codegpt-desktop-*-${{ matrix.platform }}-setup.exe.sha256", workflow)
+        self.assertIn("codegpt-desktop-v$env:VERSION-$env:CODEGPT_RELEASE_PLATFORM-setup.exe", workflow)
+        self.assertIn("-Platform $env:CODEGPT_RELEASE_PLATFORM", workflow)
 
         self.assertNotIn('desktop="dist/${{ steps.desktop_bundle.outputs.desktop_name }}"', workflow)
         self.assertNotIn('$installer = Join-Path "dist" $env:DESKTOP_INSTALLER_NAME', workflow)
@@ -670,13 +670,13 @@ class WorkflowContractTests(unittest.TestCase):
         self.assertIn("platform: linux/arm64", image)
         self.assertIn("runner: ubuntu-24.04-arm", image)
         self.assertIn("push-by-digest=true", image)
-        self.assertIn("webcodex-server-image.json", image)
+        self.assertIn("codegpt-server-image.json", image)
         self.assertIn("scripts/prepare_server_deployment_assets.py", image)
         self.assertIn("validate_server_image_release_record", image)
         self.assertIn("ref: ${{ github.workflow_sha }}", image)
         self.assertIn("deployment_source_sha", image)
-        self.assertIn("webcodex-server-bootstrap.sh", image)
-        self.assertIn("webcodex-server-compose.yaml", image)
+        self.assertIn("codegpt-server-bootstrap.sh", image)
+        self.assertIn("codegpt-server-compose.yaml", image)
         self.assertIn("durable_record_exists=false", image)
         self.assertIn("Existing immutable GitHub Release deployment record reconciled without regeneration.", image)
         self.assertIn("Require anonymous GHCR availability", image)
@@ -686,16 +686,16 @@ class WorkflowContractTests(unittest.TestCase):
         compose = Path("compose.yaml").read_text(encoding="utf-8")
         source = Path("compose.build.yaml").read_text(encoding="utf-8")
         bootstrap = Path("deploy/docker/bootstrap.sh").read_text(encoding="utf-8")
-        self.assertIn("ghcr.io/yyjeqhc/webcodex-server:latest", compose)
+        self.assertIn("ghcr.io/yyjeqhc/codegpt-server:latest", compose)
         self.assertIn("pull_policy: always", compose)
         self.assertNotIn("build:\n", compose)
-        self.assertIn("webcodex-server-local", source)
+        self.assertIn("codegpt-server-local", source)
         self.assertIn("pull_policy: build", source)
         self.assertIn("build:\n", source)
         self.assertIn("--build-from-source", bootstrap)
         self.assertIn("COMPOSE_FILE=${COMPOSE_FILE:-compose.yaml}", bootstrap)
         self.assertIn("compose_base config --images", bootstrap)
-        self.assertIn("compose_base pull webcodex", bootstrap)
+        self.assertIn("compose_base pull codegpt", bootstrap)
         self.assertIn("compose_full up -d --build", bootstrap)
 
 

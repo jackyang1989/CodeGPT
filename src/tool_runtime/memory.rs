@@ -27,7 +27,7 @@ fn memory_hash_field(hasher: &mut Sha256, value: &[u8]) {
 
 fn memory_scope_id_from_parts(project_runtime_id: &str, client_id: &str, root: &str) -> String {
     let mut hasher = Sha256::new();
-    hasher.update(b"webcodex-project-memory-scope-v1\0");
+    hasher.update(b"codegpt-project-memory-scope-v1\0");
     for value in [
         project_runtime_id.as_bytes(),
         client_id.as_bytes(),
@@ -37,7 +37,7 @@ fn memory_scope_id_from_parts(project_runtime_id: &str, client_id: &str, root: &
     }
     format!(
         "wc_memscope_{}",
-        webcodex_core::compact::encode(hasher.finalize())
+        codegpt_core::compact::encode(hasher.finalize())
     )
 }
 
@@ -51,11 +51,11 @@ pub(crate) fn memory_scope_id(project: &ResolvedProject) -> String {
 
 pub(crate) fn memory_root_fingerprint(root: &str) -> String {
     let mut hasher = Sha256::new();
-    hasher.update(b"webcodex-project-memory-root-v1\0");
+    hasher.update(b"codegpt-project-memory-root-v1\0");
     memory_hash_field(&mut hasher, root.as_bytes());
     format!(
         "wc_memroot_{}",
-        webcodex_core::compact::encode(hasher.finalize())
+        codegpt_core::compact::encode(hasher.finalize())
     )
 }
 
@@ -73,7 +73,7 @@ pub(crate) fn memory_principal_attribution(
     let (kind, stable_principal_id) = super::session_context::runtime_observation_principal(auth)
         .map_err(|_| "memory_principal_unavailable")?;
     let mut hasher = Sha256::new();
-    hasher.update(b"webcodex-project-memory-principal-v1\0");
+    hasher.update(b"codegpt-project-memory-principal-v1\0");
     memory_hash_field(&mut hasher, kind.as_bytes());
     memory_hash_field(&mut hasher, stable_principal_id.as_bytes());
     Ok(MemoryPrincipalAttribution {
@@ -787,13 +787,13 @@ mod tests {
     #[test]
     fn incomplete_bounded_inventory_never_proves_not_current() {
         let attributed = ProjectMemoryScopeRecord {
-            memory_scope_id: format!("wc_memscope_{}", webcodex_core::compact::encode([0xaa; 32])),
+            memory_scope_id: format!("wc_memscope_{}", codegpt_core::compact::encode([0xaa; 32])),
             identity_state: "attributed".to_string(),
             project_runtime_id: Some("agent:runner:demo".to_string()),
             runner_client_id: Some("runner".to_string()),
             root_fingerprint: Some(format!(
                 "wc_memroot_{}",
-                webcodex_core::compact::encode([0xbb; 32])
+                codegpt_core::compact::encode([0xbb; 32])
             )),
             created_at_unix_ms: 1,
             last_mutated_at_unix_ms: 1,
@@ -821,7 +821,7 @@ mod tests {
             updated_by_kind: "test".to_string(),
             updated_by_principal_digest: Some(format!("wc_memprincipal_{}", "1".repeat(64))),
             generation: 1,
-            revision: format!("wc_memrev_{}", webcodex_core::compact::encode([0xaa; 32])),
+            revision: format!("wc_memrev_{}", codegpt_core::compact::encode([0xaa; 32])),
             created_at_unix_ms: 1,
             updated_at_unix_ms: 1,
         };

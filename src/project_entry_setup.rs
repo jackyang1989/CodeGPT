@@ -52,9 +52,9 @@ impl ProjectPaths {
             bootstrap_key: credentials.join("bootstrap-key"),
             project_credential: credentials.join("project-credential"),
             agent_token: credentials.join("agent-token"),
-            runner_config: runner_state_dir.join(webcodex_runner_config::paths::RUNNER_CONFIG_FILE),
+            runner_config: runner_state_dir.join(codegpt_runner_config::paths::RUNNER_CONFIG_FILE),
             legacy_agent_config: runner_state_dir
-                .join(webcodex_runner_config::paths::LEGACY_AGENT_CONFIG_FILE),
+                .join(codegpt_runner_config::paths::LEGACY_AGENT_CONFIG_FILE),
             credentials,
             state,
         })
@@ -65,7 +65,7 @@ impl ProjectPaths {
             .runner_config
             .parent()
             .ok_or_else(|| invalid_registration("Runner config path has no parent directory"))?;
-        webcodex_runner_config::paths::resolve_runner_config_path(dir).map_err(|message| {
+        codegpt_runner_config::paths::resolve_runner_config_path(dir).map_err(|message| {
             ProductError::new(
                 "project_registration_invalid",
                 message,
@@ -236,7 +236,7 @@ pub(crate) fn setup(options: &ProjectCommandOptions) -> Result<SetupReport, Prod
             return Err(ProductError::new(
                 "project_registration_invalid",
                 "existing Runner configuration conflicts with missing authentication material",
-                Some("Restore the existing authentication material or remove this incomplete profile, then run webcodex setup."),
+                Some("Restore the existing authentication material or remove this incomplete profile, then run codegpt setup."),
             ));
         }
         let value = generate_project_credential();
@@ -270,7 +270,7 @@ pub(crate) fn setup(options: &ProjectCommandOptions) -> Result<SetupReport, Prod
             ProductError::new(
                 "project_registration_invalid",
                 "the project root has no parent directory for canonical managed worktrees",
-                Some("Move the project below a normal filesystem directory, then run webcodex setup."),
+                Some("Move the project below a normal filesystem directory, then run codegpt setup."),
             )
         })?.to_path_buf();
         let content = generated_runner_config_toml(&RunnerInitOptions {
@@ -292,7 +292,7 @@ pub(crate) fn setup(options: &ProjectCommandOptions) -> Result<SetupReport, Prod
             ProductError::new(
                 "project_registration_invalid",
                 format!("could not generate Runner configuration: {message}"),
-                Some("Correct the reported configuration issue, then run webcodex setup."),
+                Some("Correct the reported configuration issue, then run codegpt setup."),
             )
         })?;
         write_new_private(&runner_config, content.as_bytes())?;
@@ -306,7 +306,7 @@ pub(crate) fn setup(options: &ProjectCommandOptions) -> Result<SetupReport, Prod
             ProductError::new(
                 "project_registration_invalid",
                 format!("could not serialize project registration: {error}"),
-                Some("Run webcodex setup again after correcting the local state error."),
+                Some("Run codegpt setup again after correcting the local state error."),
             )
         })?;
         write_new_private(&project_path, content.as_bytes())?;
@@ -318,7 +318,7 @@ pub(crate) fn setup(options: &ProjectCommandOptions) -> Result<SetupReport, Prod
             ProductError::new(
                 "project_registration_invalid",
                 format!("could not serialize project configuration: {error}"),
-                Some("Run webcodex setup again after correcting the local state error."),
+                Some("Run codegpt setup again after correcting the local state error."),
             )
         })?;
         write_new_private(&paths.config, content.as_bytes())?;
@@ -339,7 +339,7 @@ pub(crate) fn setup(options: &ProjectCommandOptions) -> Result<SetupReport, Prod
             "configured".to_string()
         },
         changed,
-        next_action: "webcodex doctor".to_string(),
+        next_action: "codegpt doctor".to_string(),
     })
 }
 
@@ -360,7 +360,7 @@ fn select_available_project_port(primary: u16) -> Result<u16, ProductError> {
             "no available loopback port was found after checking {PROJECT_PORT_PROBE_LIMIT} stable project port candidates"
         ),
         Some(
-            "Stop a conflicting local process or choose a separate project state/profile, then run webcodex setup again.",
+            "Stop a conflicting local process or choose a separate project state/profile, then run codegpt setup again.",
         ),
     ))
 }
@@ -375,8 +375,8 @@ pub(super) fn local_readiness(options: &ProjectCommandOptions) -> LocalReadiness
             findings: vec![ReadinessFact::fail(
                 "Setup",
                 "project_not_configured",
-                "No WebCodex setup was found for this project.",
-                "webcodex setup",
+                "No CodeGPT setup was found for this project.",
+                "codegpt setup",
             )],
         },
         LocalProjectState::Invalid {
@@ -472,7 +472,7 @@ fn configured_readiness(config: ProjectConfig, paths: ProjectPaths) -> LocalRead
             "Runner runtime",
             "required_capability_unavailable",
             "The local Runner executable is unavailable.",
-            "Install all WebCodex binaries, then retry.",
+            "Install all CodeGPT binaries, then retry.",
         ));
     }
     LocalReadiness {
@@ -505,7 +505,7 @@ fn local_project_state(options: &ProjectCommandOptions) -> LocalProjectState {
         return LocalProjectState::invalid(
             None,
             paths,
-            invalid_registration("the WebCodex project state path is not a directory"),
+            invalid_registration("the CodeGPT project state path is not a directory"),
         );
     }
     if !paths.config.exists() {
@@ -514,7 +514,7 @@ fn local_project_state(options: &ProjectCommandOptions) -> LocalProjectState {
                 None,
                 paths,
                 invalid_registration(
-                    "WebCodex project state exists but its registration is incomplete",
+                    "CodeGPT project state exists but its registration is incomplete",
                 ),
             )
         } else {
@@ -558,7 +558,7 @@ fn invalid_registration(message: &str) -> ProductError {
     ProductError::new(
         "project_registration_invalid",
         message,
-        Some("Resolve the invalid private state, then run webcodex setup."),
+        Some("Resolve the invalid private state, then run codegpt setup."),
     )
 }
 
@@ -609,7 +609,7 @@ pub(super) fn validate_existing_runner(
                 "project_registration_invalid",
                 format!("existing Runner configuration conflicts in field '{field}'"),
                 Some(
-                    "Resolve the existing configuration conflict; WebCodex will not overwrite it.",
+                    "Resolve the existing configuration conflict; CodeGPT will not overwrite it.",
                 ),
             ));
         }
@@ -628,7 +628,7 @@ pub(super) fn validate_existing_runner(
         return Err(ProductError::new(
             "project_registration_invalid",
             "existing Runner configuration conflicts in field 'project_registry_dir'",
-            Some("Resolve the existing configuration conflict; WebCodex will not overwrite it."),
+            Some("Resolve the existing configuration conflict; CodeGPT will not overwrite it."),
         ));
     }
     if value
@@ -639,7 +639,7 @@ pub(super) fn validate_existing_runner(
         return Err(ProductError::new(
             "project_registration_invalid",
             "existing Runner configuration conflicts in field 'authentication'",
-            Some("Restore the existing authentication material; WebCodex will not overwrite it."),
+            Some("Restore the existing authentication material; CodeGPT will not overwrite it."),
         ));
     }
     Ok(())
@@ -714,7 +714,7 @@ fn registration_conflict(field: &str) -> Result<(), ProductError> {
     Err(ProductError::new(
         "project_registration_invalid",
         format!("existing project registration conflicts in field '{field}'"),
-        Some("Resolve the existing registration conflict; WebCodex will not overwrite it."),
+        Some("Resolve the existing registration conflict; CodeGPT will not overwrite it."),
     ))
 }
 
@@ -756,14 +756,14 @@ fn discover_project_root(input: &Path) -> Result<PathBuf, ProductError> {
         ProductError::new(
             "workspace_unavailable",
             "the project path is unavailable",
-            Some("Run webcodex setup from an accessible Git project."),
+            Some("Run codegpt setup from an accessible Git project."),
         )
     })?;
     if !canonical.is_dir() {
         return Err(ProductError::new(
             "workspace_unavailable",
             "the project path is not a directory",
-            Some("Run webcodex setup from a Git project directory."),
+            Some("Run codegpt setup from a Git project directory."),
         ));
     }
     let output = std::process::Command::new("git")
@@ -775,14 +775,14 @@ fn discover_project_root(input: &Path) -> Result<PathBuf, ProductError> {
             ProductError::new(
                 "workspace_unavailable",
                 "Git is unavailable",
-                Some("Install Git, then run webcodex setup."),
+                Some("Install Git, then run codegpt setup."),
             )
         })?;
     if !output.status.success() {
         return Err(ProductError::new(
             "workspace_unavailable",
             "the selected directory is not a supported Git project",
-            Some("Run webcodex setup from a Git project directory."),
+            Some("Run codegpt setup from a Git project directory."),
         ));
     }
     let discovered = String::from_utf8_lossy(&output.stdout).trim().to_string();
@@ -801,7 +801,7 @@ fn project_identity(root: &Path) -> String {
 
 fn project_grant_identity(root: &Path, profile: &str, state: &Path) -> String {
     let mut hasher = Sha256::new();
-    hasher.update(b"webcodex-project-grant-v1\0");
+    hasher.update(b"codegpt-project-grant-v1\0");
     hasher.update(root.to_string_lossy().as_bytes());
     hasher.update(b"\0");
     hasher.update(profile.as_bytes());
@@ -861,7 +861,7 @@ pub(super) fn resolve_state_path_from(
     if state == canonical_root || state.starts_with(&canonical_root) {
         return Err(ProductError::new(
             "state_directory_unsafe",
-            "the WebCodex state directory must be outside the Git project checkout",
+            "the CodeGPT state directory must be outside the Git project checkout",
             Some(
                 "Choose --state-dir in a private directory outside the checkout, or omit it to use the default user state directory.",
             ),
@@ -950,16 +950,16 @@ pub(super) fn default_state_base_from(
     local_app_data: Option<&std::ffi::OsStr>,
 ) -> Result<PathBuf, ProductError> {
     if let Some(path) = xdg_state_home.filter(|value| !value.is_empty()) {
-        return Ok(PathBuf::from(path).join("webcodex/projects"));
+        return Ok(PathBuf::from(path).join("codegpt/projects"));
     }
     // Preserve the historical HOME path when it exists. Native Windows shells
     // commonly lack HOME, so LOCALAPPDATA is the compatibility fallback rather
     // than a migration of existing profiles.
     if let Some(path) = home.filter(|value| !value.is_empty()) {
-        return Ok(PathBuf::from(path).join(".local/state/webcodex/projects"));
+        return Ok(PathBuf::from(path).join(".local/state/codegpt/projects"));
     }
     if let Some(path) = local_app_data.filter(|value| !value.is_empty()) {
-        return Ok(PathBuf::from(path).join("WebCodex/state/projects"));
+        return Ok(PathBuf::from(path).join("CodeGPT/state/projects"));
     }
     Err(ProductError::new(
         "project_not_configured",
@@ -976,7 +976,7 @@ fn read_toml<T: for<'de> Deserialize<'de>>(path: &Path) -> Result<T, ProductErro
         .ok_or_else(|| {
             ProductError::new(
                 "project_registration_invalid",
-                "a WebCodex configuration file is unreadable or not protected",
+                "a CodeGPT configuration file is unreadable or not protected",
                 Some("Restore protected private state, then retry."),
             )
         })?;
@@ -984,15 +984,15 @@ fn read_toml<T: for<'de> Deserialize<'de>>(path: &Path) -> Result<T, ProductErro
     let content = std::fs::read_to_string(path).map_err(|_| {
         ProductError::new(
             "project_registration_invalid",
-            "a WebCodex configuration file is unreadable",
+            "a CodeGPT configuration file is unreadable",
             Some("Restore readable private state, then retry."),
         )
     })?;
     toml::from_str(&content).map_err(|_| {
         ProductError::new(
             "project_registration_invalid",
-            "a WebCodex configuration file is invalid",
-            Some("Resolve the invalid configuration; WebCodex will not overwrite it."),
+            "a CodeGPT configuration file is invalid",
+            Some("Resolve the invalid configuration; CodeGPT will not overwrite it."),
         )
     })
 }
@@ -1009,7 +1009,7 @@ pub(super) fn read_toml_optional<T: for<'de> Deserialize<'de>>(
 
 pub(super) fn generate_project_credential() -> String {
     format!(
-        "webcodex_{}{}",
+        "codegpt_{}{}",
         Uuid::new_v4().simple(),
         Uuid::new_v4().simple()
     )
@@ -1082,9 +1082,9 @@ pub(super) fn harden_existing_runtime_private_state(
     #[cfg(windows)]
     {
         for path in [
-            paths.data.join("webcodex.db"),
-            paths.data.join("webcodex.db-wal"),
-            paths.data.join("webcodex.db-shm"),
+            paths.data.join("codegpt.db"),
+            paths.data.join("codegpt.db-wal"),
+            paths.data.join("codegpt.db-shm"),
             paths.logs.join("server.log"),
             paths.logs.join("agent.log"),
         ] {
@@ -1093,7 +1093,7 @@ pub(super) fn harden_existing_runtime_private_state(
                     if !metadata.file_type().is_file() {
                         return Err(ProductError::new(
                             "project_registration_invalid",
-                            "WebCodex refused unsafe existing private Windows runtime state",
+                            "CodeGPT refused unsafe existing private Windows runtime state",
                             Some(
                                 "Remove the unexpected reparse or non-file runtime state, then retry.",
                             ),
@@ -1102,7 +1102,7 @@ pub(super) fn harden_existing_runtime_private_state(
                     super::windows_private_state::protect_private_file(&path).map_err(|_| {
                         ProductError::new(
                             "project_registration_invalid",
-                            "WebCodex could not protect existing private Windows runtime state",
+                            "CodeGPT could not protect existing private Windows runtime state",
                             Some(
                                 "Check local filesystem permissions and reparse points, then retry.",
                             ),
@@ -1113,7 +1113,7 @@ pub(super) fn harden_existing_runtime_private_state(
                 Err(_) => {
                     return Err(ProductError::new(
                         "project_registration_invalid",
-                        "WebCodex could not inspect existing private Windows runtime state",
+                        "CodeGPT could not inspect existing private Windows runtime state",
                         Some("Check local filesystem permissions, then retry."),
                     ));
                 }
@@ -1129,7 +1129,7 @@ pub(super) fn create_private_dir(path: &Path) -> Result<(), ProductError> {
     std::fs::create_dir_all(path).map_err(|_| {
         ProductError::new(
             "project_registration_invalid",
-            "WebCodex could not create its private state directory",
+            "CodeGPT could not create its private state directory",
             Some("Check local filesystem permissions, then retry."),
         )
     })?;
@@ -1139,7 +1139,7 @@ pub(super) fn create_private_dir(path: &Path) -> Result<(), ProductError> {
         std::fs::set_permissions(path, std::fs::Permissions::from_mode(0o700)).map_err(|_| {
             ProductError::new(
                 "project_registration_invalid",
-                "WebCodex could not protect its private state directory",
+                "CodeGPT could not protect its private state directory",
                 Some("Check local filesystem permissions, then retry."),
             )
         })?;
@@ -1148,7 +1148,7 @@ pub(super) fn create_private_dir(path: &Path) -> Result<(), ProductError> {
     super::windows_private_state::protect_private_directory(path).map_err(|_| {
         ProductError::new(
             "project_registration_invalid",
-            "WebCodex could not protect its private Windows state directory",
+            "CodeGPT could not protect its private Windows state directory",
             Some("Check local filesystem permissions and reparse points, then retry."),
         )
     })?;
@@ -1167,9 +1167,9 @@ pub(super) fn write_new_private(path: &Path, content: &[u8]) -> Result<(), Produ
                 ProductError::new(
                     "project_registration_invalid",
                     if conflict {
-                        "WebCodex refused to overwrite existing project state"
+                        "CodeGPT refused to overwrite existing project state"
                     } else {
-                        "WebCodex could not securely write private Windows project state"
+                        "CodeGPT could not securely write private Windows project state"
                     },
                     Some(if conflict {
                         "Resolve the existing state conflict, then retry."
@@ -1192,14 +1192,14 @@ pub(super) fn write_new_private(path: &Path, content: &[u8]) -> Result<(), Produ
         let mut file = options.open(path).map_err(|_| {
             ProductError::new(
                 "project_registration_invalid",
-                "WebCodex refused to overwrite existing project state",
+                "CodeGPT refused to overwrite existing project state",
                 Some("Resolve the existing state conflict, then retry."),
             )
         })?;
         file.write_all(content).map_err(|_| {
             ProductError::new(
                 "project_registration_invalid",
-                "WebCodex could not write private project state",
+                "CodeGPT could not write private project state",
                 Some("Check local filesystem permissions, then retry."),
             )
         })

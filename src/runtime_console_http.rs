@@ -855,7 +855,7 @@ fn safe_string(value: Option<&Value>, max_chars: usize) -> Option<String> {
 }
 
 fn valid_runtime_message_id(message_id: &str) -> bool {
-    webcodex_core::workflow_session_contract::is_valid_session_message_id(message_id)
+    codegpt_core::workflow_session_contract::is_valid_session_message_id(message_id)
 }
 
 fn session_message_mutation_error(
@@ -1504,7 +1504,7 @@ async fn window_event_visible_cached(
     runtime: &ToolRuntime,
     auth: &AuthContext,
     cache: &mut HashMap<String, bool>,
-    event: &webcodex_store::models::WindowActivityEventRecord,
+    event: &codegpt_store::models::WindowActivityEventRecord,
 ) -> bool {
     crate::tool_runtime::window_activity::window_event_visible_cached(runtime, auth, cache, event)
         .await
@@ -1523,7 +1523,7 @@ async fn active_window_request_visible_cached(
 }
 
 fn project_window_loop_timings(
-    events: &[webcodex_store::models::WindowActivityEventRecord],
+    events: &[codegpt_store::models::WindowActivityEventRecord],
     visible: &[bool],
 ) -> Vec<WindowActivityTimingProjection> {
     let mut projections = vec![WindowActivityTimingProjection::default(); events.len()];
@@ -1586,7 +1586,7 @@ async fn project_visible_window_activity(
     runtime: &ToolRuntime,
     auth: &AuthContext,
     visibility_cache: &mut HashMap<String, bool>,
-    event: webcodex_store::models::WindowActivityEventRecord,
+    event: codegpt_store::models::WindowActivityEventRecord,
     timing: WindowActivityTimingProjection,
 ) -> RuntimeConsoleWindowActivity {
     #[cfg(feature = "experimental-code-mode")]
@@ -1610,7 +1610,7 @@ async fn project_visible_window_activity(
     let activity_semantics = event
         .operation
         .as_deref()
-        .map(webcodex_tool_contracts::runtime_tool_activity_semantics);
+        .map(codegpt_tool_contracts::runtime_tool_activity_semantics);
     RuntimeConsoleWindowActivity {
         started_at_ms: event.started_at_ms,
         ended_at_ms: event.ended_at_ms,
@@ -1646,7 +1646,7 @@ async fn project_visible_window_activity(
 async fn project_window_activity(
     runtime: &ToolRuntime,
     auth: &AuthContext,
-    event: webcodex_store::models::WindowActivityEventRecord,
+    event: codegpt_store::models::WindowActivityEventRecord,
 ) -> Option<RuntimeConsoleWindowActivity> {
     let mut visibility_cache = HashMap::new();
     if !window_event_visible_cached(runtime, auth, &mut visibility_cache, &event).await {
@@ -3917,8 +3917,8 @@ mod tests {
         register_project(
             &runtime,
             "special",
-            "webcodex",
-            "/root/private/webcodex",
+            "codegpt",
+            "/root/private/codegpt",
             None,
         )
         .await;
@@ -3929,9 +3929,9 @@ mod tests {
             .await;
         assert_eq!(response.status_code, Some(StatusCode::OK));
         let body: Value = response.take_json().await.unwrap();
-        assert_eq!(body["projects"][0]["id"], "agent:special:webcodex");
+        assert_eq!(body["projects"][0]["id"], "agent:special:codegpt");
         assert_eq!(body["projects"][0]["client_id"], "special");
-        assert_eq!(body["projects"][0]["path"], "/root/private/webcodex");
+        assert_eq!(body["projects"][0]["path"], "/root/private/codegpt");
         let selector = body["projects"][0].as_object().unwrap();
         assert!(selector.keys().all(|key| matches!(
             key.as_str(),
@@ -3954,7 +3954,7 @@ mod tests {
         let mut filtered = TestClient::post("http://localhost/api/runtime-console/projects")
             .json(&serde_json::json!({
                 "client_id": "special",
-                "query": "webcodex",
+                "query": "codegpt",
                 "limit": 100
             }))
             .send(&service)
@@ -3963,7 +3963,7 @@ mod tests {
         let filtered_body: Value = filtered.take_json().await.unwrap();
         assert_eq!(filtered_body["total"], 1);
         assert_eq!(filtered_body["truncated"], false);
-        assert_eq!(filtered_body["projects"][0]["id"], "agent:special:webcodex");
+        assert_eq!(filtered_body["projects"][0]["id"], "agent:special:codegpt");
 
         let invalid_query = TestClient::post("http://localhost/api/runtime-console/projects")
             .json(&serde_json::json!({"query": "   "}))
@@ -3989,8 +3989,8 @@ mod tests {
         register_project(
             &runtime,
             "special",
-            "webcodex",
-            "/root/private/webcodex",
+            "codegpt",
+            "/root/private/codegpt",
             None,
         )
         .await;
@@ -4002,7 +4002,7 @@ mod tests {
         assert!(!global
             .projects
             .iter()
-            .any(|project| project.id == "agent:special:webcodex"));
+            .any(|project| project.id == "agent:special:codegpt"));
 
         let by_runner =
             projects_for_filters_auth(&runtime, &auth, Some("special"), None, Some(100))
@@ -4010,27 +4010,27 @@ mod tests {
                 .unwrap();
         assert_eq!(by_runner.total, 1);
         assert!(!by_runner.truncated);
-        assert_eq!(by_runner.projects[0].id, "agent:special:webcodex");
+        assert_eq!(by_runner.projects[0].id, "agent:special:codegpt");
 
         let by_query =
-            projects_for_filters_auth(&runtime, &auth, None, Some("webcodex"), Some(100))
+            projects_for_filters_auth(&runtime, &auth, None, Some("codegpt"), Some(100))
                 .await
                 .unwrap();
         assert_eq!(by_query.total, 1);
         assert!(!by_query.truncated);
-        assert_eq!(by_query.projects[0].id, "agent:special:webcodex");
+        assert_eq!(by_query.projects[0].id, "agent:special:codegpt");
 
         let combined = projects_for_filters_auth(
             &runtime,
             &auth,
             Some("special"),
-            Some("webcodex"),
+            Some("codegpt"),
             Some(100),
         )
         .await
         .unwrap();
         assert_eq!(combined.total, 1);
-        assert_eq!(combined.projects[0].id, "agent:special:webcodex");
+        assert_eq!(combined.projects[0].id, "agent:special:codegpt");
     }
 
     #[tokio::test]

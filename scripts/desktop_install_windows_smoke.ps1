@@ -1,5 +1,5 @@
-# Install, inspect, and uninstall one newly-built WebCodex Desktop NSIS package.
-# The helper never kills by executable name and never removes WebCodex user state.
+# Install, inspect, and uninstall one newly-built CodeGPT Desktop NSIS package.
+# The helper never kills by executable name and never removes CodeGPT user state.
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)][string]$Installer,
@@ -21,38 +21,38 @@ if ($BuiltAt -le 0) {
     throw "BuiltAt must be a positive Unix timestamp"
 }
 
-function Get-WebCodexUninstallEntry {
+function Get-CodeGPTUninstallEntry {
     $root = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall"
     if (-not (Test-Path -LiteralPath $root)) { return $null }
     $entries = @(
         Get-ChildItem -LiteralPath $root -ErrorAction SilentlyContinue |
             ForEach-Object { Get-ItemProperty -LiteralPath $_.PSPath -ErrorAction SilentlyContinue } |
-            Where-Object { $_.DisplayName -eq "WebCodex Desktop" }
+            Where-Object { $_.DisplayName -eq "CodeGPT Desktop" }
     )
     if ($entries.Count -gt 1) {
-        throw "multiple current-user WebCodex Desktop uninstall entries found"
+        throw "multiple current-user CodeGPT Desktop uninstall entries found"
     }
     return @($entries | Select-Object -First 1)[0]
 }
 
 function Resolve-UninstallExecutable([string]$command) {
-    if (-not $command) { throw "WebCodex uninstall command is missing" }
+    if (-not $command) { throw "CodeGPT uninstall command is missing" }
     $match = [regex]::Match($command, '^\s*"([^"]+)"')
     if ($match.Success) { return $match.Groups[1].Value }
     return ($command -split '\s+', 2)[0]
 }
 
 function Resolve-RegistryPath([string]$value, [string]$field) {
-    if (-not $value) { throw "WebCodex $field is missing" }
+    if (-not $value) { throw "CodeGPT $field is missing" }
     $trimmed = $value.Trim()
     if ($trimmed.StartsWith('"') -or $trimmed.EndsWith('"')) {
         if (-not ($trimmed.StartsWith('"') -and $trimmed.EndsWith('"') -and $trimmed.Length -ge 2)) {
-            throw "WebCodex $field has malformed quoting"
+            throw "CodeGPT $field has malformed quoting"
         }
         $trimmed = $trimmed.Substring(1, $trimmed.Length - 2)
     }
     if (-not $trimmed -or $trimmed.Contains('"')) {
-        throw "WebCodex $field is not one executable-system path"
+        throw "CodeGPT $field is not one executable-system path"
     }
     return [System.IO.Path]::GetFullPath($trimmed)
 }
@@ -116,8 +116,8 @@ function Wait-Until([scriptblock]$Condition, [int]$Seconds, [string]$Failure) {
     throw $Failure
 }
 
-if (Get-WebCodexUninstallEntry) {
-    throw "refusing Desktop installer smoke because WebCodex Desktop is already installed for this user"
+if (Get-CodeGPTUninstallEntry) {
+    throw "refusing Desktop installer smoke because CodeGPT Desktop is already installed for this user"
 }
 
 $installedDir = $null
@@ -128,13 +128,13 @@ try {
     if ($installProcess.ExitCode -ne 0) {
         throw "Desktop silent install failed with exit code $($installProcess.ExitCode)"
     }
-    Wait-Until { $null -ne (Get-WebCodexUninstallEntry) } 30 "Desktop installer did not register a current-user uninstall entry"
+    Wait-Until { $null -ne (Get-CodeGPTUninstallEntry) } 30 "Desktop installer did not register a current-user uninstall entry"
     $installed = $true
 
-    $entry = Get-WebCodexUninstallEntry
+    $entry = Get-CodeGPTUninstallEntry
     $uninstaller = Resolve-UninstallExecutable ([string]$entry.UninstallString)
     if (-not (Test-Path -LiteralPath $uninstaller -PathType Leaf)) {
-        throw "registered WebCodex uninstaller does not exist: $uninstaller"
+        throw "registered CodeGPT uninstaller does not exist: $uninstaller"
     }
     $installedDir = if ($entry.InstallLocation) {
         Resolve-RegistryPath ([string]$entry.InstallLocation) "InstallLocation"
@@ -142,22 +142,22 @@ try {
         Split-Path -Parent ([System.IO.Path]::GetFullPath($uninstaller))
     }
 
-    $desktopExe = Join-Path $installedDir "WebCodex.exe"
+    $desktopExe = Join-Path $installedDir "CodeGPT.exe"
     if (-not (Test-Path -LiteralPath $desktopExe -PathType Leaf)) {
-        throw "installed WebCodex Desktop executable is missing: $desktopExe"
+        throw "installed CodeGPT Desktop executable is missing: $desktopExe"
     }
     $expectedDesktopMachine = if ($Platform -eq "win32-x64") { 0x8664 } else { 0xAA64 }
     $actualDesktopMachine = Get-PeMachine $desktopExe
     if ($actualDesktopMachine -ne $expectedDesktopMachine) {
-        throw ("installed WebCodex Desktop architecture mismatch: expected 0x{0:x4}, got 0x{1:x4}" -f $expectedDesktopMachine, $actualDesktopMachine)
+        throw ("installed CodeGPT Desktop architecture mismatch: expected 0x{0:x4}, got 0x{1:x4}" -f $expectedDesktopMachine, $actualDesktopMachine)
     }
-    $runtimeDir = Join-Path $installedDir "webcodex-runtime"
+    $runtimeDir = Join-Path $installedDir "codegpt-runtime"
     if (-not (Test-Path -LiteralPath $runtimeDir -PathType Container)) {
         throw "installed bundled runtime directory is missing: $runtimeDir"
     }
 
     $shortSource = $SourceSha.Substring(0, 12).ToLowerInvariant()
-    foreach ($name in @("webcodex", "webcodex-server", "webcodex-runner")) {
+    foreach ($name in @("codegpt", "codegpt-server", "codegpt-runner")) {
         $binary = Join-Path $runtimeDir "$name.exe"
         if (-not (Test-Path -LiteralPath $binary -PathType Leaf)) {
             throw "installed bundled binary is missing: $binary"
@@ -174,12 +174,12 @@ try {
 } finally {
     if ($installed) {
         if (-not $uninstaller) {
-            $entry = Get-WebCodexUninstallEntry
+            $entry = Get-CodeGPTUninstallEntry
             if ($entry) { $uninstaller = Resolve-UninstallExecutable ([string]$entry.UninstallString) }
         }
         if ($uninstaller -and (Test-Path -LiteralPath $uninstaller -PathType Leaf)) {
             if (-not $installedDir) {
-                throw "WebCodex install directory is unknown before silent uninstall"
+                throw "CodeGPT install directory is unknown before silent uninstall"
             }
             # NSIS normally copies the uninstaller to a temporary directory and exits the
             # original process. `_?=$INSTDIR` keeps the real uninstall in this process so
@@ -189,10 +189,10 @@ try {
             if ($uninstallProcess.ExitCode -ne 0) {
                 throw "Desktop silent uninstall failed with exit code $($uninstallProcess.ExitCode)"
             }
-            Wait-Until { $null -eq (Get-WebCodexUninstallEntry) } 30 "Desktop uninstall entry remained after silent uninstall"
+            Wait-Until { $null -eq (Get-CodeGPTUninstallEntry) } 30 "Desktop uninstall entry remained after silent uninstall"
 
-            $desktopExe = Join-Path $installedDir "WebCodex.exe"
-            $runtimeDir = Join-Path $installedDir "webcodex-runtime"
+            $desktopExe = Join-Path $installedDir "CodeGPT.exe"
+            $runtimeDir = Join-Path $installedDir "codegpt-runtime"
             Wait-Until {
                 -not (Test-Path -LiteralPath $desktopExe) -and
                 -not (Test-Path -LiteralPath $runtimeDir)

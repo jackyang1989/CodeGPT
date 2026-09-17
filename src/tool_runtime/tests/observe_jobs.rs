@@ -164,7 +164,7 @@ fn canonical_observation(
         "cwd": ".",
         "shell": "direct_argv",
         "purpose": "build",
-        "command_summary": "cargo check -p webcodex --lib",
+        "command_summary": "cargo check -p codegpt --lib",
         "detected_summary": {
             "kind": "check",
             "outcome": if terminal { "passed" } else { "in_progress" }
@@ -760,7 +760,7 @@ fn observe_jobs_compact_projection_reset_keeps_recovery_and_loss_evidence() {
     assert_eq!(item["cursor"], json!({"stdout": 5, "stderr": 3}));
     assert_eq!(item["recovery_reason_code"], "server_epoch_changed");
     assert_eq!(item["observation_token"], token);
-    assert_eq!(item["command_summary"], "cargo check -p webcodex --lib");
+    assert_eq!(item["command_summary"], "cargo check -p codegpt --lib");
     assert_eq!(item["purpose"], "build");
 }
 

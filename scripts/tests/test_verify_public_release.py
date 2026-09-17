@@ -96,7 +96,7 @@ class ManifestTests(unittest.TestCase):
         digest = "sha256:" + "c" * 64
         bootstrap = (
             "#!/bin/sh\n"
-            f"image: ${{WEBCODEX_SERVER_IMAGE:-{verifier.SERVER_IMAGE}@{digest}}}\n"
+            f"image: ${{CODEGPT_SERVER_IMAGE:-{verifier.SERVER_IMAGE}@{digest}}}\n"
             f"compose_target={verifier.SERVER_MATERIALIZED_COMPOSE}\n"
         ).encode()
         metadata = {

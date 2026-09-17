@@ -31,7 +31,7 @@ fn resolved(id: &str, client: &str, root: &str) -> ResolvedProject {
 
 fn runtime_with_memory() -> (ToolRuntime, tempfile::TempDir) {
     let tmp = tempfile::tempdir().unwrap();
-    let db = Arc::new(crate::Database::open(&tmp.path().join("webcodex.db")).unwrap());
+    let db = Arc::new(crate::Database::open(&tmp.path().join("codegpt.db")).unwrap());
     (
         ToolRuntime::new_for_tests()
             .with_memory_database(db)
@@ -291,7 +291,7 @@ fn memory_runtime_search_read_cas_pagination_and_project_scope_are_explicit() {
         "architecture-decisions".to_string(),
         Some(format!(
             "wc_memrev_{}",
-            webcodex_core::compact::encode([0_u8; 32])
+            codegpt_core::compact::encode([0_u8; 32])
         )),
     );
     assert!(!stale_read.success);
@@ -566,7 +566,7 @@ async fn memory_bootstrap_is_lightweight_explicit_bounded_and_post_tool() {
             &mut result,
             &[
                 "memory.bootstrap".to_string(),
-                "webcodex.workflow".to_string(),
+                "codegpt.workflow".to_string(),
             ],
             Some(&project),
             Some(&sidecar_auth),
@@ -684,7 +684,7 @@ async fn context_material_registry_enforces_scope_and_surface_before_provider() 
                 "project.instructions".to_string(),
                 "skills.catalog".to_string(),
                 "memory.bootstrap".to_string(),
-                "webcodex.workflow".to_string(),
+                "codegpt.workflow".to_string(),
                 "future.material".to_string(),
             ],
             Some(&project),
@@ -711,7 +711,7 @@ async fn context_material_registry_enforces_scope_and_surface_before_provider() 
     assert_eq!(
         materials
             .iter()
-            .find(|item| item["key"] == "webcodex.workflow")
+            .find(|item| item["key"] == "codegpt.workflow")
             .unwrap()["status"],
         "available"
     );
@@ -806,7 +806,7 @@ async fn context_material_registry_enforces_scope_and_surface_before_provider() 
     runtime
         .add_requested_context_projection(
             &mut public,
-            &["webcodex.workflow".to_string()],
+            &["codegpt.workflow".to_string()],
             None,
             None,
             ContextMaterialCapabilities::default(),
@@ -1184,7 +1184,7 @@ async fn memory_surface_scopes_and_permission_are_independent_authority() {
 #[tokio::test]
 async fn memory_scope_lifecycle_is_offline_safe_unregister_explicit_and_purge_only() {
     let tmp = tempfile::tempdir().unwrap();
-    let db = Arc::new(crate::Database::open(&tmp.path().join("webcodex.db")).unwrap());
+    let db = Arc::new(crate::Database::open(&tmp.path().join("codegpt.db")).unwrap());
     let runtime = ToolRuntime::new_for_tests()
         .with_memory_database(db.clone())
         .with_permission_evaluator(PermissionEvaluator::with_mode(AuthorityMode::TrustedAgent));
@@ -1851,7 +1851,7 @@ async fn memory_scope_lifecycle_authority_surface_and_permission_are_independent
 
     let restricted_tmp = tempfile::tempdir().unwrap();
     let restricted_db =
-        Arc::new(crate::Database::open(&restricted_tmp.path().join("webcodex.db")).unwrap());
+        Arc::new(crate::Database::open(&restricted_tmp.path().join("codegpt.db")).unwrap());
     let eval_count = Arc::new(AtomicUsize::new(0));
     let restricted = ToolRuntime::new_for_tests()
         .with_memory_database(restricted_db.clone())
@@ -2056,7 +2056,7 @@ fn memory_catalog_revision_depends_only_on_key_revision_pairs() {
             updated_by_kind: "test".to_string(),
             updated_by_principal_digest: Some(format!("wc_memprincipal_{}", "1".repeat(64))),
             generation: 1,
-            revision: format!("wc_memrev_{}", webcodex_core::compact::encode([0xbb; 32])),
+            revision: format!("wc_memrev_{}", codegpt_core::compact::encode([0xbb; 32])),
             created_at_unix_ms: 1,
             updated_at_unix_ms: 99,
         },
@@ -2074,7 +2074,7 @@ fn memory_catalog_revision_depends_only_on_key_revision_pairs() {
             updated_by_kind: "test".to_string(),
             updated_by_principal_digest: Some(format!("wc_memprincipal_{}", "2".repeat(64))),
             generation: 1,
-            revision: format!("wc_memrev_{}", webcodex_core::compact::encode([0xaa; 32])),
+            revision: format!("wc_memrev_{}", codegpt_core::compact::encode([0xaa; 32])),
             created_at_unix_ms: 2,
             updated_at_unix_ms: 3,
         },

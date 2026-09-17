@@ -297,12 +297,12 @@ async fn stateless_full_trace_preserves_raw_context_ack_and_records_clean_effect
 {
     let trace_root = tempfile::tempdir().unwrap();
     let mut env = crate::test_support::TestEnvGuard::new();
-    env.set("WEBCODEX_TOOL_REQUEST_TRACE", "full");
+    env.set("CODEGPT_TOOL_REQUEST_TRACE", "full");
     env.set(
-        "WEBCODEX_TOOL_REQUEST_TRACE_DIR",
+        "CODEGPT_TOOL_REQUEST_TRACE_DIR",
         trace_root.path().to_string_lossy().as_ref(),
     );
-    env.set("WEBCODEX_TOOL_REQUEST_TRACE_MAX_TOTAL_BYTES", "8388608");
+    env.set("CODEGPT_TOOL_REQUEST_TRACE_MAX_TOTAL_BYTES", "8388608");
 
     let config = test_config(Some("secret"));
     let (_tmp, db) = test_db();
@@ -352,7 +352,7 @@ async fn stateless_full_trace_preserves_raw_context_ack_and_records_clean_effect
         .get(crate::tool_runtime::sessions::TOOL_CALL_ACK_SESSION_CONTEXT_REVISION_FIELD)
         .is_none());
     assert_eq!(effective, json!({}));
-    assert!(!effective.to_string().contains("__webcodex_"));
+    assert!(!effective.to_string().contains("__codegpt_"));
     let final_response = read_phase("final_response");
     assert_eq!(final_response["result"]["isError"], false);
 }
@@ -379,12 +379,12 @@ async fn stateless_full_trace_correlates_only_hashed_openai_window_body() {
 
     let trace_root = tempfile::tempdir().unwrap();
     let mut env = crate::test_support::TestEnvGuard::new();
-    env.set("WEBCODEX_TOOL_REQUEST_TRACE", "full");
+    env.set("CODEGPT_TOOL_REQUEST_TRACE", "full");
     env.set(
-        "WEBCODEX_TOOL_REQUEST_TRACE_DIR",
+        "CODEGPT_TOOL_REQUEST_TRACE_DIR",
         trace_root.path().to_string_lossy().as_ref(),
     );
-    env.set("WEBCODEX_TOOL_REQUEST_TRACE_MAX_TOTAL_BYTES", "8388608");
+    env.set("CODEGPT_TOOL_REQUEST_TRACE_MAX_TOTAL_BYTES", "8388608");
 
     let config = test_config(Some("secret"));
     let (_tmp, db) = test_db();
@@ -997,7 +997,7 @@ async fn http_mcp_accepts_loopback_authorities_without_requiring_origin() {
 #[tokio::test]
 async fn http_mcp_accepts_configured_public_authority_and_matching_origin() {
     let mut env = crate::test_support::TestEnvGuard::new();
-    env.set("WEBCODEX_PUBLIC_URL", "https://mcp.example.test");
+    env.set("CODEGPT_PUBLIC_URL", "https://mcp.example.test");
     let config = test_config(None);
     let (_tmp, db) = test_db();
     let runtime = Arc::new(test_runtime());
@@ -1083,7 +1083,7 @@ async fn http_mcp_initialize_success() {
     let body: Value = resp.take_json().await.unwrap();
     assert_eq!(body["jsonrpc"], "2.0");
     assert_eq!(body["id"], 1);
-    assert_eq!(body["result"]["serverInfo"]["name"], "webcodex");
+    assert_eq!(body["result"]["serverInfo"]["name"], "codegpt");
     assert!(body["result"]["protocolVersion"].is_string());
     assert_eq!(
         body["result"]["capabilities"]["tools"]["listChanged"],
@@ -1463,8 +1463,8 @@ async fn http_mcp_2026_request_scoped_ack_redelivers_until_durable_resolution_bo
     )
     .unwrap();
     assert!(!audit.contains("ack_session_message_ids"));
-    assert!(!audit.contains("__webcodex_stateless_ack_session_message_ids"));
-    assert!(!audit.contains("__webcodex_stateless_session_message_resolution"));
+    assert!(!audit.contains("__codegpt_stateless_ack_session_message_ids"));
+    assert!(!audit.contains("__codegpt_stateless_session_message_resolution"));
     assert!(!audit.contains("handled through ordinary list_tools wrapper metadata"));
 }
 
@@ -1476,9 +1476,9 @@ async fn http_mcp_2026_context_request_projects_post_tool_materials_nonfatally()
     let service = Service::new(build_test_router(config, db, runtime));
     let arguments = json!({
         crate::tool_runtime::context_projection::TOOL_CALL_CONTEXT_REQUEST_FIELD: [
-            "webcodex.workflow",
+            "codegpt.workflow",
             "future.material",
-            "webcodex.workflow",
+            "codegpt.workflow",
             "project.instructions"
         ]
     });
@@ -1491,11 +1491,11 @@ async fn http_mcp_2026_context_request_projects_post_tool_materials_nonfatally()
         .as_array()
         .unwrap();
     assert_eq!(materials.len(), 3);
-    assert_eq!(materials[0]["key"], "webcodex.workflow");
+    assert_eq!(materials[0]["key"], "codegpt.workflow");
     assert_eq!(materials[0]["status"], "available");
     assert_eq!(
         materials[0]["projection"]["contract"],
-        "webcodex.coding_workflow"
+        "codegpt.coding_workflow"
     );
     assert_eq!(materials[1]["key"], "future.material");
     assert_eq!(materials[1]["status"], "unsupported");
@@ -1861,7 +1861,7 @@ async fn http_mcp_2026_session_context_revision_recovers_missing_stale_and_inval
     )
     .unwrap();
     assert!(!audit.contains("ack_session_context_revision"));
-    assert!(!audit.contains("__webcodex_stateless_ack_session_context_revision"));
+    assert!(!audit.contains("__codegpt_stateless_ack_session_context_revision"));
 }
 
 #[tokio::test]
@@ -3312,7 +3312,7 @@ async fn http_mcp_get_discovery_returns_metadata() {
         .await;
     assert_eq!(effective_status(&resp), StatusCode::OK);
     let body: Value = resp.take_json().await.unwrap();
-    assert_eq!(body["name"], "webcodex");
+    assert_eq!(body["name"], "codegpt");
     assert!(body["version"].is_string());
     assert_eq!(body["protocol"], "mcp");
     assert!(body["protocolVersion"].is_string());

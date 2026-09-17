@@ -814,7 +814,7 @@ pub(crate) fn sparsify_complete_file_read_output(
         return false;
     };
     let default_limit =
-        webcodex_workspace::file_read_range::EffectiveRange::new(None, None).limit as u64;
+        codegpt_workspace::file_read_range::EffectiveRange::new(None, None).limit as u64;
     let end_line_matches = if total_lines == 0 {
         output.get("end_line").is_some_and(Value::is_null)
     } else {
@@ -1746,7 +1746,7 @@ impl ToolRuntime {
             });
         }
         if result.success
-            && webcodex_tool_contracts::runtime_tool_activity_interaction(tool_name).is_meaningful()
+            && codegpt_tool_contracts::runtime_tool_activity_interaction(tool_name).is_meaningful()
         {
             if let Ok((principal_kind, principal_id)) =
                 super::session_context::runtime_observation_principal(auth)
@@ -2989,7 +2989,7 @@ mod structured_execution_sparse_projection_tests {
     #[test]
     fn terminal_validation_success_keeps_only_independent_mutation_truth() {
         let mut result = ToolResult::ok(json!({
-            "project": "agent:test:webcodex",
+            "project": "agent:test:codegpt",
             "command_summary": "cargo fmt",
             "cwd": ".",
             "shell": "configured",
@@ -3130,7 +3130,7 @@ mod sparse_read_projection_tests {
 
     fn complete_batch_item(outer_path: Option<&str>, inner_path: &str) -> Value {
         let default_limit =
-            webcodex_workspace::file_read_range::EffectiveRange::new(None, None).limit;
+            codegpt_workspace::file_read_range::EffectiveRange::new(None, None).limit;
         let mut item = json!({
             "index": 0,
             "success": true,

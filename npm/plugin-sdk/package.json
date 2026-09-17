@@ -1,7 +1,7 @@
 {
-  "name": "@yyjeqhc/webcodex-plugin-sdk",
+  "name": "@yyjeqhc/codegpt-plugin-sdk",
   "version": "0.1.0",
-  "description": "TypeScript authoring SDK for the WebCodex Native Tool Plugin Protocol v1.",
+  "description": "TypeScript authoring SDK for the CodeGPT Native Tool Plugin Protocol v1.",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -33,11 +33,11 @@
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/yyjeqhc/webcodex.git",
+    "url": "git+https://github.com/yyjeqhc/codegpt.git",
     "directory": "npm/plugin-sdk"
   },
   "keywords": [
-    "webcodex",
+    "codegpt",
     "plugin",
     "typescript",
     "developer-tools"

@@ -4,7 +4,7 @@ use std::ffi::OsStr;
 use std::io;
 use std::path::PathBuf;
 use std::process::Command;
-use webcodex_process::SpawnOptions;
+use codegpt_process::SpawnOptions;
 use winreg::enums::HKEY_CURRENT_USER;
 use winreg::RegKey;
 
@@ -63,7 +63,7 @@ mod tests {
     #[test]
     fn program_on_path_detects_pwsh_without_process_execution() {
         let root = std::env::temp_dir().join(format!(
-            "webcodex-pwsh-path-{}-{}",
+            "codegpt-pwsh-path-{}-{}",
             std::process::id(),
             std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)

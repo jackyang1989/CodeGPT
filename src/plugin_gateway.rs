@@ -5,7 +5,7 @@
 //! stores bounded describe observations, and dispatches the closed typed Plugin
 //! gateway with opaque exact Runner/provider/schema bindings.
 
-pub(crate) use webcodex_core::plugin::*;
+pub(crate) use codegpt_core::plugin::*;
 
 use crate::auth::{AuthContext, SCOPE_PLUGIN_INSPECT, SCOPE_PLUGIN_INVOKE, SCOPE_PLUGIN_MANAGE};
 use crate::json_measurement::serialized_json_len;
@@ -21,7 +21,7 @@ use serde_json::{json, Value};
 use std::collections::{HashMap, VecDeque};
 use std::sync::Mutex;
 use std::time::Duration;
-use webcodex_tool_contracts::PluginToolAction;
+use codegpt_tool_contracts::PluginToolAction;
 
 pub(crate) const PLUGIN_TOOL_NAME: &str = "plugin_tool";
 const MAX_PLUGIN_BINDINGS: usize = 512;
@@ -56,7 +56,7 @@ impl PluginGatewayRuntime {
             .lock()
             .unwrap_or_else(|poisoned| poisoned.into_inner());
         let binding = loop {
-            let candidate = format!("wc_pbind_{}", webcodex_core::compact::random_suffix::<16>());
+            let candidate = format!("wc_pbind_{}", codegpt_core::compact::random_suffix::<16>());
             if !store.values.contains_key(&candidate) {
                 break candidate;
             }
@@ -605,7 +605,7 @@ async fn observe_effective_provider_tools(
         Err(mut error) if matches!(error.code.as_str(), "stale_runner" | "runner_unavailable") => {
             error.code = "plugin_replaced".to_string();
             error.recovery =
-                Some("Re-list the Plugin. WebCodex did not retarget or replay the operation.");
+                Some("Re-list the Plugin. CodeGPT did not retarget or replay the operation.");
             return Err(error);
         }
         Err(error) => return Err(error),
@@ -643,7 +643,7 @@ async fn observe_effective_provider_tools(
         {
             error.code = "plugin_replaced".to_string();
             error.recovery =
-                Some("Re-list the Plugin. WebCodex did not retarget or replay the operation.");
+                Some("Re-list the Plugin. CodeGPT did not retarget or replay the operation.");
             return Err(error);
         }
         Err(error) => return Err(error),
@@ -692,7 +692,7 @@ async fn call_plugin(
             "plugin_replaced",
             "the exact Runner instance described by this binding is no longer current",
         )
-        .recovery("Re-describe this Plugin tool. WebCodex did not retarget or replay the call."));
+        .recovery("Re-describe this Plugin tool. CodeGPT did not retarget or replay the call."));
     }
 
     // Deliberately do not re-list/re-resolve the provider here. The exact
@@ -717,7 +717,7 @@ async fn call_plugin(
             if error.code == "plugin_replaced" {
                 runtime.plugin_gateway.forget(&binding_id);
                 error.recovery = Some(
-                    "Re-describe this Plugin tool. WebCodex did not retarget or replay the call.",
+                    "Re-describe this Plugin tool. CodeGPT did not retarget or replay the call.",
                 );
             }
             return Err(error);
@@ -740,13 +740,13 @@ async fn call_plugin(
             "plugin_schema_changed" | "plugin_tool_unavailable"
         ) {
             error.recovery = Some(
-                "Re-describe this Plugin tool before calling again; WebCodex did not retarget or replay the call.",
+                "Re-describe this Plugin tool before calling again; CodeGPT did not retarget or replay the call.",
             );
         }
         if error.code == "stale_plugin_provider" || error.code == "plugin_provider_unavailable" {
             error.code = "plugin_replaced".to_string();
             error.recovery = Some(
-                "The exact Plugin provider instance changed or retired. Re-describe it; WebCodex did not retarget or replay the call.",
+                "The exact Plugin provider instance changed or retired. Re-describe it; CodeGPT did not retarget or replay the call.",
             );
         }
         return Err(error);
@@ -849,7 +849,7 @@ pub(crate) async fn execute_exact(
                 )
             };
             GatewayError::local(code, public_message).recovery(
-                "Re-list or re-describe the Plugin. WebCodex did not retarget or replay this operation.",
+                "Re-list or re-describe the Plugin. CodeGPT did not retarget or replay this operation.",
             )
         })?;
 
@@ -1130,7 +1130,7 @@ fn required_binding(value: Option<&str>) -> Result<&str, GatewayError> {
             "binding is not a valid opaque Plugin binding",
         ));
     };
-    if webcodex_core::compact::decode::<16>(random).is_none() {
+    if codegpt_core::compact::decode::<16>(random).is_none() {
         return Err(GatewayError::local(
             "invalid_arguments",
             "binding is not a valid opaque Plugin binding",
@@ -1145,7 +1145,7 @@ fn describe_required_error() -> GatewayError {
         "this Plugin binding is unavailable to the current credential or is no longer retained",
     )
     .recovery(
-        "Call plugin_tool with action=describe for the intended runner, plugin, and tool, then call with the returned binding. WebCodex did not retarget or replay the call.",
+        "Call plugin_tool with action=describe for the intended runner, plugin, and tool, then call with the returned binding. CodeGPT did not retarget or replay the call.",
     )
 }
 
@@ -1250,7 +1250,7 @@ mod tests {
     }
 
     #[test]
-    fn webcodex_generated_gateway_results_keep_canonical_data_only_in_structured_content() {
+    fn codegpt_generated_gateway_results_keep_canonical_data_only_in_structured_content() {
         let metadata = json!({
             "runner": "runner-a",
             "plugins": [{"plugin": "repo-tools", "status": "ready"}]
@@ -1362,7 +1362,7 @@ mod tests {
 
     #[test]
     fn canonical_plugin_tool_catalog_hides_runtime_identity_and_provider_defined_output_schema() {
-        let spec = webcodex_tool_contracts::registered_tool_specs()
+        let spec = codegpt_tool_contracts::registered_tool_specs()
             .into_iter()
             .find(|spec| spec.name == PLUGIN_TOOL_NAME)
             .expect("plugin_tool must be a canonical registered ToolSpec");

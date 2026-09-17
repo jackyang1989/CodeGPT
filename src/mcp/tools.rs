@@ -34,7 +34,7 @@ fn filter_specs_for_oauth(mut specs: Vec<ToolSpec>, auth: Option<&AuthContext>) 
             .map(|metadata| metadata.authority);
         matches!(
             authority,
-            Some(webcodex_core::authority::ToolAuthorityPolicy::RequireAny(_))
+            Some(codegpt_core::authority::ToolAuthorityPolicy::RequireAny(_))
         )
         .then(|| check_runtime_tool_scope(auth, &spec.name).is_ok())
         .unwrap_or_else(|| {
@@ -454,7 +454,7 @@ fn add_context_projection_to_output_shape(
                     "type": "object",
                     "properties": {
                         "status": {"type": "string", "enum": ["exact", "behind", "unacknowledged", "invalid", "recovered"], "description": "Observed Context continuity state only; it is not authority, retry permission, or an action."},
-                        "suggested_call": webcodex_tool_contracts::suggested_tool_call_schema(
+                        "suggested_call": codegpt_tool_contracts::suggested_tool_call_schema(
                             "session_handoff_summary",
                             json!({
                                 "type": "object",
@@ -566,7 +566,7 @@ pub(super) fn add_stateless_workflow_recorder_metadata(payload: &mut Value) {
             crate::tool_runtime::sessions::TOOL_CALL_SESSION_MESSAGE_RESOLUTION_FIELD.to_string(),
             json!({
                 "type": "object",
-                "description": "After handling one non-todo message in the explicit recording Session, attach its id and bounded resolution text here to resolve it on the same WebCodex call. Any ACK-required Session message also needs request-scoped ACK. Applies only to that exact recording Session; removed before concrete parsing; does not apply to Peer messages and does not predict call success. Todos use the atomic completion path.",
+                "description": "After handling one non-todo message in the explicit recording Session, attach its id and bounded resolution text here to resolve it on the same CodeGPT call. Any ACK-required Session message also needs request-scoped ACK. Applies only to that exact recording Session; removed before concrete parsing; does not apply to Peer messages and does not predict call success. Todos use the atomic completion path.",
                 "properties": {
                     "message_id": {
                         "type": "string",
@@ -1236,7 +1236,7 @@ fn log_mcp_host_file_import_trust_decision(
         .and_then(|auth| auth.allowed_client_id.as_deref())
         .is_some_and(|client_id| !client_id.trim().is_empty());
     tracing::info!(
-        target: "webcodex::mcp",
+        target: "codegpt::mcp",
         trust = decision.trust.is_trusted(),
         reason = decision.reason.as_str(),
         auth_kind = mcp_auth_kind_classification(auth),
@@ -1314,7 +1314,7 @@ pub(super) fn strip_stateless_ack_session_message_ids(
             ));
         };
         let value = value.trim();
-        if !webcodex_core::workflow_session_contract::is_valid_session_message_id(value) {
+        if !codegpt_core::workflow_session_contract::is_valid_session_message_id(value) {
             return Err(format!(
                 "field '{}' must contain only valid wc_msg_* ids",
                 crate::tool_runtime::sessions::TOOL_CALL_ACK_SESSION_MESSAGE_IDS_FIELD
@@ -1355,7 +1355,7 @@ pub(super) fn strip_stateless_session_message_resolution(
         return Err("session_message_resolution.message_id must be a wc_msg_* string".to_string());
     };
     let message_id = message_id.trim().to_string();
-    if !webcodex_core::workflow_session_contract::is_valid_session_message_id(&message_id) {
+    if !codegpt_core::workflow_session_contract::is_valid_session_message_id(&message_id) {
         return Err(
             "session_message_resolution.message_id must be a valid wc_msg_* id".to_string(),
         );

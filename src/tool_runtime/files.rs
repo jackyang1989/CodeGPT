@@ -6,7 +6,7 @@ use std::collections::HashSet;
 use std::path::Path;
 use std::time::Duration;
 use tokio::time::Instant;
-use webcodex_workspace::file_read_range::{self, EffectiveRange, FileReadRange, ReadFileReason};
+use codegpt_workspace::file_read_range::{self, EffectiveRange, FileReadRange, ReadFileReason};
 
 #[cfg(test)]
 use super::helpers::run_command_sync;

@@ -1,8 +1,8 @@
-# WebCodex Desktop 快速安装与 ChatGPT 连接
+# CodeGPT Desktop 快速安装与 ChatGPT 连接
 
 [English](desktop-install.md) | [简体中文](desktop-install.zh-CN.md)
 
-对于普通 Windows / macOS 个人用户，**最推荐的路径是 WebCodex Desktop + 官方 OpenAI Secure Tunnel**。Server 和 Runner 都留在本机，ChatGPT 通过私有 Tunnel 连接；第一次使用不需要先配置反向代理、OAuth、系统 service 或公开的 WebCodex 地址。
+对于普通 Windows / macOS 个人用户，**最推荐的路径是 CodeGPT Desktop + 官方 OpenAI Secure Tunnel**。Server 和 Runner 都留在本机，ChatGPT 通过私有 Tunnel 连接；第一次使用不需要先配置反向代理、OAuth、系统 service 或公开的 CodeGPT 地址。
 
 普通用户只需要按下面这条主链走，不需要理解 Runner registry、`runtime_project_id`、内部 MCP authorization 文件或 launchd 的实现细节：
 
@@ -21,18 +21,18 @@
 
 安装完成后的日常操作请看[Desktop 使用指南](desktop-guide.zh-CN.md)。新版首页以当前项目和三个使用步骤为中心，组件详情收在“查看运行诊断”中。下文的 OpenAI 平台截图用于配置参考；Desktop 操作以文字中的当前控件名称为准。
 
-## 1. 安装 WebCodex Desktop
+## 1. 安装 CodeGPT Desktop
 
-从 [GitHub Releases](https://github.com/yyjeqhc/webcodex/releases) 下载对应安装包：
+从 [GitHub Releases](https://github.com/yyjeqhc/codegpt/releases) 下载对应安装包：
 
 - **Windows：**使用 Windows x64 installer。
 - **macOS：**按 Mac 架构选择 Intel 或 Apple Silicon DMG。
 
 当前 macOS 构建使用 ad-hoc 签名且没有 notarization。如果 Gatekeeper 拦截新下载构建的首次启动，进入**系统设置 → 隐私与安全 → 仍要打开**，再确认**打开**；不要全局关闭 Gatekeeper。
 
-安装完成后启动 WebCodex Desktop。
+安装完成后启动 CodeGPT Desktop。
 
-**成功时你应该看到：**WebCodex 主窗口能够打开，首页没有安装包/运行时缺失错误。
+**成功时你应该看到：**CodeGPT 主窗口能够打开，首页没有安装包/运行时缺失错误。
 
 **失败时：**macOS 被 Gatekeeper 拦截就按上面的“仍要打开”处理；安装包或 bundled runtime 缺失则重新安装同一版本，不要手工拼装内部二进制。
 
@@ -40,15 +40,15 @@
 
 ### 后台驻留与登录时启动
 
-WebCodex Desktop 是长期运行的本机 Runtime 控制器。关闭主窗口**不会**退出应用：
+CodeGPT Desktop 是长期运行的本机 Runtime 控制器。关闭主窗口**不会**退出应用：
 
-- **macOS：**通过菜单栏中的 WebCodex 图标重新打开窗口。
-- **Windows：**通过系统托盘中的 WebCodex 图标重新打开窗口。
+- **macOS：**通过菜单栏中的 CodeGPT 图标重新打开窗口。
+- **Windows：**通过系统托盘中的 CodeGPT 图标重新打开窗口。
 - 窗口隐藏后，Desktop 自己管理的本机 Server、Runner、Regular OpenAI Secure Tunnel，以及当时正在运行的 Quick Share 都会继续运行。Quick Share 仍然只是临时会话；后台驻留不会把它变成永久服务。
 - **停止本机运行环境**是用户明确选择的 desired-state 操作：它会停止本机 Runtime，并改变已保存的 Runtime 偏好；这和隐藏窗口不是同一件事。
-- **退出 WebCodex**才是真正退出应用。退出时 Desktop 会回收自己拥有的进程树，不会按进程名称广泛终止不属于 Desktop 的其他 WebCodex 进程。
+- **退出 CodeGPT**才是真正退出应用。退出时 Desktop 会回收自己拥有的进程树，不会按进程名称广泛终止不属于 Desktop 的其他 CodeGPT 进程。
 
-在**设置 → 后台与启动**中开启**登录时启动 WebCodex**后，Desktop 会向操作系统注册登录启动，并以后台方式启动，不主动显示主窗口。这个设置与 Runtime 的保存偏好相互独立：`runtime_autostart` 仍决定是否恢复已保存的本机 Runtime，已保存的连接偏好仍决定条件合适时是否恢复 Regular ChatGPT Tunnel。
+在**设置 → 后台与启动**中开启**登录时启动 CodeGPT**后，Desktop 会向操作系统注册登录启动，并以后台方式启动，不主动显示主窗口。这个设置与 Runtime 的保存偏好相互独立：`runtime_autostart` 仍决定是否恢复已保存的本机 Runtime，已保存的连接偏好仍决定条件合适时是否恢复 Regular ChatGPT Tunnel。
 
 ### 日常操作
 
@@ -70,7 +70,7 @@ Tunnel 名称可以自定义；记录自己的 Tunnel ID。API key 建议使用 
 
 ![OpenAI API Keys 页面](desktop-install/image-20260906171633208.png)
 
-不要把真实 API key、WebCodex token 或 authorization 内容提交到 Git、issue、截图或聊天记录中。
+不要把真实 API key、CodeGPT token 或 authorization 内容提交到 Git、issue、截图或聊天记录中。
 
 ## 3. 在 Desktop 内保存 Tunnel 配置（推荐）
 
@@ -86,10 +86,10 @@ Tunnel 名称可以自定义；记录自己的 Tunnel ID。API key 建议使用 
 
 配置保存在 Desktop 的本机应用数据目录中，相对路径为 `secrets/tunnel-config.json`：
 
-- macOS：`~/Library/Application Support/dev.webcodex.desktop/secrets/tunnel-config.json`。
-- Windows：`%LOCALAPPDATA%\dev.webcodex.desktop\secrets\tunnel-config.json`。
+- macOS：`~/Library/Application Support/dev.codegpt.desktop/secrets/tunnel-config.json`。
+- Windows：`%LOCALAPPDATA%\dev.codegpt.desktop\secrets\tunnel-config.json`。
 
-该文件包含**未加密的 API key**，请不要放入项目、Git、工单或共享备份。macOS/Unix 写入权限为当前用户读写（`0600`）；Windows 继承本机用户应用数据目录的访问权限。保存采用原子替换，不会为密钥文件保留旧值备份。`secrets` 目录受 WebCodex 现有敏感路径策略保护。普通 `desktop-state.json` 仍只保存非密钥运行状态。
+该文件包含**未加密的 API key**，请不要放入项目、Git、工单或共享备份。macOS/Unix 写入权限为当前用户读写（`0600`）；Windows 继承本机用户应用数据目录的访问权限。保存采用原子替换，不会为密钥文件保留旧值备份。`secrets` 目录受 CodeGPT 现有敏感路径策略保护。普通 `desktop-state.json` 仍只保存非密钥运行状态。
 
 点击 **清除已保存配置，改用环境变量** 会清除保存的一组值，恢复环境变量回退；文件中记录为 `null`。已有文件无效或无法读取时不会自动改用环境变量，请在界面重新保存，或者清除配置。手工编辑文件后需重新启动 Desktop；界面保存无需重启。
 
@@ -102,19 +102,19 @@ CONTROL_PLANE_TUNNEL_ID
 CONTROL_PLANE_API_KEY
 ```
 
-无需额外设置 `OPENAI_ADMIN_KEY` 或 `OPENAI_API_KEY`。首次启动 OpenAI Secure Tunnel 时，WebCodex 会自动下载并校验固定版本的 `tunnel-client`；通常不用手动安装。下载失败时检查网络或代理，高级用户可指定 `WEBCODEX_TUNNEL_CLIENT_BIN`。
+无需额外设置 `OPENAI_ADMIN_KEY` 或 `OPENAI_API_KEY`。首次启动 OpenAI Secure Tunnel 时，CodeGPT 会自动下载并校验固定版本的 `tunnel-client`；通常不用手动安装。下载失败时检查网络或代理，高级用户可指定 `CODEGPT_TUNNEL_CLIENT_BIN`。
 
-Windows 用户可以设置当前用户的持久环境变量。macOS 从 Finder / Dock 启动不会读取 `~/.zshrc`；需要从已加载变量的 Terminal 启动应用，或者配置登录会话环境。如果选择这种高级方式，修改变量后须通过托盘 **退出 WebCodex**，再重新启动。关闭窗口只是隐藏，不会更新进程环境。**重新检测配置** 不会执行 shell 启动脚本，也不会读取手工修改的配置文件。
+Windows 用户可以设置当前用户的持久环境变量。macOS 从 Finder / Dock 启动不会读取 `~/.zshrc`；需要从已加载变量的 Terminal 启动应用，或者配置登录会话环境。如果选择这种高级方式，修改变量后须通过托盘 **退出 CodeGPT**，再重新启动。关闭窗口只是隐藏，不会更新进程环境。**重新检测配置** 不会执行 shell 启动脚本，也不会读取手工修改的配置文件。
 
 ### macOS 的 Computer Use 权限
 
-如果需要截图、窗口观察、键盘鼠标等能力，请在 **系统设置 → 隐私与安全性** 为实际运行 WebCodex Runner / Desktop 的进程授予相应权限：包括 **屏幕与系统音频录制**，界面控制还需要 **辅助功能**。授权后按系统要求重启相关进程。
+如果需要截图、窗口观察、键盘鼠标等能力，请在 **系统设置 → 隐私与安全性** 为实际运行 CodeGPT Runner / Desktop 的进程授予相应权限：包括 **屏幕与系统音频录制**，界面控制还需要 **辅助功能**。授权后按系统要求重启相关进程。
 
 **成功时：**配置来源显示为本机文件，两项检测都通过。接下来选择真正要给 ChatGPT 使用的项目。
 
 ## 4. 启动本机运行环境并添加项目
 
-首次启动后，选择 **Local Full Runtime / 在此电脑使用 WebCodex**，并直接选择**真正要让 ChatGPT 使用的代码仓库目录**。Desktop 会准备本机 Service + Runner，并让 Runner 加载这个精确项目。默认 workspace 只用于 Desktop 自身，不应该替代你的真实项目选择。
+首次启动后，选择 **Local Full Runtime / 在此电脑使用 CodeGPT**，并直接选择**真正要让 ChatGPT 使用的代码仓库目录**。Desktop 会准备本机 Service + Runner，并让 Runner 加载这个精确项目。默认 workspace 只用于 Desktop 自身，不应该替代你的真实项目选择。
 
 选择项目后才能提交配置。如果项目配置或可选的 Tunnel 启动失败，配置页会保留你的项目选择并显示错误，方便重试。
 
@@ -180,7 +180,7 @@ Windows 用户可以设置当前用户的持久环境变量。macOS 从 Finder /
 2. 填入刚才的 Tunnel ID。
 3. **Authentication 选择 None / No authentication**。
 
-这里不需要 OAuth。WebCodex 会在本机保存 MCP authorization credential，并由 Tunnel client 注入；ChatGPT 侧不需要看到这份本机凭据。
+这里不需要 OAuth。CodeGPT 会在本机保存 MCP authorization credential，并由 Tunnel client 注入；ChatGPT 侧不需要看到这份本机凭据。
 
 保存 ChatGPT 连接后，回到 Desktop。仅仅保存 ChatGPT 配置并不会自动把 Desktop 的本地 Tunnel 证据升级成“已连接”；如果当前版本没有稳定的外部 MCP 客户端观测信号，Desktop 会继续保守显示“等待 ChatGPT”。
 
@@ -198,9 +198,9 @@ Windows 用户可以设置当前用户的持久环境变量。macOS 从 Finder /
 
 ## 8. 最小验收
 
-连接后先做**一个最小、真实的项目读取**，例如：“列出 WebCodex 项目，然后列出我刚选择项目的顶层文件；空目录请报告为空”。只有这一步成功，才证明完整链路真的打通：
+连接后先做**一个最小、真实的项目读取**，例如：“列出 CodeGPT 项目，然后列出我刚选择项目的顶层文件；空目录请报告为空”。只有这一步成功，才证明完整链路真的打通：
 
-- 列出 WebCodex 项目。
+- 列出 CodeGPT 项目。
 - 读取一个文件。
 - 在明确注册的项目中创建并再读取一个临时文件，然后删除。
 - 执行 `git status`、`uname -a` / `ver` 等只读命令。
@@ -212,7 +212,7 @@ Windows 用户可以设置当前用户的持久环境变量。macOS 从 Finder /
 
 ## 常见问题
 
-**OpenAI Secure Tunnel 按钮不可用**：查看 Desktop 的“OpenAI Tunnel 配置检测”。缺哪一项会明确显示；点“重新检测配置”只观察当前进程。如果变量刚设置，必须**完全退出 WebCodex 后重新启动**，关闭窗口不算退出。
+**OpenAI Secure Tunnel 按钮不可用**：查看 Desktop 的“OpenAI Tunnel 配置检测”。缺哪一项会明确显示；点“重新检测配置”只观察当前进程。如果变量刚设置，必须**完全退出 CodeGPT 后重新启动**，关闭窗口不算退出。
 
 **macOS `.zshrc` 已配置但 Desktop 仍检测不到**：这是正常的进程环境语义。Finder / Dock 不 source `~/.zshrc`；按上面的 Terminal 或 `launchctl setenv` 方式处理。Desktop 的“重新检测配置”不会执行 shell startup script。
 
@@ -222,4 +222,4 @@ Windows 用户可以设置当前用户的持久环境变量。macOS 从 Finder /
 
 **出现 `project_not_loaded` / 项目尚未就绪**：点击“重新加载项目”。Desktop 会重试同一个项目并只管理自己拥有的 Runner；普通用户不需要理解或手工修改内部 project registry。
 
-**我关了窗口再打开，为什么新环境变量还是识别不到**：因为 #346 之后关闭窗口默认是隐藏到菜单栏/托盘，进程一直没退出。使用菜单栏/托盘中的**退出 WebCodex**，再重新启动新进程。
+**我关了窗口再打开，为什么新环境变量还是识别不到**：因为 #346 之后关闭窗口默认是隐藏到菜单栏/托盘，进程一直没退出。使用菜单栏/托盘中的**退出 CodeGPT**，再重新启动新进程。

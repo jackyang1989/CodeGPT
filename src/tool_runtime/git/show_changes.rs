@@ -6,7 +6,7 @@ use std::time::Duration;
 use base64::{engine::general_purpose, Engine as _};
 use serde_json::{json, Value};
 
-use webcodex_core::runtime_contract::DEFAULT_GIT_DIFF_HUNKS_PAGE_BYTES;
+use codegpt_core::runtime_contract::DEFAULT_GIT_DIFF_HUNKS_PAGE_BYTES;
 
 use super::super::helpers::{
     decode_git_quoted_path, shell_escape_simple, validate_project_relative_path,
@@ -25,7 +25,7 @@ use crate::runner_protocol::ShellRunRequest;
 use crate::tool_runtime::sessions::{SessionEvent, SessionSummary};
 
 #[cfg(test)]
-pub(crate) const SHOW_CHANGES_SENTINEL: &str = "@@WEBCODEX_SHOW_CHANGES_SEP@@";
+pub(crate) const SHOW_CHANGES_SENTINEL: &str = "@@CODEGPT_SHOW_CHANGES_SEP@@";
 const SHOW_CHANGES_BLOCK_TRAILER_BYTES: usize = 30;
 const SHOW_CHANGES_BLOCK_MAGIC: &[u8; 6] = b"WCSF1:";
 
@@ -494,7 +494,7 @@ pub(crate) fn show_changes_command(
            fi;
            hm=$(printf 'head_exit=%s\nhead_truncated=%s\nhead_bytes=%s' "$head_exit_raw" "$he" "$head_frame_bytes");
            printf '%s\n' "$hm"; printf 'WCSF1:H:%010d:%010d\n' "$head_frame_bytes" "$(( ${#hm}+1 ))";
-           { git diff --stat 2>/dev/null; printf '__WEBCODEX_STAT_EXIT__=%s\n' "$?"; } | {
+           { git diff --stat 2>/dev/null; printf '__CODEGPT_STAT_EXIT__=%s\n' "$?"; } | {
              sb=0; se=0; stat_exit_raw=; have=0; pending=;
              while IFS= read -r sline; do
                next=$sline; sline=$pending; pending=$next;
@@ -502,14 +502,14 @@ pub(crate) fn show_changes_command(
                ll=$((${#sline}+1));
                if [ "$((sb + ll))" -gt __DIFF_STAT_BUDGET__ ]; then se=1; else printf '%s\n' "$sline"; sb=$((sb+ll)); fi;
              done;
-             case "$pending" in __WEBCODEX_STAT_EXIT__=*) stat_exit_raw=${pending#__WEBCODEX_STAT_EXIT__=} ;; *) stat_exit_raw= ;; esac;
+             case "$pending" in __CODEGPT_STAT_EXIT__=*) stat_exit_raw=${pending#__CODEGPT_STAT_EXIT__=} ;; *) stat_exit_raw= ;; esac;
              stat_wire_bytes=$sb; if [ "$sb" -gt 0 ]; then sb=$((sb-1)); fi;
              tm=$(printf 'diff_stat_exit=%s\ndiff_stat_truncated=%s\ndiff_stat_bytes=%s' "$stat_exit_raw" "$se" "$sb");
              printf '%s\n' "$tm"; printf 'WCSF1:T:%010d:%010d\n' "$stat_wire_bytes" "$(( ${#tm}+1 ))";
            };
            nb_base=HEAD;
            if ! git rev-parse --verify HEAD >/dev/null 2>&1; then nb_base=$(printf '' | git hash-object -t tree --stdin 2>/dev/null); fi;
-           { git -c core.quotePath=false diff --no-ext-diff --no-textconv --numstat --no-renames "$nb_base" -- 2>/dev/null; printf '__WEBCODEX_NUMSTAT_EXIT__=%s\n' "$?"; } | {
+           { git -c core.quotePath=false diff --no-ext-diff --no-textconv --numstat --no-renames "$nb_base" -- 2>/dev/null; printf '__CODEGPT_NUMSTAT_EXIT__=%s\n' "$?"; } | {
              nb=0; ne=0; numstat_exit_raw=; have=0; pending=;
              while IFS= read -r nline; do
                next=$nline; nline=$pending; pending=$next;
@@ -517,7 +517,7 @@ pub(crate) fn show_changes_command(
                ll=$((${#nline}+1));
                if [ "$((nb + ll))" -gt __NUMSTAT_BYTE_BUDGET__ ]; then ne=1; else printf '%s\n' "$nline"; nb=$((nb+ll)); fi;
              done;
-             case "$pending" in __WEBCODEX_NUMSTAT_EXIT__=*) numstat_exit_raw=${pending#__WEBCODEX_NUMSTAT_EXIT__=} ;; *) numstat_exit_raw= ;; esac;
+             case "$pending" in __CODEGPT_NUMSTAT_EXIT__=*) numstat_exit_raw=${pending#__CODEGPT_NUMSTAT_EXIT__=} ;; *) numstat_exit_raw= ;; esac;
              numstat_wire_bytes=$nb; if [ "$nb" -gt 0 ]; then nb=$((nb-1)); fi;
              nm=$(printf 'numstat_exit=%s\nnumstat_truncated=%s\nnumstat_bytes=%s' "$numstat_exit_raw" "$ne" "$nb");
              printf '%s\n' "$nm"; printf 'WCSF1:N:%010d:%010d\n' "$numstat_wire_bytes" "$(( ${#nm}+1 ))";
@@ -1672,7 +1672,7 @@ fn untracked_preview_path_is_sensitive(path: &str) -> bool {
                     | "projects.d"
                     | "runner.toml"
                     | "agent.toml"
-                    | "webcodex.env"
+                    | "codegpt.env"
                     | ".env"
                     | "secrets"
                     | "tokens"
@@ -1681,7 +1681,7 @@ fn untracked_preview_path_is_sensitive(path: &str) -> bool {
             ) || part.starts_with(".env")
                 || part.starts_with("runner.toml")
                 || part.starts_with("agent.toml")
-                || part.starts_with("webcodex.env")
+                || part.starts_with("codegpt.env")
                 || part.ends_with(".pem")
                 || part.ends_with(".key")
         })

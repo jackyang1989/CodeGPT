@@ -12,7 +12,7 @@ use crate::runner_protocol::ShellCommandExecutionState;
 const GIT_COMMIT_PATHS_MAX_PATHS: usize = 32;
 const GIT_COMMIT_PATH_MAX_CHARS: usize = 512;
 const GIT_COMMIT_MESSAGE_MAX_CHARS: usize = 1000;
-pub(crate) const GIT_COMMIT_RESULT_PREFIX: &str = "@@WEBCODEX_GIT_COMMIT@@";
+pub(crate) const GIT_COMMIT_RESULT_PREFIX: &str = "@@CODEGPT_GIT_COMMIT@@";
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct GitCommitMarker {
@@ -86,11 +86,11 @@ fn git_commit_paths_script(expected_head: &str, paths: &[String], message: &str)
          export LC_ALL=C GIT_PAGER=cat GIT_TERMINAL_PROMPT=0\n\
          unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE GIT_OBJECT_DIRECTORY GIT_ALTERNATE_OBJECT_DIRECTORIES GIT_COMMON_DIR GIT_NAMESPACE\n\
          expected={expected}\n\
-         index_file=$(mktemp \"${{TMPDIR:-/tmp}}/webcodex-index.XXXXXX\")\n\
-         req_file=$(mktemp \"${{TMPDIR:-/tmp}}/webcodex-req.XXXXXX\")\n\
-         req_sorted=$(mktemp \"${{TMPDIR:-/tmp}}/webcodex-req-sorted.XXXXXX\")\n\
-         staged_file=$(mktemp \"${{TMPDIR:-/tmp}}/webcodex-staged.XXXXXX\")\n\
-         msg_file=$(mktemp \"${{TMPDIR:-/tmp}}/webcodex-msg.XXXXXX\")\n\
+         index_file=$(mktemp \"${{TMPDIR:-/tmp}}/codegpt-index.XXXXXX\")\n\
+         req_file=$(mktemp \"${{TMPDIR:-/tmp}}/codegpt-req.XXXXXX\")\n\
+         req_sorted=$(mktemp \"${{TMPDIR:-/tmp}}/codegpt-req-sorted.XXXXXX\")\n\
+         staged_file=$(mktemp \"${{TMPDIR:-/tmp}}/codegpt-staged.XXXXXX\")\n\
+         msg_file=$(mktemp \"${{TMPDIR:-/tmp}}/codegpt-msg.XXXXXX\")\n\
          rm -f \"$index_file\"\n\
          cleanup() {{ rm -f \"$index_file\" \"$req_file\" \"$req_sorted\" \"$staged_file\" \"$msg_file\"; }}\n\
          trap cleanup EXIT HUP INT TERM\n\
@@ -112,7 +112,7 @@ fn git_commit_paths_script(expected_head: &str, paths: &[String], message: &str)
          tree=$(GIT_INDEX_FILE=\"$index_file\" git write-tree) || {{ printf '{GIT_COMMIT_RESULT_PREFIX} status=tree_failed\\n'; exit 30; }}\n\
          printf '%s' {message} > \"$msg_file\"\n\
          new=$(git commit-tree \"$tree\" -p \"$expected\" < \"$msg_file\") || {{ printf '{GIT_COMMIT_RESULT_PREFIX} status=commit_create_failed\\n'; exit 31; }}\n\
-         if ! git update-ref -m 'webcodex git_commit_paths' HEAD \"$new\" \"$expected\"; then actual=$(git rev-parse --verify HEAD 2>/dev/null || true); printf '{GIT_COMMIT_RESULT_PREFIX} status=head_update_failed actual=%s\\n' \"$actual\"; exit 32; fi\n\
+         if ! git update-ref -m 'codegpt git_commit_paths' HEAD \"$new\" \"$expected\"; then actual=$(git rev-parse --verify HEAD 2>/dev/null || true); printf '{GIT_COMMIT_RESULT_PREFIX} status=head_update_failed actual=%s\\n' \"$actual\"; exit 32; fi\n\
          if ! git reset -q \"$new\" --{reset_args}; then printf '{GIT_COMMIT_RESULT_PREFIX} status=index_cleanup_failed previous=%s new=%s\\n' \"$expected\" \"$new\"; exit 33; fi\n\
          printf '{GIT_COMMIT_RESULT_PREFIX} status=success previous=%s new=%s\\n' \"$expected\" \"$new\"\n"
     )

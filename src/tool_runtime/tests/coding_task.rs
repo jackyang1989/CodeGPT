@@ -2376,7 +2376,7 @@ async fn finish_coding_task_combined_early_fmt_and_test_failures_resolve_without
 
     let test_target = json!({
         "project": fixture.project.clone(),
-        "package": "webcodex",
+        "package": "codegpt",
         "filter": "focused",
     });
     record_coding_task_tool_event(

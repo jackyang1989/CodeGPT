@@ -28,11 +28,11 @@ class TestInventoryScriptTests(unittest.TestCase):
             """#[test]\nfn root_test() {\n    std::thread::sleep(std::time::Duration::from_millis(1));\n}\n""",
         )
         write_text(
-            self.root / "crates" / "webcodex-runner" / "src" / "lib.rs",
-            """#[tokio::test]\n#[ignore = \"process fixture\"]\nasync fn runner_test() {\n    let _endpoint = \"127.0.0.1:0\";\n    std::env::set_var(\"WEBCODEX_FIXTURE_TOKEN\", \"SECRET_SENTINEL\");\n}\n""",
+            self.root / "crates" / "codegpt-runner" / "src" / "lib.rs",
+            """#[tokio::test]\n#[ignore = \"process fixture\"]\nasync fn runner_test() {\n    let _endpoint = \"127.0.0.1:0\";\n    std::env::set_var(\"CODEGPT_FIXTURE_TOKEN\", \"SECRET_SENTINEL\");\n}\n""",
         )
         write_text(
-            self.root / "crates" / "webcodex-cli" / "tests" / "help.rs",
+            self.root / "crates" / "codegpt-cli" / "tests" / "help.rs",
             """#[test]\nfn cli_help() {}\n""",
         )
 
@@ -43,7 +43,7 @@ class TestInventoryScriptTests(unittest.TestCase):
             """#[test]\nfn generated_test() {}\n""",
         )
         write_text(
-            self.root / "crates" / "webcodex-runner" / "tests" / "untracked.rs",
+            self.root / "crates" / "codegpt-runner" / "tests" / "untracked.rs",
             """#[test]\nfn untracked_test() {\n    std::env::set_var(\"UNTRACKED_SECRET\", \"UNTRACKED_SENTINEL\");\n}\n""",
         )
 
@@ -54,8 +54,8 @@ class TestInventoryScriptTests(unittest.TestCase):
                 "add",
                 "scripts/test_inventory.sh",
                 "src/lib.rs",
-                "crates/webcodex-runner/src/lib.rs",
-                "crates/webcodex-cli/tests/help.rs",
+                "crates/codegpt-runner/src/lib.rs",
+                "crates/codegpt-cli/tests/help.rs",
             ],
             cwd=self.root,
             check=True,
@@ -112,15 +112,15 @@ class TestInventoryScriptTests(unittest.TestCase):
         )
         self.assertEqual(
             list(rows),
-            ["crates/webcodex-cli", "crates/webcodex-runner", "webcodex"],
+            ["crates/codegpt-cli", "crates/codegpt-runner", "codegpt"],
         )
-        self.assertEqual(rows["webcodex"], ["1", "1", "0", "0", "1", "0", "0", "0", "0"])
+        self.assertEqual(rows["codegpt"], ["1", "1", "0", "0", "1", "0", "0", "0", "0"])
         self.assertEqual(
-            rows["crates/webcodex-runner"],
+            rows["crates/codegpt-runner"],
             ["1", "0", "1", "1", "0", "0", "1", "1", "0"],
         )
         self.assertEqual(
-            rows["crates/webcodex-cli"],
+            rows["crates/codegpt-cli"],
             ["1", "1", "0", "0", "0", "0", "0", "0", "0"],
         )
         self.assertNotIn("generated.rs", result.stdout)
@@ -131,14 +131,14 @@ class TestInventoryScriptTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertRegex(
             result.stdout,
-            r"crates/webcodex-runner/src/lib\.rs:\d+:env_mutation",
+            r"crates/codegpt-runner/src/lib\.rs:\d+:env_mutation",
         )
         self.assertRegex(
             result.stdout,
-            r"crates/webcodex-runner/src/lib\.rs:\d+:loopback_or_listener",
+            r"crates/codegpt-runner/src/lib\.rs:\d+:loopback_or_listener",
         )
         self.assertNotIn("SECRET_SENTINEL", result.stdout)
-        self.assertNotIn("WEBCODEX_FIXTURE_TOKEN", result.stdout)
+        self.assertNotIn("CODEGPT_FIXTURE_TOKEN", result.stdout)
         self.assertNotIn("UNTRACKED_SENTINEL", result.stdout)
         self.assertNotIn("SECRET_SENTINEL", result.stderr)
 

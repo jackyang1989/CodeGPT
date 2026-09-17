@@ -22,9 +22,9 @@ const CHANGES_METADATA_SOURCE_BYTES: usize = 32 * 1024;
 const CHANGES_DIFF_MAX_BYTES: usize = 48 * 1024;
 const CHANGES_DIFF_MAX_LINES: usize = 1200;
 const CHANGES_SESSION_SUMMARY_LIMIT: usize = 0;
-const SOURCE_BYTES_MARKER: &str = "WEBCODEX_CHANGES_SOURCE_BYTES=";
-const DIFF_BYTES_MARKER: &str = "WEBCODEX_CHANGES_DIFF_BYTES=";
-const DIFF_LINES_MARKER: &str = "WEBCODEX_CHANGES_DIFF_LINES=";
+const SOURCE_BYTES_MARKER: &str = "CODEGPT_CHANGES_SOURCE_BYTES=";
+const DIFF_BYTES_MARKER: &str = "CODEGPT_CHANGES_DIFF_BYTES=";
+const DIFF_LINES_MARKER: &str = "CODEGPT_CHANGES_DIFF_LINES=";
 
 #[derive(Debug, Clone)]
 struct ChangesFileMetadata {
@@ -133,8 +133,8 @@ struct ChangesTotals {
 /// The command-scope overlay preserves ordinary Git config (autocrlf, sparse
 /// checkout, ignores, etc.) while replacing only execution-bearing filters with
 /// identity/no-op behavior for this observation.
-const CHANGES_GIT_SAFE_CONFIG_SETUP: &str = r#"changes_git_overlay=$(mktemp "${TMPDIR:-/tmp}/webcodex-changes-config.XXXXXX")
-changes_git_filter_keys=$(mktemp "${TMPDIR:-/tmp}/webcodex-changes-filter-keys.XXXXXX")
+const CHANGES_GIT_SAFE_CONFIG_SETUP: &str = r#"changes_git_overlay=$(mktemp "${TMPDIR:-/tmp}/codegpt-changes-config.XXXXXX")
+changes_git_filter_keys=$(mktemp "${TMPDIR:-/tmp}/codegpt-changes-filter-keys.XXXXXX")
 changes_git_tmp_index=
 changes_git_untracked_tmp=
 changes_git_cleanup() {
@@ -203,7 +203,7 @@ fi
 if [ "$diff_status" -ne 0 ]; then
   exit 20
 fi
-changes_git_untracked_tmp=$(mktemp "${{TMPDIR:-/tmp}}/webcodex-changes-untracked.XXXXXX")
+changes_git_untracked_tmp=$(mktemp "${{TMPDIR:-/tmp}}/codegpt-changes-untracked.XXXXXX")
 changes_git ls-files --others --exclude-standard -z -- . >"$changes_git_untracked_tmp"
 if [ -s "$changes_git_untracked_tmp" ]; then
   exit 10
@@ -421,7 +421,7 @@ LC_ALL=C; export LC_ALL
 GIT_TERMINAL_PROMPT=0; export GIT_TERMINAL_PROMPT
 umask 077
 {safe_config_setup}
-changes_git_tmp_index=$(mktemp "${{TMPDIR:-/tmp}}/webcodex-changes-index.XXXXXX")
+changes_git_tmp_index=$(mktemp "${{TMPDIR:-/tmp}}/codegpt-changes-index.XXXXXX")
 rm -f "$changes_git_tmp_index"
 if changes_git rev-parse --verify HEAD >/dev/null 2>&1; then
   GIT_INDEX_FILE="$changes_git_tmp_index" changes_git read-tree HEAD
@@ -524,7 +524,7 @@ GIT_INDEX_FILE="$changes_git_tmp_index" changes_git write-tree
             r#"set -eu
 LC_ALL=C; export LC_ALL
 umask 077
-tmp=$(mktemp "${{TMPDIR:-/tmp}}/webcodex-changes-meta.XXXXXX")
+tmp=$(mktemp "${{TMPDIR:-/tmp}}/codegpt-changes-meta.XXXXXX")
 trap 'rm -f "$tmp"' 0 HUP INT TERM
 git --no-pager diff --no-ext-diff --no-textconv {mode} {baseline_tree} {final_tree} -- . >"$tmp"
 bytes=$(wc -c <"$tmp" | tr -d '[:space:]')
@@ -563,7 +563,7 @@ dd if="$tmp" bs=1 count={CHANGES_METADATA_SOURCE_BYTES} 2>/dev/null
             r#"set -eu
 LC_ALL=C; export LC_ALL
 umask 077
-tmp=$(mktemp "${{TMPDIR:-/tmp}}/webcodex-changes-diff.XXXXXX")
+tmp=$(mktemp "${{TMPDIR:-/tmp}}/codegpt-changes-diff.XXXXXX")
 trap 'rm -f "$tmp"' 0 HUP INT TERM
 git --no-pager diff --no-ext-diff --no-textconv --find-renames --unified=3 {} {} -- {pathspecs} >"$tmp"
 bytes=$(wc -c <"$tmp" | tr -d '[:space:]')

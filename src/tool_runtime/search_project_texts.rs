@@ -8,8 +8,8 @@ use futures_util::{stream, StreamExt};
 use serde_json::{json, Value};
 use std::time::Duration;
 use tokio::time::Instant;
-use webcodex_core::runtime_contract::MODEL_INSPECTION_MAX_RESULT_BYTES as MAX_SERIALIZED_OUTPUT_BYTES;
-use webcodex_workspace::file_read_normalize::MODEL_RESULT_ENVELOPE_RESERVE_BYTES;
+use codegpt_core::runtime_contract::MODEL_INSPECTION_MAX_RESULT_BYTES as MAX_SERIALIZED_OUTPUT_BYTES;
+use codegpt_workspace::file_read_normalize::MODEL_RESULT_ENVELOPE_RESERVE_BYTES;
 
 pub(crate) const MAX_SEARCH_PROJECT_TEXTS_QUERIES: usize = 8;
 // Keep search fanout below the query cap: each rg process can independently
@@ -18,7 +18,7 @@ pub(crate) const MAX_SEARCH_PROJECT_TEXTS_QUERIES: usize = 8;
 // 2-vs-4 narrow/broad workload review; results still preserve input order.
 pub(crate) const MAX_SEARCH_PROJECT_TEXTS_CONCURRENCY: usize = 2;
 pub(crate) const DEFAULT_SEARCH_PROJECT_TEXTS_DEADLINE: Duration = Duration::from_secs(30);
-pub(crate) use webcodex_core::runtime_contract::{
+pub(crate) use codegpt_core::runtime_contract::{
     DEFAULT_SEARCH_PROJECT_TEXTS_RESULT_BYTES, MIN_SEARCH_PROJECT_TEXTS_RESULT_BYTES,
 };
 
@@ -262,7 +262,7 @@ fn failure_reason_code(result: &ToolResult) -> &'static str {
         Some("search_execution_failed") => "search_execution_failed",
         Some("search_request_dropped") => "search_request_dropped",
         _ if result.output.get("format").and_then(Value::as_str)
-            == Some("webcodex.external_provider_error.v1") =>
+            == Some("codegpt.external_provider_error.v1") =>
         {
             "external_provider_error"
         }
@@ -836,7 +836,7 @@ mod tests {
             timeout_secs: None,
         })
         .unwrap();
-        let marker = "{\"webcodex_search\":{\"backend\":\"rg\",\"feature_unavailable\":false}}\n";
+        let marker = "{\"codegpt_search\":{\"backend\":\"rg\",\"feature_unavailable\":false}}\n";
         let stdout = format!("{marker}/private/absolute/secret.rs\u{0}2\n");
         let single = crate::tool_runtime::files::search_project_text_output(
             "agent:special:demo",

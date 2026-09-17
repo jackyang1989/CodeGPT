@@ -141,10 +141,10 @@ export interface DefineToolOptions<
   ) => MaybePromise<ToolResult<NoInfer<OutputValue<TOutput>>>>;
 }
 
-const TOOL_DEFINITION = Symbol("webcodex.plugin.tool-definition");
-const TOOL_EXECUTE = Symbol("webcodex.plugin.tool-execute");
-const PLUGIN_DEFINITIONS = Symbol("webcodex.plugin.definitions");
-const PLUGIN_DISPATCH = Symbol("webcodex.plugin.dispatch");
+const TOOL_DEFINITION = Symbol("codegpt.plugin.tool-definition");
+const TOOL_EXECUTE = Symbol("codegpt.plugin.tool-execute");
+const PLUGIN_DEFINITIONS = Symbol("codegpt.plugin.definitions");
+const PLUGIN_DISPATCH = Symbol("codegpt.plugin.dispatch");
 
 interface InternalDefinedTool {
   readonly [TOOL_DEFINITION]: PluginToolDefinition;

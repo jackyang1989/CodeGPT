@@ -148,7 +148,7 @@ impl TokenVerifier for PatVerifier {
 
 /// OAuth2 bearer token verifier.
 ///
-/// Validates WebCodex-issued opaque OAuth2 access tokens (`wc_oat_*`). The
+/// Validates CodeGPT-issued opaque OAuth2 access tokens (`wc_oat_*`). The
 /// database stores only SHA-256 hashes; the plaintext token is never persisted.
 ///
 /// Validation steps:

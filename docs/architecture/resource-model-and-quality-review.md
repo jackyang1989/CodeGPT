@@ -1,4 +1,4 @@
-# WebCodex 资源模型与架构质量探索
+# CodeGPT 资源模型与架构质量探索
 
 状态：探索性评审，不是新的运行时契约。本文会随真实 dogfood 和产品使用证据修订，而不是反过来要求实现服从路线图。2026-09-13 复审后，后续资源路线从 user-private / Memory-first 收缩为 usage-driven 的 Skill / Plugin-first；现有 Memory 保留但冻结扩张，Runner 继续承担执行与资源 placement，而不再作为面向用户的资源 scope。
 
@@ -6,7 +6,7 @@
 
 ## 1. 总体判断与范围
 
-WebCodex 不缺架构：Server/Runner 分离、分层 workspace、统一 ToolDefinition、RunnerOperation、事务式 Memory、精确 Plugin binding、独立 Workflow Session/Job/AgentTask 都已经存在。继续增加一层通用框架，未必比收拢现有概念更好。
+CodeGPT 不缺架构：Server/Runner 分离、分层 workspace、统一 ToolDefinition、RunnerOperation、事务式 Memory、精确 Plugin binding、独立 Workflow Session/Job/AgentTask 都已经存在。继续增加一层通用框架，未必比收拢现有概念更好。
 
 当前最值得投入的是：**统一观察与描述，收敛规则所有权，保留业务状态机，降低模型决策成本。** 目标应是以后新增一种资源或一种工具时，更少触碰不相关模块，而不是让所有对象实现同一个 CRUD 接口。
 
@@ -19,10 +19,10 @@ WebCodex 不缺架构：Server/Runner 分离、分层 workspace、统一 ToolDef
 | 已有结构 | 源码证据 | 判断 |
 |---|---|---|
 | 17 个 workspace package 的依赖策略 | [workspace-boundaries.toml](../../workspace-boundaries.toml)、[检查器](../../scripts/workspace_boundary_check.py)，本轮实际检查通过 | 分层已有机器约束，不需要再发明一套目录约定替代它 |
-| 统一工具定义 | [ToolDefinition](../../crates/webcodex-tool-contracts/src/tool_definition.rs)，698–712 | 审计、策略、模型暴露、Session evidence 已有合理归属，应沿此继续收敛 |
-| 线协议与内部语义分离 | [RunnerOperation](../../crates/webcodex-core/src/runner_operation.rs)，1–6、30–44 | 在边界解码旧 DTO，内部携带类型化操作；比重写全部 wire protocol 更稳健 |
+| 统一工具定义 | [ToolDefinition](../../crates/codegpt-tool-contracts/src/tool_definition.rs)，698–712 | 审计、策略、模型暴露、Session evidence 已有合理归属，应沿此继续收敛 |
+| 线协议与内部语义分离 | [RunnerOperation](../../crates/codegpt-core/src/runner_operation.rs)，1–6、30–44 | 在边界解码旧 DTO，内部携带类型化操作；比重写全部 wire protocol 更稳健 |
 | 描述与执行权限分离 | [PluginBinding/PluginOperation](../../src/plugin_gateway.rs)，27–34、135–187 | describe 不是执行授权，metadata hint 不是权限；必须保留 |
-| Memory 事务与条件更新 | [set_project_memory_attributed](../../crates/webcodex-store/src/memory.rs)，962–1054 | 内容相同的幂等重试、CAS、实例/代际身份不能简化为一个内容哈希 |
+| Memory 事务与条件更新 | [set_project_memory_attributed](../../crates/codegpt-store/src/memory.rs)，962–1054 | 内容相同的幂等重试、CAS、实例/代际身份不能简化为一个内容哈希 |
 | 语义不同的任务对象独立 | [Durable Agent 设计](durable-agent-runtime.md)、[Session 模型](../agent/session-model.md) | AgentTask、Workflow Session、Job、ClientWindow 不是四种同名 Task |
 | 有界观察而非完整转储 | [context_projection](../../src/tool_runtime/context_projection.rs)、[startup_brief](../../src/tool_runtime/startup_brief.rs) | 模型上下文是受预算约束的投影，不能当完整数据库或权限凭证 |
 
@@ -42,7 +42,7 @@ WebCodex 不缺架构：Server/Runner 分离、分层 workspace、统一 ToolDef
 | Placement / applicability | 它在哪里运行、在哪个 Project 适用？ | Runner placement、exact Project cwd、Control storage；不是新的 scope |
 | Domain operation | 怎样读取、绑定或执行？ | Skill read、Memory CAS、Plugin describe/call 各自保留 |
 
-这里的 `user` 是产品层“当前 WebCodex 用户可用的个人资源”概念，不等价于新建一个 `AuthContext.user_id` 私有安全域。对当前 self-hosted 模式，能够操作某个 Runner 已经代表对该执行宿主的用户权限；资源抽象不再额外引入 principal namespace、resource ACL、sharing grant 或 admin enumeration 体系。现有 authentication、Runner access、tool scope、Project authority 与 Plugin exact binding 继续按各自边界执行。
+这里的 `user` 是产品层“当前 CodeGPT 用户可用的个人资源”概念，不等价于新建一个 `AuthContext.user_id` 私有安全域。对当前 self-hosted 模式，能够操作某个 Runner 已经代表对该执行宿主的用户权限；资源抽象不再额外引入 principal namespace、resource ACL、sharing grant 或 admin enumeration 体系。现有 authentication、Runner access、tool scope、Project authority 与 Plugin exact binding 继续按各自边界执行。
 
 Runner 因此从面向用户的资源 scope 降为 **placement / provider host**。例如 configured / managed Skill 可以在产品层解释为 User Skill 的两种 source；Native Plugin 是由 Runner 托管的 User Plugin provider，再通过 exact cwd 等事实决定 Project applicability；Project Skill 仍直接来自 repository。Project 与 User 同名时是否默认优先、并存或 fail closed 属于具体资源的选择语义，不由一个通用 inheritance/ACL 框架决定。
 
@@ -57,7 +57,7 @@ Runner 因此从面向用户的资源 scope 降为 **placement / provider host**
 | Native Plugin | scope=`user`、placement=`runner` 的 executable provider；当前 Project applicability 由 provider cwd 与 exact Project root 匹配产生 | plugin_tool list / describe / call；binding 固定 exact Runner/provider instance 与 schema | 进程实例、冻结 catalog、check/reload、结果不确定性；现有 execution authority 不由资源目录替代 |
 | User-private ACL / sharing namespace | 当前无真实产品需求，近期不实现 | 不新增 `wc_userns_*`、resource ACL、share grant 或跨用户枚举 | 若未来出现真实多用户/SaaS需求，再以独立产品问题重新设计 |
 
-证据：[Memory scope](../../src/tool_runtime/memory.rs)，38–56；[Skill descriptor/locator](../../src/tool_runtime/skills.rs)，61–94、562–638；[Skill store](../../crates/webcodex-core/src/skill_store.rs)，35–103；[Plugin project catalog](../../crates/webcodex-runner/src/webcodex_runner/plugin.rs)，392–490。
+证据：[Memory scope](../../src/tool_runtime/memory.rs)，38–56；[Skill descriptor/locator](../../src/tool_runtime/skills.rs)，61–94、562–638；[Skill store](../../crates/codegpt-core/src/skill_store.rs)，35–103；[Plugin project catalog](../../crates/codegpt-runner/src/codegpt_runner/plugin.rs)，392–490。
 
 ### 3.3 推荐的共同边界是只读目录，不是万能 ResourceManager
 
@@ -96,13 +96,13 @@ Memory provider    Skill providers    Plugin provider
 
 后续 consolidation 已将这一个静态事实收敛到 canonical `ToolDefinition`：`ToolOperatorExtensionFamily` 只描述 `SkillRuntime / SkillManagement / MemoryRuntime / MemoryManagement / TraceDiagnostics` 的 Stateless Operator protocol admission family，各定义在 Skill、Memory、diagnostic 的 ToolDefinition 旁显式声明。Registry、Kernel capability gate、tool manifest 与 MCP Stateless protocol-extension projection 统一通过 `runtime_tool_operator_extension_family` 消费；旧 Skill/Memory classifier 和 registry 中对应的硬编码 family name sets 已从 live code 删除。
 
-证据：[tool_definition.rs](../../crates/webcodex-tool-contracts/src/tool_definition.rs)、[tool_policy.rs](../../crates/webcodex-tool-contracts/src/tool_policy.rs)、[tool_specs.rs](../../crates/webcodex-tool-contracts/src/registry/tool_specs.rs)、[kernel.rs](../../src/tool_runtime/kernel.rs)、[surface.rs](../../src/tool_runtime/surface.rs)、[mcp/tools.rs](../../src/mcp/tools.rs)。
+证据：[tool_definition.rs](../../crates/codegpt-tool-contracts/src/tool_definition.rs)、[tool_policy.rs](../../crates/codegpt-tool-contracts/src/tool_policy.rs)、[tool_specs.rs](../../crates/codegpt-tool-contracts/src/registry/tool_specs.rs)、[kernel.rs](../../src/tool_runtime/kernel.rs)、[surface.rs](../../src/tool_runtime/surface.rs)、[mcp/tools.rs](../../src/mcp/tools.rs)。
 
 这个收敛没有把 authorization 混入 family：Skill Management 的 admin 要求、Memory conjunctive scopes、Project/Runner authority、permission 与 Session evidence 仍由原 canonical policy 所有；Goal Plan、Work Result、Agent Continuation 的 MCP App/Host capability 也保持独立。Definition invariant 还要求 operator-extension family 必须保持 `ModelHidden`，避免普通 model-visible 工具因误标 family 同时进入通用 registry 与 extension projection。
 
 ### B. Skill 目录观察与精确读取（P1 风险已进入 observer/resolver split）
 
-#420 建立 baseline 时，`discover_project_skills` 会逐个读取包定义，`discover_skills` 依次观察 Project、configured、managed 来源，而 `skill_read_file` 也先重建完整目录再按 id 定位。Stage 2 后续实现已把 known-id read 从这个完整 catalog observer 中分离；`skill_list`、startup/context catalog 仍保留完整 `discover_skills` 语义。证据：[skills.rs](../../src/tool_runtime/skills.rs)、[configured_skills.rs](../../crates/webcodex-runner/src/webcodex_runner/configured_skills.rs)。
+#420 建立 baseline 时，`discover_project_skills` 会逐个读取包定义，`discover_skills` 依次观察 Project、configured、managed 来源，而 `skill_read_file` 也先重建完整目录再按 id 定位。Stage 2 后续实现已把 known-id read 从这个完整 catalog observer 中分离；`skill_list`、startup/context catalog 仍保留完整 `discover_skills` 语义。证据：[skills.rs](../../src/tool_runtime/skills.rs)、[configured_skills.rs](../../crates/codegpt-runner/src/codegpt_runner/configured_skills.rs)。
 
 注意：启动层的 Skill 和 Plugin 已经并行等待，见 [coding_task.rs](../../src/tool_runtime/coding_task.rs)，1232–1269；不能把它描述为整个启动串行。
 
@@ -142,7 +142,7 @@ canonical Runtime surface是 `List / Resolve / Read`，Management surface是 `Ve
 
 Stage 4A1 把关联的 authoritative owner 放在 Runner project registry，而不是 Server DB。原因是 managed-worktree 的 `managed_source`、`managed_base_sha`、managed lifecycle 与 Project root canonicalization 本来就由 owning Runner 创建并持久化；Runner 也是唯一能在创建时用自己的 canonical registry 精确回答“这个 source root 当前对应哪个 Runner Project”的组件。Server 只消费 `RunnerProjectSummary.lineage` 的 typed projection，不再建立第二份 lineage truth，也没有新增 SQLite table、migration、background reconciler 或 cache。
 
-canonical lineage 是 closed `RunnerProjectLineage::ManagedWorktreeSource`。新 managed record 除原有 `managed_source` 与 `managed_base_sha` 外，还持久化 `managed_source_project_id` 与 `managed_source_root_fingerprint`；只有这两个新字段同时存在时才产生 knowledge association。source Project identity 是 **exact Runner Project id + independent root fingerprint** 的组合：project id 防止 path-only 猜测，root fingerprint 防止 project id 被 unregister 后重新注册到另一个 root 时 silent retarget。fingerprint 使用独立 domain `webcodex-project-root-identity-v1` 与 `wc_projroot_` 前缀，并复用 Runner config 已有 `normalize_path_identity` 的平台 path semantics；它不是 Memory scope fingerprint 类型，也不会进入 model-facing metadata。
+canonical lineage 是 closed `RunnerProjectLineage::ManagedWorktreeSource`。新 managed record 除原有 `managed_source` 与 `managed_base_sha` 外，还持久化 `managed_source_project_id` 与 `managed_source_root_fingerprint`；只有这两个新字段同时存在时才产生 knowledge association。source Project identity 是 **exact Runner Project id + independent root fingerprint** 的组合：project id 防止 path-only 猜测，root fingerprint 防止 project id 被 unregister 后重新注册到另一个 root 时 silent retarget。fingerprint 使用独立 domain `codegpt-project-root-identity-v1` 与 `wc_projroot_` 前缀，并复用 Runner config 已有 `normalize_path_identity` 的平台 path semantics；它不是 Memory scope fingerprint 类型，也不会进入 model-facing metadata。
 
 新 managed worktree 创建要求 source checkout 已经在同一 Runner registry 中以唯一、enabled Project 存在；Git remote、仓库名、basename、Git config、`registration_source` 或“看起来像 worktree”的路径都不会建立 association。带显式 lineage 的 resume 重新解析同一 source root，并验证 persisted source Project id 与 root fingerprint 都仍相同；任一变化都 fail closed。旧 managed record若只有 `managed_source` 而没有新 authoritative pair，仍可按原 execution 语义存在/恢复，但 `lineage=None`，不会通过 heuristic 自动升级。
 
@@ -162,13 +162,13 @@ Stage 4A1 因此保留为 **managed-worktree source lineage foundation**：它�
 
 ### E. 存储访问需要测量隔离，不宜先换数据库（Stage 3A 已建立基线）
 
-[Database](../../crates/webcodex-store/src/lib.rs) 仍由单个 `Mutex<Connection>` 持有 SQLite connection，因此不同 store domain 在结构上可能互相排队；这仍然只是 bottleneck 假设，不是优化依据。Stage 3A 没有改连接数、线程模型、WAL、事务、CAS、replay 或 schema，而是把 production connection acquisition 收敛到一个 store-local observation boundary。
+[Database](../../crates/codegpt-store/src/lib.rs) 仍由单个 `Mutex<Connection>` 持有 SQLite connection，因此不同 store domain 在结构上可能互相排队；这仍然只是 bottleneck 假设，不是优化依据。Stage 3A 没有改连接数、线程模型、WAL、事务、CAS、replay 或 schema，而是把 production connection acquisition 收敛到一个 store-local observation boundary。
 
 该边界只暴露三个稳定 measurement name：`store_connection_acquisitions_total`、`store_connection_lock_wait_seconds`、`store_connection_hold_seconds`。唯一业务 label 是 closed `domain`，当前集合为 `accounts`、`activity`、`admin_project_lifecycle`、`agent_task`、`agent_wake`、`audit`、`communication`、`core`、`executions`、`goal`、`job_receipts`、`memory`、`oauth`、`schema`、`task_kernel`、`window_activity`。不记录 project/principal/account/Agent/Goal/Task/request id、路径、SQL 文本、table 动态字符串或用户数据。
 
 `lock_wait` 定义为调用 `Mutex::lock` 前的 monotonic timestamp 到成功取得 connection guard；`hold` 定义为成功取得 connection guard 到真实 `MutexGuard<Connection>` 释放。后者是 **connection critical-section duration**，不是 SQLite statement duration：一个 guard 内可能包含多条 query、transaction、validation、CAS 检查、commit 和少量 Rust 逻辑。若某个 domain 的 hold 异常，再做 statement/transaction drill-down；Stage 3A 不包装 rusqlite API。
 
-默认 observation 以 `webcodex_store::connection` target 的 structured trace 发出，并使用 `trace` level，避免每次 connection acquisition 在普通 `info` 日志中产生高频噪声。Server 默认 `RUST_LOG`/fallback filter 是 `info`，因此 **这些样本默认不会输出**；dogfood 采样窗口必须显式启用该 target，例如 `RUST_LOG=info,webcodex_store::connection=trace`（保留部署环境原有其它 filter 时应合并而不是覆盖）。没有该 target 的 trace event 只能说明采样未启用或没有观测到事件，不能解释为 `lock_wait=0`。真实 connection guard 在 observer callback 前先释放，因此 trace subscriber 不会扩大被测 connection critical section，也不会让其它 store caller 因 telemetry 继续等待该 mutex。observer panic 在这个小边界内 `catch_unwind`，不会被翻译成 DB/business error；原有 `Mutex::lock().unwrap()` poison panic 仍保持。启用的同步 trace subscriber 理论上仍可能在 **mutex 已释放后** 延迟当前 caller 返回，Stage 3A 不为此增加后台 telemetry worker；dogfood 采样时也应观察这一开销。
+默认 observation 以 `codegpt_store::connection` target 的 structured trace 发出，并使用 `trace` level，避免每次 connection acquisition 在普通 `info` 日志中产生高频噪声。Server 默认 `RUST_LOG`/fallback filter 是 `info`，因此 **这些样本默认不会输出**；dogfood 采样窗口必须显式启用该 target，例如 `RUST_LOG=info,codegpt_store::connection=trace`（保留部署环境原有其它 filter 时应合并而不是覆盖）。没有该 target 的 trace event 只能说明采样未启用或没有观测到事件，不能解释为 `lock_wait=0`。真实 connection guard 在 observer callback 前先释放，因此 trace subscriber 不会扩大被测 connection critical section，也不会让其它 store caller 因 telemetry 继续等待该 mutex。observer panic 在这个小边界内 `catch_unwind`，不会被翻译成 DB/business error；原有 `Mutex::lock().unwrap()` poison panic 仍保持。启用的同步 trace subscriber 理论上仍可能在 **mutex 已释放后** 延迟当前 caller 返回，Stage 3A 不为此增加后台 telemetry worker；dogfood 采样时也应观察这一开销。
 
 因此 Stage 3A 的结论只是“现在可以测量”，不是“数据库需要优化”。p50/p95 必须来自 dogfood 或 production-like workload，不伪造 benchmark 改善数字。Stage 3B 只有在数据支持时才进入：
 
@@ -205,7 +205,7 @@ Job 的 running/recovering、Memory 的 CAS changed、Plugin 的 stale binding�
 
 ### 5.2 把“是否执行过”与“是否成功”分开
 
-Plugin 已有 `NotStarted / OutcomeUnknown / Completed`，见 [plugin.rs](../../crates/webcodex-core/src/plugin.rs)，83–89。结构化执行也区分排队、运行和 unknown，见 [structured_execution.rs](../../src/tool_runtime/structured_execution.rs)，162–182。
+Plugin 已有 `NotStarted / OutcomeUnknown / Completed`，见 [plugin.rs](../../crates/codegpt-core/src/plugin.rs)，83–89。结构化执行也区分排队、运行和 unknown，见 [structured_execution.rs](../../src/tool_runtime/structured_execution.rs)，162–182。
 
 建议建立跨工具一致的恢复语义：未执行可调整输入；明确业务失败按失败处理；结果未知先观察原执行。共享的是这套知识模型，不是把所有操作转成 Job，也不是引入通用自动 retry。执行能力与可安全重试性不能从 readOnly/idempotent hint 推导。
 
@@ -278,7 +278,7 @@ Plugin 已有 `NotStarted / OutcomeUnknown / Completed`，见 [plugin.rs](../../
 - `read_files` 的编号、SHA 与显式 continuation 支撑可追溯分析和受保护修改；`search_project_texts` 一个子查询失败不影响其他查询。
 - 本轮 `show_changes(max_hunk_lines=200)` 顶层正确报告 `diff_hunk_line_limit` 并给出恢复调用，但对应 hunk 同时带有 `truncated=false`，文本又在函数中途结束。按提示使用 `git_diff_hunks`、更窄路径与 400 行上限后取得完整 diff。建议对顶层/条目级完整性元数据增加一致性测试；本轮只记录，不修改该工具。
 - 对不存在的 `src/tool_runtime/context_material.rs` 发起搜索，得到 `search_execution_failed / backend_process_failed / exit_code=2`。重新定位后实际文件是 `context_projection.rs`。相比之下，read_files 对不存在的文件明确返回 `not_found`。建议搜索入口也区分缺失路径与真正后端故障。
-- 一个拟进行只读源码计数的 Python 命令被宿主以“无法确定请求的安全状态”拦截；没有 Runner 执行结果。没有改换通道重试。此事不能归因于 WebCodex 权限策略，报告也不使用该计数结果。产品诊断应区分 host pre-dispatch rejection 与 Runner business error；Runner 未收到请求时不能声称观察到执行状态。
+- 一个拟进行只读源码计数的 Python 命令被宿主以“无法确定请求的安全状态”拦截；没有 Runner 执行结果。没有改换通道重试。此事不能归因于 CodeGPT 权限策略，报告也不使用该计数结果。产品诊断应区分 host pre-dispatch rejection 与 Runner business error；Runner 未收到请求时不能声称观察到执行状态。
 - `cargo_test` 能把同一执行交给 Job，再与独立阅读重叠，保留了执行身份。其当前结构化 schema 有 package/filter 等参数，却没有 `--lib` 选择项。可评估增加常见 target selector，减少为了精准验证退回 raw Cargo 的需要；不要求默认扩大运行范围。
 
 ### 可用性建议
@@ -298,9 +298,9 @@ Plugin 已有 `NotStarted / OutcomeUnknown / Completed`，见 [plugin.rs](../../
 ## 10. 验证记录
 
 - workspace boundary：本轮已通过，17 packages；没有修改依赖策略。
-- 新增表征测试的基线运行：`cargo test -p webcodex startup_catalog`，4 passed / 0 failed；两组参数矩阵合计 100 个 JSON 对照场景，另有不可用与合并预算测试。
-- 最终源码：`cargo fmt -p webcodex -- --check` 通过；`cargo test -p webcodex startup` 完成编译并执行 41 tests，41 passed / 0 failed，包含新增的 4 tests。
-- 扩展目录集成：`cargo test -p webcodex work_on_project_extension_catalog`，2 passed / 0 failed；覆盖 configured roots 进入目录及关闭目录时跳过发现。
+- 新增表征测试的基线运行：`cargo test -p codegpt startup_catalog`，4 passed / 0 failed；两组参数矩阵合计 100 个 JSON 对照场景，另有不可用与合并预算测试。
+- 最终源码：`cargo fmt -p codegpt -- --check` 通过；`cargo test -p codegpt startup` 完成编译并执行 41 tests，41 passed / 0 failed，包含新增的 4 tests。
+- 扩展目录集成：`cargo test -p codegpt work_on_project_extension_catalog`，2 passed / 0 failed；覆盖 configured roots 进入目录及关闭目录时跳过发现。
 - 文档链接：`python3 scripts/check_markdown_links.py`，75 个 Markdown 文件、512 个本地链接、missing=0。
 - 变更检查：`git diff --cached --check` 通过；已审查完整 Rust diff 和新增测试。性能收益没有计时验证；编译成功不等于全仓测试通过。
 - 未运行：全 workspace 测试、跨平台测试、外网/生产重启、性能基准。

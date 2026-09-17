@@ -1,9 +1,9 @@
-# Stage exact WebCodex runtime bytes for a native Windows Tauri Desktop bundle.
+# Stage exact CodeGPT runtime bytes for a native Windows Tauri Desktop bundle.
 #
 # This helper consumes already-built release binaries, verifies one exact
 # source/version/build identity, copies them into an ignored generated tree,
 # proves the copies are byte-for-byte identical, and writes a Tauri config
-# overlay that maps only those staged files into `webcodex-runtime`.
+# overlay that maps only those staged files into `codegpt-runtime`.
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)][string]$BinDir,
@@ -31,10 +31,10 @@ if (Test-Path -LiteralPath $OutputDir) {
     throw "Desktop bundle output already exists: $OutputDir"
 }
 
-$runtimeDir = Join-Path $OutputDir "resources\webcodex-runtime"
+$runtimeDir = Join-Path $OutputDir "resources\codegpt-runtime"
 New-Item -ItemType Directory -Force -Path $runtimeDir | Out-Null
 $shortSource = $SourceSha.Substring(0, 12).ToLowerInvariant()
-$binaryNames = @("webcodex", "webcodex-server", "webcodex-runner")
+$binaryNames = @("codegpt", "codegpt-server", "codegpt-runner")
 $resourceMap = [ordered]@{}
 $fileMetadata = [ordered]@{}
 
@@ -74,7 +74,7 @@ try {
             throw "staged Desktop runtime byte verification failed for $name.exe"
         }
 
-        $resourceMap[[System.IO.Path]::GetFullPath($destination)] = "webcodex-runtime/$name.exe"
+        $resourceMap[[System.IO.Path]::GetFullPath($destination)] = "codegpt-runtime/$name.exe"
         $fileMetadata[$name] = [ordered]@{
             filename = "$name.exe"
             size = [Int64]$destinationItem.Length
@@ -104,7 +104,7 @@ try {
         version = $Version
         source_sha = $SourceSha.ToLowerInvariant()
         built_at = $BuiltAt
-        resource_dir = "resources/webcodex-runtime"
+        resource_dir = "resources/codegpt-runtime"
         files = $fileMetadata
     }
     $metadataPath = Join-Path $OutputDir "desktop-bundle.json"

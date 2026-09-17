@@ -734,7 +734,7 @@ async fn runner_host_context_projects_to_full_list_and_compact_runtime() {
         runtime: Some("Prefer this Runner for operations on its own host.".to_string()),
         service: Some("Use the ordinary host-local service mechanism.".to_string()),
         network: None,
-        architecture: Some("Hosts the WebCodex Server/control plane.".to_string()),
+        architecture: Some("Hosts the CodeGPT Server/control plane.".to_string()),
     });
     runtime.runner_registry.register(request).await.unwrap();
 
@@ -750,7 +750,7 @@ async fn runner_host_context_projects_to_full_list_and_compact_runtime() {
     assert_eq!(full["host_context"]["role"], "server_host");
     assert_eq!(
         full["host_context"]["architecture"],
-        "Hosts the WebCodex Server/control plane."
+        "Hosts the CodeGPT Server/control plane."
     );
 
     let compact = crate::tool_runtime::runtime_info::compact_runtime_status(&status.output);

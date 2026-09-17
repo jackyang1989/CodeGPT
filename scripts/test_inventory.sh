@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Heuristic, read-only test inventory for WebCodex.
+# Heuristic, read-only test inventory for CodeGPT.
 #
 # Scope:
 #   - scans Git-tracked Rust files across the whole workspace
@@ -168,7 +168,7 @@ area_for_file() {
             printf 'crates/%s\n' "$crate"
             ;;
         src/*|tests/*)
-            printf 'webcodex\n'
+            printf 'codegpt\n'
             ;;
         *)
             printf 'other\n'

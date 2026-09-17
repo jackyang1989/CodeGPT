@@ -14,7 +14,7 @@ use serde_json::{json, Value};
 use std::collections::{HashMap, VecDeque};
 use std::sync::Mutex;
 use std::time::Duration;
-use webcodex_core::ssh_resource::{
+use codegpt_core::ssh_resource::{
     validate_response_for_request, SshResourceRequest, SshResourceResponse,
 };
 
@@ -79,7 +79,7 @@ impl SshResourceGatewayRuntime {
             .lock()
             .unwrap_or_else(|poisoned| poisoned.into_inner());
         let binding = loop {
-            let candidate = format!("wc_sbind_{}", webcodex_core::compact::random_suffix::<16>());
+            let candidate = format!("wc_sbind_{}", codegpt_core::compact::random_suffix::<16>());
             if !store.values.contains_key(&candidate) {
                 break candidate;
             }
@@ -217,7 +217,7 @@ pub(crate) fn mcp_output_schema() -> Value {
         json!({
             "type": "string",
             "minLength": 1,
-            "maxLength": webcodex_core::ssh_resource::SSH_RESOURCE_NAME_MAX_BYTES
+            "maxLength": codegpt_core::ssh_resource::SSH_RESOURCE_NAME_MAX_BYTES
         })
     };
     let inventory_entry = json!({
@@ -241,7 +241,7 @@ pub(crate) fn mcp_output_schema() -> Value {
                     "binding": {"type": "string", "pattern": "^wc_sbind_[A-Za-z0-9_-]{21}[AQgw]$"},
                     "resources": {
                         "type": "array",
-                        "maxItems": webcodex_core::ssh_resource::MANAGED_SSH_RESOURCE_MAX_COUNT,
+                        "maxItems": codegpt_core::ssh_resource::MANAGED_SSH_RESOURCE_MAX_COUNT,
                         "items": inventory_entry
                     }
                 },
@@ -606,7 +606,7 @@ async fn resolve_binding(
     let binding_id = binding.ok_or_else(binding_required_error)?;
     if binding_id
         .strip_prefix("wc_sbind_")
-        .and_then(webcodex_core::compact::decode::<16>)
+        .and_then(codegpt_core::compact::decode::<16>)
         .is_none()
     {
         return Err(binding_required_error());
@@ -628,7 +628,7 @@ async fn resolve_binding(
             "runner_replaced",
             "the exact Runner instance observed by this binding is no longer current",
         )
-        .recovery("List SSH resources again. WebCodex did not retarget or replay the mutation."));
+        .recovery("List SSH resources again. CodeGPT did not retarget or replay the mutation."));
     }
     Ok((binding_id, observed, runner))
 }
@@ -698,7 +698,7 @@ async fn execute_exact(
                     "the exact Runner changed or became unavailable before dispatch",
                 )
                 .recovery(
-                    "List SSH resources again. WebCodex did not retarget or replay the operation.",
+                    "List SSH resources again. CodeGPT did not retarget or replay the operation.",
                 )
             } else {
                 GatewayError::new(

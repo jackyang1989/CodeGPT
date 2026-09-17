@@ -3,16 +3,16 @@
 use crate::tool_runtime::activity::ActivityRecorder;
 use crate::Database;
 use std::sync::Arc;
-use webcodex_core::activity_contract::ActivityRecord;
+use codegpt_core::activity_contract::ActivityRecord;
 
 const COMMAND_PREVIEW_MAX_CHARS: usize = 120;
 const DEFAULT_MAX_ROWS: i64 = 2_000;
 
 /// SQLite-backed [`ActivityRecorder`] wired into the server's `ToolRuntime`.
 /// Env knobs (self-hosted operators own the privacy tradeoff):
-/// - `WEBCODEX_ACTIVITY=0` disables recording entirely.
-/// - `WEBCODEX_ACTIVITY_COMMAND_PREVIEW=0` drops command previews.
-/// - `WEBCODEX_ACTIVITY_MAX_ROWS` bounds the ledger (default 2000).
+/// - `CODEGPT_ACTIVITY=0` disables recording entirely.
+/// - `CODEGPT_ACTIVITY_COMMAND_PREVIEW=0` drops command previews.
+/// - `CODEGPT_ACTIVITY_MAX_ROWS` bounds the ledger (default 2000).
 pub(crate) struct WorkspaceActivityStore {
     db: Arc<Database>,
     preview_enabled: bool,
@@ -30,17 +30,17 @@ impl WorkspaceActivityStore {
     }
 
     pub(crate) fn from_env(db: Arc<Database>) -> Option<Self> {
-        if env_flag_disabled("WEBCODEX_ACTIVITY") {
+        if env_flag_disabled("CODEGPT_ACTIVITY") {
             return None;
         }
-        let max_rows = std::env::var("WEBCODEX_ACTIVITY_MAX_ROWS")
+        let max_rows = std::env::var("CODEGPT_ACTIVITY_MAX_ROWS")
             .ok()
             .and_then(|value| value.trim().parse::<i64>().ok())
             .unwrap_or(DEFAULT_MAX_ROWS)
             .clamp(100, 100_000);
         Some(Self {
             db,
-            preview_enabled: !env_flag_disabled("WEBCODEX_ACTIVITY_COMMAND_PREVIEW"),
+            preview_enabled: !env_flag_disabled("CODEGPT_ACTIVITY_COMMAND_PREVIEW"),
             max_rows,
         })
     }
@@ -84,7 +84,7 @@ fn truncate_chars(text: &str, max_chars: usize) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use webcodex_core::activity_contract::{ActivityScope, ActivityVisibility};
+    use codegpt_core::activity_contract::{ActivityScope, ActivityVisibility};
 
     fn sample<'a>(command: Option<&'a str>) -> ActivityRecord<'a> {
         ActivityRecord {

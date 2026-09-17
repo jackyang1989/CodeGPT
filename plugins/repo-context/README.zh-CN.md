@@ -1,6 +1,6 @@
 # repo-context Native Tool Plugin
 
-`repo-context` 是一个很小的只读 first-party Native Plugin composition 实验。它先通过真实的 `webcodex plugin init plugins/repo-context --id repo-context` authoring flow 创建，再把仓库内 dependency 调整为 `file:../../npm/plugin-sdk`，从而让 CI 验证当前 checkout，同时不改变公开的 `@yyjeqhc/webcodex-plugin-sdk@0.1.0` contract。
+`repo-context` 是一个很小的只读 first-party Native Plugin composition 实验。它先通过真实的 `codegpt plugin init plugins/repo-context --id repo-context` authoring flow 创建，再把仓库内 dependency 调整为 `file:../../npm/plugin-sdk`，从而让 CI 验证当前 checkout，同时不改变公开的 `@yyjeqhc/codegpt-plugin-sdk@0.1.0` contract。
 
 它只暴露一个 `repo_context` 工具，input 是空对象。provider 配置中的 `cwd` 是唯一 repository authority boundary；调用者不能传入 path、project、repository、Runner、command 或 environment override。
 
@@ -36,7 +36,7 @@ npm test
 id = "repo-context"
 name = "Repo Context"
 command = "node"
-args = ["/absolute/path/to/webcodex/plugins/repo-context/dist/plugin.js"]
+args = ["/absolute/path/to/codegpt/plugins/repo-context/dist/plugin.js"]
 cwd = "/absolute/path/to/repository"
 timeout_secs = 30
 ```
@@ -46,10 +46,10 @@ timeout_secs = 30
 ## Author loop
 
 ```text
-webcodex plugin check --runner <runner> --plugin repo-context
-webcodex plugin reload --runner <runner>
-webcodex plugin list --runner <runner> --plugin repo-context
-webcodex plugin describe --runner <runner> --plugin repo-context --tool repo_context
+codegpt plugin check --runner <runner> --plugin repo-context
+codegpt plugin reload --runner <runner>
+codegpt plugin list --runner <runner> --plugin repo-context
+codegpt plugin describe --runner <runner> --plugin repo-context --tool repo_context
 ```
 
-实际 invocation 继续使用 canonical `plugin_tool describe -> call` opaque binding 路径；这里不会新增 `webcodex plugin call`，也不会把 `repo_context` 暴露成 outer MCP root tool。
+实际 invocation 继续使用 canonical `plugin_tool describe -> call` opaque binding 路径；这里不会新增 `codegpt plugin call`，也不会把 `repo_context` 暴露成 outer MCP root tool。

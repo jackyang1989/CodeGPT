@@ -16,7 +16,7 @@ browser_observe / browser_act
         -> canonical specialized governance
         -> exact Runner capability + operation
         -> Runner-owned BrowserSupervisor
-        -> webcodex-browser CDP runtime
+        -> codegpt-browser CDP runtime
         -> Chromium-family browser
 ```
 
@@ -74,12 +74,12 @@ native executable path remains Runner-private.
 `BrowserSupervisor` is Runner-owned process state rather than a global singleton.
 It bounds browsers, pages, request time, semantic snapshot nodes/bytes, image
 bytes, input text, idle time, and absolute runtime lifetime. Every launched browser
-uses a WebCodex-owned temporary profile. It never attaches the user's normal
+uses a CodeGPT-owned temporary profile. It never attaches the user's normal
 Chrome/Edge profile or logged-in session. The CDP endpoint is bound to loopback and
 its port, target IDs, session IDs, websocket URL, profile path, process IDs, and
 native node identities remain private to the Runner/runtime.
 
-The owned Chromium process tree is spawned through `webcodex-process::ManagedChild`.
+The owned Chromium process tree is spawned through `codegpt-process::ManagedChild`.
 Manual close, idle/lifetime reaping, and Runner shutdown all use bounded process-tree
 termination/reaping. Runner restart intentionally invalidates all ephemeral Browser
 identities; Phase 1 does not persist or recover Browser sessions.
@@ -112,16 +112,16 @@ filesystem or shell authority.
 ## Effect certainty and recovery
 
 Every Browser effect preserves the same three-state certainty model used by other
-WebCodex effectful runtimes:
+CodeGPT effectful runtimes:
 
-- `not_started`: WebCodex proved the effect did not cross its effect boundary;
+- `not_started`: CodeGPT proved the effect did not cross its effect boundary;
 - `completed`: the exact requested effect has a known terminal result;
 - `outcome_unknown`: the effect may have been dispatched or partially completed,
   but a trustworthy terminal result is unavailable.
 
 Transport loss, timeout, Runner interruption, or a later failed stage after an
 earlier Browser effect was submitted must not be converted into a retry-safe
-failure. WebCodex never automatically repeats navigation, click, text input, key
+failure. CodeGPT never automatically repeats navigation, click, text input, key
 input, page creation, close, or launch. `outcome_unknown` returns an observation
 first recovery call, normally `browser_observe(action=pages)` or
 `browser_observe(action=snapshot)`, so the caller reconciles current state before

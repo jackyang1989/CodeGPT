@@ -10,7 +10,7 @@ mod process;
 mod state;
 mod tray;
 mod tunnel_config;
-mod webcodex;
+mod codegpt;
 
 use state::AppState;
 use tauri::Manager;
@@ -67,7 +67,7 @@ pub fn run() {
             commands::get_bounded_activity,
         ])
         .build(tauri::generate_context!())
-        .expect("failed to build WebCodex Desktop");
+        .expect("failed to build CodeGPT Desktop");
 
     app.run(|app_handle, event| match event {
         tauri::RunEvent::WindowEvent {

@@ -433,7 +433,7 @@ impl ToolRuntime {
         }))
     }
 
-    /// Register an existing directory as a WebCodex project on the selected
+    /// Register an existing directory as a CodeGPT project on the selected
     /// agent. See the `ToolCall::RegisterProject` doc comment for the full
     /// contract. The server validates the owner boundary, builds a JSON
     /// payload, routes it to the agent, parses the JSON response, and
@@ -504,7 +504,7 @@ impl ToolRuntime {
     }
 
     /// Create a new directory on the selected Runner, or explicitly adopt an
-    /// already-existing empty directory, and register it as a WebCodex project.
+    /// already-existing empty directory, and register it as a CodeGPT project.
     /// See the `ToolCall::CreateProject` doc comment for the full contract.
     #[allow(clippy::too_many_arguments)]
     pub(crate) async fn create_project(
@@ -1092,7 +1092,7 @@ fn validate_project_op_description(desc: &str) -> Result<(), String> {
     Ok(())
 }
 
-pub(super) use webcodex_core::runtime_contract::validate_project_op_path;
+pub(super) use codegpt_core::runtime_contract::validate_project_op_path;
 
 /// Truncate a string for inclusion in an error message (bounded).
 fn truncate_for_error(s: &str) -> String {

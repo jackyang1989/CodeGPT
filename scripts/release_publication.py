@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Bounded release publication-control helpers for WebCodex."""
+"""Bounded release publication-control helpers for CodeGPT."""
 
 from __future__ import annotations
 
@@ -26,7 +26,7 @@ else:
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     import collect_release_bundle as collector
 
-PACKAGE = "@yyjeqhc/webcodex"
+PACKAGE = "@yyjeqhc/codegpt"
 NPM_REGISTRY = "https://registry.npmjs.org/"
 BUILD_WORKFLOW_FILE = "release-build.yml"
 BUILD_WORKFLOW_PATH = f".github/workflows/{BUILD_WORKFLOW_FILE}"
@@ -107,7 +107,7 @@ def _package_versions(root: Path) -> dict[str, str]:
     try:
         cargo = tomllib.loads((root / "Cargo.toml").read_text(encoding="utf-8"))
         cargo_version = cargo["workspace"]["package"]["version"]
-        npm = json.loads((root / "npm/webcodex/package.json").read_text(encoding="utf-8"))
+        npm = json.loads((root / "npm/codegpt/package.json").read_text(encoding="utf-8"))
         npm_version = npm["version"]
         desktop_package = json.loads((root / "apps/desktop/package.json").read_text(encoding="utf-8"))
         desktop_package_version = desktop_package["version"]
@@ -949,7 +949,7 @@ def stage_npm(
         ],
         cwd=source,
     )
-    with tempfile.TemporaryDirectory(prefix="webcodex-release-binaries-") as temp:
+    with tempfile.TemporaryDirectory(prefix="codegpt-release-binaries-") as temp:
         binaries = Path(temp) / "bin"
         _extract_linux_x64_binaries(bundle, summary, binaries)
         _run_checked(

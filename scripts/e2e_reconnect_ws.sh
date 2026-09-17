@@ -2,10 +2,10 @@
 set -euo pipefail
 
 # ============================================================================
-# WebCodex — Runner/Server Restart & Reconnect Continuity E2E
+# CodeGPT — Runner/Server Restart & Reconnect Continuity E2E
 #
 # Real-process integration harness for Iteration 9 Phase 2:
-#   1. Boots a real `webcodex-server` and `webcodex-runner` (WebSocket).
+#   1. Boots a real `codegpt-server` and `codegpt-runner` (WebSocket).
 #   2. Verifies the layered connection observations (runner_process /
 #      server_transport / server_registration / project_registry /
 #      connector_endpoint / last_successful_tool_call) carry the full
@@ -162,13 +162,13 @@ if [ "${E2E_SKIP_RUN:-0}" = "1" ]; then
 fi
 
 # Build once so restarts are fast and both restarts run the same binaries.
-log "building webcodex + webcodex-runner (release of the current tree, debug profile)"
-"$CARGO_BIN" build --quiet -p webcodex -p webcodex-runner --bins
-SERVER_BIN="$PROJECT_DIR/target/debug/webcodex-server"
-RUNNER_BIN="$PROJECT_DIR/target/debug/webcodex-runner"
+log "building codegpt + codegpt-runner (release of the current tree, debug profile)"
+"$CARGO_BIN" build --quiet -p codegpt -p codegpt-runner --bins
+SERVER_BIN="$PROJECT_DIR/target/debug/codegpt-server"
+RUNNER_BIN="$PROJECT_DIR/target/debug/codegpt-runner"
 
 PORT="${E2E_PORT:-$(find_free_port)}"
-TMP_ROOT="$(mktemp -d -t webcodex-reconnect-e2e-XXXXXX)"
+TMP_ROOT="$(mktemp -d -t codegpt-reconnect-e2e-XXXXXX)"
 COOKIE_JAR="$TMP_ROOT/cookies.txt"
 : >"$COOKIE_JAR"
 DATA_DIR="$TMP_ROOT/data"
@@ -216,9 +216,9 @@ max_output_bytes = 262144
 EOF
 
 start_server() {
-    WEBCODEX_ADDR="127.0.0.1:${PORT}" \
-    WEBCODEX_DATA="$DATA_DIR" \
-    WEBCODEX_TOKEN="$TOKEN" \
+    CODEGPT_ADDR="127.0.0.1:${PORT}" \
+    CODEGPT_DATA="$DATA_DIR" \
+    CODEGPT_TOKEN="$TOKEN" \
     RUST_LOG="info" \
     "$SERVER_BIN" >>"$SERVER_LOG" 2>&1 &
     SERVER_PID=$!

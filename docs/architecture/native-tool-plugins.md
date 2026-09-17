@@ -18,10 +18,10 @@ The intended stack is:
 ```text
 Plugin domain code
     -> optional TypeScript authoring SDK
-    -> webcodex-plugin-v1 over newline-delimited JSON-RPC stdio
+    -> codegpt-plugin-v1 over newline-delimited JSON-RPC stdio
     -> Runner-owned provider process and frozen catalog
     -> plugin_tool exact Runner/provider/tool binding
-    -> existing WebCodex permission, audit, and model surfaces
+    -> existing CodeGPT permission, audit, and model surfaces
 ```
 
 The TypeScript SDK is an authoring layer, not a second runtime authority. Native
@@ -33,7 +33,7 @@ same protocol directly in Python, Rust, Go, JavaScript, or another executable.
 The following pieces are already implemented and should be treated as the current
 baseline rather than redesigned by the next authoring work:
 
-- `webcodex-plugin-v1` defines `initialize`, `tools/list`, and `tools/call` over
+- `codegpt-plugin-v1` defines `initialize`, `tools/list`, and `tools/call` over
   bounded newline-delimited JSON-RPC 2.0.
 - The Runner resolves the configured native executable from its prepared local
   environment, starts and owns the provider process tree, and keeps command,
@@ -52,7 +52,7 @@ baseline rather than redesigned by the next authoring work:
 - Rust remains authoritative for schema/profile admission, catalog and payload
   bounds, timeout/process lifecycle, output validation, and uncertain effect
   handling.
-- `@yyjeqhc/webcodex-plugin-sdk` provides a small TypeScript schema builder,
+- `@yyjeqhc/codegpt-plugin-sdk` provides a small TypeScript schema builder,
   `defineTool`, `definePlugin`, result helpers, and serial stdio protocol runtime.
   It intentionally does not duplicate the Runner's admission policy.
 - `plugins/safe-delete` is the first effectful first-party SDK dogfood Plugin. It
@@ -121,7 +121,7 @@ configuration, documentation, and dedicated tests together when practical.
 This does **not** permit weakening real boundaries. Compatibility or stability
 must be preserved where there is a concrete contract, especially:
 
-- the currently declared `webcodex-plugin-v1` wire behavior;
+- the currently declared `codegpt-plugin-v1` wire behavior;
 - model-facing tool schemas and effect annotations when callers rely on them;
 - destructive-action authority and path fencing;
 - retry/uncertainty semantics;
@@ -138,21 +138,21 @@ The first CLI phase reduces the manual author loop without creating another Plug
 runtime. Its canonical public surface is intentionally limited to:
 
 ```text
-webcodex plugin list [--runner <runner> [--plugin <provider>]]
-webcodex plugin describe --runner <runner> --plugin <provider> --tool <tool>
-webcodex plugin check --runner <runner> --plugin <provider>
-webcodex plugin reload --runner <runner>
+codegpt plugin list [--runner <runner> [--plugin <provider>]]
+codegpt plugin describe --runner <runner> --plugin <provider> --tool <tool>
+codegpt plugin check --runner <runner> --plugin <provider>
+codegpt plugin reload --runner <runner>
 ```
 
 The normal author loop is:
 
 ```text
 edit/build Plugin
-    -> webcodex plugin check --runner special --plugin safe-delete
+    -> codegpt plugin check --runner special --plugin safe-delete
     -> fix bounded Runner admission diagnostics until ready
-    -> webcodex plugin reload --runner special
-    -> webcodex plugin list --runner special --plugin safe-delete
-    -> webcodex plugin describe --runner special --plugin safe-delete --tool safe_delete
+    -> codegpt plugin reload --runner special
+    -> codegpt plugin list --runner special --plugin safe-delete
+    -> codegpt plugin describe --runner special --plugin safe-delete --tool safe_delete
 ```
 
 `list` and `describe` mirror the existing `plugin_tool` inspection semantics and
@@ -166,7 +166,7 @@ never supplies `plugin:manage`.
 Every network command goes through the existing authenticated Server runtime path:
 
 ```text
-webcodex plugin ...
+codegpt plugin ...
     -> POST /api/tools/call
     -> {"tool":"plugin_tool","params":{...canonical action arguments...}}
     -> existing Server permission/audit gateway
@@ -201,14 +201,14 @@ fields. A completed `check` exits successfully only when `ready=true`; a known
 `failures` array is empty. HTTP/auth/runtime failures remain non-zero without
 flattening canonical failure codes or exposing credentials.
 
-There is intentionally no `webcodex plugin call` in this phase. Effectful
+There is intentionally no `codegpt plugin call` in this phase. Effectful
 invocation, binding/retry behavior, and `OutcomeUnknown` remain on the normal
 model/operator `plugin_tool describe -> call` path.
 
 ### Why Phase 1 deferred `plugin init`
 
-A public `webcodex plugin init` was deliberately **not** part of Phase 1. At that
-time `@yyjeqhc/webcodex-plugin-sdk` was only a repository development package used
+A public `codegpt plugin init` was deliberately **not** part of Phase 1. At that
+time `@yyjeqhc/codegpt-plugin-sdk` was only a repository development package used
 by first-party dogfood through a local `file:` dependency; it had no established
 external npm publication/versioning contract. Generating a project that appeared
 standalone while depending on a source checkout or build-machine path would have
@@ -264,21 +264,21 @@ The first real `repo-info` authoring loop exposed two narrower onboarding costs 
 do not require another runtime: identifying a usable user/API credential and turning
 a generated project into a correct Runner-local provider entry. The onboarding
 closure keeps those concerns at their existing boundaries. User/API CLI resolution
-accepts `WEBCODEX_PAT` only as a fallback alias after the existing
-`WEBCODEX_TOKEN` inputs, while the Runner's canonical sensitive-environment filter
-also treats `WEBCODEX_PAT` as secret so inherited/configured child environments
+accepts `CODEGPT_PAT` only as a fallback alias after the existing
+`CODEGPT_TOKEN` inputs, while the Runner's canonical sensitive-environment filter
+also treats `CODEGPT_PAT` as secret so inherited/configured child environments
 cannot receive it. `plugin init` prints a TOML-serialized provider block containing
 the generated absolute compiled entrypoint, but never edits or discovers a Runner's
 local config itself.
 
 ### Phase 3: SDK distribution contract and `plugin init` — implemented
 
-The distribution gate is now satisfied: `@yyjeqhc/webcodex-plugin-sdk@0.1.0` is
-publicly distributed through npm. `webcodex plugin init <DIRECTORY> [--id PROVIDER_ID]`
+The distribution gate is now satisfied: `@yyjeqhc/codegpt-plugin-sdk@0.1.0` is
+publicly distributed through npm. `codegpt plugin init <DIRECTORY> [--id PROVIDER_ID]`
 therefore creates a deterministic local TypeScript/ESM project that depends on that
 published package with an **exact `0.1.0` compatibility pin** and does not require a
-WebCodex source checkout. The scaffold compatibility version is intentionally a CLI
-choice; it is not required to equal either the WebCodex product version or every
+CodeGPT source checkout. The scaffold compatibility version is intentionally a CLI
+choice; it is not required to equal either the CodeGPT product version or every
 newer SDK version that may subsequently exist.
 
 `plugin init` is a local-only action, structurally separate from the network
@@ -304,7 +304,7 @@ before its repository-local dependency was switched to that local SDK source. Th
 preserves deterministic repository CI without making normal validation depend on npm
 registry availability.
 
-Do not make WebCodex product releases depend on SDK version equality. Native Plugin
+Do not make CodeGPT product releases depend on SDK version equality. Native Plugin
 protocol versioning, SDK package versioning, and the scaffold compatibility pin are
 distinct concerns.
 
@@ -317,7 +317,7 @@ not be added as SDK-only fields that the Runner does not understand.
 
 A higher-level TypeScript control/extension runtime, if later needed for Skills,
 Memory, orchestration, or integrations, is also a separate architectural layer.
-It may consume canonical WebCodex primitives, but Native Tool Plugins should not
+It may consume canonical CodeGPT primitives, but Native Tool Plugins should not
 silently evolve into that runtime.
 
 The Experimental Code Mode E1.x work now provides a concrete reason to preserve
@@ -377,8 +377,8 @@ Phase 1 is complete when all of the following are true:
 Phase 3 is complete when the local scaffold uses only the public SDK distribution,
 never overwrites existing user data, reuses canonical provider-id validation,
 performs no network/token/Runner/package-manager/generated-code action, and a fresh
-consumer outside the WebCodex checkout can `npm install`, typecheck/build, and run
-the generated Plugin against `webcodex-plugin-v1` using the published exact SDK
+consumer outside the CodeGPT checkout can `npm install`, typecheck/build, and run
+the generated Plugin against `codegpt-plugin-v1` using the published exact SDK
 version.
 
 Once these conditions hold, the project will have a coherent extension path:

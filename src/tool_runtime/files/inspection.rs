@@ -72,14 +72,14 @@ fn build_read_file_success(
     path: Option<&str>,
 ) -> ToolResult {
     let mut output =
-        webcodex_workspace::file_read_normalize::success_output(result, with_line_numbers);
+        codegpt_workspace::file_read_normalize::success_output(result, with_line_numbers);
     if let Some(path) = path {
         output["path"] = json!(path);
     }
     // Re-check the hard serialized limit after numbering and JSON escaping.
     // The content budget already bounds the raw range, but a heavily escaped or
     // numbered payload could still grow; fail closed rather than truncate.
-    if !webcodex_workspace::file_read_normalize::serialized_fits(&output) {
+    if !codegpt_workspace::file_read_normalize::serialized_fits(&output) {
         return read_file_failure(ReadFileReason::RangeTooLarge, path);
     }
     ToolResult::ok(output)
@@ -159,7 +159,7 @@ fn map_runner_read_error(resp: &ShellRunResponse) -> ReadFileReason {
     }
 }
 
-/// Strictly validate a Runner `webcodex.file_read_range.v1` stdout envelope and
+/// Strictly validate a Runner `codegpt.file_read_range.v1` stdout envelope and
 /// return a shared [`FileReadRange`] reconstructed from its formal fields alone.
 /// Returns a stable [`ReadFileReason`] for any malformed, mistyped, inconsistent,
 /// or oversized response so the caller can fail closed without leaking runner
@@ -173,7 +173,7 @@ fn parse_runner_file_read_range(
     let trimmed = stdout.trim();
     let value = serde_json::from_str::<Value>(trimmed)
         .map_err(|_| ReadFileReason::MalformedRunnerResponse)?;
-    if value.get("format").and_then(|f| f.as_str()) != Some("webcodex.file_read_range.v1") {
+    if value.get("format").and_then(|f| f.as_str()) != Some("codegpt.file_read_range.v1") {
         return Err(ReadFileReason::MalformedRunnerResponse);
     }
 
@@ -270,7 +270,7 @@ fn parse_runner_file_read_range(
 }
 
 /// Parse the stdout of a best-effort Runner `file_read` for an instruction
-/// candidate. Only the canonical `webcodex.file_read_range.v1` JSON envelope
+/// candidate. Only the canonical `codegpt.file_read_range.v1` JSON envelope
 /// is accepted. Empty content is a successfully observed absent rule body;
 /// malformed or obsolete output is conservatively unavailable.
 fn parse_instruction_runner_stdout(
@@ -280,7 +280,7 @@ fn parse_instruction_runner_stdout(
     if !trimmed.is_empty() {
         if let Ok(value) = serde_json::from_str::<Value>(trimmed) {
             if value.get("format").and_then(|format| format.as_str())
-                == Some("webcodex.file_read_range.v1")
+                == Some("codegpt.file_read_range.v1")
             {
                 let content = value
                     .get("content")
@@ -1293,7 +1293,7 @@ mod tests {
     fn read_file_runner_stdout_json_is_returned_without_reslicing() {
         let result = read_file_runner_stdout_result(
             serde_json::json!({
-                "format": "webcodex.file_read_range.v1",
+                "format": "codegpt.file_read_range.v1",
                 "content": "line-560\nline-561",
                 "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
                 "total_lines": 7348,
@@ -1401,7 +1401,7 @@ mod tests {
     fn read_file_runner_stdout_json_with_line_numbers_preserves_empty_lines() {
         let result = read_file_runner_stdout_result_with_options(
             serde_json::json!({
-                "format": "webcodex.file_read_range.v1",
+                "format": "codegpt.file_read_range.v1",
                 "content": "\nsecond",
                 "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
                 "total_lines": 3,
@@ -1447,11 +1447,11 @@ mod tests {
         limit: Option<usize>,
         numbered: bool,
     ) -> Value {
-        use webcodex_workspace::file_read_range::{self, EffectiveRange};
+        use codegpt_workspace::file_read_range::{self, EffectiveRange};
         let range = EffectiveRange::new(start, limit);
         let result = file_read_range::read_range_from(content.as_bytes(), range).unwrap();
         let envelope = serde_json::json!({
-            "format": "webcodex.file_read_range.v1",
+            "format": "codegpt.file_read_range.v1",
             "content": result.content,
             "sha256": result.sha256,
             "total_lines": result.total_lines,
@@ -1520,7 +1520,7 @@ mod tests {
     #[test]
     fn read_file_runner_rejects_bad_sha256() {
         let envelope = serde_json::json!({
-            "format": "webcodex.file_read_range.v1",
+            "format": "codegpt.file_read_range.v1",
             "content": "x",
             "sha256": "too-short",
             "total_lines": 1,
@@ -1536,7 +1536,7 @@ mod tests {
     #[test]
     fn read_file_runner_rejects_wrong_start_line() {
         let envelope = serde_json::json!({
-            "format": "webcodex.file_read_range.v1",
+            "format": "codegpt.file_read_range.v1",
             "content": "x\ny",
             "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
             "total_lines": 2,
@@ -1553,7 +1553,7 @@ mod tests {
     fn read_file_runner_rejects_inconsistent_content_lines() {
         // content has 2 segments but total_lines/start/limit imply 3 returned.
         let envelope = serde_json::json!({
-            "format": "webcodex.file_read_range.v1",
+            "format": "codegpt.file_read_range.v1",
             "content": "a\nb",
             "sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
             "total_lines": 4,
@@ -1569,7 +1569,7 @@ mod tests {
     #[test]
     fn read_file_runner_rejects_wrong_field_types() {
         let envelope = serde_json::json!({
-            "format": "webcodex.file_read_range.v1",
+            "format": "codegpt.file_read_range.v1",
             "content": 7,
             "sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
             "total_lines": "1",
@@ -1596,9 +1596,9 @@ mod tests {
 
     #[test]
     fn read_file_runner_rejects_oversized_formal_content() {
-        let big = "x".repeat(webcodex_workspace::file_read_range::MAX_RANGE_CONTENT_BYTES + 1);
+        let big = "x".repeat(codegpt_workspace::file_read_range::MAX_RANGE_CONTENT_BYTES + 1);
         let envelope = serde_json::json!({
-            "format": "webcodex.file_read_range.v1",
+            "format": "codegpt.file_read_range.v1",
             "content": big,
             "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
             "total_lines": 1,
@@ -1614,7 +1614,7 @@ mod tests {
     #[test]
     fn read_file_runner_strips_huge_padding() {
         let envelope = serde_json::json!({
-            "format": "webcodex.file_read_range.v1",
+            "format": "codegpt.file_read_range.v1",
             "content": "hello",
             "sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
             "total_lines": 1,
@@ -1635,14 +1635,14 @@ mod tests {
         assert!(!serialized.contains("leak"));
         assert!(!serialized.contains("runner_secret"));
         assert!(
-            serialized.len() < webcodex_workspace::file_read_range::MAX_SERIALIZED_OUTPUT_BYTES
+            serialized.len() < codegpt_workspace::file_read_range::MAX_SERIALIZED_OUTPUT_BYTES
         );
     }
 
     #[test]
     fn read_file_error_no_absolute_path_or_os_text() {
         let result = read_file_failure(
-            webcodex_workspace::file_read_range::ReadFileReason::NotFound,
+            codegpt_workspace::file_read_range::ReadFileReason::NotFound,
             Some("README.md"),
         );
         assert!(!result.success);
@@ -1669,7 +1669,7 @@ mod tests {
         assert!(text.len() < 256);
         let serialized = serde_json::to_string(&out).unwrap();
         assert!(
-            serialized.len() < webcodex_workspace::file_read_range::MAX_SERIALIZED_OUTPUT_BYTES
+            serialized.len() < codegpt_workspace::file_read_range::MAX_SERIALIZED_OUTPUT_BYTES
         );
     }
 
@@ -1815,7 +1815,7 @@ mod tests {
         }
         let serialized = serde_json::to_string(&out).unwrap();
         assert!(
-            serialized.len() <= webcodex_workspace::file_read_range::MAX_SERIALIZED_OUTPUT_BYTES,
+            serialized.len() <= codegpt_workspace::file_read_range::MAX_SERIALIZED_OUTPUT_BYTES,
             "serialized output {} exceeds hard limit",
             serialized.len()
         );

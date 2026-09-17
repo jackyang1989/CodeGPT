@@ -109,7 +109,7 @@ jobs:
           # Docker tag names do not allow SemVer '+'. Underscore cannot occur in
           # SemVer itself, so this mapping remains collision-free for valid releases.
           image_version="${version//+/_}"
-          package_version="$(python3 -c 'import json; print(json.load(open("npm/webcodex/package.json", encoding="utf-8"))["version"])')"
+          package_version="$(python3 -c 'import json; print(json.load(open("npm/codegpt/package.json", encoding="utf-8"))["version"])')"
           if [ "$package_version" != "$version" ]; then
             echo "Tag/package version mismatch: tag=$version package=$package_version" >&2
             exit 1
@@ -137,7 +137,7 @@ jobs:
           fi
 
           owner="${GITHUB_REPOSITORY_OWNER,,}"
-          image="$REGISTRY/$owner/webcodex-server"
+          image="$REGISTRY/$owner/codegpt-server"
           {
             echo "tag=$tag"
             echo "version=$version"
@@ -196,11 +196,11 @@ jobs:
           push: true
           outputs: type=image,name=${{ needs.resolve.outputs.image }},push-by-digest=true,name-canonical=true,push=true
           build-args: |
-            WEBCODEX_GIT_COMMIT=${{ needs.resolve.outputs.source_short }}
-            WEBCODEX_GIT_DIRTY=false
-            WEBCODEX_BUILT_AT=${{ needs.resolve.outputs.built_at }}
+            CODEGPT_GIT_COMMIT=${{ needs.resolve.outputs.source_short }}
+            CODEGPT_GIT_DIRTY=false
+            CODEGPT_BUILT_AT=${{ needs.resolve.outputs.built_at }}
           labels: |
-            org.opencontainers.image.title=WebCodex Server
+            org.opencontainers.image.title=CodeGPT Server
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
             org.opencontainers.image.revision=${{ needs.resolve.outputs.source_sha }}
             org.opencontainers.image.version=${{ needs.resolve.outputs.version }}
@@ -230,24 +230,24 @@ jobs:
 
           actual_arch="$(docker image inspect --format '{{.Architecture}}' "$ref")"
           test "$actual_arch" = "$EXPECTED_ARCH"
-          test "$(docker image inspect --format '{{.Config.User}}' "$ref")" = "webcodex:webcodex"
+          test "$(docker image inspect --format '{{.Config.User}}' "$ref")" = "codegpt:codegpt"
           docker run --rm --entrypoint sh "$ref" -ec '
             test "$(id -u)" = 10001
             test "$(id -g)" = 10001
-            test ! -e /usr/local/bin/webcodex-runner
+            test ! -e /usr/local/bin/codegpt-runner
           '
 
-          expected_server="webcodex-server $VERSION (commit $SOURCE_SHORT, dirty=false, built_at=$BUILT_AT)"
-          expected_cli="webcodex $VERSION (commit $SOURCE_SHORT, dirty=false, built_at=$BUILT_AT)"
+          expected_server="codegpt-server $VERSION (commit $SOURCE_SHORT, dirty=false, built_at=$BUILT_AT)"
+          expected_cli="codegpt $VERSION (commit $SOURCE_SHORT, dirty=false, built_at=$BUILT_AT)"
           test "$(docker run --rm "$ref" --version)" = "$expected_server"
-          test "$(docker run --rm --entrypoint /usr/local/bin/webcodex "$ref" --version)" = "$expected_cli"
+          test "$(docker run --rm --entrypoint /usr/local/bin/codegpt "$ref" --version)" = "$expected_cli"
 
-          name="webcodex-image-smoke-${GITHUB_RUN_ID}-${{ matrix.slug }}"
+          name="codegpt-image-smoke-${GITHUB_RUN_ID}-${{ matrix.slug }}"
           cleanup() { docker rm -f "$name" >/dev/null 2>&1 || true; }
           trap cleanup EXIT
           docker run -d --name "$name" \
-            -e WEBCODEX_TOKEN=0000000000000000000000000000000000000000000000000000000000000000 \
-            -e WEBCODEX_PUBLIC_URL=https://webcodex.invalid \
+            -e CODEGPT_TOKEN=0000000000000000000000000000000000000000000000000000000000000000 \
+            -e CODEGPT_PUBLIC_URL=https://codegpt.invalid \
             "$ref" >/dev/null
           for _ in $(seq 1 40); do
             health="$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}missing{{end}}' "$name")"
@@ -330,7 +330,7 @@ jobs:
           set -euo pipefail
           version_ref="$IMAGE:v$IMAGE_VERSION"
           numeric_ref="$IMAGE:$IMAGE_VERSION"
-          metadata_name=webcodex-server-image.json
+          metadata_name=codegpt-server-image.json
           metadata="$RUNNER_TEMP/$metadata_name"
           manifest_json="$RUNNER_TEMP/manifest.json"
           release_record_dir="$RUNNER_TEMP/existing-release-record"
@@ -423,9 +423,9 @@ jobs:
           config = image.get("config")
           if not isinstance(config, dict):
               raise SystemExit(f"child image config is missing for {platform}")
-          if config.get("User") != "webcodex:webcodex":
-              raise SystemExit(f"child image user is not the non-root WebCodex user for {platform}")
-          if config.get("Entrypoint") != ["/usr/local/bin/webcodex-server"]:
+          if config.get("User") != "codegpt:codegpt":
+              raise SystemExit(f"child image user is not the non-root CodeGPT user for {platform}")
+          if config.get("Entrypoint") != ["/usr/local/bin/codegpt-server"]:
               raise SystemExit(f"child image entrypoint is unexpected for {platform}")
           labels = config.get("Labels")
           expected = {
@@ -455,7 +455,7 @@ jobs:
           print(next((str(asset["id"]) for asset in release.get("assets", []) if asset.get("name") == name), ""))
           PY
           )"
-          bootstrap_name=webcodex-server-bootstrap.sh
+          bootstrap_name=codegpt-server-bootstrap.sh
           bootstrap_asset_id="$(python3 - "$release_json" "$bootstrap_name" <<'PY'
           import json
           import sys
@@ -512,7 +512,7 @@ jobs:
           value = json.load(open(metadata_path, encoding="utf-8"))
           deployment = json.load(open(deployment_path, encoding="utf-8"))
           assets = deployment.get("assets")
-          if not isinstance(assets, dict) or set(assets) != {"webcodex-server-bootstrap.sh"}:
+          if not isinstance(assets, dict) or set(assets) != {"codegpt-server-bootstrap.sh"}:
               raise SystemExit("server deployment asset summary is incomplete")
           if not re.fullmatch(r"[0-9a-f]{40}", workflow_sha):
               raise SystemExit("publication workflow source SHA is invalid")
@@ -580,12 +580,12 @@ jobs:
 
           echo "digest=$digest" >> "$GITHUB_OUTPUT"
           {
-            echo "### Published WebCodex Server image"
+            echo "### Published CodeGPT Server image"
             echo "- image: \`$version_ref\`"
             echo "- digest: \`$digest\`"
             echo "- platforms: \`linux/amd64\`, \`linux/arm64\`"
             echo "- release metadata asset: \`$metadata_name\`"
-            echo "- clone-free asset: \`webcodex-server-bootstrap.sh\` (embeds digest-pinned Compose)"
+            echo "- clone-free asset: \`codegpt-server-bootstrap.sh\` (embeds digest-pinned Compose)"
           } >> "$GITHUB_STEP_SUMMARY"
 
   verify-public:
@@ -606,7 +606,7 @@ jobs:
           set -euo pipefail
           tmp="$RUNNER_TEMP/server-image-public"
           mkdir -p "$tmp"
-          for name in webcodex-server-image.json webcodex-server-bootstrap.sh; do
+          for name in codegpt-server-image.json codegpt-server-bootstrap.sh; do
             gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --pattern "$name" --dir "$tmp"
           done
           readarray -t values < <(python3 - "$tmp" <<'PY'
@@ -617,9 +617,9 @@ jobs:
           import sys
 
           root = pathlib.Path(sys.argv[1])
-          value = json.loads((root / "webcodex-server-image.json").read_text(encoding="utf-8"))
+          value = json.loads((root / "codegpt-server-image.json").read_text(encoding="utf-8"))
           assets = value.get("deployment_assets")
-          name = "webcodex-server-bootstrap.sh"
+          name = "codegpt-server-bootstrap.sh"
           if not isinstance(assets, dict) or set(assets) != {name}:
               raise SystemExit("server deployment asset metadata is incomplete")
           data = (root / name).read_bytes()
@@ -631,9 +631,9 @@ jobs:
               raise SystemExit("server image metadata is incomplete")
           bootstrap = data.decode("utf-8")
           pinned = f"{image}@{digest}"
-          if bootstrap.count(pinned) != 1 or re.search(r"webcodex-server:latest", bootstrap):
+          if bootstrap.count(pinned) != 1 or re.search(r"codegpt-server:latest", bootstrap):
               raise SystemExit("clone-free bootstrap is not pinned to the immutable image digest")
-          if "compose_target=webcodex-server-compose.yaml" not in bootstrap:
+          if "compose_target=codegpt-server-compose.yaml" not in bootstrap:
               raise SystemExit("clone-free bootstrap does not materialize the canonical compose filename")
           print(image)
           print(digest)

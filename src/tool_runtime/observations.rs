@@ -34,7 +34,7 @@ impl RuntimeObservations {
     /// so the canonical ToolDefinition interaction policy is enforced at the
     /// single recording funnel as a defensive backstop.
     pub(crate) fn record_successful_tool_call(&self, observation: ToolCallObservation) {
-        if !webcodex_tool_contracts::runtime_tool_activity_interaction(&observation.tool)
+        if !codegpt_tool_contracts::runtime_tool_activity_interaction(&observation.tool)
             .is_meaningful()
         {
             return;

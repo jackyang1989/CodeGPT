@@ -761,7 +761,7 @@ test("all App coordination survives stripped ToolResult metadata through success
     await view.reply(view.calls("agent_continuation_state").at(-1), toolResult({ agent_continuation: currentProjection }));
     await view.reply(view.calls("agent_continuation_wake_acquire").at(-1), toolResult({ wake: currentWake }));
     const response = prepared(currentWake);
-    response._meta = { "webcodex/agentContinuation": { automatic_message: "Wrong metadata envelope" } };
+    response._meta = { "codegpt/agentContinuation": { automatic_message: "Wrong metadata envelope" } };
     await view.reply(view.calls("agent_continuation_wake_prepare").at(-1), response);
     assert.equal(hostMessages(view).length, round + 1);
     assert.equal(hostMessages(view).at(-1).params.content[0].text, response.structuredContent.output.app_protocol.automatic_message);

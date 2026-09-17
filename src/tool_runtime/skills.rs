@@ -18,15 +18,15 @@ use std::collections::BTreeMap;
 use std::path::Component;
 use std::time::{Duration, Instant};
 use unicase::UniCase;
-use webcodex_core::runner_skill::{
+use codegpt_core::runner_skill::{
     RunnerSkillDescriptor, RunnerSkillExecutionRequest, RunnerSkillListResponse,
     RunnerSkillReadResponse, RunnerSkillRequest, RunnerSkillResolveResponse, RunnerSkillSource,
 };
-use webcodex_core::skill_metadata::parse_skill_metadata;
-pub(crate) use webcodex_core::skill_metadata::{
+use codegpt_core::skill_metadata::parse_skill_metadata;
+pub(crate) use codegpt_core::skill_metadata::{
     MAX_SKILL_DEFINITION_BYTES, MAX_SKILL_DESCRIPTION_CHARS, MAX_SKILL_NAME_CHARS,
 };
-use webcodex_core::skill_store::{
+use codegpt_core::skill_store::{
     valid_lower_sha256, valid_package_revision, valid_skill_key, valid_state_revision,
     SkillStoreActivateResponse, SkillStoreInstallResponse, SkillStoreRemoveResponse,
     SkillStoreVersionsResponse, MAX_OPERATOR_REVISIONS_PER_SKILL, MAX_SKILL_STORE_FILE_COUNT,
@@ -40,7 +40,7 @@ pub(crate) const MAX_SKILL_INVALID_DIAGNOSTICS: usize = 8;
 pub(crate) const MAX_SKILL_RESOURCE_FILE_BYTES: usize = 512 * 1024;
 pub(crate) const MAX_SKILL_CATALOG_RESULT_BYTES: usize = 64 * 1024;
 pub(crate) const MAX_SKILL_SIDECAR_CATALOG_BYTES: usize = 8 * 1024;
-pub(crate) use webcodex_core::runtime_contract::{
+pub(crate) use codegpt_core::runtime_contract::{
     MAX_SKILL_LIST_LIMIT, MAX_SKILL_QUERY_CHARS, MAX_SKILL_READ_LINES,
     MAX_SKILL_RESOURCE_PATH_CHARS,
 };
@@ -49,8 +49,8 @@ pub(crate) const MAX_SKILL_READ_RESULT_BYTES: usize = 64 * 1024;
 const MAX_SKILL_DISCOVERY_READ_LINES: usize = 128;
 const DEFAULT_SKILL_LIST_LIMIT: usize = 20;
 const DEFAULT_SKILL_READ_LINES: usize = 200;
-const SKILL_PACKAGE_LIST_FORMAT: &str = "webcodex.skill_package_list.v1";
-const SKILL_FILE_READ_FORMAT: &str = "webcodex.skill_file_read.v1";
+const SKILL_PACKAGE_LIST_FORMAT: &str = "codegpt.skill_package_list.v1";
+const SKILL_FILE_READ_FORMAT: &str = "codegpt.skill_file_read.v1";
 
 #[derive(Debug, Clone, Serialize)]
 pub(crate) struct SkillDescriptor {
@@ -2501,7 +2501,7 @@ fn valid_package_name(name: &str) -> bool {
 fn valid_skill_id(value: &str) -> bool {
     value
         .strip_prefix("wc_skill_")
-        .and_then(webcodex_core::compact::decode::<16>)
+        .and_then(codegpt_core::compact::decode::<16>)
         .is_some()
 }
 
@@ -2515,13 +2515,13 @@ fn is_lower_sha256(value: &str) -> bool {
 fn valid_catalog_revision(value: &str) -> bool {
     value
         .strip_prefix("wc_skillcat_")
-        .and_then(webcodex_core::compact::decode::<32>)
+        .and_then(codegpt_core::compact::decode::<32>)
         .is_some()
 }
 
 fn skill_id(project: &str, package_name: &str) -> String {
     let mut hasher = Sha256::new();
-    hasher.update(b"webcodex.project-skill-id.v1\0");
+    hasher.update(b"codegpt.project-skill-id.v1\0");
     hasher.update(project.as_bytes());
     hasher.update(b"\0");
     hasher.update(SKILL_ROOT.as_bytes());
@@ -2529,7 +2529,7 @@ fn skill_id(project: &str, package_name: &str) -> String {
     hasher.update(package_name.as_bytes());
     format!(
         "wc_skill_{}",
-        webcodex_core::compact::encode(&hasher.finalize()[..16])
+        codegpt_core::compact::encode(&hasher.finalize()[..16])
     )
 }
 
@@ -2540,7 +2540,7 @@ fn catalog_revision(
     discovery_truncated: bool,
 ) -> String {
     let mut hasher = Sha256::new();
-    hasher.update(b"webcodex.skill-catalog.v2\0");
+    hasher.update(b"codegpt.skill-catalog.v2\0");
     for skill in skills {
         for value in [
             skill.descriptor.skill_id.as_str(),
@@ -2569,7 +2569,7 @@ fn catalog_revision(
     hasher.update([u8::from(discovery_truncated)]);
     format!(
         "wc_skillcat_{}",
-        webcodex_core::compact::encode(hasher.finalize())
+        codegpt_core::compact::encode(hasher.finalize())
     )
 }
 
@@ -2658,7 +2658,7 @@ mod tests {
                 descriptor: SkillDescriptor {
                     skill_id: format!(
                         "wc_skill_{}",
-                        webcodex_core::compact::encode(&(index as u128).to_be_bytes()[0..])
+                        codegpt_core::compact::encode(&(index as u128).to_be_bytes()[0..])
                     ),
                     name: format!("skill-{index:02}"),
                     description: format!("descriptor-{index:02}-{}", "d".repeat(420)),

@@ -1,21 +1,21 @@
-name: webcodex
+name: codegpt
 
 services:
-  webcodex:
-    image: ${WEBCODEX_SERVER_IMAGE:-ghcr.io/yyjeqhc/webcodex-server:latest}
+  codegpt:
+    image: ${CODEGPT_SERVER_IMAGE:-ghcr.io/yyjeqhc/codegpt-server:latest}
     pull_policy: always
     restart: unless-stopped
     environment:
-      WEBCODEX_TOKEN: ${WEBCODEX_TOKEN:?set WEBCODEX_TOKEN in .env}
-      WEBCODEX_ADDR: 0.0.0.0:8080
-      WEBCODEX_DATA: /var/lib/webcodex
-      WEBCODEX_PUBLIC_URL: ${WEBCODEX_PUBLIC_URL:?set WEBCODEX_PUBLIC_URL in .env}
+      CODEGPT_TOKEN: ${CODEGPT_TOKEN:?set CODEGPT_TOKEN in .env}
+      CODEGPT_ADDR: 0.0.0.0:8080
+      CODEGPT_DATA: /var/lib/codegpt
+      CODEGPT_PUBLIC_URL: ${CODEGPT_PUBLIC_URL:?set CODEGPT_PUBLIC_URL in .env}
       RUST_LOG: ${RUST_LOG:-info}
     ports:
-      # Only the existing reverse proxy on this host should reach WebCodex.
-      - "${WEBCODEX_HOST_IP:-127.0.0.1}:${WEBCODEX_HOST_PORT:-8080}:8080"
+      # Only the existing reverse proxy on this host should reach CodeGPT.
+      - "${CODEGPT_HOST_IP:-127.0.0.1}:${CODEGPT_HOST_PORT:-8080}:8080"
     volumes:
-      - webcodex_data:/var/lib/webcodex
+      - codegpt_data:/var/lib/codegpt
     read_only: true
     tmpfs:
       - /tmp:size=64m,mode=1777
@@ -31,4 +31,4 @@ services:
       retries: 5
 
 volumes:
-  webcodex_data:
+  codegpt_data:

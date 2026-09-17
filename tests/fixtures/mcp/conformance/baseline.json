@@ -8,7 +8,7 @@
           "scenario": "completion-complete",
           "check_id": "completion-complete",
           "classification": "optional_capability_not_implemented",
-          "reason": "This protocol capability is optional and is not advertised/implemented by the current WebCodex MCP surface.",
+          "reason": "This protocol capability is optional and is not advertised/implemented by the current CodeGPT MCP surface.",
           "evidence": "MCP server capability model plus first GitHub Actions conformance baseline raw report",
           "expected_status": "FAILURE",
           "evidence_sha256": "3fb31b87a162a1318b40f9d1ddee34b892156f5d42e865bb31a78e9cbb2fa5e3"
@@ -17,7 +17,7 @@
           "scenario": "logging-set-level",
           "check_id": "logging-set-level",
           "classification": "optional_capability_not_implemented",
-          "reason": "This protocol capability is optional and is not advertised/implemented by the current WebCodex MCP surface.",
+          "reason": "This protocol capability is optional and is not advertised/implemented by the current CodeGPT MCP surface.",
           "evidence": "MCP server capability model plus first GitHub Actions conformance baseline raw report",
           "expected_status": "FAILURE",
           "evidence_sha256": "2eea842958ca1c21934dbf7f31c526278313834d87d01c77b24d28e2ea1d7f17"
@@ -26,7 +26,7 @@
           "scenario": "prompts-get-embedded-resource",
           "check_id": "prompts-get-embedded-resource",
           "classification": "optional_capability_not_implemented",
-          "reason": "This protocol capability is optional and is not advertised/implemented by the current WebCodex MCP surface.",
+          "reason": "This protocol capability is optional and is not advertised/implemented by the current CodeGPT MCP surface.",
           "evidence": "MCP server capability model plus first GitHub Actions conformance baseline raw report",
           "expected_status": "FAILURE",
           "evidence_sha256": "69302e542bba424021834142e01875b229b97440c67eedbc4b671b87ed03640d"
@@ -35,7 +35,7 @@
           "scenario": "prompts-get-simple",
           "check_id": "prompts-get-simple",
           "classification": "optional_capability_not_implemented",
-          "reason": "This protocol capability is optional and is not advertised/implemented by the current WebCodex MCP surface.",
+          "reason": "This protocol capability is optional and is not advertised/implemented by the current CodeGPT MCP surface.",
           "evidence": "MCP server capability model plus first GitHub Actions conformance baseline raw report",
           "expected_status": "FAILURE",
           "evidence_sha256": "69302e542bba424021834142e01875b229b97440c67eedbc4b671b87ed03640d"
@@ -44,7 +44,7 @@
           "scenario": "prompts-get-with-args",
           "check_id": "prompts-get-with-args",
           "classification": "optional_capability_not_implemented",
-          "reason": "This protocol capability is optional and is not advertised/implemented by the current WebCodex MCP surface.",
+          "reason": "This protocol capability is optional and is not advertised/implemented by the current CodeGPT MCP surface.",
           "evidence": "MCP server capability model plus first GitHub Actions conformance baseline raw report",
           "expected_status": "FAILURE",
           "evidence_sha256": "69302e542bba424021834142e01875b229b97440c67eedbc4b671b87ed03640d"
@@ -53,7 +53,7 @@
           "scenario": "prompts-get-with-image",
           "check_id": "prompts-get-with-image",
           "classification": "optional_capability_not_implemented",
-          "reason": "This protocol capability is optional and is not advertised/implemented by the current WebCodex MCP surface.",
+          "reason": "This protocol capability is optional and is not advertised/implemented by the current CodeGPT MCP surface.",
           "evidence": "MCP server capability model plus first GitHub Actions conformance baseline raw report",
           "expected_status": "FAILURE",
           "evidence_sha256": "69302e542bba424021834142e01875b229b97440c67eedbc4b671b87ed03640d"
@@ -62,7 +62,7 @@
           "scenario": "prompts-list",
           "check_id": "prompts-list",
           "classification": "optional_capability_not_implemented",
-          "reason": "This protocol capability is optional and is not advertised/implemented by the current WebCodex MCP surface.",
+          "reason": "This protocol capability is optional and is not advertised/implemented by the current CodeGPT MCP surface.",
           "evidence": "MCP server capability model plus first GitHub Actions conformance baseline raw report",
           "expected_status": "FAILURE",
           "evidence_sha256": "500284cbe8b04997354d450cc6004d54c245c404c89baa1d45e8f657bda7ff6b"
@@ -71,7 +71,7 @@
           "scenario": "resources-list",
           "check_id": "resources-list",
           "classification": "optional_capability_not_implemented",
-          "reason": "This protocol capability is optional and is not advertised/implemented by the current WebCodex MCP surface.",
+          "reason": "This protocol capability is optional and is not advertised/implemented by the current CodeGPT MCP surface.",
           "evidence": "MCP server capability model plus first GitHub Actions conformance baseline raw report",
           "expected_status": "FAILURE",
           "evidence_sha256": "940374420a5847d2786704f3964d1f6a9b6f93d45d5caca7c867109789721091"
@@ -80,7 +80,7 @@
           "scenario": "resources-subscribe",
           "check_id": "resources-subscribe",
           "classification": "optional_capability_not_implemented",
-          "reason": "This protocol capability is optional and is not advertised/implemented by the current WebCodex MCP surface.",
+          "reason": "This protocol capability is optional and is not advertised/implemented by the current CodeGPT MCP surface.",
           "evidence": "MCP server capability model plus first GitHub Actions conformance baseline raw report",
           "expected_status": "FAILURE",
           "evidence_sha256": "6fa45e84678894951bba5b600f36e0eeb6fa9f4760bc4e54aa7aa4fd03caa465"
@@ -89,7 +89,7 @@
           "scenario": "resources-unsubscribe",
           "check_id": "resources-unsubscribe",
           "classification": "optional_capability_not_implemented",
-          "reason": "This protocol capability is optional and is not advertised/implemented by the current WebCodex MCP surface.",
+          "reason": "This protocol capability is optional and is not advertised/implemented by the current CodeGPT MCP surface.",
           "evidence": "MCP server capability model plus first GitHub Actions conformance baseline raw report",
           "expected_status": "FAILURE",
           "evidence_sha256": "6fa45e84678894951bba5b600f36e0eeb6fa9f4760bc4e54aa7aa4fd03caa465"
@@ -98,7 +98,7 @@
           "scenario": "tools-call-with-logging",
           "check_id": "tools-call-with-logging",
           "classification": "optional_capability_not_implemented",
-          "reason": "This protocol capability is optional and is not advertised/implemented by the current WebCodex MCP surface.",
+          "reason": "This protocol capability is optional and is not advertised/implemented by the current CodeGPT MCP surface.",
           "evidence": "MCP server capability model plus first GitHub Actions conformance baseline raw report",
           "expected_status": "FAILURE",
           "evidence_sha256": "2eea842958ca1c21934dbf7f31c526278313834d87d01c77b24d28e2ea1d7f17"
@@ -125,7 +125,7 @@
           "scenario": "resources-read-binary",
           "check_id": "resources-read-binary",
           "classification": "optional_capability_not_implemented",
-          "reason": "The legacy 2025-11-25 WebCodex surface does not advertise/implement the resources capability exercised by this scenario.",
+          "reason": "The legacy 2025-11-25 CodeGPT surface does not advertise/implement the resources capability exercised by this scenario.",
           "evidence": "MCP 2025-11-25 resources capability is optional; first GitHub Actions conformance baseline raw report",
           "expected_status": "FAILURE",
           "evidence_sha256": "5ec605e03cf3cb3c48dae40d35358da3caffebcba8576ed4050cc206d0a12327"
@@ -134,7 +134,7 @@
           "scenario": "resources-read-text",
           "check_id": "resources-read-text",
           "classification": "optional_capability_not_implemented",
-          "reason": "The legacy 2025-11-25 WebCodex surface does not advertise/implement the resources capability exercised by this scenario.",
+          "reason": "The legacy 2025-11-25 CodeGPT surface does not advertise/implement the resources capability exercised by this scenario.",
           "evidence": "MCP 2025-11-25 resources capability is optional; first GitHub Actions conformance baseline raw report",
           "expected_status": "FAILURE",
           "evidence_sha256": "5ec605e03cf3cb3c48dae40d35358da3caffebcba8576ed4050cc206d0a12327"
@@ -143,7 +143,7 @@
           "scenario": "resources-templates-read",
           "check_id": "resources-templates-read",
           "classification": "optional_capability_not_implemented",
-          "reason": "The legacy 2025-11-25 WebCodex surface does not advertise/implement the resources capability exercised by this scenario.",
+          "reason": "The legacy 2025-11-25 CodeGPT surface does not advertise/implement the resources capability exercised by this scenario.",
           "evidence": "MCP 2025-11-25 resources capability is optional; first GitHub Actions conformance baseline raw report",
           "expected_status": "FAILURE",
           "evidence_sha256": "5ec605e03cf3cb3c48dae40d35358da3caffebcba8576ed4050cc206d0a12327"
@@ -152,7 +152,7 @@
           "scenario": "tools-call-audio",
           "check_id": "tools-call-audio",
           "classification": "missing_harness_fixture",
-          "reason": "The upstream scenario requires a named reference test tool that WebCodex intentionally does not expose in its product registry.",
+          "reason": "The upstream scenario requires a named reference test tool that CodeGPT intentionally does not expose in its product registry.",
           "evidence": "Pinned conformance scenario fixture contract; first GitHub Actions conformance baseline raw report",
           "expected_status": "FAILURE",
           "evidence_sha256": "be8f81e64007ce6377f1411fa0a5de04e0eab43ada9f6ea73cda249248ed50d6"
@@ -161,7 +161,7 @@
           "scenario": "tools-call-elicitation",
           "check_id": "tools-call-elicitation",
           "classification": "missing_harness_fixture",
-          "reason": "The upstream scenario requires a named reference test tool that WebCodex intentionally does not expose in its product registry.",
+          "reason": "The upstream scenario requires a named reference test tool that CodeGPT intentionally does not expose in its product registry.",
           "evidence": "Pinned conformance scenario fixture contract; first GitHub Actions conformance baseline raw report",
           "expected_status": "FAILURE",
           "evidence_sha256": "5d4f1dbc94d17705be569e9277db7775d03cb4acde367cb363d3f0bfe39191a8"
@@ -170,7 +170,7 @@
           "scenario": "tools-call-embedded-resource",
           "check_id": "tools-call-embedded-resource",
           "classification": "missing_harness_fixture",
-          "reason": "The upstream scenario requires a named reference test tool that WebCodex intentionally does not expose in its product registry.",
+          "reason": "The upstream scenario requires a named reference test tool that CodeGPT intentionally does not expose in its product registry.",
           "evidence": "Pinned conformance scenario fixture contract; first GitHub Actions conformance baseline raw report",
           "expected_status": "FAILURE",
           "evidence_sha256": "f98e835b12539be49dfac66428b261a968f0ee7e4e16accb0c37307aa7297dfd"
@@ -179,7 +179,7 @@
           "scenario": "tools-call-error",
           "check_id": "tools-call-error",
           "classification": "missing_harness_fixture",
-          "reason": "The upstream scenario requires a named reference test tool that WebCodex intentionally does not expose in its product registry.",
+          "reason": "The upstream scenario requires a named reference test tool that CodeGPT intentionally does not expose in its product registry.",
           "evidence": "Pinned conformance scenario fixture contract; first GitHub Actions conformance baseline raw report",
           "expected_status": "FAILURE",
           "evidence_sha256": "54ba7e7e08aec6f6d17ca71a1de47bdc699112296e1bf0065b7d08ac9736f545"
@@ -188,7 +188,7 @@
           "scenario": "tools-call-image",
           "check_id": "tools-call-image",
           "classification": "missing_harness_fixture",
-          "reason": "The upstream scenario requires a named reference test tool that WebCodex intentionally does not expose in its product registry.",
+          "reason": "The upstream scenario requires a named reference test tool that CodeGPT intentionally does not expose in its product registry.",
           "evidence": "Pinned conformance scenario fixture contract; first GitHub Actions conformance baseline raw report",
           "expected_status": "FAILURE",
           "evidence_sha256": "bfc273da83ca13f3deabc48b80b18006b8eb3b58bf4a3058fae5a2dcc26885b2"
@@ -197,7 +197,7 @@
           "scenario": "tools-call-mixed-content",
           "check_id": "tools-call-mixed-content",
           "classification": "missing_harness_fixture",
-          "reason": "The upstream scenario requires a named reference test tool that WebCodex intentionally does not expose in its product registry.",
+          "reason": "The upstream scenario requires a named reference test tool that CodeGPT intentionally does not expose in its product registry.",
           "evidence": "Pinned conformance scenario fixture contract; first GitHub Actions conformance baseline raw report",
           "expected_status": "FAILURE",
           "evidence_sha256": "3debe81b45d33edf2334e98203b9f5d553169b8770ea1b0c95e9249f29980f57"
@@ -206,7 +206,7 @@
           "scenario": "tools-call-sampling",
           "check_id": "tools-call-sampling",
           "classification": "missing_harness_fixture",
-          "reason": "The upstream scenario requires a named reference test tool that WebCodex intentionally does not expose in its product registry.",
+          "reason": "The upstream scenario requires a named reference test tool that CodeGPT intentionally does not expose in its product registry.",
           "evidence": "Pinned conformance scenario fixture contract; first GitHub Actions conformance baseline raw report",
           "expected_status": "FAILURE",
           "evidence_sha256": "aa21f825ed5b37e5d10925e793b8b392d1950c197c0777593409b13a3042d90c"
@@ -215,7 +215,7 @@
           "scenario": "tools-call-simple-text",
           "check_id": "tools-call-simple-text",
           "classification": "missing_harness_fixture",
-          "reason": "The upstream scenario requires a named reference test tool that WebCodex intentionally does not expose in its product registry.",
+          "reason": "The upstream scenario requires a named reference test tool that CodeGPT intentionally does not expose in its product registry.",
           "evidence": "Pinned conformance scenario fixture contract; first GitHub Actions conformance baseline raw report",
           "expected_status": "FAILURE",
           "evidence_sha256": "0c21f91625708019e412bd79df069d8b314e029e48159b1e8949256726ca1a1b"
@@ -224,7 +224,7 @@
           "scenario": "tools-call-with-progress",
           "check_id": "tools-call-with-progress",
           "classification": "missing_harness_fixture",
-          "reason": "The upstream scenario requires a named reference test tool that WebCodex intentionally does not expose in its product registry.",
+          "reason": "The upstream scenario requires a named reference test tool that CodeGPT intentionally does not expose in its product registry.",
           "evidence": "Pinned conformance scenario fixture contract; first GitHub Actions conformance baseline raw report",
           "expected_status": "FAILURE",
           "evidence_sha256": "2d39e73bd3f5f229ed274196b53b1821a4e1450221413a8f20205bd6aa30294f"
@@ -242,7 +242,7 @@
           "scenario": "caching",
           "check_id": "sep-2549-prompts-list-caching-hints",
           "classification": "optional_capability_not_implemented",
-          "reason": "The cacheable endpoint belongs to an optional capability that the current WebCodex surface does not implement.",
+          "reason": "The cacheable endpoint belongs to an optional capability that the current CodeGPT surface does not implement.",
           "evidence": "SEP-2549 applies when the corresponding optional endpoint exists; first GitHub Actions conformance baseline raw report",
           "expected_status": "FAILURE",
           "evidence_sha256": "7af406127f9e0edb58db00d3c7a974c4a64e9dc2eb966779a6de918741a9f5f8"
@@ -251,7 +251,7 @@
           "scenario": "caching",
           "check_id": "sep-2549-resources-templates-list-caching-hints",
           "classification": "optional_capability_not_implemented",
-          "reason": "The cacheable endpoint belongs to an optional capability that the current WebCodex surface does not implement.",
+          "reason": "The cacheable endpoint belongs to an optional capability that the current CodeGPT surface does not implement.",
           "evidence": "SEP-2549 applies when the corresponding optional endpoint exists; first GitHub Actions conformance baseline raw report",
           "expected_status": "FAILURE",
           "evidence_sha256": "e3fb42ce657d615df87789d7f92cc5b379ed29c676d48cd6f60f27515347ec75"
@@ -269,7 +269,7 @@
           "scenario": "completion-complete",
           "check_id": "completion-complete",
           "classification": "optional_capability_not_implemented",
-          "reason": "This protocol capability is optional and is not advertised/implemented by the current WebCodex MCP surface.",
+          "reason": "This protocol capability is optional and is not advertised/implemented by the current CodeGPT MCP surface.",
           "evidence": "MCP server capability model plus first GitHub Actions conformance baseline raw report",
           "expected_status": "FAILURE",
           "evidence_sha256": "662966f5250ef4190d1d1dfa6f5b05348cf61d995e15b8a435240872b3273ae1"
@@ -278,7 +278,7 @@
           "scenario": "prompts-get-embedded-resource",
           "check_id": "prompts-get-embedded-resource",
           "classification": "optional_capability_not_implemented",
-          "reason": "This protocol capability is optional and is not advertised/implemented by the current WebCodex MCP surface.",
+          "reason": "This protocol capability is optional and is not advertised/implemented by the current CodeGPT MCP surface.",
           "evidence": "MCP server capability model plus first GitHub Actions conformance baseline raw report",
           "expected_status": "FAILURE",
           "evidence_sha256": "9b485366f340ecc7b0a03461e3949fac498d9d362fffbdde82d0fcc5f0a7b224"
@@ -287,7 +287,7 @@
           "scenario": "prompts-get-simple",
           "check_id": "prompts-get-simple",
           "classification": "optional_capability_not_implemented",
-          "reason": "This protocol capability is optional and is not advertised/implemented by the current WebCodex MCP surface.",
+          "reason": "This protocol capability is optional and is not advertised/implemented by the current CodeGPT MCP surface.",
           "evidence": "MCP server capability model plus first GitHub Actions conformance baseline raw report",
           "expected_status": "FAILURE",
           "evidence_sha256": "9b485366f340ecc7b0a03461e3949fac498d9d362fffbdde82d0fcc5f0a7b224"
@@ -296,7 +296,7 @@
           "scenario": "prompts-get-with-args",
           "check_id": "prompts-get-with-args",
           "classification": "optional_capability_not_implemented",
-          "reason": "This protocol capability is optional and is not advertised/implemented by the current WebCodex MCP surface.",
+          "reason": "This protocol capability is optional and is not advertised/implemented by the current CodeGPT MCP surface.",
           "evidence": "MCP server capability model plus first GitHub Actions conformance baseline raw report",
           "expected_status": "FAILURE",
           "evidence_sha256": "9b485366f340ecc7b0a03461e3949fac498d9d362fffbdde82d0fcc5f0a7b224"
@@ -305,7 +305,7 @@
           "scenario": "prompts-get-with-image",
           "check_id": "prompts-get-with-image",
           "classification": "optional_capability_not_implemented",
-          "reason": "This protocol capability is optional and is not advertised/implemented by the current WebCodex MCP surface.",
+          "reason": "This protocol capability is optional and is not advertised/implemented by the current CodeGPT MCP surface.",
           "evidence": "MCP server capability model plus first GitHub Actions conformance baseline raw report",
           "expected_status": "FAILURE",
           "evidence_sha256": "9b485366f340ecc7b0a03461e3949fac498d9d362fffbdde82d0fcc5f0a7b224"
@@ -314,7 +314,7 @@
           "scenario": "prompts-list",
           "check_id": "prompts-list",
           "classification": "optional_capability_not_implemented",
-          "reason": "This protocol capability is optional and is not advertised/implemented by the current WebCodex MCP surface.",
+          "reason": "This protocol capability is optional and is not advertised/implemented by the current CodeGPT MCP surface.",
           "evidence": "MCP server capability model plus first GitHub Actions conformance baseline raw report",
           "expected_status": "FAILURE",
           "evidence_sha256": "96a058e400b47135503f462d35b6865092c786aee626904bcfd88ffa4f51aa02"
@@ -422,7 +422,7 @@
           "scenario": "input-required-result-non-tool-request",
           "check_id": "sep-2322-non-tool-incomplete",
           "classification": "optional_capability_not_implemented",
-          "reason": "This MRTR probe uses prompts/get, but the current WebCodex surface does not implement the optional prompts capability.",
+          "reason": "This MRTR probe uses prompts/get, but the current CodeGPT surface does not implement the optional prompts capability.",
           "evidence": "SEP-2322 non-tool request scenario plus server capability model; first GitHub Actions conformance baseline raw report",
           "expected_status": "FAILURE",
           "evidence_sha256": "19847c48286d6012d963b8274997698a9c1a9cdfb53fc7f9980729303d5c62bc"
@@ -494,7 +494,7 @@
           "scenario": "server-stateless",
           "check_id": "sep-2575-server-honors-notification-filter",
           "classification": "optional_capability_not_implemented",
-          "reason": "The referee marked this check not applicable because WebCodex did not advertise the related subscription/listChanged capability.",
+          "reason": "The referee marked this check not applicable because CodeGPT did not advertise the related subscription/listChanged capability.",
           "evidence": "SEP-2575 check details from first GitHub Actions conformance baseline raw report",
           "expected_status": "SKIPPED",
           "evidence_sha256": "3526c6b7099730a5aa95fcdb13c9a9256c97a831c6adf4a6fcea428948faedc1"
@@ -503,7 +503,7 @@
           "scenario": "server-stateless",
           "check_id": "sep-2575-server-sends-prompts-list-changed-on-subscription",
           "classification": "optional_capability_not_implemented",
-          "reason": "The referee marked this check not applicable because WebCodex did not advertise the related subscription/listChanged capability.",
+          "reason": "The referee marked this check not applicable because CodeGPT did not advertise the related subscription/listChanged capability.",
           "evidence": "SEP-2575 check details from first GitHub Actions conformance baseline raw report",
           "expected_status": "SKIPPED",
           "evidence_sha256": "bc64f7ce41051860e4ea6a058fa1fc33182b920635312562fa174807df371b2c"
@@ -512,7 +512,7 @@
           "scenario": "server-stateless",
           "check_id": "sep-2575-server-sends-subscription-ack",
           "classification": "optional_capability_not_implemented",
-          "reason": "The referee marked this check not applicable because WebCodex did not advertise the related subscription/listChanged capability.",
+          "reason": "The referee marked this check not applicable because CodeGPT did not advertise the related subscription/listChanged capability.",
           "evidence": "SEP-2575 check details from first GitHub Actions conformance baseline raw report",
           "expected_status": "SKIPPED",
           "evidence_sha256": "3526c6b7099730a5aa95fcdb13c9a9256c97a831c6adf4a6fcea428948faedc1"
@@ -521,7 +521,7 @@
           "scenario": "server-stateless",
           "check_id": "sep-2575-server-sends-tools-list-changed-on-subscription",
           "classification": "optional_capability_not_implemented",
-          "reason": "The referee marked this check not applicable because WebCodex did not advertise the related subscription/listChanged capability.",
+          "reason": "The referee marked this check not applicable because CodeGPT did not advertise the related subscription/listChanged capability.",
           "evidence": "SEP-2575 check details from first GitHub Actions conformance baseline raw report",
           "expected_status": "SKIPPED",
           "evidence_sha256": "9b3210383e2285dfff82e29bfce618a0124128dac675e6d498f11495e20af5f6"
@@ -530,7 +530,7 @@
           "scenario": "server-stateless",
           "check_id": "sep-2575-server-tags-subscription-id",
           "classification": "optional_capability_not_implemented",
-          "reason": "The referee marked this check not applicable because WebCodex did not advertise the related subscription/listChanged capability.",
+          "reason": "The referee marked this check not applicable because CodeGPT did not advertise the related subscription/listChanged capability.",
           "evidence": "SEP-2575 check details from first GitHub Actions conformance baseline raw report",
           "expected_status": "SKIPPED",
           "evidence_sha256": "3526c6b7099730a5aa95fcdb13c9a9256c97a831c6adf4a6fcea428948faedc1"
@@ -539,7 +539,7 @@
           "scenario": "tools-call-audio",
           "check_id": "tools-call-audio",
           "classification": "missing_harness_fixture",
-          "reason": "The upstream scenario requires a named reference test tool that WebCodex intentionally does not expose in its product registry.",
+          "reason": "The upstream scenario requires a named reference test tool that CodeGPT intentionally does not expose in its product registry.",
           "evidence": "Pinned conformance scenario fixture contract; first GitHub Actions conformance baseline raw report",
           "expected_status": "FAILURE",
           "evidence_sha256": "167f7b2aab138f5d58a6457f8e54999f72052e4f181ea8e097b591fe6e0e5fd5"
@@ -548,7 +548,7 @@
           "scenario": "tools-call-embedded-resource",
           "check_id": "tools-call-embedded-resource",
           "classification": "missing_harness_fixture",
-          "reason": "The upstream scenario requires a named reference test tool that WebCodex intentionally does not expose in its product registry.",
+          "reason": "The upstream scenario requires a named reference test tool that CodeGPT intentionally does not expose in its product registry.",
           "evidence": "Pinned conformance scenario fixture contract; first GitHub Actions conformance baseline raw report",
           "expected_status": "FAILURE",
           "evidence_sha256": "ac15296fe2e3933a0209672765932a60179614b53a6caa779b0fb2e083bdd1a7"
@@ -557,7 +557,7 @@
           "scenario": "tools-call-error",
           "check_id": "tools-call-error",
           "classification": "missing_harness_fixture",
-          "reason": "The upstream scenario requires a named reference test tool that WebCodex intentionally does not expose in its product registry.",
+          "reason": "The upstream scenario requires a named reference test tool that CodeGPT intentionally does not expose in its product registry.",
           "evidence": "Pinned conformance scenario fixture contract; first GitHub Actions conformance baseline raw report",
           "expected_status": "FAILURE",
           "evidence_sha256": "8ba320ddcc338989d004655f45941840957cddac5a7560a640dbec4f57dfa150"
@@ -566,7 +566,7 @@
           "scenario": "tools-call-image",
           "check_id": "tools-call-image",
           "classification": "missing_harness_fixture",
-          "reason": "The upstream scenario requires a named reference test tool that WebCodex intentionally does not expose in its product registry.",
+          "reason": "The upstream scenario requires a named reference test tool that CodeGPT intentionally does not expose in its product registry.",
           "evidence": "Pinned conformance scenario fixture contract; first GitHub Actions conformance baseline raw report",
           "expected_status": "FAILURE",
           "evidence_sha256": "f4c2a05b2a65479571b00cb56f4296afa3421cc093fd6a3e6ae6eb38081b3485"
@@ -575,7 +575,7 @@
           "scenario": "tools-call-mixed-content",
           "check_id": "tools-call-mixed-content",
           "classification": "missing_harness_fixture",
-          "reason": "The upstream scenario requires a named reference test tool that WebCodex intentionally does not expose in its product registry.",
+          "reason": "The upstream scenario requires a named reference test tool that CodeGPT intentionally does not expose in its product registry.",
           "evidence": "Pinned conformance scenario fixture contract; first GitHub Actions conformance baseline raw report",
           "expected_status": "FAILURE",
           "evidence_sha256": "4ac779b4d23b386d9db3448b3420722a1c825e8e09dfefc48312317894aecb4b"
@@ -584,7 +584,7 @@
           "scenario": "tools-call-simple-text",
           "check_id": "tools-call-simple-text",
           "classification": "missing_harness_fixture",
-          "reason": "The upstream scenario requires a named reference test tool that WebCodex intentionally does not expose in its product registry.",
+          "reason": "The upstream scenario requires a named reference test tool that CodeGPT intentionally does not expose in its product registry.",
           "evidence": "Pinned conformance scenario fixture contract; first GitHub Actions conformance baseline raw report",
           "expected_status": "FAILURE",
           "evidence_sha256": "7ce39ec311288ca86a4ee842f9ee7946344a8563845ff2c5220936a147870a40"
@@ -593,7 +593,7 @@
           "scenario": "tools-call-with-progress",
           "check_id": "tools-call-with-progress",
           "classification": "missing_harness_fixture",
-          "reason": "The upstream scenario requires a named reference test tool that WebCodex intentionally does not expose in its product registry.",
+          "reason": "The upstream scenario requires a named reference test tool that CodeGPT intentionally does not expose in its product registry.",
           "evidence": "Pinned conformance scenario fixture contract; first GitHub Actions conformance baseline raw report",
           "expected_status": "FAILURE",
           "evidence_sha256": "2b1644e2f5310a0794eb4fa3718b9a98c8609c1255c92224fd34e4178bd88934"

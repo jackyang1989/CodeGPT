@@ -859,7 +859,7 @@ async fn mcp_artifact_export_resource_link_and_binary_round_trip() {
     // Keep the PDF above one public read_project_artifact chunk so the export
     // resource path must exercise the bounded multi-read loop.
     let mut pdf = Vec::with_capacity(96 * 1024);
-    pdf.extend_from_slice(b"%PDF-1.7\nWebCodex export fixture\n");
+    pdf.extend_from_slice(b"%PDF-1.7\nCodeGPT export fixture\n");
     while pdf.len() < 96 * 1024 - 6 {
         pdf.extend_from_slice(b"artifact export bounded chunk fixture\n");
     }
@@ -1070,7 +1070,7 @@ async fn http_mcp_artifact_export_resources_read_streams_valid_json_blob() {
     assert_eq!(decoded, bytes);
     assert_eq!(
         body["result"]["_meta"]["io.modelcontextprotocol/serverInfo"]["name"],
-        "webcodex"
+        "codegpt"
     );
 }
 
@@ -1765,7 +1765,7 @@ async fn mcp_artifact_export_unknown_expired_and_changed_snapshots_fail_closed()
             "resources/read",
             Some(json!(3106)),
             mcp_2026_params(json!({
-                "uri": "webcodex-artifact://export/wc_export_0123456789abcdef0123456789abcdef"
+                "uri": "codegpt-artifact://export/wc_export_0123456789abcdef0123456789abcdef"
             })),
         ),
         Some(&auth),

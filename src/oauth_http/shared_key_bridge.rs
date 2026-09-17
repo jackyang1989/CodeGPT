@@ -12,7 +12,7 @@ use crate::auth::{
 };
 use crate::models::OAuthAuthorizationCodeRecord;
 use crate::runner_http::{RunnerFeature, RunnerFeatureSet};
-use webcodex_core::authority::SCOPE_RUNNER_MANAGE;
+use codegpt_core::authority::SCOPE_RUNNER_MANAGE;
 
 use super::{
     apply_oauth_no_store_headers, authorize_bridge_html, decoded_authorize_param, form_field,
@@ -1043,7 +1043,7 @@ pub(crate) async fn oauth_shared_key_client_provision(
         id: uuid::Uuid::new_v4().to_string(),
         client_id: crate::auth::generate_oauth_client_id(),
         client_secret_hash: hash_token(&plaintext_secret),
-        name: "WebCodex hosted shared-key bridge".to_string(),
+        name: "CodeGPT hosted shared-key bridge".to_string(),
         owner_user_id: None,
         owner_project_grant_id: None,
         owner_shared_key_hash: Some(shared_key_hash.to_string()),

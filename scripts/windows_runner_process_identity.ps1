@@ -1,15 +1,15 @@
 # Focused Windows process identity helpers for Runner deployment/lifecycle scripts.
 # CreationTime is the raw FILETIME returned by GetProcessTimes, matching the
-# authoritative detached Job PID-reuse fencing in webcodex-runner.
+# authoritative detached Job PID-reuse fencing in codegpt-runner.
 
-if (-not ("WebCodex.WindowsProcessIdentity" -as [type])) {
+if (-not ("CodeGPT.WindowsProcessIdentity" -as [type])) {
     Add-Type -TypeDefinition @'
 using System;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
 
-namespace WebCodex {
+namespace CodeGPT {
     public sealed class ProcessIdentityHandle : SafeHandleZeroOrMinusOneIsInvalid {
         private ProcessIdentityHandle() : base(true) {}
         protected override bool ReleaseHandle() { return CloseHandle(handle); }
@@ -115,12 +115,12 @@ function ConvertFrom-WindowsCommandLine {
 
     # PowerShell's parser is not Windows argv parsing. Use the framework's exact
     # CommandLineToArgvW binding through a tiny on-demand type.
-    if (-not ("WebCodex.CommandLine" -as [type])) {
+    if (-not ("CodeGPT.CommandLine" -as [type])) {
         Add-Type -TypeDefinition @'
 using System;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
-namespace WebCodex {
+namespace CodeGPT {
     public static class CommandLine {
         [DllImport("shell32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
         private static extern IntPtr CommandLineToArgvW(string commandLine, out int argc);
@@ -143,7 +143,7 @@ namespace WebCodex {
 }
 '@
     }
-    return @([WebCodex.CommandLine]::Parse($CommandLine))
+    return @([CodeGPT.CommandLine]::Parse($CommandLine))
 }
 
 function Test-PrimaryRunnerArguments {
@@ -153,7 +153,7 @@ function Test-PrimaryRunnerArguments {
     # that representation: any current/future internal Runner token anywhere in
     # parsed argv is non-primary.
     foreach ($argument in @($Arguments)) {
-        if ($argument.StartsWith("--webcodex-internal-", [System.StringComparison]::Ordinal)) {
+        if ($argument.StartsWith("--codegpt-internal-", [System.StringComparison]::Ordinal)) {
             return $false
         }
     }
@@ -164,7 +164,7 @@ function Get-PrimaryRunnerProcesses {
     param([Parameter(Mandatory = $true)][string]$ExactPath)
 
     $normalized = [System.IO.Path]::GetFullPath($ExactPath)
-    $records = @(Get-CimInstance Win32_Process -Filter "Name = 'webcodex-runner.exe'" -ErrorAction Stop)
+    $records = @(Get-CimInstance Win32_Process -Filter "Name = 'codegpt-runner.exe'" -ErrorAction Stop)
     $matches = @()
     foreach ($record in $records) {
         if (-not $record.ExecutablePath) { continue }
@@ -179,7 +179,7 @@ function Get-PrimaryRunnerProcesses {
         $argv = @(ConvertFrom-WindowsCommandLine -CommandLine ([string]$record.CommandLine))
         if (-not (Test-PrimaryRunnerArguments -Arguments $argv)) { continue }
         $creation = [uint64]0
-        if (-not [WebCodex.WindowsProcessIdentity]::TryGetCreationTime([uint32]$record.ProcessId, [ref]$creation)) {
+        if (-not [CodeGPT.WindowsProcessIdentity]::TryGetCreationTime([uint32]$record.ProcessId, [ref]$creation)) {
             # A stale CIM row for a process that already exited is not live identity.
             continue
         }
@@ -204,14 +204,14 @@ function Get-ExactlyOnePrimaryRunner {
 
 function Test-CapturedProcessIdentityLive {
     param([Parameter(Mandatory = $true)]$Identity)
-    return [WebCodex.WindowsProcessIdentity]::IsLive([uint32]$Identity.Id, [uint64]$Identity.CreationTime)
+    return [CodeGPT.WindowsProcessIdentity]::IsLive([uint32]$Identity.Id, [uint64]$Identity.CreationTime)
 }
 
 function Assert-CapturedPrimaryRunnerIdentity {
     param([Parameter(Mandatory = $true)]$Identity)
 
     $currentCreation = [uint64]0
-    if (-not [WebCodex.WindowsProcessIdentity]::TryGetCreationTime([uint32]$Identity.Id, [ref]$currentCreation)) {
+    if (-not [CodeGPT.WindowsProcessIdentity]::TryGetCreationTime([uint32]$Identity.Id, [ref]$currentCreation)) {
         throw "Primary Runner process exited before effect: PID $($Identity.Id)"
     }
     if ($currentCreation -ne [uint64]$Identity.CreationTime) {
@@ -236,5 +236,5 @@ function Stop-CapturedPrimaryRunner {
     # checks creation FILETIME on the same handle used for the termination effect.
     # A process exit/PID reuse in between therefore fails closed before effect.
     $null = Assert-CapturedPrimaryRunnerIdentity -Identity $Identity
-    [WebCodex.WindowsProcessIdentity]::TerminateExact([uint32]$Identity.Id, [uint64]$Identity.CreationTime)
+    [CodeGPT.WindowsProcessIdentity]::TerminateExact([uint32]$Identity.Id, [uint64]$Identity.CreationTime)
 }

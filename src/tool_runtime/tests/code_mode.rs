@@ -1041,7 +1041,7 @@ async fn canonical_orchestration_host_rejects_server_owned_metadata_without_fron
         ("recording_session_id", json!("wc_sess_0000000000000000")),
         ("ack_session_context_revision", json!(1)),
         ("ack_session_message_ids", json!([])),
-        ("context_request", json!(["webcodex.workflow"])),
+        ("context_request", json!(["codegpt.workflow"])),
         (
             "session_message_resolution",
             json!({"message_id": "wc_msg_0000000000000000", "resolution": "handled"}),
@@ -1051,7 +1051,7 @@ async fn canonical_orchestration_host_rejects_server_owned_metadata_without_fron
         ("result_expectation", json!("failure")),
         ("accepted_exit_codes", json!([0, 1])),
         ("assertion_name", json!("nested-assertion")),
-        ("__webcodex_private", json!(true)),
+        ("__codegpt_private", json!(true)),
     ] {
         let mut arguments = serde_json::Map::new();
         arguments.insert(field.to_string(), value);
@@ -1073,7 +1073,7 @@ async fn code_mode_binds_exact_project_and_session_through_real_canonical_reads(
     init_git_repo(tmp.path());
     std::fs::write(
         tmp.path().join("README.md"),
-        "WebCodex Code Mode integration fixture\nToolRuntime\n",
+        "CodeGPT Code Mode integration fixture\nToolRuntime\n",
     )
     .unwrap();
 

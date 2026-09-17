@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Small, explicit operator surface for WebCodex release control-plane steps."""
+"""Small, explicit operator surface for CodeGPT release control-plane steps."""
 
 from __future__ import annotations
 
@@ -25,7 +25,7 @@ else:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="WebCodex release operator. Mutating publication steps remain separate and explicit."
+        description="CodeGPT release operator. Mutating publication steps remain separate and explicit."
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
     preflight = subparsers.add_parser(

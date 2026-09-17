@@ -3,10 +3,10 @@ use crate::Database;
 use sha2::{Digest, Sha256};
 use std::panic::{catch_unwind, AssertUnwindSafe};
 use std::sync::{Arc, RwLock};
-use webcodex_runner_registry::{
+use codegpt_runner_registry::{
     JobTerminalEvent, JobTerminalEventSink, JobTerminalRegistrationSnapshot, RunnerAccessGroup,
 };
-use webcodex_store::{
+use codegpt_store::{
     JobTerminalDeliveryState, JobTerminalFact, JobTerminalSourceIdentity, JobTerminalWaitPrincipal,
     JobTerminalWaitRecord, JobTerminalWaitStoreError,
 };
@@ -240,7 +240,7 @@ pub(crate) fn principal_for_auth(auth: Option<&AuthContext>) -> JobTerminalWaitP
         },
     };
     let mut hasher = Sha256::new();
-    hasher.update(b"webcodex.job-terminal-wait.principal.v1\0");
+    hasher.update(b"codegpt.job-terminal-wait.principal.v1\0");
     hash_field(&mut hasher, kind);
     hash_field(&mut hasher, &subject);
     JobTerminalWaitPrincipal {
@@ -305,7 +305,7 @@ fn source(
 
 pub(crate) fn metric(outcome: &'static str) {
     tracing::info!(
-        target: "webcodex::job_terminal_attention",
+        target: "codegpt::job_terminal_attention",
         metric = JOB_TERMINAL_ATTENTION_METRIC,
         outcome,
         value = 1_u64,
@@ -318,7 +318,7 @@ mod tests {
     use super::*;
     use std::sync::atomic::{AtomicUsize, Ordering};
     use tempfile::tempdir;
-    use webcodex_store::{JobTerminalWaitState, NewJobTerminalWait};
+    use codegpt_store::{JobTerminalWaitState, NewJobTerminalWait};
 
     #[derive(Debug)]
     struct TestAdapter {

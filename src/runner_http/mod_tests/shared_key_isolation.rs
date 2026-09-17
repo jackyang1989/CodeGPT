@@ -154,11 +154,11 @@ async fn registry_filters_lightweight_clients_by_auth_group() {
     assert_eq!(visible_to_open, vec!["open"]);
     assert_eq!(
         open_access.group,
-        Some(webcodex_runner_registry::RunnerAccessGroup::OpenAnonymous)
+        Some(codegpt_runner_registry::RunnerAccessGroup::OpenAnonymous)
     );
     assert_eq!(
         bridge_a_access.group,
-        Some(webcodex_runner_registry::RunnerAccessGroup::SharedKey(
+        Some(codegpt_runner_registry::RunnerAccessGroup::SharedKey(
             shared_hash
         ))
     );
@@ -284,24 +284,24 @@ async fn managed_user_coding_agent_inventory_does_not_cross_owner() {
                 job_concurrency_limit: None,
                 job_inventory: None,
                 coding_agent_providers: Some(vec![
-                    webcodex_core::coding_agent::CodingAgentProvider {
+                    codegpt_core::coding_agent::CodingAgentProvider {
                         provider_id: "codex".to_string(),
                         provider_instance_id: format!("provider-{owner}"),
                         name: "Codex".to_string(),
                     },
                 ]),
                 coding_agent_inventory: Some(
-                    webcodex_core::coding_agent::CodingAgentRunInventory {
-                        runs: vec![webcodex_core::coding_agent::CodingAgentRunSnapshot {
+                    codegpt_core::coding_agent::CodingAgentRunInventory {
+                        runs: vec![codegpt_core::coding_agent::CodingAgentRunSnapshot {
                             run_id: run_id.to_string(),
                             intent_fingerprint: format!("intent-{owner}"),
                             authority_fingerprint: format!("auth_{owner}"),
                             runtime_project_id: format!("agent:{client_id}:private"),
                             provider_id: "codex".to_string(),
                             provider_instance_id: format!("provider-{owner}"),
-                            state: webcodex_core::coding_agent::CodingAgentRunState::Running,
+                            state: codegpt_core::coding_agent::CodingAgentRunState::Running,
                             execution_state:
-                                webcodex_core::coding_agent::CodingAgentExecutionState::Started,
+                                codegpt_core::coding_agent::CodingAgentExecutionState::Started,
                             observation_revision: 1,
                             created_at: 1,
                             updated_at: 1,

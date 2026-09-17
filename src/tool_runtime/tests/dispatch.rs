@@ -14,7 +14,7 @@ fn structured_validation_tools_are_known_and_parse() {
     assert!(matches!(
         ToolCall::from_tool_name(
             "cargo_fmt",
-            json!({"project":"agent:oe:webcodex","check":true,"cwd":"crates/app","sync_wait_secs":60})
+            json!({"project":"agent:oe:codegpt","check":true,"cwd":"crates/app","sync_wait_secs":60})
         )
         .unwrap(),
         ToolCall::CargoFmt {
@@ -26,7 +26,7 @@ fn structured_validation_tools_are_known_and_parse() {
     assert!(matches!(
         ToolCall::from_tool_name(
             "cargo_check",
-            json!({"project":"agent:oe:webcodex","sync_wait_secs":1})
+            json!({"project":"agent:oe:codegpt","sync_wait_secs":1})
         )
         .unwrap(),
         ToolCall::CargoCheck {
@@ -39,7 +39,7 @@ fn structured_validation_tools_are_known_and_parse() {
         ToolCall::from_tool_name(
             "cargo_test",
             json!({
-                "project":"agent:oe:webcodex",
+                "project":"agent:oe:codegpt",
                 "filter":"tool_runtime",
                 "require_tests": true,
                 "min_tests": 6
@@ -58,7 +58,7 @@ fn structured_validation_tools_are_known_and_parse() {
     assert!(matches!(
         ToolCall::from_tool_name(
             "go_test",
-            json!({"project":"agent:oe:webcodex","cwd":"internal/nodeapp","sync_wait_secs":1})
+            json!({"project":"agent:oe:codegpt","cwd":"internal/nodeapp","sync_wait_secs":1})
         )
         .unwrap(),
         ToolCall::GoTest { cwd: Some(cwd), sync_wait_secs: Some(1), .. } if cwd == "internal/nodeapp"
@@ -70,7 +70,7 @@ async fn cargo_tools_reject_unsafe_cwd_before_project_dispatch() {
     let runtime = test_runtime();
     let fmt = runtime
         .cargo_fmt(
-            "agent:oe:webcodex".to_string(),
+            "agent:oe:codegpt".to_string(),
             Some("../outside".to_string()),
             None,
             None,
@@ -81,7 +81,7 @@ async fn cargo_tools_reject_unsafe_cwd_before_project_dispatch() {
 
     let check = runtime
         .cargo_check(
-            "agent:oe:webcodex".to_string(),
+            "agent:oe:codegpt".to_string(),
             Some("/tmp".to_string()),
             None,
             None,
@@ -96,7 +96,7 @@ async fn cargo_tools_reject_unsafe_cwd_before_project_dispatch() {
 
     let test = runtime
         .cargo_test(
-            "agent:oe:webcodex".to_string(),
+            "agent:oe:codegpt".to_string(),
             Some("src\0bad".to_string()),
             None,
             None,
@@ -113,7 +113,7 @@ async fn cargo_tools_reject_unsafe_cwd_before_project_dispatch() {
 
     let go_parent = runtime
         .go_test(
-            "agent:oe:webcodex".to_string(),
+            "agent:oe:codegpt".to_string(),
             Some("../outside".to_string()),
             None,
         )
@@ -123,7 +123,7 @@ async fn cargo_tools_reject_unsafe_cwd_before_project_dispatch() {
 
     let go_absolute = runtime
         .go_test(
-            "agent:oe:webcodex".to_string(),
+            "agent:oe:codegpt".to_string(),
             Some("/tmp".to_string()),
             None,
         )

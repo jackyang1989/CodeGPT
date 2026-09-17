@@ -24,7 +24,7 @@ pub(crate) struct ProjectAgentTokenVerifier {
 }
 
 /// Process-local authentication material for a project-scoped Server launched by
-/// `webcodex run` / `webcodex share`. This state authenticates credentials only;
+/// `codegpt run` / `codegpt share`. This state authenticates credentials only;
 /// it does not define a coding surface, Project model, Task model, or execution
 /// lifecycle. Canonical ToolRuntime and Runner authorization remain authoritative.
 #[derive(Clone, Default)]
@@ -33,10 +33,10 @@ pub(crate) struct ProjectAuthState {
     agent_token: Option<ProjectAgentTokenVerifier>,
 }
 
-pub(crate) const PROJECT_GRANT_ID_ENV: &str = "WEBCODEX_PROJECT_GRANT_ID";
-pub(crate) const PROJECT_CREDENTIAL_FILE_ENV: &str = "WEBCODEX_PROJECT_CREDENTIAL_FILE";
-pub(crate) const PROJECT_AGENT_TOKEN_FILE_ENV: &str = "WEBCODEX_PROJECT_AGENT_TOKEN_FILE";
-pub(crate) const PROJECT_RUNNER_CLIENT_ID_ENV: &str = "WEBCODEX_PROJECT_RUNNER_CLIENT_ID";
+pub(crate) const PROJECT_GRANT_ID_ENV: &str = "CODEGPT_PROJECT_GRANT_ID";
+pub(crate) const PROJECT_CREDENTIAL_FILE_ENV: &str = "CODEGPT_PROJECT_CREDENTIAL_FILE";
+pub(crate) const PROJECT_AGENT_TOKEN_FILE_ENV: &str = "CODEGPT_PROJECT_AGENT_TOKEN_FILE";
+pub(crate) const PROJECT_RUNNER_CLIENT_ID_ENV: &str = "CODEGPT_PROJECT_RUNNER_CLIENT_ID";
 
 impl ProjectAuthState {
     pub(crate) fn from_env() -> Result<Self, String> {
@@ -206,7 +206,7 @@ fn validate_grant_id(value: &str) -> Result<(), String> {
 }
 
 pub(crate) fn validate_credential(value: &str) -> Result<(), String> {
-    let suffix = value.strip_prefix("webcodex_").unwrap_or_default();
+    let suffix = value.strip_prefix("codegpt_").unwrap_or_default();
     if suffix.len() != 64
         || !suffix
             .bytes()

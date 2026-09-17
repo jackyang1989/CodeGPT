@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Stage exact native WebCodex runtime bytes for one macOS Tauri Desktop bundle."""
+"""Stage exact native CodeGPT runtime bytes for one macOS Tauri Desktop bundle."""
 
 from __future__ import annotations
 
@@ -15,7 +15,7 @@ import sys
 from pathlib import Path
 
 
-BINARIES = ("webcodex", "webcodex-server", "webcodex-runner")
+BINARIES = ("codegpt", "codegpt-server", "codegpt-runner")
 PLATFORM_ARCH = {
     "darwin-x64": ("x86_64", "x86_64"),
     "darwin-arm64": ("arm64", "arm64"),
@@ -82,7 +82,7 @@ def stage(args: argparse.Namespace) -> dict:
     if output_dir.exists() or output_dir.is_symlink():
         raise StageError(f"Desktop bundle output already exists: {output_dir}")
 
-    runtime_dir = output_dir / "resources" / "webcodex-runtime"
+    runtime_dir = output_dir / "resources" / "codegpt-runtime"
     runtime_dir.mkdir(parents=True)
     short_source = args.source_sha[:12].lower()
     resources: dict[str, str] = {}
@@ -126,7 +126,7 @@ def stage(args: argparse.Namespace) -> dict:
             ):
                 raise StageError(f"staged Desktop runtime byte verification failed for {name}")
             destination.chmod(destination_stat.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
-            resources[str(destination.resolve())] = f"webcodex-runtime/{name}"
+            resources[str(destination.resolve())] = f"codegpt-runtime/{name}"
             files[name] = {
                 "filename": name,
                 "size": destination_stat.st_size,
@@ -156,7 +156,7 @@ def stage(args: argparse.Namespace) -> dict:
             "source_sha": args.source_sha.lower(),
             "built_at": args.built_at,
             "signing_mode": args.signing_mode,
-            "resource_dir": "resources/webcodex-runtime",
+            "resource_dir": "resources/codegpt-runtime",
             "provenance": "same_unsigned_runtime_input_before_platform_signing",
             "files": files,
         }

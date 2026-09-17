@@ -34,7 +34,7 @@ class AgentLoopReportTests(unittest.TestCase):
     def setUp(self) -> None:
         self.temp_dir = tempfile.TemporaryDirectory()
         self.root = Path(self.temp_dir.name)
-        self.audit_db = self.root / "webcodex.db"
+        self.audit_db = self.root / "codegpt.db"
         connection = sqlite3.connect(self.audit_db)
         connection.executescript(
             """
@@ -203,7 +203,7 @@ class AgentLoopReportTests(unittest.TestCase):
 
         self.assertEqual(result["outer_calls"]["total"], 3)
         self.assertEqual(result["outer_calls"]["meaningful"], 2)
-        gap = result["timing"]["outside_webcodex_gap_ms"]
+        gap = result["timing"]["outside_codegpt_gap_ms"]
         self.assertEqual(gap["samples"], 1)
         self.assertEqual(gap["total"], 30)
         self.assertEqual(gap["p50"], 30)
@@ -217,7 +217,7 @@ class AgentLoopReportTests(unittest.TestCase):
         result = self.summarize()
 
         self.assertEqual(result["timing"]["overlap_count"], 1)
-        gap = result["timing"]["outside_webcodex_gap_ms"]
+        gap = result["timing"]["outside_codegpt_gap_ms"]
         self.assertEqual(gap["samples"], 1)
         self.assertEqual(gap["total"], 20)
 
@@ -456,7 +456,7 @@ class AgentLoopReportTests(unittest.TestCase):
             )
 
         result = self.summarize()
-        metric = result["timing"]["outside_webcodex_gap_ms"]
+        metric = result["timing"]["outside_codegpt_gap_ms"]
 
         self.assertEqual(result["outer_calls"]["total"], 2)
         self.assertEqual(result["tools"]["outer_by_name"], {"read_files": 2})
@@ -484,7 +484,7 @@ class AgentLoopReportTests(unittest.TestCase):
         )
 
         result = self.summarize()
-        metric = result["timing"]["outside_webcodex_gap_ms"]
+        metric = result["timing"]["outside_codegpt_gap_ms"]
 
         self.assertIsNone(metric["total"])
         self.assertEqual(metric["observed_total"], 40)
@@ -522,8 +522,8 @@ class AgentLoopReportTests(unittest.TestCase):
         self.assertIsNone(result["canonical_calls"]["total"])
         self.assertIsNone(result["results"]["serialized_tool_result_bytes"]["total"])
         self.assertFalse(result["availability"]["window_timing"]["available"])
-        self.assertIsNone(result["timing"]["webcodex_service_ms"]["total"])
-        self.assertFalse(result["availability"]["webcodex_service_timing"]["available"])
+        self.assertIsNone(result["timing"]["codegpt_service_ms"]["total"])
+        self.assertFalse(result["availability"]["codegpt_service_timing"]["available"])
 
     def test_code_mode_canonical_count_stays_separate_from_persisted_child_count(self) -> None:
         self.insert_event(

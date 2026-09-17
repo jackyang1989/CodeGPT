@@ -132,7 +132,7 @@ fn validation_summary_registration_schema_metadata_and_openapi_are_synchronized(
     assert!(openapi["paths"]
         .get("/api/actions/validation_summary")
         .is_none());
-    assert!(webcodex_tool_contracts::gpt_action_tool_supported(
+    assert!(codegpt_tool_contracts::gpt_action_tool_supported(
         "validation_summary"
     ));
     assert_eq!(

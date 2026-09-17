@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Offline Agent Loop profiler for existing WebCodex observability evidence.
+"""Offline Agent Loop profiler for existing CodeGPT observability evidence.
 
 The profiler consumes payload-safe metadata only. ActionAudit is the preferred
 source for canonical outer-call, Window, and ModelErgonomics facts. Per-trace
@@ -587,9 +587,9 @@ def _summarize_audit(
         },
         "composition": composition,
         "timing": {
-            "webcodex_service_ms": service,
+            "codegpt_service_ms": service,
             "tool_runtime_ms": runtime_duration,
-            "outside_webcodex_gap_ms": gaps,
+            "outside_codegpt_gap_ms": gaps,
             "overlap_count": overlap_count,
         },
         "results": {"serialized_tool_result_bytes": result_byte_metric},
@@ -601,7 +601,7 @@ def _summarize_audit(
         },
         "availability": {
             "action_audit": {"available": True},
-            "webcodex_service_timing": {"available": service["total"] is not None, "reason": None if service["total"] is not None else "one or more outer calls lack non-streaming request-observed/response-handoff timestamps"},
+            "codegpt_service_timing": {"available": service["total"] is not None, "reason": None if service["total"] is not None else "one or more outer calls lack non-streaming request-observed/response-handoff timestamps"},
             "tool_runtime_timing": {"available": runtime_duration["total"] is not None, "reason": None if runtime_duration["total"] is not None else "one or more outer calls lack ModelErgonomics runtime duration evidence"},
             "window_timing": {"available": missing_serial == 0, "reason": None if missing_serial == 0 else "one or more canonical serial transitions lack the predecessor timestamps needed for a gap"},
             "canonical_calls": {"available": canonical_total is not None, "reason": canonical_reason},
@@ -648,7 +648,7 @@ def _summarize_trace_only(trace_events: list[dict[str, Any]], variant: str | Non
         [], variant, action_audit_available=False
     )
     unavailable = {
-        "webcodex_service_timing": {"available": False, "reason": "tool_handler_returned duration is not the canonical request-observed to response-handoff service interval"},
+        "codegpt_service_timing": {"available": False, "reason": "tool_handler_returned duration is not the canonical request-observed to response-handoff service interval"},
         "tool_runtime_timing": {"available": False, "reason": "events.jsonl does not persist canonical ModelErgonomics runtime duration evidence"},
         "window_timing": {"available": False, "reason": "events.jsonl does not persist canonical meaningful/continuity transition facts"},
         "canonical_calls": {"available": False, "reason": "outer trace lifecycle metadata is not a complete canonical nested-call ledger"},
@@ -662,9 +662,9 @@ def _summarize_trace_only(trace_events: list[dict[str, Any]], variant: str | Non
         "canonical_calls": {"total": None, "observed_outer_runtime_records": None, "by_name": {}},
         "composition": composition,
         "timing": {
-            "webcodex_service_ms": _metric_distribution([], missing=len(handlers)),
+            "codegpt_service_ms": _metric_distribution([], missing=len(handlers)),
             "tool_runtime_ms": _metric_distribution([], missing=len(handlers)),
-            "outside_webcodex_gap_ms": _metric_distribution([]),
+            "outside_codegpt_gap_ms": _metric_distribution([]),
             "overlap_count": None,
         },
         "results": {"serialized_tool_result_bytes": _metric_distribution([], missing=len(handlers))},
@@ -783,8 +783,8 @@ def summarize(*, trace_root: Path | None, audit_db: Path | None, workflow_sessio
         **core,
         "evidence": {"trace_files": trace_files, "trace_ids": len(trace_ids), "audit_events": len(audit_events), "workflow_session_selected": workflow_session_id is not None},
         "notes": [
-            "observed_span_ms is the span between observed WebCodex outer-call timestamps, not task wall time",
-            "outside_webcodex_gap_ms contains only canonical serial meaningful-Window gaps and is not model reasoning time",
+            "observed_span_ms is the span between observed CodeGPT outer-call timestamps, not task wall time",
+            "outside_codegpt_gap_ms contains only canonical serial meaningful-Window gaps and is not model reasoning time",
             "Runner request counts are observed enqueue events, not an asserted complete total",
         ],
     }
@@ -808,10 +808,10 @@ _COMPARISON_METRICS = [
     "composition.job_handoffs.total",
     "composition.outcome_unknown.total", "composition.duration_ms.total",
     "composition.slot_wait_ms.total", "composition.returned_bytes.total",
-    "composition.nested_raw_result_bytes_total.total", "timing.webcodex_service_ms.total",
-    "timing.webcodex_service_ms.p50", "timing.webcodex_service_ms.p95",
-    "timing.tool_runtime_ms.total", "timing.outside_webcodex_gap_ms.total",
-    "timing.outside_webcodex_gap_ms.p50", "timing.outside_webcodex_gap_ms.p95",
+    "composition.nested_raw_result_bytes_total.total", "timing.codegpt_service_ms.total",
+    "timing.codegpt_service_ms.p50", "timing.codegpt_service_ms.p95",
+    "timing.tool_runtime_ms.total", "timing.outside_codegpt_gap_ms.total",
+    "timing.outside_codegpt_gap_ms.p50", "timing.outside_codegpt_gap_ms.p95",
     "timing.overlap_count", "results.serialized_tool_result_bytes.total",
     "jobs.handoffs", "jobs.terminal",
 ]

@@ -483,7 +483,7 @@ impl ToolRuntime {
             ));
         }
         let mut hasher = Sha256::new();
-        hasher.update(b"webcodex.session-message-completion.v1\0");
+        hasher.update(b"codegpt.session-message-completion.v1\0");
         hasher.update(completion_key.as_bytes());
         Ok(format!("{:x}", hasher.finalize()))
     }

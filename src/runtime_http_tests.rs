@@ -514,7 +514,7 @@ async fn http_runtime_status_correct_bearer_returns_summary() {
     let body: Value = resp.take_json().await.unwrap();
     assert_eq!(body["success"], true);
     let out = &body["output"];
-    assert_eq!(out["service"], "webcodex");
+    assert_eq!(out["service"], "codegpt");
     assert_eq!(out["version"], env!("CARGO_PKG_VERSION"));
     assert_eq!(out["projects"]["mode"], "agent_registered");
     assert!(out["projects"].get("configured").is_none());
@@ -639,12 +639,12 @@ fn full_trace_dir_with_payload(
 async fn http_tools_call_full_trace_captures_raw_effective_and_final_payloads() {
     let trace_root = tempfile::tempdir().unwrap();
     let mut env = crate::test_support::TestEnvGuard::new();
-    env.set("WEBCODEX_TOOL_REQUEST_TRACE", "full");
+    env.set("CODEGPT_TOOL_REQUEST_TRACE", "full");
     env.set(
-        "WEBCODEX_TOOL_REQUEST_TRACE_DIR",
+        "CODEGPT_TOOL_REQUEST_TRACE_DIR",
         trace_root.path().to_string_lossy().as_ref(),
     );
-    env.set("WEBCODEX_TOOL_REQUEST_TRACE_MAX_TOTAL_BYTES", "8388608");
+    env.set("CODEGPT_TOOL_REQUEST_TRACE_MAX_TOTAL_BYTES", "8388608");
 
     let (_tmp, service) = phase2_service();
     let request = json!({
@@ -695,12 +695,12 @@ async fn http_tools_call_full_trace_captures_raw_effective_and_final_payloads() 
 async fn http_tools_call_full_trace_captures_pre_dispatch_error_response() {
     let trace_root = tempfile::tempdir().unwrap();
     let mut env = crate::test_support::TestEnvGuard::new();
-    env.set("WEBCODEX_TOOL_REQUEST_TRACE", "full");
+    env.set("CODEGPT_TOOL_REQUEST_TRACE", "full");
     env.set(
-        "WEBCODEX_TOOL_REQUEST_TRACE_DIR",
+        "CODEGPT_TOOL_REQUEST_TRACE_DIR",
         trace_root.path().to_string_lossy().as_ref(),
     );
-    env.set("WEBCODEX_TOOL_REQUEST_TRACE_MAX_TOTAL_BYTES", "8388608");
+    env.set("CODEGPT_TOOL_REQUEST_TRACE_MAX_TOTAL_BYTES", "8388608");
 
     let (_tmp, service) = phase2_service();
     let request = json!({"params": {"project": "demo"}});
@@ -931,7 +931,7 @@ fn extract_tool_call_rejects_retired_arguments_envelope() {
 fn extract_tool_call_collects_flattened_top_level_fields() {
     let (tool, params) = extract_tool_call(&json!({
         "tool": "git_status",
-        "project": "agent:oe:webcodex",
+        "project": "agent:oe:codegpt",
         "session_id": "wc_sess_tool_arg",
         TOOL_CALL_RECORDING_SESSION_ID_FIELD: "wc_sess_recorder",
     }))
@@ -940,7 +940,7 @@ fn extract_tool_call_collects_flattened_top_level_fields() {
     assert_eq!(tool, "git_status");
     assert_eq!(
         params,
-        json!({"project": "agent:oe:webcodex", "session_id": "wc_sess_tool_arg"})
+        json!({"project": "agent:oe:codegpt", "session_id": "wc_sess_tool_arg"})
     );
     assert_eq!(
         extract_recording_session_id(
@@ -992,7 +992,7 @@ fn extract_tool_call_collects_flattened_session_handoff_flags() {
 fn extract_tool_call_collects_flattened_write_project_file_fields() {
     let (tool, params) = extract_tool_call(&json!({
         "tool": "write_project_file",
-        "project": "agent:oe:webcodex",
+        "project": "agent:oe:codegpt",
         "path": "x.tmp",
         "content": "BETA\n",
         "overwrite": true,
@@ -1000,7 +1000,7 @@ fn extract_tool_call_collects_flattened_write_project_file_fields() {
     .unwrap();
 
     assert_eq!(tool, "write_project_file");
-    assert_eq!(params["project"], "agent:oe:webcodex");
+    assert_eq!(params["project"], "agent:oe:codegpt");
     assert_eq!(params["path"], "x.tmp");
     assert_eq!(params["content"], "BETA\n");
     assert_eq!(params["overwrite"], true);

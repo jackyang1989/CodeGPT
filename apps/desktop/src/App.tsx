@@ -327,7 +327,7 @@ export default function App() {
       <main className="splash">
         <img className="brand-mark" src={brandIcon} alt="" />
         {error ? (
-          <section className="startup-error" aria-label="WebCodex">
+          <section className="startup-error" aria-label="CodeGPT">
             <AppError error={error} />
             <button
               className="primary-button"
@@ -336,7 +336,7 @@ export default function App() {
                 setError(null);
                 setStartupAttempt((attempt) => attempt + 1);
               }}
-              data-webcodex-action="retry-desktop-startup"
+              data-codegpt-action="retry-desktop-startup"
             >
               {t("common.retry")}
             </button>
@@ -353,7 +353,7 @@ export default function App() {
   return (
     <div className="app-shell">
       <aside className="sidebar">
-        <div className="brand"><img className="brand-mark" src={brandIcon} alt="" /><div><strong>WebCodex</strong><span>Desktop</span></div></div>
+        <div className="brand"><img className="brand-mark" src={brandIcon} alt="" /><div><strong>CodeGPT</strong><span>Desktop</span></div></div>
         <nav aria-label={t("nav.main")}>
           {NAVIGATION.map((item, index) => (
             <button
@@ -363,7 +363,7 @@ export default function App() {
               aria-current={navigation === item ? "page" : undefined}
               aria-keyshortcuts={`Control+${index + 1} Meta+${index + 1}`}
               title={`${t(`nav.${item}`)} (⌘ / Ctrl + ${index + 1})`}
-              data-webcodex-action={`navigate-${item}`}
+              data-codegpt-action={`navigate-${item}`}
             >
               <span className={`nav-icon nav-${item}`} aria-hidden="true" />
               {t(`nav.${item}`)}
@@ -378,7 +378,7 @@ export default function App() {
             aria-label={t("locale.label")}
             value={locale}
             onChange={(event) => setLocale(event.target.value as typeof locale)}
-            data-webcodex-control="locale"
+            data-codegpt-control="locale"
           >
             {LANGUAGES.map((language) => <option key={language.value} value={language.value}>{language.label}</option>)}
           </select>
@@ -401,7 +401,7 @@ export default function App() {
             role="status"
             aria-live="polite"
             aria-label={t("operation.statusLabel")}
-            data-webcodex-operation={state.current_operation.kind}
+            data-codegpt-operation={state.current_operation.kind}
           >
             <div>
               <span className="section-kicker">
@@ -421,7 +421,7 @@ export default function App() {
                   cancelSubmittingId === state.current_operation.id
                 }
                 onClick={() => void cancelCurrentOperation()}
-                data-webcodex-action="cancel-desktop-operation"
+                data-codegpt-action="cancel-desktop-operation"
               >
                 {state.current_operation.phase === "cancelling"
                   ? t("operation.cancelling")

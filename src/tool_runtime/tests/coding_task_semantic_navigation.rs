@@ -544,7 +544,7 @@ fn coding_workflow_semantic_navigation_output_schema_is_explicit_and_surface_cou
         .sum();
     assert_eq!(
         operation_count,
-        webcodex_tool_contracts::gpt_action_direct_tool_definitions().len() + 1,
+        codegpt_tool_contracts::gpt_action_direct_tool_definitions().len() + 1,
         "GPT Actions must inherit Adaptive Direct plus call_runtime_tool"
     );
     assert!(

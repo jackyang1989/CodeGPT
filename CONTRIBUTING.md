@@ -1,12 +1,12 @@
-# Contributing to WebCodex
+# Contributing to CodeGPT
 
 [简体中文](CONTRIBUTING.zh-CN.md)
 
 Contributions are welcome, including bug reports, documentation improvements,
-focused fixes, and new capabilities that fit WebCodex's current product
+focused fixes, and new capabilities that fit CodeGPT's current product
 direction.
 
-Contributions created with WebCodex itself or with other coding agents are also
+Contributions created with CodeGPT itself or with other coding agents are also
 welcome. The contributor remains responsible for reviewing the resulting diff,
 validating the change, and making sure no credentials or machine-private data
 are included.
@@ -26,7 +26,7 @@ are included.
 
 A useful bug report should include, when relevant:
 
-- the WebCodex version or commit;
+- the CodeGPT version or commit;
 - Server and Runner operating systems;
 - the client in use, such as ChatGPT, Claude, Gemini, Grok, or another MCP
   client;

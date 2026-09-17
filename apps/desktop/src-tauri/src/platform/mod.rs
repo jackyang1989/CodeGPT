@@ -3,7 +3,7 @@ mod windows;
 
 use crate::error::{DesktopError, DesktopResult};
 use crate::models::PowerShellRuntimeSnapshot;
-use webcodex_process::SpawnOptions;
+use codegpt_process::SpawnOptions;
 
 #[cfg(target_os = "windows")]
 const POWERSHELL_INSTALL_GUIDE_URL: &str =

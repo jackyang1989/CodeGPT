@@ -27,7 +27,7 @@ def _state() -> dict:
         "created_at": 1234567890,
         "ci_run_id": 777,
         "ci_run_attempt": 2,
-        "ci_run_url": "https://github.com/yyjeqhc/webcodex/actions/runs/777",
+        "ci_run_url": "https://github.com/yyjeqhc/codegpt/actions/runs/777",
         "ci_run_head_sha": SOURCE,
         "ci_run_conclusion": "success",
         "run_id": None,
@@ -48,7 +48,7 @@ def _run(run_id: int = 123) -> dict:
         "head_branch": "main",
         "head_sha": SOURCE,
         "display_title": readiness._run_name(REQUEST, SOURCE),
-        "html_url": f"https://github.com/yyjeqhc/webcodex/actions/runs/{run_id}",
+        "html_url": f"https://github.com/yyjeqhc/codegpt/actions/runs/{run_id}",
         "status": "in_progress",
         "conclusion": None,
     }
@@ -62,7 +62,7 @@ def _ci_run(run_id: int = 777, *, attempt: int = 2, source: str = SOURCE, conclu
         "event": "push",
         "head_branch": "main",
         "head_sha": source,
-        "html_url": f"https://github.com/yyjeqhc/webcodex/actions/runs/{run_id}",
+        "html_url": f"https://github.com/yyjeqhc/codegpt/actions/runs/{run_id}",
         "status": "completed",
         "conclusion": conclusion,
     }
@@ -275,7 +275,7 @@ class WorkflowContractTests(unittest.TestCase):
         self.assertIn("needs.changes.outputs.needs_docker == 'true'", docker)
         self.assertIn("platforms: linux/amd64", docker)
         self.assertIn("docker/build-push-action@v6", docker)
-        self.assertIn("test ! -e /usr/local/bin/webcodex-runner", docker)
+        self.assertIn("test ! -e /usr/local/bin/codegpt-runner", docker)
 
         self.assertIn("needs: changes", contract)
         self.assertIn("if: needs.changes.outputs.needs_frontend == 'true'", contract)
@@ -332,7 +332,7 @@ class WorkflowContractTests(unittest.TestCase):
         self.assertIn("NEEDS_DOCKER: ${{ needs.changes.outputs.needs_docker }}", native_aggregate)
         self.assertIn("expected_docker=skipped", native_aggregate)
         self.assertNotIn("FULL_NATIVE_REQUESTED", workflow)
-        self.assertIn("cargo build --locked --release -p webcodex -p webcodex-cli -p webcodex-runner", release_build)
+        self.assertIn("cargo build --locked --release -p codegpt -p codegpt-cli -p codegpt-runner", release_build)
 
     def test_ci_native_lane_conditions_are_classifier_driven(self) -> None:
         workflow = Path(".github/workflows/ci.yml").read_text(encoding="utf-8")

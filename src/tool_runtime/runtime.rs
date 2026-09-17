@@ -20,7 +20,7 @@ use uuid::Uuid;
 
 fn new_git_diff_hunks_continuation_mac_key() -> Arc<[u8; 32]> {
     let mut hasher = Sha256::new();
-    hasher.update(b"webcodex.git-diff-hunks.runtime-mac-key.v1\0");
+    hasher.update(b"codegpt.git-diff-hunks.runtime-mac-key.v1\0");
     hasher.update(Uuid::new_v4().as_bytes());
     hasher.update(Uuid::new_v4().as_bytes());
     Arc::new(hasher.finalize().into())
@@ -151,7 +151,7 @@ pub struct ToolRuntime {
     /// restart intentionally invalidates old committed continuations fail-closed.
     pub(crate) git_diff_hunks_continuation_mac_key: Arc<[u8; 32]>,
     /// Authoritative permission evaluator for this runtime instance.
-    /// Resolved once at construction (`WEBCODEX_AUTHORITY_MODE`); dispatch
+    /// Resolved once at construction (`CODEGPT_AUTHORITY_MODE`); dispatch
     /// evaluates once per tool request before mutation.
     pub(crate) permission_evaluator: PermissionEvaluator,
     /// Sink for the workspace activity ledger (mutating tool executions).
@@ -170,7 +170,7 @@ pub struct ToolRuntime {
     /// normal Server SQLite database and never becomes an authorization store.
     pub(crate) window_activity_db: Option<Arc<crate::Database>>,
     /// Optional Control-owned durable project Memory store. It is injected by
-    /// the server from the existing webcodex.db handle; Runner-native project
+    /// the server from the existing codegpt.db handle; Runner-native project
     /// filesystems never own Memory v1 persistence.
     pub(crate) memory_db: Option<Arc<crate::Database>>,
     /// Optional Control-owned durable user-domain store. Durable Agent, Conversation,

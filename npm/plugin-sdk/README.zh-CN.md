@@ -1,8 +1,8 @@
-# @yyjeqhc/webcodex-plugin-sdk
+# @yyjeqhc/codegpt-plugin-sdk
 
-WebCodex Native Tool Plugin 的 TypeScript authoring SDK。它只负责消除 JSON-RPC、stdio framing 与 dispatch 样板代码，底层协议仍然是现有的 `webcodex-plugin-v1`。
+CodeGPT Native Tool Plugin 的 TypeScript authoring SDK。它只负责消除 JSON-RPC、stdio framing 与 dispatch 样板代码，底层协议仍然是现有的 `codegpt-plugin-v1`。
 
-Rust Runner 继续权威拥有 Plugin admission、schema validation、authority、timeout、process lifecycle、frozen catalog identity、response bounds 与 `OutcomeUnknown` 语义。TypeScript 类型和 SDK helper 只改善作者体验；`plugin_tool check` 仍然是 WebCodex Plugin 的 authoritative admission check。
+Rust Runner 继续权威拥有 Plugin admission、schema validation、authority、timeout、process lifecycle、frozen catalog identity、response bounds 与 `OutcomeUnknown` 语义。TypeScript 类型和 SDK helper 只改善作者体验；`plugin_tool check` 仍然是 CodeGPT Plugin 的 authoritative admission check。
 
 ## 运行要求
 
@@ -10,7 +10,7 @@ Rust Runner 继续权威拥有 Plugin admission、schema validation、authority�
 - TypeScript 只属于 authoring/build dependency。生产 Plugin 执行编译后的 ESM JavaScript，不要求 TypeScript runtime 或 compiler。
 - SDK runtime package dependency 为 0，只使用 Node built-ins。
 
-使用这个 SDK 不会把 Plugin 变成 MCP Server，不会增加 WebCodex 权限，也不会 sandbox executable。Native Plugin 仍然是受信任的本地进程。WebCodex Server / Runner 不会因为 SDK 而要求 Node；只有选择这个 SDK 的 Plugin 自己需要 Runner 机器提供 Node runtime。
+使用这个 SDK 不会把 Plugin 变成 MCP Server，不会增加 CodeGPT 权限，也不会 sandbox executable。Native Plugin 仍然是受信任的本地进程。CodeGPT Server / Runner 不会因为 SDK 而要求 Node；只有选择这个 SDK 的 Plugin 自己需要 Runner 机器提供 Node runtime。
 
 ## 稳定性
 
@@ -25,7 +25,7 @@ import {
   runPlugin,
   schema,
   textResult,
-} from "@yyjeqhc/webcodex-plugin-sdk";
+} from "@yyjeqhc/codegpt-plugin-sdk";
 
 const echo = defineTool({
   name: "echo",
@@ -69,7 +69,7 @@ plugin.ts
 
 没有包裹 `schema.optional(...)` 的 property 会进入 `required`。`defineTool` 的 input/output root 在 TypeScript API 上必须是 object schema。普通场景下 enum / const 会尽可能保留 literal inference。
 
-Builder 明确不支持 `$ref`、`$defs`、recursive refs、`pattern`、`format`、numeric range、schema-valued `additionalProperties`、union type、`anyOf`、`oneOf`、`allOf`、`not` 或 draft-specific keyword。它也不会复制 WebCodex 的 byte/depth/node-count/catalog admission 上限。请对真实配置 provider 运行 `plugin_tool check`，以 Runner 的结果为准。
+Builder 明确不支持 `$ref`、`$defs`、recursive refs、`pattern`、`format`、numeric range、schema-valued `additionalProperties`、union type、`anyOf`、`oneOf`、`allOf`、`not` 或 draft-specific keyword。它也不会复制 CodeGPT 的 byte/depth/node-count/catalog admission 上限。请对真实配置 provider 运行 `plugin_tool check`，以 Runner 的结果为准。
 
 ## Result 与失败语义
 
@@ -83,6 +83,6 @@ SDK 不会为了通过 Runner bounds 而截断或改写结果。声明 `outputSc
 
 `runPlugin(plugin)` 在 process stdin/stdout 上提供 newline-delimited JSON-RPC 2.0。请求严格串行：async handler 完成以前不会 dispatch 下一行。只支持 `initialize`、`tools/list`、`tools/call`；notification 与 arbitrary method fail closed。
 
-`definePlugin` 会在 serve 前拒绝 provider-local duplicate tool name，并冻结 authoring catalog。`tools/list` 只暴露 protocol definition；execute handler、function source、closure/local state 不会进入 wire。SDK 保留声明顺序，WebCodex Runner 会独立 admission 并冻结自己的 authoritative catalog。
+`definePlugin` 会在 serve 前拒绝 provider-local duplicate tool name，并冻结 authoring catalog。`tools/list` 只暴露 protocol definition；execute handler、function source、closure/local state 不会进入 wire。SDK 保留声明顺序，CodeGPT Runner 会独立 admission 并冻结自己的 authoritative catalog。
 
-发布后的 package 会包含 [`examples/echo-plugin.ts`](examples/echo-plugin.ts) 作为最小 TypeScript SDK authoring 示例。完全不依赖 SDK 的 raw protocol reference 仍然位于 WebCodex 仓库的 [`examples/native-tool-plugin.mjs`](https://github.com/yyjeqhc/webcodex/blob/main/examples/native-tool-plugin.mjs)。
+发布后的 package 会包含 [`examples/echo-plugin.ts`](examples/echo-plugin.ts) 作为最小 TypeScript SDK authoring 示例。完全不依赖 SDK 的 raw protocol reference 仍然位于 CodeGPT 仓库的 [`examples/native-tool-plugin.mjs`](https://github.com/yyjeqhc/codegpt/blob/main/examples/native-tool-plugin.mjs)。

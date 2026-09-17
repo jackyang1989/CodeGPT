@@ -54,7 +54,7 @@ export function TunnelConfigDiagnostics({
   };
 
   return (
-    <article onKeyDown={(event) => { if (event.key === "Enter" && event.target instanceof HTMLInputElement) event.preventDefault(); }} className="detail-card tunnel-config-diagnostics" data-webcodex-component="tunnel-config-diagnostics">
+    <article onKeyDown={(event) => { if (event.key === "Enter" && event.target instanceof HTMLInputElement) event.preventDefault(); }} className="detail-card tunnel-config-diagnostics" data-codegpt-component="tunnel-config-diagnostics">
       <span className="section-kicker">{t("tunnelConfig.title")}</span>
       <p className="tunnel-config-guidance">{t("tunnelConfig.fileFirst")}</p>
       <div className="field-group">
@@ -92,7 +92,7 @@ export function TunnelConfigDiagnostics({
           className="secondary-button"
           onClick={() => void recheck()}
           disabled={busy}
-          data-webcodex-action="recheck-tunnel-config"
+          data-codegpt-action="recheck-tunnel-config"
         >
           {rechecking ? t("tunnelConfig.rechecking") : t("tunnelConfig.recheck")}
         </button>

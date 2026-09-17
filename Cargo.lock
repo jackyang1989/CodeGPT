@@ -5360,7 +5360,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "webcodex"
+name = "codegpt"
 version = "0.4.1"
 dependencies = [
  "anyhow",
@@ -5389,25 +5389,25 @@ dependencies = [
  "url",
  "urlencoding",
  "uuid",
- "webcodex-admin",
- "webcodex-code-mode",
- "webcodex-core",
- "webcodex-persistent-shell",
- "webcodex-runner-config",
- "webcodex-runner-registry",
- "webcodex-store",
- "webcodex-tool-contracts",
- "webcodex-tool-runtime-contracts",
- "webcodex-validation",
- "webcodex-workflow-session",
- "webcodex-workspace",
+ "codegpt-admin",
+ "codegpt-code-mode",
+ "codegpt-core",
+ "codegpt-persistent-shell",
+ "codegpt-runner-config",
+ "codegpt-runner-registry",
+ "codegpt-store",
+ "codegpt-tool-contracts",
+ "codegpt-tool-runtime-contracts",
+ "codegpt-validation",
+ "codegpt-workflow-session",
+ "codegpt-workspace",
  "windows-sys 0.61.2",
  "zip",
  "zstd",
 ]
 
 [[package]]
-name = "webcodex-admin"
+name = "codegpt-admin"
 version = "0.4.1"
 dependencies = [
  "reqwest 0.12.28",
@@ -5417,7 +5417,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "webcodex-browser"
+name = "codegpt-browser"
 version = "0.4.1"
 dependencies = [
  "base64",
@@ -5429,11 +5429,11 @@ dependencies = [
  "tungstenite",
  "url",
  "uuid",
- "webcodex-process",
+ "codegpt-process",
 ]
 
 [[package]]
-name = "webcodex-cli"
+name = "codegpt-cli"
 version = "0.4.1"
 dependencies = [
  "chrono",
@@ -5451,15 +5451,15 @@ dependencies = [
  "toml_edit 0.22.27",
  "url",
  "uuid",
- "webcodex",
- "webcodex-admin",
- "webcodex-core",
- "webcodex-runner-config",
+ "codegpt",
+ "codegpt-admin",
+ "codegpt-core",
+ "codegpt-runner-config",
  "windows-sys 0.61.2",
 ]
 
 [[package]]
-name = "webcodex-code-mode"
+name = "codegpt-code-mode"
 version = "0.4.1"
 dependencies = [
  "deno_core_icudata",
@@ -5470,7 +5470,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "webcodex-computer"
+name = "codegpt-computer"
 version = "0.4.1"
 dependencies = [
  "base64",
@@ -5486,14 +5486,14 @@ dependencies = [
  "serde_json",
  "sha2",
  "tempfile",
- "webcodex-core",
+ "codegpt-core",
  "windows",
  "windows-sys 0.61.2",
  "xcap",
 ]
 
 [[package]]
-name = "webcodex-core"
+name = "codegpt-core"
 version = "0.4.1"
 dependencies = [
  "base64",
@@ -5506,7 +5506,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "webcodex-lsp"
+name = "codegpt-lsp"
 version = "0.4.1"
 dependencies = [
  "libc",
@@ -5515,26 +5515,26 @@ dependencies = [
  "tempfile",
  "tracing",
  "url",
- "webcodex-core",
- "webcodex-process",
- "webcodex-runner-config",
+ "codegpt-core",
+ "codegpt-process",
+ "codegpt-runner-config",
  "windows-sys 0.61.2",
 ]
 
 [[package]]
-name = "webcodex-persistent-shell"
+name = "codegpt-persistent-shell"
 version = "0.4.1"
 dependencies = [
  "base64",
  "libc",
  "tempfile",
  "uuid",
- "webcodex-process",
+ "codegpt-process",
  "windows-sys 0.61.2",
 ]
 
 [[package]]
-name = "webcodex-process"
+name = "codegpt-process"
 version = "0.4.1"
 dependencies = [
  "libc",
@@ -5543,7 +5543,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "webcodex-runner"
+name = "codegpt-runner"
 version = "0.4.1"
 dependencies = [
  "agent-client-protocol-schema",
@@ -5567,14 +5567,14 @@ dependencies = [
  "tracing-subscriber",
  "url",
  "uuid",
- "webcodex-browser",
- "webcodex-computer",
- "webcodex-core",
- "webcodex-lsp",
- "webcodex-persistent-shell",
- "webcodex-process",
- "webcodex-runner-config",
- "webcodex-workspace",
+ "codegpt-browser",
+ "codegpt-computer",
+ "codegpt-core",
+ "codegpt-lsp",
+ "codegpt-persistent-shell",
+ "codegpt-process",
+ "codegpt-runner-config",
+ "codegpt-workspace",
  "webpki-roots 0.26.11",
  "windows-sys 0.61.2",
  "xml",
@@ -5582,16 +5582,16 @@ dependencies = [
 ]
 
 [[package]]
-name = "webcodex-runner-config"
+name = "codegpt-runner-config"
 version = "0.4.1"
 dependencies = [
  "serde",
  "toml 0.8.23",
- "webcodex-core",
+ "codegpt-core",
 ]
 
 [[package]]
-name = "webcodex-runner-registry"
+name = "codegpt-runner-registry"
 version = "0.4.1"
 dependencies = [
  "chrono",
@@ -5600,11 +5600,11 @@ dependencies = [
  "tokio",
  "tracing",
  "uuid",
- "webcodex-core",
+ "codegpt-core",
 ]
 
 [[package]]
-name = "webcodex-store"
+name = "codegpt-store"
 version = "0.4.1"
 dependencies = [
  "anyhow",
@@ -5617,34 +5617,34 @@ dependencies = [
  "tempfile",
  "tracing",
  "uuid",
- "webcodex-core",
+ "codegpt-core",
 ]
 
 [[package]]
-name = "webcodex-tool-contracts"
+name = "codegpt-tool-contracts"
 version = "0.4.1"
 dependencies = [
  "regex",
  "schemars 1.2.2",
  "serde",
  "serde_json",
- "webcodex-core",
+ "codegpt-core",
 ]
 
 [[package]]
-name = "webcodex-tool-runtime-contracts"
+name = "codegpt-tool-runtime-contracts"
 version = "0.4.1"
 dependencies = [
  "serde",
  "serde_json",
  "sha2",
- "webcodex-core",
- "webcodex-tool-contracts",
- "webcodex-workflow-session",
+ "codegpt-core",
+ "codegpt-tool-contracts",
+ "codegpt-workflow-session",
 ]
 
 [[package]]
-name = "webcodex-validation"
+name = "codegpt-validation"
 version = "0.4.1"
 dependencies = [
  "serde",
@@ -5652,14 +5652,14 @@ dependencies = [
  "sha2",
  "tempfile",
  "toml 0.8.23",
- "webcodex-core",
- "webcodex-tool-contracts",
- "webcodex-tool-runtime-contracts",
- "webcodex-workflow-session",
+ "codegpt-core",
+ "codegpt-tool-contracts",
+ "codegpt-tool-runtime-contracts",
+ "codegpt-workflow-session",
 ]
 
 [[package]]
-name = "webcodex-workflow-session"
+name = "codegpt-workflow-session"
 version = "0.4.1"
 dependencies = [
  "base64",
@@ -5671,19 +5671,19 @@ dependencies = [
  "tokio",
  "tracing",
  "uuid",
- "webcodex-core",
- "webcodex-tool-contracts",
+ "codegpt-core",
+ "codegpt-tool-contracts",
 ]
 
 [[package]]
-name = "webcodex-workspace"
+name = "codegpt-workspace"
 version = "0.4.1"
 dependencies = [
  "serde",
  "serde_json",
  "sha2",
  "tempfile",
- "webcodex-core",
+ "codegpt-core",
 ]
 
 [[package]]

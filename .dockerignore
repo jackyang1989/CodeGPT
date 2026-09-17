@@ -10,7 +10,7 @@
 
 /data*
 /.env
-/webcodex.env
+/codegpt.env
 /runner.toml
 /agent.toml
 /project-registry

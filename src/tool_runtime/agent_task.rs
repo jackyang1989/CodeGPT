@@ -14,7 +14,7 @@ use serde::Serialize;
 use serde_json::{json, to_value, Value};
 use sha2::{Digest, Sha256};
 use std::collections::BTreeMap;
-use webcodex_core::coding_agent::{
+use codegpt_core::coding_agent::{
     CodingAgentConfigValue, CodingAgentRunSnapshot, CodingAgentRunState,
 };
 
@@ -61,7 +61,7 @@ fn agent_task_recovery_kind(
 #[cfg(test)]
 mod observation_tests {
     use super::*;
-    use webcodex_core::coding_agent::CodingAgentExecutionState;
+    use codegpt_core::coding_agent::CodingAgentExecutionState;
 
     #[test]
     fn coding_run_observation_revision_overflow_fails_closed() {
@@ -133,7 +133,7 @@ fn coding_run_binding_fingerprint(
     prepared: &CodingAgentPreparedStart,
 ) -> String {
     let mut hasher = Sha256::new();
-    hasher.update(b"webcodex.agent-task-coding-run-binding.v1\0");
+    hasher.update(b"codegpt.agent-task-coding-run-binding.v1\0");
     for value in [
         task_id,
         attempt_id,

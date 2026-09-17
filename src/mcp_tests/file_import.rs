@@ -1,6 +1,6 @@
 use super::*;
 
-const MCP_IMPORT_TRUSTED_REDIRECT: &str = "https://chatgpt.example/connector/oauth/webcodex-test";
+const MCP_IMPORT_TRUSTED_REDIRECT: &str = "https://chatgpt.example/connector/oauth/codegpt-test";
 
 struct McpImportStartupEnvGuard {
     _env_lock: std::sync::MutexGuard<'static, ()>,
@@ -10,10 +10,10 @@ struct McpImportStartupEnvGuard {
 impl McpImportStartupEnvGuard {
     fn new() -> Self {
         const NAMES: &[&str] = &[
-            "WEBCODEX_ENV_FILE",
-            "WEBCODEX_TOKEN",
-            "WEBCODEX_OAUTH2_ENABLED",
-            "WEBCODEX_OAUTH2_TRUSTED_MCP_FILE_CLIENT_IDS",
+            "CODEGPT_ENV_FILE",
+            "CODEGPT_TOKEN",
+            "CODEGPT_OAUTH2_ENABLED",
+            "CODEGPT_OAUTH2_TRUSTED_MCP_FILE_CLIENT_IDS",
         ];
         let env_lock = crate::admin_cli::TEST_ENV_LOCK
             .lock()
@@ -50,11 +50,11 @@ fn mcp_import_config_from_startup_env(
 ) -> Arc<crate::Config> {
     let guard = McpImportStartupEnvGuard::new();
     let dir = tempfile::tempdir().unwrap();
-    let env_file = dir.path().join("webcodex.env");
+    let env_file = dir.path().join("codegpt.env");
     std::fs::write(
         &env_file,
         format!(
-            "WEBCODEX_OAUTH2_ENABLED=false\nWEBCODEX_OAUTH2_TRUSTED_MCP_FILE_CLIENT_IDS={env_file_client_id}\n"
+            "CODEGPT_OAUTH2_ENABLED=false\nCODEGPT_OAUTH2_TRUSTED_MCP_FILE_CLIENT_IDS={env_file_client_id}\n"
         ),
     )
     .unwrap();
@@ -62,11 +62,11 @@ fn mcp_import_config_from_startup_env(
     // Production startup loads env files first, but an already-present process
     // environment is authoritative and load_env_file deliberately does not
     // replace it. This matches the live deployment shape being debugged.
-    guard.set("WEBCODEX_ENV_FILE", &env_file);
-    guard.set("WEBCODEX_TOKEN", "startup-env-bootstrap-token");
-    guard.set("WEBCODEX_OAUTH2_ENABLED", "true");
+    guard.set("CODEGPT_ENV_FILE", &env_file);
+    guard.set("CODEGPT_TOKEN", "startup-env-bootstrap-token");
+    guard.set("CODEGPT_OAUTH2_ENABLED", "true");
     guard.set(
-        "WEBCODEX_OAUTH2_TRUSTED_MCP_FILE_CLIENT_IDS",
+        "CODEGPT_OAUTH2_TRUSTED_MCP_FILE_CLIENT_IDS",
         trusted_client_id,
     );
     let loads = crate::config::load_startup_env_files().unwrap();
@@ -621,7 +621,7 @@ async fn pat_created_replacement_client_with_same_redirect_remains_untrusted() {
     let (_db_tmp, db) = test_db();
     let user = seed_user(&db, "alice");
     let trusted =
-        seed_mcp_import_client(&db, &user, "ChatGPT WebCodex", MCP_IMPORT_TRUSTED_REDIRECT);
+        seed_mcp_import_client(&db, &user, "ChatGPT CodeGPT", MCP_IMPORT_TRUSTED_REDIRECT);
     let config = mcp_import_config(&[trusted.client_id.as_str()]);
     let pat = seed_mcp_import_pat(&db, &user);
     let service = Service::new(build_mcp_import_oauth_management_router(
@@ -641,7 +641,7 @@ async fn pat_created_replacement_client_with_same_redirect_remains_untrusted() {
     let mut created = TestClient::post("http://localhost/api/oauth/clients/create")
         .bearer_auth(&pat)
         .json(&json!({
-            "name": "ChatGPT WebCodex",
+            "name": "ChatGPT CodeGPT",
             "redirect_uris": [MCP_IMPORT_TRUSTED_REDIRECT],
             "allowed_scopes": ["project:write"]
         }))
@@ -676,7 +676,7 @@ fn mcp_file_import_trust_decision_reports_exact_failure_stage() {
     let (_tmp, db) = test_db();
     let user = seed_user(&db, "alice");
     let client =
-        seed_mcp_import_client(&db, &user, "ChatGPT WebCodex", MCP_IMPORT_TRUSTED_REDIRECT);
+        seed_mcp_import_client(&db, &user, "ChatGPT CodeGPT", MCP_IMPORT_TRUSTED_REDIRECT);
     config.oauth2.trusted_mcp_file_client_ids = vec![client.client_id.clone()];
 
     let missing_auth = mcp_host_file_import_trust_decision_from_state(&config, &db, None);
@@ -784,7 +784,7 @@ async fn adaptive_gateway_file_import_preserves_target_aware_host_trust_impl() {
     let (_db_tmp, db) = test_db();
     let user = seed_user(&db, "alice");
     let client =
-        seed_mcp_import_client(&db, &user, "ChatGPT WebCodex", MCP_IMPORT_TRUSTED_REDIRECT);
+        seed_mcp_import_client(&db, &user, "ChatGPT CodeGPT", MCP_IMPORT_TRUSTED_REDIRECT);
     let token = seed_oauth_access_token(&db, &client, &user, "project:write");
     let project_tmp = tempfile::tempdir().unwrap();
     let (runtime, _registry) = mcp_import_runtime_inner(project_tmp.path(), Some("alice")).await;
@@ -848,7 +848,7 @@ async fn oauth_mcp_file_import_startup_env_stateless_2026_crosses_provenance_gat
     let (_db_tmp, db) = test_db();
     let user = seed_user(&db, "alice");
     let client =
-        seed_mcp_import_client(&db, &user, "ChatGPT WebCodex", MCP_IMPORT_TRUSTED_REDIRECT);
+        seed_mcp_import_client(&db, &user, "ChatGPT CodeGPT", MCP_IMPORT_TRUSTED_REDIRECT);
     let token = seed_oauth_access_token(&db, &client, &user, "project:write");
     let env_file_other_client_id = crate::auth::generate_oauth_client_id();
     let config = mcp_import_config_from_startup_env(&client.client_id, &env_file_other_client_id);
@@ -1054,7 +1054,7 @@ async fn oauth_mcp_file_import_trusted_client_saves_pptx_impl() {
     let (_db_tmp, db) = test_db();
     let user = seed_user(&db, "alice");
     let client =
-        seed_mcp_import_client(&db, &user, "ChatGPT WebCodex", MCP_IMPORT_TRUSTED_REDIRECT);
+        seed_mcp_import_client(&db, &user, "ChatGPT CodeGPT", MCP_IMPORT_TRUSTED_REDIRECT);
     let token = seed_oauth_access_token(&db, &client, &user, "project:write");
     let project_tmp = tempfile::tempdir().unwrap();
     let (runtime, registry) = mcp_import_runtime(project_tmp.path(), Some("alice")).await;
@@ -1132,7 +1132,7 @@ async fn oauth_mcp_file_import_trusted_download_guards_remain_bounded_impl() {
     let (_db_tmp, db) = test_db();
     let user = seed_user(&db, "alice");
     let client =
-        seed_mcp_import_client(&db, &user, "ChatGPT WebCodex", MCP_IMPORT_TRUSTED_REDIRECT);
+        seed_mcp_import_client(&db, &user, "ChatGPT CodeGPT", MCP_IMPORT_TRUSTED_REDIRECT);
     let token = seed_oauth_access_token(&db, &client, &user, "project:write");
     let project_tmp = tempfile::tempdir().unwrap();
     let (runtime, registry) = mcp_import_runtime(project_tmp.path(), Some("alice")).await;

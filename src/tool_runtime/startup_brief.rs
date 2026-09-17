@@ -45,12 +45,12 @@ const MAX_ACTION_JSON_BYTES: usize = 384;
 const MAX_INSTRUCTION_EXCERPT_JSON_BYTES: usize = 768;
 
 #[cfg(test)]
-pub(crate) use webcodex_core::runtime_contract::BUILTIN_CODING_WORKFLOW_MAX_GUIDANCE_ITEMS;
-pub(crate) use webcodex_core::runtime_contract::{
+pub(crate) use codegpt_core::runtime_contract::BUILTIN_CODING_WORKFLOW_MAX_GUIDANCE_ITEMS;
+pub(crate) use codegpt_core::runtime_contract::{
     BUILTIN_CODING_WORKFLOW_CONTRACT, BUILTIN_CODING_WORKFLOW_VERSION,
 };
 
-/// Stable model-facing coding/review semantics owned by WebCodex itself.
+/// Stable model-facing coding/review semantics owned by CodeGPT itself.
 ///
 /// This is intentionally not a project instruction source and is never stored
 /// as Session mode, capability, permission, or execution authority. Ordinary
@@ -125,8 +125,8 @@ pub(crate) struct StartupPluginEntry {
     pub(crate) title: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) description: Option<String>,
-    #[serde(skip_serializing_if = "webcodex_core::plugin::PluginSelectionAnnotations::is_empty")]
-    pub(crate) annotations: webcodex_core::plugin::PluginSelectionAnnotations,
+    #[serde(skip_serializing_if = "codegpt_core::plugin::PluginSelectionAnnotations::is_empty")]
+    pub(crate) annotations: codegpt_core::plugin::PluginSelectionAnnotations,
 }
 
 /// Shared startup metadata projection, not a resource store or authority.
@@ -1590,7 +1590,7 @@ pub(crate) fn validate_schema_instance_for_test(
     instance: &Value,
     schema: &Value,
 ) -> Result<(), String> {
-    webcodex_tool_contracts::test_support::validate_schema_instance(instance, schema)
+    codegpt_tool_contracts::test_support::validate_schema_instance(instance, schema)
 }
 
 #[cfg(test)]
@@ -2093,7 +2093,7 @@ mod tests {
                     .map(|index| StartupSkillEntry {
                         skill_id: format!(
                             "wc_skill_{}",
-                            webcodex_core::compact::encode(&(index as u128).to_be_bytes()[0..])
+                            codegpt_core::compact::encode(&(index as u128).to_be_bytes()[0..])
                         ),
                         name: format!("skill-{index:02}"),
                         description: format!("skill-{index:02}-{}", "s".repeat(500)),
@@ -2104,7 +2104,7 @@ mod tests {
                     .collect(),
             ),
             plugins: StartupPluginsCatalog::available(
-                format!("wc_plugcat_{}", webcodex_core::compact::encode([0xbb; 32])),
+                format!("wc_plugcat_{}", codegpt_core::compact::encode([0xbb; 32])),
                 64,
                 (0..64)
                     .map(|index| StartupPluginEntry {
@@ -2113,7 +2113,7 @@ mod tests {
                         tool: format!("tool_{index:02}"),
                         title: Some(format!("Tool {index:02}")),
                         description: Some(format!("plugin-{index:02}-{}", "p".repeat(500))),
-                        annotations: webcodex_core::plugin::PluginSelectionAnnotations {
+                        annotations: codegpt_core::plugin::PluginSelectionAnnotations {
                             read_only_hint: Some(true),
                             destructive_hint: Some(false),
                             idempotent_hint: Some(true),

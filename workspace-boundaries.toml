@@ -11,49 +11,49 @@ entrypoint = 5
 [root_test_support]
 feature = "root-test-support"
 providers = [
-    "webcodex-runner-registry",
-    "webcodex-store",
-    "webcodex-tool-contracts",
-    "webcodex-workflow-session",
+    "codegpt-runner-registry",
+    "codegpt-store",
+    "codegpt-tool-contracts",
+    "codegpt-workflow-session",
 ]
 
 [forbidden_external_dependencies]
-webcodex-cli = ["quinn", "rusqlite", "salvo"]
-webcodex-core = ["quinn", "rusqlite", "salvo"]
-webcodex-runner = ["rusqlite", "salvo"]
+codegpt-cli = ["quinn", "rusqlite", "salvo"]
+codegpt-core = ["quinn", "rusqlite", "salvo"]
+codegpt-runner = ["rusqlite", "salvo"]
 
-[packages.webcodex]
+[packages.codegpt]
 layer = "composition"
 role = "Server composition and protocol adapters."
 normal = [
-    "webcodex-admin",
-    "webcodex-code-mode",
-    "webcodex-core",
-    "webcodex-persistent-shell",
-    "webcodex-runner-config",
-    "webcodex-runner-registry",
-    "webcodex-store",
-    "webcodex-tool-contracts",
-    "webcodex-tool-runtime-contracts",
-    "webcodex-validation",
-    "webcodex-workflow-session",
-    "webcodex-workspace",
+    "codegpt-admin",
+    "codegpt-code-mode",
+    "codegpt-core",
+    "codegpt-persistent-shell",
+    "codegpt-runner-config",
+    "codegpt-runner-registry",
+    "codegpt-store",
+    "codegpt-tool-contracts",
+    "codegpt-tool-runtime-contracts",
+    "codegpt-validation",
+    "codegpt-workflow-session",
+    "codegpt-workspace",
 ]
 dev = [
-    "webcodex-runner-registry",
-    "webcodex-store",
-    "webcodex-tool-contracts",
-    "webcodex-workflow-session",
+    "codegpt-runner-registry",
+    "codegpt-store",
+    "codegpt-tool-contracts",
+    "codegpt-workflow-session",
 ]
 build = []
 test_support = [
-    "webcodex-runner-registry",
-    "webcodex-store",
-    "webcodex-tool-contracts",
-    "webcodex-workflow-session",
+    "codegpt-runner-registry",
+    "codegpt-store",
+    "codegpt-tool-contracts",
+    "codegpt-workflow-session",
 ]
 
-[packages.webcodex-admin]
+[packages.codegpt-admin]
 layer = "leaf"
 role = "Standalone operator/admin HTTP client support."
 normal = []
@@ -61,20 +61,20 @@ dev = []
 build = []
 test_support = []
 
-[packages.webcodex-cli]
+[packages.codegpt-cli]
 layer = "entrypoint"
 role = "User-facing CLI entrypoint over server composition and shared setup helpers."
 normal = [
-    "webcodex",
-    "webcodex-admin",
-    "webcodex-core",
-    "webcodex-runner-config",
+    "codegpt",
+    "codegpt-admin",
+    "codegpt-core",
+    "codegpt-runner-config",
 ]
 dev = []
 build = []
 test_support = []
 
-[packages.webcodex-code-mode]
+[packages.codegpt-code-mode]
 layer = "runtime"
 role = "Experimental transport-neutral Code Mode frontend/runtime and bounded V8 orchestration."
 normal = []
@@ -82,15 +82,15 @@ dev = []
 build = []
 test_support = []
 
-[packages.webcodex-computer]
+[packages.codegpt-computer]
 layer = "leaf"
 role = "Platform-native computer-use primitives."
-normal = ["webcodex-core"]
+normal = ["codegpt-core"]
 dev = []
 build = []
 test_support = []
 
-[packages.webcodex-core]
+[packages.codegpt-core]
 layer = "leaf"
 role = "Shared contracts and low-level helpers with no workspace dependencies."
 normal = []
@@ -98,27 +98,27 @@ dev = []
 build = []
 test_support = []
 
-[packages.webcodex-lsp]
+[packages.codegpt-lsp]
 layer = "domain"
 role = "Native bounded Language Server Protocol lifecycle and semantic navigation."
 normal = [
-    "webcodex-core",
-    "webcodex-process",
-    "webcodex-runner-config",
+    "codegpt-core",
+    "codegpt-process",
+    "codegpt-runner-config",
 ]
 dev = []
 build = []
 test_support = []
 
-[packages.webcodex-persistent-shell]
+[packages.codegpt-persistent-shell]
 layer = "domain"
 role = "Persistent local shell lifecycle built on process primitives."
-normal = ["webcodex-process"]
+normal = ["codegpt-process"]
 dev = []
 build = []
 test_support = []
 
-[packages.webcodex-process]
+[packages.codegpt-process]
 layer = "leaf"
 role = "OS process-tree ownership and lifecycle primitives."
 normal = []
@@ -126,97 +126,97 @@ dev = []
 build = []
 test_support = []
 
-[packages.webcodex-runner]
+[packages.codegpt-runner]
 layer = "runtime"
 role = "Runner executable/runtime composition for local project execution."
 normal = [
-    "webcodex-computer",
-    "webcodex-core",
-    "webcodex-lsp",
-    "webcodex-persistent-shell",
-    "webcodex-process",
-    "webcodex-runner-config",
-    "webcodex-workspace",
+    "codegpt-computer",
+    "codegpt-core",
+    "codegpt-lsp",
+    "codegpt-persistent-shell",
+    "codegpt-process",
+    "codegpt-runner-config",
+    "codegpt-workspace",
 ]
 dev = []
 build = []
 test_support = []
 
-[packages.webcodex-runner-config]
+[packages.codegpt-runner-config]
 layer = "domain"
 role = "Runner configuration contracts and parsing."
-normal = ["webcodex-core"]
+normal = ["codegpt-core"]
 dev = []
 build = []
 test_support = []
 
-[packages.webcodex-runner-registry]
+[packages.codegpt-runner-registry]
 layer = "domain"
 role = "Server-side Runner registry, connection lease, queue, and reconciliation domain."
-normal = ["webcodex-core"]
+normal = ["codegpt-core"]
 dev = []
 build = []
 test_support = []
 
-[packages.webcodex-store]
+[packages.codegpt-store]
 layer = "domain"
 role = "Durable SQLite-backed persistence ownership."
-normal = ["webcodex-core"]
+normal = ["codegpt-core"]
 dev = []
 build = []
 test_support = []
 
-[packages.webcodex-tool-contracts]
+[packages.codegpt-tool-contracts]
 layer = "domain"
 role = "Protocol-neutral tool schemas and parsing contracts."
-normal = ["webcodex-core"]
+normal = ["codegpt-core"]
 dev = []
 build = []
 test_support = []
 
-[packages.webcodex-tool-runtime-contracts]
+[packages.codegpt-tool-runtime-contracts]
 layer = "runtime"
 role = "Tool runtime result, recorder metadata, and audit contracts."
 normal = [
-    "webcodex-core",
-    "webcodex-tool-contracts",
-    "webcodex-workflow-session",
+    "codegpt-core",
+    "codegpt-tool-contracts",
+    "codegpt-workflow-session",
 ]
 dev = []
 build = []
 test_support = []
 
-[packages.webcodex-validation]
+[packages.codegpt-validation]
 layer = "domain"
 role = "Validation recipes, adapters, and evidence domain."
 normal = [
-    "webcodex-core",
-    "webcodex-tool-contracts",
-    "webcodex-workflow-session",
+    "codegpt-core",
+    "codegpt-tool-contracts",
+    "codegpt-workflow-session",
 ]
 dev = [
-    "webcodex-tool-contracts",
-    "webcodex-tool-runtime-contracts",
-    "webcodex-workflow-session",
+    "codegpt-tool-contracts",
+    "codegpt-tool-runtime-contracts",
+    "codegpt-workflow-session",
 ]
 build = []
 test_support = [
-    "webcodex-tool-contracts",
-    "webcodex-workflow-session",
+    "codegpt-tool-contracts",
+    "codegpt-workflow-session",
 ]
 
-[packages.webcodex-workflow-session]
+[packages.codegpt-workflow-session]
 layer = "domain"
 role = "Workflow Session continuity, evidence, and handoff domain."
-normal = ["webcodex-core", "webcodex-tool-contracts"]
+normal = ["codegpt-core", "codegpt-tool-contracts"]
 dev = []
 build = []
 test_support = []
 
-[packages.webcodex-workspace]
+[packages.codegpt-workspace]
 layer = "domain"
 role = "Registered project/workspace path and metadata contracts."
-normal = ["webcodex-core"]
+normal = ["codegpt-core"]
 dev = []
 build = []
 test_support = []

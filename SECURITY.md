@@ -1,6 +1,6 @@
 # Security Policy
 
-WebCodex is a remote tool execution system for private code. Deploy it as a permissioned bridge: online clients can request bounded tool calls, but repository access and command execution stay behind your self-hosted server and connected agent.
+CodeGPT is a remote tool execution system for private code. Deploy it as a permissioned bridge: online clients can request bounded tool calls, but repository access and command execution stay behind your self-hosted server and connected agent.
 
 ## Supported Versions
 
@@ -13,7 +13,7 @@ Security fixes are expected to target the latest v0.3.x release unless stated ot
 
 ## Security Model Summary
 
-- The online model can only call exposed WebCodex tools.
+- The online model can only call exposed CodeGPT tools.
 - Projects are registered by agents; the server does not scan your filesystem.
 - Project work runs on the agent machine inside configured project boundaries.
 - Structured read, edit, validation, review, and finish tools should be the default workflow.
@@ -22,7 +22,7 @@ Security fixes are expected to target the latest v0.3.x release unless stated ot
 
 ## What The Online Model Can Do
 
-Depending on the token, scopes, client surface, session state, and agent policy, the model can ask WebCodex to:
+Depending on the token, scopes, client surface, session state, and agent policy, the model can ask CodeGPT to:
 
 - Discover runtime health and registered projects.
 - Read bounded project files and search project text.
@@ -34,7 +34,7 @@ Depending on the token, scopes, client surface, session state, and agent policy,
 
 ## What The Online Model Cannot Do
 
-WebCodex does not grant the model:
+CodeGPT does not grant the model:
 
 - Direct filesystem access outside exposed tools.
 - Automatic discovery of local repositories from the server.
@@ -108,7 +108,7 @@ Detailed PAT, shared-key, and OAuth behavior belongs in [docs/AUTH_MODEL.md](doc
 
 ## Session And Audit Evidence
 
-WebCodex records bounded task evidence for review and handoff:
+CodeGPT records bounded task evidence for review and handoff:
 
 - session ids and tool status,
 - selected project ids,
@@ -135,10 +135,10 @@ After revocation, verify with `runtime_status`, `list_projects`, and a read-only
 
 ## Reporting Vulnerabilities
 
-Please report vulnerabilities through GitHub Issues on `yyjeqhc/webcodex` or by contacting the maintainer privately through GitHub if the report contains sensitive details.
+Please report vulnerabilities through GitHub Issues on `yyjeqhc/codegpt` or by contacting the maintainer privately through GitHub if the report contains sensitive details.
 
 Do not publish real tokens, env files, complete Runner configs, private repository contents, or exploit details in public issues. Use placeholders and minimal reproduction steps.
 
 ## Known Limitations
 
-WebCodex v0.3.x is intended for controlled self-hosted environments. It is not a hosted SaaS, not a full identity provider, and not a replacement for normal code review, Git hygiene, endpoint hardening, or least-privilege operating-system policy.
+CodeGPT v0.3.x is intended for controlled self-hosted environments. It is not a hosted SaaS, not a full identity provider, and not a replacement for normal code review, Git hygiene, endpoint hardening, or least-privilege operating-system policy.

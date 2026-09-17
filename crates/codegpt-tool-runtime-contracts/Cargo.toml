@@ -1,0 +1,18 @@
+[package]
+name = "codegpt-tool-runtime-contracts"
+version.workspace = true
+license.workspace = true
+edition.workspace = true
+
+[features]
+default = []
+experimental-code-mode = ["codegpt-tool-contracts/experimental-code-mode"]
+workspace-checkpoints = ["codegpt-tool-contracts/workspace-checkpoints"]
+
+[dependencies]
+codegpt-core = { path = "../codegpt-core" }
+codegpt-tool-contracts = { path = "../codegpt-tool-contracts" }
+codegpt-workflow-session = { path = "../codegpt-workflow-session" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.10"

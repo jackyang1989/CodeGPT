@@ -1,4 +1,4 @@
-# Windows-native packaging + npm-install smoke for WebCodex.
+# Windows-native packaging + npm-install smoke for CodeGPT.
 #
 # Exercises the full Windows distribution chain on one Windows machine,
 # without Git Bash, WSL, or the npm registry:
@@ -11,8 +11,8 @@
 #   - the artifact is created and contains exactly the three .exe binaries
 #   - the installer verifies the checksum and unpacks the tar.gz
 #   - version and build identity are consistent
-#   - the npm wrapper finds webcodex.exe
-#   - webcodex.exe --version / --help and webcodex-runner.exe --version work
+#   - the npm wrapper finds codegpt.exe
+#   - codegpt.exe --version / --help and codegpt-runner.exe --version work
 #   - packaged `server init` + foreground `server run --env-file` reaches HTTP readiness
 #     with an isolated local config/data root and leaves no Server process behind
 #   - packaged explicit `share --tunnel none` reaches local MCP readiness with
@@ -26,10 +26,10 @@
 #
 # Usage:
 #   powershell -ExecutionPolicy Bypass -File scripts\npm_install_windows_smoke.ps1
-#   powershell -ExecutionPolicy Bypass -File scripts\npm_install_windows_smoke.ps1 -BinDir E:\webcodex\target\release -Platform win32-x64
+#   powershell -ExecutionPolicy Bypass -File scripts\npm_install_windows_smoke.ps1 -BinDir E:\codegpt\target\release -Platform win32-x64
 [CmdletBinding()]
 param(
-    # Directory containing webcodex.exe / webcodex-server.exe / webcodex-runner.exe.
+    # Directory containing codegpt.exe / codegpt-server.exe / codegpt-runner.exe.
     # Defaults to the debug build, which this script builds first.
     [string]$BinDir,
     # Native Windows release platform exercised by this host.
@@ -53,9 +53,9 @@ function Get-BoundedShareLogTail {
         }
         # These logs should already avoid credentials, but keep failure diagnostics
         # safe even if a future log message accidentally includes an auth header or
-        # one of WebCodex's opaque credential forms.
+        # one of CodeGPT's opaque credential forms.
         $text = $text -replace '(?i)(authorization\s*:\s*bearer\s+)[^\s"]+', '$1<redacted>'
-        $text = $text -replace '\b(?:wc_pat|wc_agent|wc_csec|webcodex)_[A-Za-z0-9_-]{8,}\b', '<redacted>'
+        $text = $text -replace '\b(?:wc_pat|wc_agent|wc_csec|codegpt)_[A-Za-z0-9_-]{8,}\b', '<redacted>'
         return $text
     } catch {
         return "<unreadable>"
@@ -63,7 +63,7 @@ function Get-BoundedShareLogTail {
 }
 
 $Root = Split-Path -Parent $PSScriptRoot
-$Version = (Get-Content -LiteralPath (Join-Path $Root "npm\webcodex\package.json") -Raw | ConvertFrom-Json).version
+$Version = (Get-Content -LiteralPath (Join-Path $Root "npm\codegpt\package.json") -Raw | ConvertFrom-Json).version
 if (-not $Platform) {
     $Platform = if ($env:PROCESSOR_ARCHITECTURE -eq "ARM64") { "win32-arm64" } else { "win32-x64" }
 }
@@ -83,18 +83,18 @@ if (-not $BinDir) {
     $BinDir = Join-Path $Root "target\debug"
     Write-Host "building Windows binaries (debug)..."
     # Pin the build timestamp so every binary built in this invocation reports
-    # the identical `built_at` in its revision identity (webcodex-core's
-    # build.rs reads WEBCODEX_BUILT_AT when set). This mirrors what a release
+    # the identical `built_at` in its revision identity (codegpt-core's
+    # build.rs reads CODEGPT_BUILT_AT when set). This mirrors what a release
     # build on the release host must do.
     #
-    # The three binaries live in three packages: webcodex.exe is the
-    # webcodex-cli package's bin, webcodex-server.exe is the root webcodex
-    # package's bin, and webcodex-runner.exe is its own package.
-    $env:WEBCODEX_BUILT_AT = [string][long](Get-Date -UFormat %s)
+    # The three binaries live in three packages: codegpt.exe is the
+    # codegpt-cli package's bin, codegpt-server.exe is the root codegpt
+    # package's bin, and codegpt-runner.exe is its own package.
+    $env:CODEGPT_BUILT_AT = [string][long](Get-Date -UFormat %s)
     try {
-        & cargo build --locked -p webcodex -p webcodex-cli -p webcodex-runner
+        & cargo build --locked -p codegpt -p codegpt-cli -p codegpt-runner
     } finally {
-        Remove-Item Env:WEBCODEX_BUILT_AT -ErrorAction SilentlyContinue
+        Remove-Item Env:CODEGPT_BUILT_AT -ErrorAction SilentlyContinue
     }
     if ($LASTEXITCODE -ne 0) {
         throw "cargo build failed with exit code $LASTEXITCODE"
@@ -106,7 +106,7 @@ $BinDir = [System.IO.Path]::GetFullPath($BinDir)
 # Isolate everything under one smoke root; the registry is pinned to a
 # non-routable address so the smoke provably never contacts npmjs.org.
 # ---------------------------------------------------------------------------
-$TempRoot = Join-Path $env:TEMP ("webcodex-smoke-" + [guid]::NewGuid().ToString("N"))
+$TempRoot = Join-Path $env:TEMP ("codegpt-smoke-" + [guid]::NewGuid().ToString("N"))
 $ArtifactOut = Join-Path $TempRoot "artifact-out"
 $Prefix = Join-Path $TempRoot "install-prefix"
 $ManifestPath = Join-Path $TempRoot "local-manifest.json"
@@ -131,7 +131,7 @@ try {
     if ($sha256 -notmatch '^[a-f0-9]{64}$') {
         throw "packaging did not report a SHA-256: $shaLine"
     }
-    $ExpectedArchiveName = "webcodex-v$Version-$Platform.tar.gz"
+    $ExpectedArchiveName = "codegpt-v$Version-$Platform.tar.gz"
     if ((Split-Path -Leaf $Archive) -ne $ExpectedArchiveName) {
         throw "unexpected artifact name: $(Split-Path -Leaf $Archive) (expected $ExpectedArchiveName)"
     }
@@ -146,7 +146,7 @@ try {
         throw "tar.exe was not found at $systemTar; required to inspect the artifact"
     }
     $entries = @(& $systemTar -tf $Archive)
-    $expectedEntries = @("webcodex.exe", "webcodex-server.exe", "webcodex-runner.exe")
+    $expectedEntries = @("codegpt.exe", "codegpt-server.exe", "codegpt-runner.exe")
     $diff = @($entries | Where-Object { $_ -notin $expectedEntries }) + `
         @($expectedEntries | Where-Object { $_ -notin $entries })
     if ($diff.Count -ne 0) {
@@ -163,7 +163,7 @@ try {
     }
     $manifest = [ordered]@{
         version = $Version
-        binaries = @("webcodex", "webcodex-server", "webcodex-runner")
+        binaries = @("codegpt", "codegpt-server", "codegpt-runner")
         artifacts = $artifacts
     }
     # BOM-less UTF-8: install.js parses the manifest with JSON.parse, which
@@ -177,7 +177,7 @@ try {
     # -----------------------------------------------------------------------
     # 4. Pack the npm package locally, then install it into a temp prefix.
     # -----------------------------------------------------------------------
-    $PackageDir = Join-Path $Root "npm\webcodex"
+    $PackageDir = Join-Path $Root "npm\codegpt"
     Push-Location $PackageDir
     try {
         # This smoke intentionally installs from the local development manifest
@@ -191,66 +191,66 @@ try {
     } finally {
         Pop-Location
     }
-    $Tarball = Get-ChildItem -LiteralPath $TempRoot -Filter "yyjeqhc-webcodex-*.tgz" |
+    $Tarball = Get-ChildItem -LiteralPath $TempRoot -Filter "yyjeqhc-codegpt-*.tgz" |
         Select-Object -First 1 -ExpandProperty FullName
     if (-not $Tarball) {
         throw "npm pack produced no tarball"
     }
 
     Write-Host "installing from local artifact via npm installer..."
-    $env:WEBCODEX_MANIFEST = $ManifestPath
+    $env:CODEGPT_MANIFEST = $ManifestPath
     try {
         & npm install --prefix $Prefix --no-audit --no-fund $Tarball
         if ($LASTEXITCODE -ne 0) {
             throw "npm install failed with exit code $LASTEXITCODE"
         }
     } finally {
-        Remove-Item Env:WEBCODEX_MANIFEST -ErrorAction SilentlyContinue
+        Remove-Item Env:CODEGPT_MANIFEST -ErrorAction SilentlyContinue
     }
 
     # -----------------------------------------------------------------------
     # 5. vendor/bin/*.exe, version/identity, wrapper, --help.
     # -----------------------------------------------------------------------
-    $Installed = Join-Path $Prefix "node_modules\@yyjeqhc\webcodex"
+    $Installed = Join-Path $Prefix "node_modules\@yyjeqhc\codegpt"
     $VendorBin = Join-Path $Installed "vendor\bin"
-    foreach ($name in @("webcodex", "webcodex-server", "webcodex-runner")) {
+    foreach ($name in @("codegpt", "codegpt-server", "codegpt-runner")) {
         if (-not (Test-Path -LiteralPath (Join-Path $VendorBin "$name.exe") -PathType Leaf)) {
             throw "installed package is missing $name.exe in vendor\bin"
         }
     }
 
-    $cli = Join-Path $VendorBin "webcodex.exe"
+    $cli = Join-Path $VendorBin "codegpt.exe"
     $versionOut = & $cli --version
-    if ($LASTEXITCODE -ne 0 -or -not $versionOut -or -not $versionOut.StartsWith("webcodex $Version ")) {
-        throw "webcodex.exe --version produced unexpected output: $versionOut"
+    if ($LASTEXITCODE -ne 0 -or -not $versionOut -or -not $versionOut.StartsWith("codegpt $Version ")) {
+        throw "codegpt.exe --version produced unexpected output: $versionOut"
     }
     $helpOut = & $cli --help
     if ($LASTEXITCODE -ne 0 -or -not $helpOut) {
-        throw "webcodex.exe --help failed"
+        throw "codegpt.exe --help failed"
     }
-    $runnerOut = & (Join-Path $VendorBin "webcodex-runner.exe") --version
-    if ($LASTEXITCODE -ne 0 -or -not $runnerOut -or -not $runnerOut.StartsWith("webcodex-runner $Version ")) {
-        throw "webcodex-runner.exe --version produced unexpected output: $runnerOut"
+    $runnerOut = & (Join-Path $VendorBin "codegpt-runner.exe") --version
+    if ($LASTEXITCODE -ne 0 -or -not $runnerOut -or -not $runnerOut.StartsWith("codegpt-runner $Version ")) {
+        throw "codegpt-runner.exe --version produced unexpected output: $runnerOut"
     }
 
     # The npm wrapper (vendor/bin resolution + spawn) through the .bin shim.
-    $wrapperShim = Join-Path $Prefix "node_modules\.bin\webcodex.cmd"
+    $wrapperShim = Join-Path $Prefix "node_modules\.bin\codegpt.cmd"
     if (-not (Test-Path -LiteralPath $wrapperShim)) {
-        throw "npm did not create the .bin\webcodex wrapper shim"
+        throw "npm did not create the .bin\codegpt wrapper shim"
     }
     $wrapperOut = & $wrapperShim --version
-    if ($LASTEXITCODE -ne 0 -or -not $wrapperOut -or -not $wrapperOut.StartsWith("webcodex $Version ")) {
+    if ($LASTEXITCODE -ne 0 -or -not $wrapperOut -or -not $wrapperOut.StartsWith("codegpt $Version ")) {
         throw "npm wrapper --version produced unexpected output: $wrapperOut"
     }
 
     # -----------------------------------------------------------------------
     # 6. Windows foreground Server runtime. Exercise the installed CLI so this
-    #    proves sibling webcodex-server.exe discovery and WEBCODEX_ENV_FILE
+    #    proves sibling codegpt-server.exe discovery and CODEGPT_ENV_FILE
     #    propagation, not merely that the Server binary itself starts.
     # -----------------------------------------------------------------------
     $ServerSmokeRoot = Join-Path $TempRoot "foreground-server"
     $ServerData = Join-Path $ServerSmokeRoot "data"
-    $ServerEnv = Join-Path $ServerSmokeRoot "webcodex.env"
+    $ServerEnv = Join-Path $ServerSmokeRoot "codegpt.env"
     $ServerStdout = Join-Path $ServerSmokeRoot "server.stdout.log"
     $ServerStderr = Join-Path $ServerSmokeRoot "server.stderr.log"
     New-Item -ItemType Directory -Force -Path $ServerSmokeRoot | Out-Null
@@ -271,16 +271,16 @@ try {
         "CONTROL_PLANE_API_KEY",
         "CONTROL_PLANE_TUNNEL_ID",
         "OPENAI_TUNNEL_TOKEN",
-        "WEBCODEX_ENV_FILE",
-        "WEBCODEX_ADDR",
-        "WEBCODEX_DATA",
-        "WEBCODEX_TOKEN",
-        "WEBCODEX_SHARED_KEY_ENABLED",
-        "WEBCODEX_ALLOW_ANONYMOUS",
-        "WEBCODEX_PUBLIC_URL",
-        "WEBCODEX_OAUTH2_ENABLED",
-        "WEBCODEX_OAUTH2_ISSUER",
-        "WEBCODEX_OAUTH2_SHARED_KEY_BRIDGE"
+        "CODEGPT_ENV_FILE",
+        "CODEGPT_ADDR",
+        "CODEGPT_DATA",
+        "CODEGPT_TOKEN",
+        "CODEGPT_SHARED_KEY_ENABLED",
+        "CODEGPT_ALLOW_ANONYMOUS",
+        "CODEGPT_PUBLIC_URL",
+        "CODEGPT_OAUTH2_ENABLED",
+        "CODEGPT_OAUTH2_ISSUER",
+        "CODEGPT_OAUTH2_SHARED_KEY_BRIDGE"
     )
     $SavedSensitiveEnv = @{}
     foreach ($name in $SensitiveEnvNames) {
@@ -291,9 +291,9 @@ try {
 
     $ServerCliProcess = $null
     $ServerChildPid = $null
-    $ServerExe = Join-Path $VendorBin "webcodex-server.exe"
+    $ServerExe = Join-Path $VendorBin "codegpt-server.exe"
     $BaselineServerPids = @(
-        Get-CimInstance Win32_Process -Filter "Name='webcodex-server.exe'" -ErrorAction SilentlyContinue |
+        Get-CimInstance Win32_Process -Filter "Name='codegpt-server.exe'" -ErrorAction SilentlyContinue |
             Where-Object { $_.ExecutablePath -eq $ServerExe } |
             Select-Object -ExpandProperty ProcessId
     )
@@ -303,13 +303,13 @@ try {
             throw "Windows foreground server init failed with exit code $LASTEXITCODE"
         }
         $envText = [System.IO.File]::ReadAllText($ServerEnv)
-        $tokenMatch = [regex]::Match($envText, '(?m)^WEBCODEX_TOKEN=(.+)$')
+        $tokenMatch = [regex]::Match($envText, '(?m)^CODEGPT_TOKEN=(.+)$')
         if (-not $tokenMatch.Success -or [string]::IsNullOrWhiteSpace($tokenMatch.Groups[1].Value)) {
-            throw "server init did not write WEBCODEX_TOKEN to the isolated env file"
+            throw "server init did not write CODEGPT_TOKEN to the isolated env file"
         }
         $secretToken = $tokenMatch.Groups[1].Value.Trim()
         if (($initOutput -join "`n").Contains($secretToken)) {
-            throw "server init leaked WEBCODEX_TOKEN to stdout"
+            throw "server init leaked CODEGPT_TOKEN to stdout"
         }
 
         $quotedEnvFile = '"' + $ServerEnv.Replace('"', '\"') + '"'
@@ -322,11 +322,11 @@ try {
         $deadline = [System.Diagnostics.Stopwatch]::StartNew()
         while ($deadline.Elapsed -lt [TimeSpan]::FromSeconds(20)) {
             if ($ServerCliProcess.HasExited) {
-                throw "foreground webcodex CLI exited before Server readiness (exit $($ServerCliProcess.ExitCode))"
+                throw "foreground codegpt CLI exited before Server readiness (exit $($ServerCliProcess.ExitCode))"
             }
             if ($null -eq $ServerChildPid) {
                 $child = Get-CimInstance Win32_Process -Filter "ParentProcessId=$($ServerCliProcess.Id)" -ErrorAction SilentlyContinue |
-                    Where-Object { $_.Name -eq "webcodex-server.exe" -and $_.ExecutablePath -eq $ServerExe } |
+                    Where-Object { $_.Name -eq "codegpt-server.exe" -and $_.ExecutablePath -eq $ServerExe } |
                     Select-Object -First 1
                 if ($null -ne $child) { $ServerChildPid = [int]$child.ProcessId }
             }
@@ -346,7 +346,7 @@ try {
         }
         while ($null -eq $ServerChildPid -and $deadline.Elapsed -lt [TimeSpan]::FromSeconds(20)) {
             $child = Get-CimInstance Win32_Process -Filter "ParentProcessId=$($ServerCliProcess.Id)" -ErrorAction SilentlyContinue |
-                Where-Object { $_.Name -eq "webcodex-server.exe" -and $_.ExecutablePath -eq $ServerExe } |
+                Where-Object { $_.Name -eq "codegpt-server.exe" -and $_.ExecutablePath -eq $ServerExe } |
                 Select-Object -First 1
             if ($null -ne $child) {
                 $ServerChildPid = [int]$child.ProcessId
@@ -355,7 +355,7 @@ try {
             Start-Sleep -Milliseconds 50
         }
         if ($null -eq $ServerChildPid) {
-            throw "foreground CLI readiness succeeded without observing its real webcodex-server.exe child before the same absolute deadline"
+            throw "foreground CLI readiness succeeded without observing its real codegpt-server.exe child before the same absolute deadline"
         }
     } finally {
         if ($null -ne $ServerChildPid) {
@@ -374,7 +374,7 @@ try {
             }
         }
         $newServerProcesses = @(
-            Get-CimInstance Win32_Process -Filter "Name='webcodex-server.exe'" -ErrorAction SilentlyContinue |
+            Get-CimInstance Win32_Process -Filter "Name='codegpt-server.exe'" -ErrorAction SilentlyContinue |
                 Where-Object { $_.ExecutablePath -eq $ServerExe -and $_.ProcessId -notin $BaselineServerPids }
         )
         foreach ($process in $newServerProcesses) {
@@ -384,7 +384,7 @@ try {
             Start-Sleep -Milliseconds 200
             $leftRunning = @($newServerProcesses | Where-Object { Get-Process -Id $_.ProcessId -ErrorAction SilentlyContinue })
             if ($leftRunning.Count -gt 0) {
-                throw "foreground Windows Server smoke left webcodex-server.exe running"
+                throw "foreground Windows Server smoke left codegpt-server.exe running"
             }
         }
     }
@@ -415,7 +415,7 @@ try {
     if ($LASTEXITCODE -ne 0) {
         throw "could not stage initial Windows share smoke fixture"
     }
-    & git -C $ShareRepo -c user.name="WebCodex CI" -c user.email="ci@webcodex.invalid" commit --quiet -m "Initialize Windows share smoke"
+    & git -C $ShareRepo -c user.name="CodeGPT CI" -c user.email="ci@codegpt.invalid" commit --quiet -m "Initialize Windows share smoke"
     if ($LASTEXITCODE -ne 0) {
         throw "could not create initial Windows share smoke commit"
     }
@@ -430,20 +430,20 @@ try {
         "OPENAI_ADMIN_KEY",
         "OPENAI_API_KEY",
         "OPENAI_TUNNEL_TOKEN",
-        "WEBCODEX_AGENT_BIN",
-        "WEBCODEX_AGENT_TOKEN",
-        "WEBCODEX_CLOUDFLARED_BIN",
-        "WEBCODEX_TUNNEL_CLIENT_BIN",
-        "WEBCODEX_ENV_FILE",
-        "WEBCODEX_ADDR",
-        "WEBCODEX_DATA",
-        "WEBCODEX_TOKEN",
-        "WEBCODEX_SHARED_KEY_ENABLED",
-        "WEBCODEX_ALLOW_ANONYMOUS",
-        "WEBCODEX_PUBLIC_URL",
-        "WEBCODEX_OAUTH2_ENABLED",
-        "WEBCODEX_OAUTH2_ISSUER",
-        "WEBCODEX_OAUTH2_SHARED_KEY_BRIDGE"
+        "CODEGPT_AGENT_BIN",
+        "CODEGPT_AGENT_TOKEN",
+        "CODEGPT_CLOUDFLARED_BIN",
+        "CODEGPT_TUNNEL_CLIENT_BIN",
+        "CODEGPT_ENV_FILE",
+        "CODEGPT_ADDR",
+        "CODEGPT_DATA",
+        "CODEGPT_TOKEN",
+        "CODEGPT_SHARED_KEY_ENABLED",
+        "CODEGPT_ALLOW_ANONYMOUS",
+        "CODEGPT_PUBLIC_URL",
+        "CODEGPT_OAUTH2_ENABLED",
+        "CODEGPT_OAUTH2_ISSUER",
+        "CODEGPT_OAUTH2_SHARED_KEY_BRIDGE"
     )
     $SavedShareEnv = @{}
     foreach ($name in $ShareEnvNames) {
@@ -459,8 +459,8 @@ try {
     $ShareStderrBuffer = [System.Text.StringBuilder]::new()
     $ShareStdoutTask = $null
     $ShareStderrTask = $null
-    $ShareServerExe = Join-Path $VendorBin "webcodex-server.exe"
-    $ShareRunnerExe = Join-Path $VendorBin "webcodex-runner.exe"
+    $ShareServerExe = Join-Path $VendorBin "codegpt-server.exe"
+    $ShareRunnerExe = Join-Path $VendorBin "codegpt-runner.exe"
     try {
         $quotedShareRepo = '"' + $ShareRepo.Replace('"', '\"') + '"'
         $quotedShareState = '"' + $ShareState.Replace('"', '\"') + '"'
@@ -479,7 +479,7 @@ try {
         $ShareCliProcess = [System.Diagnostics.Process]::new()
         $ShareCliProcess.StartInfo = $shareStartInfo
         if (-not $ShareCliProcess.Start()) {
-            throw "could not start webcodex share --tunnel none"
+            throw "could not start codegpt share --tunnel none"
         }
         $ShareStdoutTask = $ShareCliProcess.StandardOutput.ReadLineAsync()
         $ShareStderrTask = $ShareCliProcess.StandardError.ReadLineAsync()
@@ -511,18 +511,18 @@ try {
                 $shareError = $ShareStderrBuffer.ToString().Trim()
                 $agentTail = Get-BoundedShareLogTail -Path (Join-Path $ShareState "logs\agent.log")
                 $serverTail = Get-BoundedShareLogTail -Path (Join-Path $ShareState "logs\server.log")
-                throw "webcodex share --tunnel none exited before readiness (exit $($ShareCliProcess.ExitCode)): $shareError`n--- agent.log tail ---`n$agentTail`n--- server.log tail ---`n$serverTail"
+                throw "codegpt share --tunnel none exited before readiness (exit $($ShareCliProcess.ExitCode)): $shareError`n--- agent.log tail ---`n$agentTail`n--- server.log tail ---`n$serverTail"
             }
             $children = @(Get-CimInstance Win32_Process -Filter "ParentProcessId=$($ShareCliProcess.Id)" -ErrorAction SilentlyContinue)
             if ($null -eq $ShareServerPid) {
-                $serverChild = $children | Where-Object { $_.Name -eq "webcodex-server.exe" -and $_.ExecutablePath -eq $ShareServerExe } | Select-Object -First 1
+                $serverChild = $children | Where-Object { $_.Name -eq "codegpt-server.exe" -and $_.ExecutablePath -eq $ShareServerExe } | Select-Object -First 1
                 if ($null -ne $serverChild) { $ShareServerPid = [int]$serverChild.ProcessId }
             }
             if ($null -eq $ShareRunnerPid) {
-                $runnerChild = $children | Where-Object { $_.Name -eq "webcodex-runner.exe" -and $_.ExecutablePath -eq $ShareRunnerExe } | Select-Object -First 1
+                $runnerChild = $children | Where-Object { $_.Name -eq "codegpt-runner.exe" -and $_.ExecutablePath -eq $ShareRunnerExe } | Select-Object -First 1
                 if ($null -ne $runnerChild) { $ShareRunnerPid = [int]$runnerChild.ProcessId }
             }
-            if ($shareOutput.Contains("WebCodex ready")) {
+            if ($shareOutput.Contains("CodeGPT ready")) {
                 $shareReady = $true
                 break
             }
@@ -607,7 +607,7 @@ try {
     }
     $badManifest = [ordered]@{
         version = $Version
-        binaries = @("webcodex", "webcodex-server", "webcodex-runner")
+        binaries = @("codegpt", "codegpt-server", "codegpt-runner")
         artifacts = $badArtifacts
     }
     $BadManifestPath = Join-Path $TempRoot "bad-manifest.json"
@@ -616,14 +616,14 @@ try {
         ($badManifest | ConvertTo-Json -Depth 6),
         [System.Text.UTF8Encoding]::new($false)
     )
-    $env:WEBCODEX_MANIFEST = $BadManifestPath
+    $env:CODEGPT_MANIFEST = $BadManifestPath
     try {
         & node (Join-Path $Installed "install.js")
         if ($LASTEXITCODE -eq 0) {
             throw "install.js must fail against a manifest with a wrong checksum"
         }
     } finally {
-        Remove-Item Env:WEBCODEX_MANIFEST -ErrorAction SilentlyContinue
+        Remove-Item Env:CODEGPT_MANIFEST -ErrorAction SilentlyContinue
     }
     $afterFailure = & $cli --version
     if ($LASTEXITCODE -ne 0 -or $afterFailure -ne $versionOut) {
@@ -634,7 +634,7 @@ try {
     # 9. Staging/temporary cleanup.
     # -----------------------------------------------------------------------
     $leftovers = Get-ChildItem -LiteralPath $env:TEMP -Directory -ErrorAction SilentlyContinue |
-        Where-Object { $_.Name -like "webcodex-artifact-*" -or $_.Name -like "webcodex-manifest-*" -or $_.Name -like "webcodex-npm-test-*" } |
+        Where-Object { $_.Name -like "codegpt-artifact-*" -or $_.Name -like "codegpt-manifest-*" -or $_.Name -like "codegpt-npm-test-*" } |
         Select-Object -ExpandProperty FullName
     $stagingLeftovers = Get-ChildItem -LiteralPath (Split-Path $Installed) -Directory -ErrorAction SilentlyContinue |
         Where-Object { $_.Name -like ".bin-staging-*" -or $_.Name -like ".bin-backup-*" } |
@@ -649,7 +649,7 @@ try {
     Write-Host "  installed: $VendorBin"
 } finally {
     Remove-Item Env:npm_config_registry -ErrorAction SilentlyContinue
-    Remove-Item Env:WEBCODEX_MANIFEST -ErrorAction SilentlyContinue
+    Remove-Item Env:CODEGPT_MANIFEST -ErrorAction SilentlyContinue
     if (Test-Path -LiteralPath $TempRoot) {
         Remove-Item -LiteralPath $TempRoot -Recurse -Force
     }

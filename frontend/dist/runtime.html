@@ -7,8 +7,8 @@
   <meta name="theme-color" content="#0b0d12" />
   <script>
     (() => {
-      const key = "webcodex.runtime.appearance.v1";
-      const languageKey = "webcodex.runtime.language.v1";
+      const key = "codegpt.runtime.appearance.v1";
+      const languageKey = "codegpt.runtime.language.v1";
       let preference = "system";
       let language = navigator.language && navigator.language.toLowerCase().startsWith("zh") ? "zh-CN" : "en";
       try {
@@ -27,7 +27,7 @@
       document.querySelector('meta[name="theme-color"]')?.setAttribute("content", resolved === "light" ? "#f4f4f1" : "#090a0d");
     })();
   </script>
-  <title>WebCodex — Runtime Console</title>
+  <title>CodeGPT — Runtime Console</title>
   <link rel="stylesheet" href="/runtime/styles.css" />
 </head>
 <body>
@@ -36,7 +36,7 @@
       <div class="brand-lockup">
         <span class="brand-mark" aria-hidden="true">W</span>
         <div>
-          <h1>WebCodex Runtime Console</h1>
+          <h1>CodeGPT Runtime Console</h1>
           <p class="muted">A local workspace for Projects, Sessions, and collaboration</p>
         </div>
       </div>
@@ -80,7 +80,7 @@
         <header class="sidebar-brand">
           <div class="sidebar-brand-lockup">
             <span class="sidebar-logo" aria-hidden="true">W</span>
-            <strong>WebCodex</strong>
+            <strong>CodeGPT</strong>
           </div>
           <div class="sidebar-brand-tools">
             <span class="sidebar-runtime-status"><i aria-hidden="true"></i><span>Local</span></span>
@@ -190,13 +190,13 @@
           <div id="runtime-navigation-windows" class="sidebar-view-panel" hidden>
             <section class="sidebar-section runtime-window-navigation-section">
               <div class="sidebar-section-head">
-                <h2>WebCodex Window activity</h2>
+                <h2>CodeGPT Window activity</h2>
                 <span id="runtime-window-list-count" class="count-badge">0</span>
               </div>
               <p class="operations-navigation-copy muted small">Host Window liveness and correlation evidence. Window identity never grants execution or Session authority.</p>
               <span id="runtime-window-list-status" class="muted small" role="status">Window activity has not been loaded yet.</span>
-              <div id="runtime-window-list" class="runtime-window-list" role="group" aria-label="WebCodex Window activity"></div>
-              <p id="runtime-window-list-empty" class="muted small empty-copy" hidden>No WebCodex activity is available.</p>
+              <div id="runtime-window-list" class="runtime-window-list" role="group" aria-label="CodeGPT Window activity"></div>
+              <p id="runtime-window-list-empty" class="muted small empty-copy" hidden>No CodeGPT activity is available.</p>
             </section>
           </div>
         </div>
@@ -371,7 +371,7 @@
               <div>
                 <p class="eyebrow">Window activity</p>
                 <h2 id="runtime-windows-heading">Window activity</h2>
-                <p class="muted">Shows WebCodex calls and correlations only. It cannot observe model reasoning or determine whether the ChatGPT frontend is frozen.</p>
+                <p class="muted">Shows CodeGPT calls and correlations only. It cannot observe model reasoning or determine whether the ChatGPT frontend is frozen.</p>
               </div>
               <span id="runtime-window-live-badge" class="operations-live"><i aria-hidden="true"></i><span>3s activity refresh</span></span>
             </header>
@@ -391,7 +391,7 @@
                 <div class="metric-grid window-metrics">
                   <div class="metric"><span class="metric-label">Source</span><strong id="runtime-window-source">—</strong></div>
                   <div class="metric"><span class="metric-label">Active requests</span><strong id="runtime-window-active-count">0</strong></div>
-                  <div class="metric"><span class="metric-label">Last WebCodex call</span><strong id="runtime-window-last-call">—</strong></div>
+                  <div class="metric"><span class="metric-label">Last CodeGPT call</span><strong id="runtime-window-last-call">—</strong></div>
                   <div class="metric"><span class="metric-label">Last meaningful work</span><strong id="runtime-window-last-meaningful">—</strong></div>
                 </div>
               </section>

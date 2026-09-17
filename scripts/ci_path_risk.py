@@ -264,7 +264,7 @@ def _classify_path(risk: Risk, path: str) -> None:
     # behavior. Linux tooling exercises its portable contract, but production
     # package changes also need the native Windows package lane that runs the
     # artifact-to-install smoke.
-    if path.startswith("npm/webcodex/"):
+    if path.startswith("npm/codegpt/"):
         _mark_windows_package(risk, "npm-package")
         return
 
@@ -311,19 +311,19 @@ def _classify_path(risk: Risk, path: str) -> None:
         risk.categories.add("release-packaging")
         return
 
-    if path.startswith("crates/webcodex-process/"):
+    if path.startswith("crates/codegpt-process/"):
         _mark_windows_core(risk, "native-process")
         _mark_macos(risk, "native-process")
         return
-    if path.startswith("crates/webcodex-persistent-shell/"):
+    if path.startswith("crates/codegpt-persistent-shell/"):
         _mark_windows_core(risk, "persistent-shell")
         _mark_macos(risk, "persistent-shell")
         return
-    if path.startswith("crates/webcodex-computer/"):
+    if path.startswith("crates/codegpt-computer/"):
         _mark_windows_runner(risk, "computer-runtime")
         _mark_macos(risk, "computer-runtime")
         return
-    if path.startswith("crates/webcodex-runner/"):
+    if path.startswith("crates/codegpt-runner/"):
         runner_native_tokens = (
             "plugin",
             "lsp",

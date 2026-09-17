@@ -116,7 +116,7 @@ pub fn sanitize_message(message: &str) -> String {
     let mut safe = message
         .replace("Authorization: Bearer ", "Authorization: [redacted]")
         .replace("authorization: bearer ", "authorization: [redacted]");
-    for prefix in ["wc_pair_", "wc_pat_", "wc_agent_", "webcodex_temporary_"] {
+    for prefix in ["wc_pair_", "wc_pat_", "wc_agent_", "codegpt_temporary_"] {
         safe = redact_prefixed_token(&safe, prefix);
     }
     truncate_utf8(&safe, ACTIVITY_MESSAGE_BYTES)
@@ -159,7 +159,7 @@ mod tests {
     #[test]
     fn activity_redacts_runtime_credentials() {
         let safe = sanitize_message(
-            "Authorization: Bearer abc wc_pair_secret wc_pat_secret wc_agent_secret webcodex_temporary_secret",
+            "Authorization: Bearer abc wc_pair_secret wc_pat_secret wc_agent_secret codegpt_temporary_secret",
         );
         assert!(!safe.contains("secret"));
         assert!(!safe.contains("Bearer abc"));

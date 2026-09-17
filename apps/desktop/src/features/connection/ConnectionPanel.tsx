@@ -60,7 +60,7 @@ export function ConnectionPanel({
 
   if (topology?.server.kind === "remote") {
     return (
-      <section className="page-section" aria-labelledby="connection-title" data-webcodex-page="connection">
+      <section className="page-section" aria-labelledby="connection-title" data-codegpt-page="connection">
         <PageHeading />
         <article className="detail-card" aria-labelledby="remote-server-title">
           <h2 id="remote-server-title">{t("connection.remoteServer")}</h2>
@@ -76,7 +76,7 @@ export function ConnectionPanel({
 
   if (topology?.experience === "quick_share") {
     return (
-      <section className="page-section" aria-labelledby="connection-title" data-webcodex-page="connection">
+      <section className="page-section" aria-labelledby="connection-title" data-codegpt-page="connection">
         <PageHeading />
         <article className="detail-card">
           <span className="section-kicker">Quick Share</span>
@@ -100,7 +100,7 @@ export function ConnectionPanel({
       className="page-section"
       aria-labelledby="connection-title"
       aria-busy={mutationBusy}
-      data-webcodex-page="connection"
+      data-codegpt-page="connection"
     >
       <PageHeading />
 
@@ -125,7 +125,7 @@ export function ConnectionPanel({
             className="danger-button"
             disabled={mutationBusy}
             onClick={() => void run(desktopApi.stopRegularTunnel)}
-            data-webcodex-action="stop-regular-tunnel"
+            data-codegpt-action="stop-regular-tunnel"
           >
             {mutationBusy ? t("common.checking") : t("connection.stopTunnel")}
           </button>
@@ -159,7 +159,7 @@ export function ConnectionPanel({
           {!state.readiness.runtime_ready && <p className="inline-note">{t("connection.runtimeRequired")}</p>}
 
           {provider === "openai" && (
-            <button className="primary-button" disabled={mutationBusy || !canStart} onClick={() => void run(desktopApi.startRegularTunnel)} data-webcodex-action="start-regular-tunnel">
+            <button className="primary-button" disabled={mutationBusy || !canStart} onClick={() => void run(desktopApi.startRegularTunnel)} data-codegpt-action="start-regular-tunnel">
               {mutationBusy ? t("connection.tunnelStarting") : t("home.connectChatGpt")}
             </button>
           )}

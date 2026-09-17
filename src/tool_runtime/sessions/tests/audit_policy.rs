@@ -7,7 +7,7 @@ use crate::tool_runtime::tool_audit::{
 fn canonical_audit_policies_keep_private_payloads_out_of_durable_session_ledger() {
     let directory = tempfile::tempdir().unwrap();
     let ledger = directory.path().join("audit-policies.json");
-    let definitions: Vec<_> = webcodex_tool_contracts::tool_definitions().collect();
+    let definitions: Vec<_> = codegpt_tool_contracts::tool_definitions().collect();
     // Keep every tested event so an early leak cannot be hidden by retention.
     let event_capacity = definitions.len() * 2 + 20;
     let store = SessionStore::with_persistence(&ledger, 10, event_capacity);
@@ -22,7 +22,7 @@ fn canonical_audit_policies_keep_private_payloads_out_of_durable_session_ledger(
         "content":"PRIVATE_CONTENT", "text":"PRIVATE_TEXT", "instruction":"PRIVATE_PROMPT",
         "script":"PRIVATE_SCRIPT", "command":"echo PRIVATE_COMMAND", "stdin":"PRIVATE_STDIN",
         "args":["PRIVATE_NATIVE_DESTINATION"], "executable":"PRIVATE_EXECUTABLE",
-        "package_base64":"PRIVATE_PACKAGE", "package":"webcodex",
+        "package_base64":"PRIVATE_PACKAGE", "package":"codegpt",
         "idempotency_key":"PRIVATE_IDEMPOTENCY", "consume_token":"PRIVATE_CONSUME",
         "after_observation_token":"PRIVATE_OBSERVATION", "binding":"PRIVATE_BINDING",
         "arguments":{"opaque":"PRIVATE_PLUGIN_ARGUMENTS"},

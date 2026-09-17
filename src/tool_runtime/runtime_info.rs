@@ -5,7 +5,7 @@ use super::{permissions, ToolResult, ToolRuntime};
 use crate::auth::AuthContext;
 use crate::runner_protocol::{RunnerView, ShellJobInfo};
 use serde_json::{json, Value};
-use webcodex_core::runner_job_lifecycle::RunnerJobLifecycle;
+use codegpt_core::runner_job_lifecycle::RunnerJobLifecycle;
 
 const LIST_RUNNERS_MAX_CLIENT_IDS: usize = 8;
 const TARGET_CLIENT_ID_MAX_CHARS: usize = 128;
@@ -22,7 +22,7 @@ pub(crate) struct ListRunnersOptions {
 /// tools (e.g. `runtime_status`) can report bounded auth/OAuth/public-url state
 /// without the runtime holding a full `Config` (which would couple it to HTTP/fs details).
 ///
-/// `configured_public_url` is `None` when `WEBCODEX_PUBLIC_URL` is unset; the
+/// `configured_public_url` is `None` when `CODEGPT_PUBLIC_URL` is unset; the
 /// observability output reports this as `null` so a deployer can immediately
 /// see that the public URL has not been configured.
 #[derive(Debug, Clone)]
@@ -48,7 +48,7 @@ impl RuntimeInfo {
         quic_cfg: &crate::config::QuicServerConfig,
     ) -> Self {
         let auth_enabled = config.is_auth_enabled();
-        let configured_public_url = std::env::var("WEBCODEX_PUBLIC_URL")
+        let configured_public_url = std::env::var("CODEGPT_PUBLIC_URL")
             .ok()
             .map(|s| s.trim().trim_end_matches('/').to_string())
             .filter(|s| !s.is_empty());
@@ -378,7 +378,7 @@ impl ToolRuntime {
         let runner_known_count = runner_jobs.len();
         let active_count = runner_jobs
             .iter()
-            .filter(|j| webcodex_runner_registry::job_status_is_active(&j.status))
+            .filter(|j| codegpt_runner_registry::job_status_is_active(&j.status))
             .count();
         let recovering_count = runner_jobs
             .iter()
@@ -441,7 +441,7 @@ impl ToolRuntime {
         });
 
         let mut output = json!({
-            "service": "webcodex",
+            "service": "codegpt",
             "mcp_compact_schemas": crate::model_surface::effective_mcp_compact_schemas(
                 crate::config::mcp_compact_schemas_override(),
             ),
@@ -559,7 +559,7 @@ impl ToolRuntime {
             .count();
         let runner_active = selected_jobs
             .iter()
-            .filter(|job| webcodex_runner_registry::job_status_is_active(&job.status))
+            .filter(|job| codegpt_runner_registry::job_status_is_active(&job.status))
             .count();
         let running_count = selected_jobs
             .iter()
@@ -640,7 +640,7 @@ impl ToolRuntime {
         });
         let server_build = crate::build_info::runtime_build_info();
         ToolResult::ok(json!({
-            "service": "webcodex",
+            "service": "codegpt",
             "mcp_compact_schemas": crate::model_surface::effective_mcp_compact_schemas(
                 crate::config::mcp_compact_schemas_override(),
             ),
@@ -687,7 +687,7 @@ pub(crate) fn compact_runtime_status(status: &Value) -> Value {
     if status.get("focus").is_some() {
         return json!({
             "compact": true,
-            "service": status.get("service").cloned().unwrap_or_else(|| json!("webcodex")),
+            "service": status.get("service").cloned().unwrap_or_else(|| json!("codegpt")),
             "mcp_compact_schemas": status.get("mcp_compact_schemas").cloned().unwrap_or_else(|| json!(false)),
             "effective_config": status.get("effective_config").cloned().unwrap_or(Value::Null),
             "auth_enabled": status.get("auth_enabled").cloned().unwrap_or_else(|| json!(false)),
@@ -713,7 +713,7 @@ pub(crate) fn compact_runtime_status(status: &Value) -> Value {
     }
     let mut compact = json!({
         "compact": true,
-        "service": status.get("service").cloned().unwrap_or_else(|| json!("webcodex")),
+        "service": status.get("service").cloned().unwrap_or_else(|| json!("codegpt")),
         "mcp_compact_schemas": status.get("mcp_compact_schemas").cloned().unwrap_or_else(|| json!(false)),
         "effective_config": status.get("effective_config").cloned().unwrap_or(Value::Null),
         "auth_enabled": status.get("auth_enabled").cloned().unwrap_or_else(|| json!(false)),
@@ -1262,7 +1262,7 @@ fn active_jobs_for_client(runner_jobs: &[ShellJobInfo], client_id: &str) -> usiz
         .iter()
         .filter(|job| {
             job.client_id == client_id
-                && webcodex_runner_registry::job_status_is_active(&job.status)
+                && codegpt_runner_registry::job_status_is_active(&job.status)
         })
         .count()
 }

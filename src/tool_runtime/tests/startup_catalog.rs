@@ -51,7 +51,7 @@ fn skill(index: usize, description: &str) -> StartupSkillEntry {
     StartupSkillEntry {
         skill_id: format!(
             "wc_skill_{}",
-            webcodex_core::compact::encode(&(index as u128).to_be_bytes()[0..])
+            codegpt_core::compact::encode(&(index as u128).to_be_bytes()[0..])
         ),
         name: format!("skill-{index}"),
         description: description.to_string(),
@@ -113,7 +113,7 @@ fn startup_catalog_skill_projection_matches_original_prefix_contract() {
 
 #[test]
 fn startup_catalog_plugin_projection_preserves_provider_total_and_optional_fields() {
-    let revision = format!("wc_plugcat_{}", webcodex_core::compact::encode([0xbb; 32]));
+    let revision = format!("wc_plugcat_{}", codegpt_core::compact::encode([0xbb; 32]));
     for count in [0, 1, 2, 8, 64] {
         for width in [0, 32, 180, 512, 3000] {
             let description = "\u{63d2}\u{4ef6}\"\\\n".repeat(width);
@@ -189,7 +189,7 @@ fn startup_catalog_combined_budget_and_utf8_description_remain_bounded() {
             (0..64).map(|i| skill(i, &description)).collect(),
         ),
         plugins: StartupPluginsCatalog::available(
-            format!("wc_plugcat_{}", webcodex_core::compact::encode([0xbb; 32])),
+            format!("wc_plugcat_{}", codegpt_core::compact::encode([0xbb; 32])),
             64,
             (0..64).map(|i| plugin(i, &description)).collect(),
         ),

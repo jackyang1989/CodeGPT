@@ -2,7 +2,7 @@
 
 This experiment provides a repeatable measurement baseline for comparing a real
 coding-agent run that uses Direct Tools with a run of the same task through Code
-Mode. It measures facts already recorded by WebCodex. It does not infer model
+Mode. It measures facts already recorded by CodeGPT. It does not infer model
 reasoning, intent, or private chain-of-thought.
 
 The deterministic [`scripts/eval_coding_loop.sh`](../../scripts/eval_coding_loop.sh)
@@ -27,7 +27,7 @@ It accepts two payload-safe evidence sources:
    enqueue events. The profiler reads only JSONL metadata; it never opens captured
    request/result payload files.
 
-On the current runtime, `WEBCODEX_TOOL_REQUEST_TRACE=true`/metadata mode does not
+On the current runtime, `CODEGPT_TOOL_REQUEST_TRACE=true`/metadata mode does not
 persist a per-trace `events.jsonl` tree. That is not a blocker for the core
 baseline because ActionAudit already persists the payload-safe outer/Window facts.
 If Runner enqueue observations are required, a capture made with full request
@@ -41,7 +41,7 @@ not claim that the trace tree is a complete Runner-request ledger.
 
 ## Timing semantics
 
-For a non-streaming outer call `i`, WebCodex-owned service time is:
+For a non-streaming outer call `i`, CodeGPT-owned service time is:
 
 ```text
 service_i = response_handed_at_i - request_observed_at_i
@@ -51,7 +51,7 @@ For two continuity-eligible, meaningful calls in the same hashed Window and
 principal, a canonical serial transition permits:
 
 ```text
-outside_webcodex_gap_i = request_observed_at_(i+1) - response_handed_at_i
+outside_codegpt_gap_i = request_observed_at_(i+1) - response_handed_at_i
 ```
 
 The latter may include model inference, host scheduling, network delay, UI delay,
@@ -65,7 +65,7 @@ is outside the selection, that selected gap remains unavailable. Overlap is coun
 separately and never converted into a negative gap. Streaming handoff does not
 prove response completion. Continuity breaks remain missing evidence.
 
-`observed_span_ms` is only the span covered by observed WebCodex outer-call
+`observed_span_ms` is only the span covered by observed CodeGPT outer-call
 timestamps. It is not end-to-end task wall time unless some independent harness
 provides explicit task start/end timestamps.
 
@@ -160,8 +160,8 @@ The schema-v1 JSON summary reports, when evidence is available:
   `code_mode_composition`, including nested call/success/failure counts,
   `nested_tool_counts`, consequential known/Job/unknown outcomes, internal/slot
   timing, and nested raw versus returned bytes;
-- WebCodex service time and ToolRuntime duration distributions;
-- canonical serial `outside_webcodex_gap` distributions and overlap count;
+- CodeGPT service time and ToolRuntime duration distributions;
+- canonical serial `outside_codegpt_gap` distributions and overlap count;
 - exact serialized `ToolResult` byte totals/distributions;
 - observed Runner enqueue count and request-kind distribution from trace JSONL;
 - structured error/failure/recovery-guidance distributions.
@@ -226,6 +226,6 @@ parse command bodies or payloads to guess task type. Full payload tracing is not
 required for the core ActionAudit-derived metrics.
 
 These measurements cannot establish model reasoning time, reasoning quality,
-intent, causal attribution for outside-WebCodex gaps, or a general claim that Code
+intent, causal attribution for outside-CodeGPT gaps, or a general claim that Code
 Mode is faster. They provide bounded observations for controlled Direct-vs-Code-
 Mode experiments only.

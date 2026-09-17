@@ -177,7 +177,7 @@ test("handler rejection returns no ToolResult and emits only a bounded generic d
   );
   assert.equal(output.read(), "");
   assert.equal(secondRan, false);
-  assert.equal(error.read(), "webcodex plugin handler failed; provider will stop\n");
+  assert.equal(error.read(), "codegpt plugin handler failed; provider will stop\n");
   assert.equal(error.read().includes("secret-argument"), false);
   assert.equal(error.read().includes("secret-exception-body"), false);
   assert.equal(error.read().includes(" at "), false);

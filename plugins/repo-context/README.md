@@ -1,6 +1,6 @@
 # repo-context Native Tool Plugin
 
-`repo-context` is a small read-only first-party experiment for Native Plugin composition. It was created with the real `webcodex plugin init plugins/repo-context --id repo-context` authoring flow, then its repository dependency was switched to `file:../../npm/plugin-sdk` so CI validates the current checkout without changing the public `@yyjeqhc/webcodex-plugin-sdk@0.1.0` contract.
+`repo-context` is a small read-only first-party experiment for Native Plugin composition. It was created with the real `codegpt plugin init plugins/repo-context --id repo-context` authoring flow, then its repository dependency was switched to `file:../../npm/plugin-sdk` so CI validates the current checkout without changing the public `@yyjeqhc/codegpt-plugin-sdk@0.1.0` contract.
 
 It exposes exactly one tool, `repo_context`, with an empty input object. The provider's configured `cwd` is the only repository authority boundary; callers cannot supply a path, project, repository, Runner, command, or environment override.
 
@@ -36,7 +36,7 @@ Node.js 18 or newer is required. Production execution uses the compiled ESM `dis
 id = "repo-context"
 name = "Repo Context"
 command = "node"
-args = ["/absolute/path/to/webcodex/plugins/repo-context/dist/plugin.js"]
+args = ["/absolute/path/to/codegpt/plugins/repo-context/dist/plugin.js"]
 cwd = "/absolute/path/to/repository"
 timeout_secs = 30
 ```
@@ -46,10 +46,10 @@ timeout_secs = 30
 ## Author loop
 
 ```text
-webcodex plugin check --runner <runner> --plugin repo-context
-webcodex plugin reload --runner <runner>
-webcodex plugin list --runner <runner> --plugin repo-context
-webcodex plugin describe --runner <runner> --plugin repo-context --tool repo_context
+codegpt plugin check --runner <runner> --plugin repo-context
+codegpt plugin reload --runner <runner>
+codegpt plugin list --runner <runner> --plugin repo-context
+codegpt plugin describe --runner <runner> --plugin repo-context --tool repo_context
 ```
 
-Invocation remains on the canonical `plugin_tool describe -> call` binding path. There is intentionally no `webcodex plugin call` command and no outer MCP tool is added for `repo_context`.
+Invocation remains on the canonical `plugin_tool describe -> call` binding path. There is intentionally no `codegpt plugin call` command and no outer MCP tool is added for `repo_context`.

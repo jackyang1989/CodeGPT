@@ -1,4 +1,4 @@
-use webcodex_runner_registry::{DetachedInitiatorIdentity, RunnerAccess, RunnerAccessGroup};
+use codegpt_runner_registry::{DetachedInitiatorIdentity, RunnerAccess, RunnerAccessGroup};
 
 pub(crate) fn runner_access_from_auth(
     auth: Option<&crate::auth::AuthContext>,

@@ -15,7 +15,7 @@ fn runtime_command_inherits_only_tunnel_authority_not_server_bootstrap_or_openai
     );
 
     let env = command.as_std().get_envs().collect::<Vec<_>>();
-    for key in ["WEBCODEX_TOKEN", "OPENAI_ADMIN_KEY", "OPENAI_API_KEY"] {
+    for key in ["CODEGPT_TOKEN", "OPENAI_ADMIN_KEY", "OPENAI_API_KEY"] {
         assert!(env
             .iter()
             .any(|(name, value)| { name.to_str() == Some(key) && value.is_none() }));
@@ -113,16 +113,16 @@ fn managed_root_prefers_private_xdg_then_home() {
             Some(local.as_os_str()),
         )
         .unwrap(),
-        state.join("webcodex/tools/tunnel-client")
+        state.join("codegpt/tools/tunnel-client")
     );
     assert_eq!(
         managed_tunnel_client_root_from(None, Some(home.as_os_str()), Some(local.as_os_str()),)
             .unwrap(),
-        home.join(".local/state/webcodex/tools/tunnel-client")
+        home.join(".local/state/codegpt/tools/tunnel-client")
     );
     assert_eq!(
         managed_tunnel_client_root_from(None, None, Some(local.as_os_str())).unwrap(),
-        local.join("WebCodex/tools/tunnel-client")
+        local.join("CodeGPT/tools/tunnel-client")
     );
     assert!(managed_tunnel_client_root_from(None, None, None).is_err());
     assert!(managed_tunnel_client_root_from(

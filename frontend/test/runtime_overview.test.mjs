@@ -56,17 +56,17 @@ test("attentionLabel formats individual attention categories or returns fallback
 
 test("formatProjectIdentity formats English and localized identity strings", () => {
   const project = {
-    id: "webcodex",
+    id: "codegpt",
     client_id: "macbook-air",
-    path: "/Users/dev/webcodex",
+    path: "/Users/dev/codegpt",
   };
   assert.equal(
     formatProjectIdentity(project, "en"),
-    "Runner: macbook-air · Project: webcodex · Workspace: /Users/dev/webcodex"
+    "Runner: macbook-air · Project: codegpt · Workspace: /Users/dev/codegpt"
   );
   assert.equal(
     formatProjectIdentity(project, "zh-CN"),
-    "运行器：macbook-air · 项目：webcodex · 工作空间：/Users/dev/webcodex"
+    "运行器：macbook-air · 项目：codegpt · 工作空间：/Users/dev/codegpt"
   );
 
   assert.equal(formatProjectIdentity(null, "zh-CN"), "尚未选择项目");
@@ -126,7 +126,7 @@ test("formatRuntimeOverviewMetrics formats overview metric views", () => {
   assert.equal(formatRuntimeOverviewMetrics(null), null);
 
   const data = {
-    service: "webcodex",
+    service: "codegpt",
     version: "0.4.1",
     build_git_commit: "abc1234",
     build_git_dirty: true,
@@ -154,7 +154,7 @@ test("formatRuntimeOverviewMetrics formats overview metric views", () => {
 
   const metricsEn = formatRuntimeOverviewMetrics(data, "en");
   assert.ok(metricsEn);
-  assert.equal(metricsEn.identity, "webcodex · 0.4.1");
+  assert.equal(metricsEn.identity, "codegpt · 0.4.1");
   assert.equal(metricsEn.build, "build abc1234 · dirty");
   assert.equal(metricsEn.runners, "2 Runners");
   assert.equal(metricsEn.alignment, "1 online · 1 stale · 0 unavailable");

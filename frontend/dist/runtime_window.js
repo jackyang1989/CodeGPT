@@ -35,7 +35,7 @@ export function renderWindowActivityRows(node, activities, options = {}) {
         const head = document.createElement("div");
         head.className = "window-activity-head";
         const title = document.createElement("strong");
-        title.textContent = String(activity?.tool_name || activity?.method || "WebCodex call");
+        title.textContent = String(activity?.tool_name || activity?.method || "CodeGPT call");
         const time = document.createElement("span");
         time.className = "muted small";
         time.textContent = windowDateTimeLabel(activity?.started_at_ms, language);
@@ -133,14 +133,14 @@ export function createWindowCard(row, selectedWindowKey, onSelect, now = Date.no
     const call = document.createElement("span");
     call.className = "muted small";
     call.textContent = row?.last_tool_call_at_ms
-        ? (language === "zh-CN" ? "最后调用 " : "Last WebCodex call ") + windowAgeLabel(row.last_tool_call_at_ms, now, language)
-        : (language === "zh-CN" ? "最后活动 " : "Last WebCodex activity ") + windowAgeLabel(row?.last_seen_at_ms, now, language);
+        ? (language === "zh-CN" ? "最后调用 " : "Last CodeGPT call ") + windowAgeLabel(row.last_tool_call_at_ms, now, language)
+        : (language === "zh-CN" ? "最后活动 " : "Last CodeGPT activity ") + windowAgeLabel(row?.last_seen_at_ms, now, language);
     button.appendChild(call);
     const meaningful = document.createElement("span");
     meaningful.className = "muted small";
     meaningful.textContent = row?.last_meaningful_activity_at_ms
         ? (language === "zh-CN" ? "最后有效工作 " : "Last meaningful work ") + windowAgeLabel(row.last_meaningful_activity_at_ms, now, language)
-        : (language === "zh-CN" ? "未记录到有效 WebCodex 工作" : "No meaningful WebCodex work recorded");
+        : (language === "zh-CN" ? "未记录到有效 CodeGPT 工作" : "No meaningful CodeGPT work recorded");
     button.appendChild(meaningful);
     const links = document.createElement("span");
     links.className = "muted small";
@@ -160,7 +160,7 @@ export function renderWindowActiveRequests(activeNode, activeRequests, options =
     if (!activeRequests.length) {
         const empty = document.createElement("p");
         empty.className = "muted small";
-        empty.textContent = translate("No WebCodex request is currently active.", language);
+        empty.textContent = translate("No CodeGPT request is currently active.", language);
         activeNode.appendChild(empty);
         return;
     }
@@ -168,7 +168,7 @@ export function renderWindowActiveRequests(activeNode, activeRequests, options =
         const item = document.createElement("article");
         item.className = "window-request-item";
         const title = document.createElement("strong");
-        title.textContent = String(request?.tool_name || request?.method || "WebCodex request");
+        title.textContent = String(request?.tool_name || request?.method || "CodeGPT request");
         item.appendChild(title);
         const meta = document.createElement("div");
         meta.className = "muted small";
@@ -242,7 +242,7 @@ export function renderSessionWindowCorrelationLinks(linkedNode, links, onSelectW
         meta.className = "muted small";
         meta.textContent = [
             link?.source,
-            link?.last_seen_at_ms ? (language === "zh-CN" ? "最后活动 " : "last WebCodex activity ") + windowAgeLabel(link.last_seen_at_ms, now, language) : null,
+            link?.last_seen_at_ms ? (language === "zh-CN" ? "最后活动 " : "last CodeGPT activity ") + windowAgeLabel(link.last_seen_at_ms, now, language) : null,
             Number(link?.recorder_gap_count || 0) ? String(link.recorder_gap_count) + (language === "zh-CN" ? " 个记录断层" : " recorder gap") : null,
         ].filter(Boolean).map(String).join(" · ");
         button.appendChild(title);
@@ -271,7 +271,7 @@ export function formatWindowDetailFields(detail, fallbackKey = "", now = Date.no
             : translate("No completed tools/call activity", language),
         lastMeaningful: detail.last_meaningful_activity_at_ms
             ? windowAgeLabel(detail.last_meaningful_activity_at_ms, now, language)
-            : translate("No meaningful WebCodex work recorded", language),
+            : translate("No meaningful CodeGPT work recorded", language),
         activeStatus: translate(Number(detail.active_count || 0) ? "Active request" : "No active request", language),
         linkedStatus: localizedCountLabel(Number(detail.sessions_returned || 0), "Session", "Sessions", language) +
             (detail.sessions_truncated ? " · " + translate("bounded", language) : ""),

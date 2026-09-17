@@ -1,8 +1,8 @@
-# @yyjeqhc/webcodex-plugin-sdk
+# @yyjeqhc/codegpt-plugin-sdk
 
-TypeScript authoring helpers for WebCodex Native Tool Plugins. The SDK removes JSON-RPC, stdio framing, and dispatch boilerplate while keeping the existing `webcodex-plugin-v1` protocol unchanged.
+TypeScript authoring helpers for CodeGPT Native Tool Plugins. The SDK removes JSON-RPC, stdio framing, and dispatch boilerplate while keeping the existing `codegpt-plugin-v1` protocol unchanged.
 
-The Rust Runner remains authoritative for Plugin admission, schema validation, authority, timeout, process lifecycle, frozen catalog identity, response bounds, and `OutcomeUnknown` semantics. TypeScript types and SDK helpers improve authoring; `plugin_tool check` remains the authoritative WebCodex Plugin admission check.
+The Rust Runner remains authoritative for Plugin admission, schema validation, authority, timeout, process lifecycle, frozen catalog identity, response bounds, and `OutcomeUnknown` semantics. TypeScript types and SDK helpers improve authoring; `plugin_tool check` remains the authoritative CodeGPT Plugin admission check.
 
 ## Requirements
 
@@ -10,7 +10,7 @@ The Rust Runner remains authoritative for Plugin admission, schema validation, a
 - TypeScript is an authoring/build dependency only. Production Plugin execution uses compiled ESM JavaScript and does not require a TypeScript runtime or compiler.
 - The SDK has zero runtime package dependencies and uses Node built-ins only.
 
-Using this SDK does not make a Plugin an MCP server, grant new WebCodex permissions, or sandbox the executable. Native Plugins are trusted local processes. WebCodex Server and Runner themselves do not require Node because of this SDK; only a Plugin that chooses this SDK needs a Node runtime on its Runner machine.
+Using this SDK does not make a Plugin an MCP server, grant new CodeGPT permissions, or sandbox the executable. Native Plugins are trusted local processes. CodeGPT Server and Runner themselves do not require Node because of this SDK; only a Plugin that chooses this SDK needs a Node runtime on its Runner machine.
 
 ## Stability
 
@@ -25,7 +25,7 @@ import {
   runPlugin,
   schema,
   textResult,
-} from "@yyjeqhc/webcodex-plugin-sdk";
+} from "@yyjeqhc/codegpt-plugin-sdk";
 
 const echo = defineTool({
   name: "echo",
@@ -69,7 +69,7 @@ plugin.ts
 
 Object properties not wrapped with `schema.optional(...)` are emitted in `required`. Input and output roots accepted by `defineTool` are object schemas. Enum and const literals are preserved in ordinary TypeScript inference where practical.
 
-The builder deliberately does not implement `$ref`, `$defs`, recursive references, `pattern`, `format`, numeric ranges, schema-valued `additionalProperties`, union types, `anyOf`, `oneOf`, `allOf`, `not`, or draft-specific keywords. It also does not copy WebCodex's byte, depth, node-count, or catalog admission limits. Run `plugin_tool check` against the configured provider for the authoritative result.
+The builder deliberately does not implement `$ref`, `$defs`, recursive references, `pattern`, `format`, numeric ranges, schema-valued `additionalProperties`, union types, `anyOf`, `oneOf`, `allOf`, `not`, or draft-specific keywords. It also does not copy CodeGPT's byte, depth, node-count, or catalog admission limits. Run `plugin_tool check` against the configured provider for the authoritative result.
 
 ## Results and failure semantics
 
@@ -83,6 +83,6 @@ The SDK does not truncate or rewrite results to fit Runner limits. When an `outp
 
 `runPlugin(plugin)` serves newline-delimited JSON-RPC 2.0 over process stdin/stdout. Requests are handled strictly one at a time; async handlers are awaited before the next input line is dispatched. Only `initialize`, `tools/list`, and `tools/call` are supported. Notifications and arbitrary methods fail closed.
 
-`definePlugin` rejects duplicate provider-local tool names before serving and freezes the authoring catalog. `tools/list` exposes only protocol definitions; executable handlers and local closures never enter the wire representation. Declaration order is preserved by the SDK; the WebCodex Runner independently admits and freezes its authoritative catalog.
+`definePlugin` rejects duplicate provider-local tool names before serving and freezes the authoring catalog. `tools/list` exposes only protocol definitions; executable handlers and local closures never enter the wire representation. Declaration order is preserved by the SDK; the CodeGPT Runner independently admits and freezes its authoritative catalog.
 
-The published package includes [`examples/echo-plugin.ts`](examples/echo-plugin.ts) as a minimal SDK authoring example. For the raw protocol without any SDK dependency, see [`examples/native-tool-plugin.mjs`](https://github.com/yyjeqhc/webcodex/blob/main/examples/native-tool-plugin.mjs) in the WebCodex repository.
+The published package includes [`examples/echo-plugin.ts`](examples/echo-plugin.ts) as a minimal SDK authoring example. For the raw protocol without any SDK dependency, see [`examples/native-tool-plugin.mjs`](https://github.com/yyjeqhc/codegpt/blob/main/examples/native-tool-plugin.mjs) in the CodeGPT repository.

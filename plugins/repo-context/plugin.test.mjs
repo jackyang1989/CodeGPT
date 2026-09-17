@@ -14,13 +14,13 @@ import {
   observeRepoContext,
 } from "./dist/context.js";
 
-const PROTOCOL_VERSION = "webcodex-plugin-v1";
+const PROTOCOL_VERSION = "codegpt-plugin-v1";
 const here = path.dirname(fileURLToPath(import.meta.url));
 const pluginPath = path.join(here, "dist", "plugin.js");
 const HEAD = "a".repeat(40);
 
 function tempRoot() {
-  return fs.mkdtempSync(path.join(os.tmpdir(), "webcodex-repo-context-"));
+  return fs.mkdtempSync(path.join(os.tmpdir(), "codegpt-repo-context-"));
 }
 
 function git(cwd, args) {
@@ -67,9 +67,9 @@ function initWorkspace() {
   git(root, ["add", "."]);
   git(root, [
     "-c",
-    "user.name=WebCodex Test",
+    "user.name=CodeGPT Test",
     "-c",
-    "user.email=webcodex-test@example.invalid",
+    "user.email=codegpt-test@example.invalid",
     "-c",
     "commit.gpgSign=false",
     "-c",
@@ -251,9 +251,9 @@ test("cross-package rename marks both source and destination packages affected",
     git(root, ["add", "crates/a/rename-me.txt"]);
     git(root, [
       "-c",
-      "user.name=WebCodex Test",
+      "user.name=CodeGPT Test",
       "-c",
-      "user.email=webcodex-test@example.invalid",
+      "user.email=codegpt-test@example.invalid",
       "-c",
       "commit.gpgSign=false",
       "commit",

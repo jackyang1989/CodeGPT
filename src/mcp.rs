@@ -189,7 +189,7 @@ fn log_mcp_computer_app_resource_delivery(
     mcp_error_code: Option<i64>,
 ) {
     tracing::info!(
-        target: "webcodex::mcp",
+        target: "codegpt::mcp",
         uri,
         protocol_era,
         ui_capability_present,
@@ -268,7 +268,7 @@ pub async fn mcp_info(req: &mut Request, depot: &mut Depot, res: &mut Response) 
     }
     let auth_required = config.is_auth_enabled();
     res.render(Json(json!({
-        "name": "webcodex",
+        "name": "codegpt",
         "version": env!("CARGO_PKG_VERSION"),
         "protocol": "mcp",
         "protocolVersion": MCP_PROTOCOL_VERSION,
@@ -508,7 +508,7 @@ pub async fn mcp_post(req: &mut Request, depot: &mut Depot, res: &mut Response) 
                 .error(error)
                 .summary(summary)
                 .meaningful(
-                    webcodex_tool_contracts::runtime_tool_activity_interaction(tool)
+                    codegpt_tool_contracts::runtime_tool_activity_interaction(tool)
                         .is_meaningful(),
                 )
                 .recorder_gap(correlation.recorder_gap_session_id.clone());
@@ -1016,7 +1016,7 @@ async fn handle_mcp_request_with_lifecycle(
     let id = request.id.clone();
     let response = match request.method.as_str() {
         // MCP 2026-07-28 clients discover capabilities before issuing ordinary
-        // requests. WebCodex supports the stateless tools path required by
+        // requests. CodeGPT supports the stateless tools path required by
         // modern clients while retaining the initialized 2025 tool-only
         // session lifecycle used by 2025-06-18 and ChatGPT 2025-11-25 clients.
         "server/discover" if stateless_2026 => rpc_result(

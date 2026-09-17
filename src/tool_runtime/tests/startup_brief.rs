@@ -107,7 +107,7 @@ fn instruction_source<'a>(output: &'a Value, path: &str) -> &'a Value {
 
 fn assert_builtin_workflow(output: &Value) {
     let workflow = &output["workflow"];
-    assert_eq!(workflow["contract"], "webcodex.coding_workflow");
+    assert_eq!(workflow["contract"], "codegpt.coding_workflow");
     assert_eq!(workflow["version"], 13);
     assert_eq!(workflow["authority"], "model_guidance_only");
     assert!(workflow["role_selection"]
@@ -403,7 +403,7 @@ async fn explicit_coding_task_resume_reuses_rules_without_repeating_content() {
     assert!(
         !serde_json::to_string(&summary)
             .unwrap()
-            .contains("webcodex.coding_workflow"),
+            .contains("codegpt.coding_workflow"),
         "built-in workflow guidance must not become durable Session authority"
     );
 }

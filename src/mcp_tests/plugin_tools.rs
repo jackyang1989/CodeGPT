@@ -1,7 +1,7 @@
 use super::*;
 use crate::runner_protocol::{RunnerPolicySummary, RunnerResultPayload};
 use std::sync::Arc;
-use webcodex_core::plugin::{
+use codegpt_core::plugin::{
     PluginContent, PluginDispatchState, PluginGatewayRequest, PluginGatewayResponse,
     PluginGatewayResponsePayload, PluginProviderView, PluginTool, PluginToolResult,
 };
@@ -782,7 +782,7 @@ async fn plugin_tool_accepts_collaboration_ack_but_rejects_other_stateless_wrapp
             696,
             json!({
                 "action":"list",
-                crate::tool_runtime::context_projection::TOOL_CALL_CONTEXT_REQUEST_FIELD: ["webcodex.workflow"]
+                crate::tool_runtime::context_projection::TOOL_CALL_CONTEXT_REQUEST_FIELD: ["codegpt.workflow"]
             }),
         ),
         (
@@ -889,7 +889,7 @@ async fn restricted_permission_denies_plugin_call_and_outer_direct_name_never_di
     .await;
     assert!(
         matches!(direct, McpOutcome::BadRequest(_)),
-        "a provider-local name is not an outer WebCodex tool and must never enter Plugin governance/dispatch"
+        "a provider-local name is not an outer CodeGPT tool and must never enter Plugin governance/dispatch"
     );
     assert!(runtime
         .runner_registry

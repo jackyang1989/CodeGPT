@@ -3,7 +3,7 @@ use super::{
     route, AuditClass::*, RouteId::*, RouteMethod::*, RouteOpenApiProjection::*, RouteSpec,
     RouteSurface::*,
 };
-use webcodex_core::authority::{OAuthRouteScopePolicy::*, SCOPE_ACCOUNT_MANAGE};
+use codegpt_core::authority::{OAuthRouteScopePolicy::*, SCOPE_ACCOUNT_MANAGE};
 
 pub(super) const ENROLLMENT_ROUTES: &[RouteSpec] = &[route(
     PairingEnroll,

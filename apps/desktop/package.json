@@ -1,5 +1,5 @@
 {
-  "name": "@webcodex/desktop",
+  "name": "@codegpt/desktop",
   "private": true,
   "version": "0.4.1",
   "type": "module",

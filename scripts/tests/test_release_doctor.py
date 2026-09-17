@@ -37,7 +37,7 @@ class ReleaseDoctorTests(unittest.TestCase):
         ci = {
             "id": 123,
             "run_attempt": 2,
-            "html_url": "https://github.com/yyjeqhc/webcodex/actions/runs/123",
+            "html_url": "https://github.com/yyjeqhc/codegpt/actions/runs/123",
         }
         with (
             mock.patch.object(doctor, "_require_tools", return_value="tools ok"),
@@ -52,7 +52,7 @@ class ReleaseDoctorTests(unittest.TestCase):
             mock.patch.object(publication, "_github_json_array", return_value=[]),
         ):
             result = doctor.run_doctor(
-                repo="yyjeqhc/webcodex",
+                repo="yyjeqhc/codegpt",
                 version=VERSION,
                 source_sha=SOURCE,
                 root=Path.cwd(),
@@ -79,7 +79,7 @@ class ReleaseDoctorTests(unittest.TestCase):
             mock.patch.object(publication, "_github_json_array", return_value=[]),
         ):
             result = doctor.run_doctor(
-                repo="yyjeqhc/webcodex",
+                repo="yyjeqhc/codegpt",
                 version=VERSION,
                 source_sha=SOURCE,
                 root=Path.cwd(),

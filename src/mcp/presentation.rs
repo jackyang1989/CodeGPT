@@ -1,8 +1,8 @@
 use serde_json::{json, Map, Value};
-use webcodex_core::runner_job_lifecycle::RunnerJobLifecycle;
-use webcodex_validation::validation_kind_for_tool;
+use codegpt_core::runner_job_lifecycle::RunnerJobLifecycle;
+use codegpt_validation::validation_kind_for_tool;
 
-pub(super) const MCP_PRESENTATION_META_KEY: &str = "webcodex/presentation";
+pub(super) const MCP_PRESENTATION_META_KEY: &str = "codegpt/presentation";
 pub(super) const MCP_PRESENTATION_VERSION: u64 = 1;
 pub(super) const MAX_MCP_PRESENTATION_ITEMS: usize = 8;
 pub(super) const MAX_MCP_PRESENTATION_TEXT_CHARS: usize = 256;
@@ -183,7 +183,7 @@ fn job_work_presentation(source: &Value) -> Option<Value> {
 }
 
 fn apply_job_lifecycle(item: &mut Map<String, Value>, status: &str) {
-    let active = webcodex_runner_registry::job_status_is_active(status);
+    let active = codegpt_runner_registry::job_status_is_active(status);
     let lifecycle = RunnerJobLifecycle::from_wire(status).ok();
     let terminal_pending = lifecycle == Some(RunnerJobLifecycle::StopRequested);
     let terminal = lifecycle.is_some_and(RunnerJobLifecycle::is_terminal);

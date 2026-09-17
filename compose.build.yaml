@@ -1,13 +1,13 @@
 services:
-  webcodex:
+  codegpt:
     # Explicit developer/source-build override. The default compose.yaml consumes
     # the published GHCR image instead of compiling Rust on the deployment host.
-    image: webcodex-server-local:${WEBCODEX_IMAGE_TAG:-latest}
+    image: codegpt-server-local:${CODEGPT_IMAGE_TAG:-latest}
     pull_policy: build
     build:
       context: .
       dockerfile: Dockerfile
       args:
-        WEBCODEX_GIT_COMMIT: ${WEBCODEX_GIT_COMMIT:-}
-        WEBCODEX_GIT_DIRTY: ${WEBCODEX_GIT_DIRTY:-}
-        WEBCODEX_BUILT_AT: ${WEBCODEX_BUILT_AT:-}
+        CODEGPT_GIT_COMMIT: ${CODEGPT_GIT_COMMIT:-}
+        CODEGPT_GIT_DIRTY: ${CODEGPT_GIT_DIRTY:-}
+        CODEGPT_BUILT_AT: ${CODEGPT_BUILT_AT:-}

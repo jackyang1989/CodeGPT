@@ -789,7 +789,7 @@ async fn oversized_result_rolls_back_one_shot_peer_projection() {
     assert!(posted.success, "{:?}", posted.error);
 
     let mut oversized = ToolResult::ok(json!({
-        "blob": "x".repeat(webcodex_workspace::file_read_range::MAX_SERIALIZED_OUTPUT_BYTES)
+        "blob": "x".repeat(codegpt_workspace::file_read_range::MAX_SERIALIZED_OUTPUT_BYTES)
     }));
     runtime.add_peer_collaboration_projection(
         &mut oversized,

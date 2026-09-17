@@ -235,7 +235,7 @@ async fn list_projects_batch_job_counts_join_exact_projects_and_skip_empty_selec
                     codex: None,
                 },
                 "fixture".into(),
-                webcodex_runner_registry::ShellJobStartMetadata {
+                codegpt_runner_registry::ShellJobStartMetadata {
                     project_id: Some(format!("agent:batch:{id}")),
                     ..Default::default()
                 },
@@ -375,8 +375,8 @@ async fn list_projects_targets_visible_inventory_before_limit_and_compacts() {
             )
         })
         .collect::<Vec<_>>();
-    let mut target = registered_project("webcodex-target", "/root/git/webcodex-target");
-    target.name = Some("WebCodex Target".to_string());
+    let mut target = registered_project("codegpt-target", "/root/git/codegpt-target");
+    target.name = Some("CodeGPT Target".to_string());
     target.description = Some("Focused Runtime Inventory".to_string());
     target.git_branch = Some("feat/targeted-inventory".to_string());
     target.git_head = Some("abc123".to_string());
@@ -403,7 +403,7 @@ async fn list_projects_targets_visible_inventory_before_limit_and_compacts() {
         .dispatch(list_projects_call(
             Some("special"),
             None,
-            Some("WEBCODEX"),
+            Some("CODEGPT"),
             Some(1),
             true,
         ))
@@ -413,7 +413,7 @@ async fn list_projects_targets_visible_inventory_before_limit_and_compacts() {
     assert_eq!(focused.output["count"], 1);
     assert_eq!(focused.output["truncated"], false);
     let project = &focused.output["projects"][0];
-    assert_eq!(project["id"], "agent:special:webcodex-target");
+    assert_eq!(project["id"], "agent:special:codegpt-target");
     for omitted in [
         "path",
         "revision",
@@ -434,7 +434,7 @@ async fn list_projects_targets_visible_inventory_before_limit_and_compacts() {
     let exact = runtime
         .dispatch(list_projects_call(
             None,
-            Some("agent:special:webcodex-target"),
+            Some("agent:special:codegpt-target"),
             None,
             Some(1),
             false,
@@ -444,13 +444,13 @@ async fn list_projects_targets_visible_inventory_before_limit_and_compacts() {
     assert_eq!(exact.output["count"], 1);
     assert_eq!(
         exact.output["projects"][0]["id"],
-        "agent:special:webcodex-target"
+        "agent:special:codegpt-target"
     );
 
     let wrong_runner = runtime
         .dispatch(list_projects_call(
             Some("mini"),
-            Some("agent:special:webcodex-target"),
+            Some("agent:special:codegpt-target"),
             None,
             Some(1),
             false,
@@ -463,7 +463,7 @@ async fn list_projects_targets_visible_inventory_before_limit_and_compacts() {
         .dispatch(list_projects_call(
             Some("special"),
             None,
-            Some("webcodex"),
+            Some("codegpt"),
             Some(1),
             true,
         ))
@@ -662,7 +662,7 @@ async fn list_runners_supports_exact_batch_and_compact_projection() {
         &runtime,
         "special",
         vec![
-            registered_project("webcodex", "/root/git/webcodex"),
+            registered_project("codegpt", "/root/git/codegpt"),
             registered_project("other", "/tmp/other"),
         ],
         None,
@@ -775,7 +775,7 @@ async fn runtime_status_focus_is_not_polluted_by_unrelated_runner_mismatch() {
     register_target_agent(
         &runtime,
         "special",
-        vec![registered_project("webcodex", "/tmp/webcodex")],
+        vec![registered_project("codegpt", "/tmp/codegpt")],
         Some(special_build),
     )
     .await;
@@ -864,7 +864,7 @@ async fn runtime_status_focus_preserves_selected_stale_runner_truth() {
     register_target_agent(
         &runtime,
         "special",
-        vec![registered_project("webcodex", "/tmp/webcodex")],
+        vec![registered_project("codegpt", "/tmp/codegpt")],
         None,
     )
     .await;
@@ -930,8 +930,8 @@ fn targeted_inventory_schemas_and_tool_parsing_are_bounded() {
         "list_projects",
         serde_json::json!({
             "client_id": "special",
-            "project": "agent:special:webcodex",
-            "query": "webcodex",
+            "project": "agent:special:codegpt",
+            "query": "codegpt",
             "limit": 3,
             "summary_only": true,
         }),
@@ -984,7 +984,7 @@ fn targeted_inventory_schemas_and_tool_parsing_are_bounded() {
     let jobs = ToolCall::from_tool_name(
         "list_jobs",
         serde_json::json!({
-            "project": "agent:special:webcodex",
+            "project": "agent:special:codegpt",
             "session_id": "wc_sess_example",
             "status": "running",
             "limit": 2,

@@ -6,7 +6,7 @@ struct Fixture(std::path::PathBuf);
 impl Fixture {
     fn new() -> Self {
         let path = std::env::temp_dir().join(format!(
-            "webcodex-tunnel-settings-{}-{}",
+            "codegpt-tunnel-settings-{}-{}",
             std::process::id(),
             NEXT.fetch_add(1, Ordering::Relaxed)
         ));

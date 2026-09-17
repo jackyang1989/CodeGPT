@@ -2,10 +2,10 @@
 """Focused Linux socket-activation, listener-continuity, and graceful-drain proof.
 
 This deliberately does not require PID 1 systemd. It has three focused scenarios:
-1. systemd-socket-activate -> inherited fd 3 -> real webcodex-server -> HTTP.
+1. systemd-socket-activate -> inherited fd 3 -> real codegpt-server -> HTTP.
 2. A parent-owned TCP listener survives Server A termination and is inherited by
    Server B while bounded client probes classify success/reset/timeout/refused.
-3. A real WebCodex run_process request is already executing on a real WebSocket
+3. A real CodeGPT run_process request is already executing on a real WebSocket
    Runner when Server A receives SIGTERM; the response completes before A exits,
    then Server B inherits the same listener and the Runner reconnects.
 
@@ -31,7 +31,7 @@ import time
 from pathlib import Path
 from typing import Dict, Optional
 
-HTTP_FD_NAME = "webcodex-http"
+HTTP_FD_NAME = "codegpt-http"
 LISTEN_FD = 3
 HOST = "127.0.0.1"
 PROBE_PATH = "/openapi.json"
@@ -54,9 +54,9 @@ def server_env(port: int, data_dir: Path) -> Dict[str, str]:
     env = os.environ.copy()
     env.update(
         {
-            "WEBCODEX_ADDR": f"{HOST}:{port}",
-            "WEBCODEX_DATA": str(data_dir),
-            "WEBCODEX_TOKEN": TOKEN,
+            "CODEGPT_ADDR": f"{HOST}:{port}",
+            "CODEGPT_DATA": str(data_dir),
+            "CODEGPT_TOKEN": TOKEN,
             "RUST_LOG": env.get("RUST_LOG", "warn"),
         }
     )
@@ -162,7 +162,7 @@ def wait_ready(port: int, proc: subprocess.Popen[bytes], timeout: float = 20.0) 
 
 def run_systemd_smoke(binary: Path, systemd_socket_activate: Path) -> Dict[str, object]:
     port = reserve_port()
-    with tempfile.TemporaryDirectory(prefix="webcodex-systemd-socket-smoke-") as root:
+    with tempfile.TemporaryDirectory(prefix="codegpt-systemd-socket-smoke-") as root:
         root_path = Path(root)
         log_path = root_path / "server.log"
         env = server_env(port, root_path / "data")
@@ -174,11 +174,11 @@ def run_systemd_smoke(binary: Path, systemd_socket_activate: Path) -> Dict[str, 
                     "--listen",
                     f"{HOST}:{port}",
                     "--setenv",
-                    f"WEBCODEX_ADDR={env['WEBCODEX_ADDR']}",
+                    f"CODEGPT_ADDR={env['CODEGPT_ADDR']}",
                     "--setenv",
-                    f"WEBCODEX_DATA={env['WEBCODEX_DATA']}",
+                    f"CODEGPT_DATA={env['CODEGPT_DATA']}",
                     "--setenv",
-                    f"WEBCODEX_TOKEN={env['WEBCODEX_TOKEN']}",
+                    f"CODEGPT_TOKEN={env['CODEGPT_TOKEN']}",
                     "--setenv",
                     f"RUST_LOG={env['RUST_LOG']}",
                     "--fdname",
@@ -262,7 +262,7 @@ def run_continuity(binary: Path) -> Dict[str, object]:
                     unexpected.append(repr(error))
             stop.wait(0.01)
 
-    with tempfile.TemporaryDirectory(prefix="webcodex-listener-continuity-") as root:
+    with tempfile.TemporaryDirectory(prefix="codegpt-listener-continuity-") as root:
         root_path = Path(root)
         data = root_path / "data"
         data.mkdir()
@@ -340,7 +340,7 @@ def run_graceful_inflight(binary: Path, runner_binary: Path) -> Dict[str, object
                     unexpected.append(repr(error))
             stop.wait(0.01)
 
-    with tempfile.TemporaryDirectory(prefix="webcodex-graceful-inflight-") as root:
+    with tempfile.TemporaryDirectory(prefix="codegpt-graceful-inflight-") as root:
         root_path = Path(root)
         data = root_path / "data"
         projects = root_path / "project-registry"
@@ -501,8 +501,8 @@ def run_graceful_inflight(binary: Path, runner_binary: Path) -> Dict[str, object
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--server-bin", default="target/dogfood/webcodex-server")
-    parser.add_argument("--runner-bin", default="target/dogfood/webcodex-runner")
+    parser.add_argument("--server-bin", default="target/dogfood/codegpt-server")
+    parser.add_argument("--runner-bin", default="target/dogfood/codegpt-runner")
     parser.add_argument("--skip-systemd-smoke", action="store_true")
     parser.add_argument("--skip-continuity", action="store_true")
     parser.add_argument("--skip-graceful-inflight", action="store_true")

@@ -6,9 +6,9 @@ TMP="$(mktemp -d)"
 cleanup() { rm -rf "$TMP"; }
 trap cleanup EXIT
 
-cp -a "$ROOT/npm/webcodex" "$TMP/npm-package"
+cp -a "$ROOT/npm/codegpt" "$TMP/npm-package"
 mkdir -p "$TMP/bin" "$TMP/fake-path"
-VERSION="$(node -p "require('$ROOT/npm/webcodex/package.json').version")"
+VERSION="$(node -p "require('$ROOT/npm/codegpt/package.json').version")"
 
 python3 - "$TMP/npm-package/manifest.json" "$VERSION" <<'PY'
 import json
@@ -18,12 +18,12 @@ path, version = sys.argv[1:]
 platforms = ("linux-x64", "linux-arm64", "darwin-x64", "darwin-arm64", "win32-x64", "win32-arm64")
 manifest = {
     "version": version,
-    "binaries": ["webcodex", "webcodex-server", "webcodex-runner"],
+    "binaries": ["codegpt", "codegpt-server", "codegpt-runner"],
     "artifacts": {
         platform: {
             "url": (
-                f"https://github.com/yyjeqhc/webcodex/releases/download/v{version}/"
-                f"webcodex-v{version}-{platform}.tar.gz"
+                f"https://github.com/yyjeqhc/codegpt/releases/download/v{version}/"
+                f"codegpt-v{version}-{platform}.tar.gz"
             ),
             "sha256": "a" * 64,
         }
@@ -35,7 +35,7 @@ with open(path, "w", encoding="utf-8") as handle:
     handle.write("\n")
 PY
 
-for name in webcodex webcodex-server webcodex-runner; do
+for name in codegpt codegpt-server codegpt-runner; do
     cat > "$TMP/bin/$name" <<EOF
 #!/bin/sh
 if [ "\${1:-}" = "--help" ]; then

@@ -37,7 +37,7 @@ fn request_pattern(request: &RunnerRequest) -> String {
 }
 
 fn search_stdout(mode: &str, path: &str, preview: &str) -> String {
-    let marker = r#"{"webcodex_search":{"backend":"rg","feature_unavailable":false}}"#;
+    let marker = r#"{"codegpt_search":{"backend":"rg","feature_unavailable":false}}"#;
     match mode {
         "matches" => format!("{marker}\n{path}:1:{preview}\n"),
         "files_with_matches" => format!("{marker}\n{path}\n"),
@@ -179,7 +179,7 @@ fn serialized_output_bytes(result: &ToolResult) -> usize {
 
 #[test]
 fn search_project_text_model_projection_compacts_default_matches_and_measures_bytes() {
-    let marker = "{\"webcodex_search\":{\"backend\":\"rg\",\"feature_unavailable\":false}}\n";
+    let marker = "{\"codegpt_search\":{\"backend\":\"rg\",\"feature_unavailable\":false}}\n";
     let one_stdout = format!("{marker}src/foo.rs:123:needle\n");
     let one = canonical_search_result(
         "needle",
@@ -265,7 +265,7 @@ fn search_project_text_model_projection_compacts_default_matches_and_measures_by
 
 #[test]
 fn search_project_text_model_projection_preserves_requested_context_and_unicode() {
-    let marker = "{\"webcodex_search\":{\"backend\":\"rg\",\"feature_unavailable\":false}}\n";
+    let marker = "{\"codegpt_search\":{\"backend\":\"rg\",\"feature_unavailable\":false}}\n";
     let stdout = format!(
         "{marker}src/foo.rs\0{}-before 界\nsrc/foo.rs\0{}:target 界\nsrc/foo.rs\0{}-after 界\n",
         122, 123, 124
@@ -308,7 +308,7 @@ fn search_project_text_model_projection_preserves_requested_context_and_unicode(
 
 #[test]
 fn search_project_text_model_projection_compacts_files_count_and_guides_truncation() {
-    let marker = "{\"webcodex_search\":{\"backend\":\"rg\",\"feature_unavailable\":false}}\n";
+    let marker = "{\"codegpt_search\":{\"backend\":\"rg\",\"feature_unavailable\":false}}\n";
 
     let files_stdout = format!("{marker}src/a.rs\nsrc/b.rs\n");
     let files = canonical_search_result(
@@ -971,7 +971,7 @@ async fn search_project_texts_one_query_grep_fallback_keeps_backend_metadata() {
     });
     let request = wait_for_patch_agent_request(&runtime, client_id).await;
     let stdout = concat!(
-        "{\"webcodex_search\":{\"backend\":\"grep\",\"feature_unavailable\":false}}\n",
+        "{\"codegpt_search\":{\"backend\":\"grep\",\"feature_unavailable\":false}}\n",
         "src/a.rs:1:needle\n"
     );
     complete_patch_agent_request(&runtime, client_id, &request.request_id, 0, stdout, "").await;
@@ -1503,7 +1503,7 @@ async fn search_project_texts_does_not_retry_nontransient_agent_failures() {
         "batch-search-no-retry-missing",
         missing_query,
         2,
-        r#"{"webcodex_search":{"backend":"native","feature_unavailable":false,"path_status":"not_found"}}
+        r#"{"codegpt_search":{"backend":"native","feature_unavailable":false,"path_status":"not_found"}}
 "#
         .to_string(),
         "",
@@ -1529,7 +1529,7 @@ async fn search_project_texts_does_not_retry_nontransient_agent_failures() {
         "batch-search-no-retry-timeout",
         timeout_query,
         -1,
-        r#"{"webcodex_search":{"backend":"rg","feature_unavailable":false}}
+        r#"{"codegpt_search":{"backend":"rg","feature_unavailable":false}}
 "#
         .to_string(),
         "command timed out after 1 seconds",
@@ -1552,7 +1552,7 @@ async fn search_project_texts_does_not_retry_nontransient_agent_failures() {
         "batch-search-no-retry-backend",
         query("backend", None),
         2,
-        r#"{"webcodex_search":{"backend":"rg","feature_unavailable":false}}
+        r#"{"codegpt_search":{"backend":"rg","feature_unavailable":false}}
 "#
         .to_string(),
         "rg failed",
@@ -1577,7 +1577,7 @@ async fn search_project_texts_does_not_retry_nontransient_agent_failures() {
         "batch-search-no-retry-feature",
         query("feature", Some(SearchResultMode::Count)),
         1,
-        r#"{"webcodex_search":{"backend":"grep","feature_unavailable":true}}
+        r#"{"codegpt_search":{"backend":"grep","feature_unavailable":true}}
 "#
         .to_string(),
         "",
@@ -1601,7 +1601,7 @@ async fn search_project_texts_does_not_retry_nontransient_agent_failures() {
         query("provider", None),
         0,
         json!({
-            "format": "webcodex.external_provider_error.v1",
+            "format": "codegpt.external_provider_error.v1",
             "provider": "claude_code",
             "capability": "search_project_text",
             "code": "rate_limited",
@@ -1637,7 +1637,7 @@ async fn search_project_texts_does_not_retry_nontransient_agent_failures() {
         query("invalid-provider", None),
         0,
         json!({
-            "format": "webcodex.external_provider_error.v1",
+            "format": "codegpt.external_provider_error.v1",
             "provider": "unexpected_provider",
             "capability": "search_project_text",
             "code": "rate_limited",
@@ -1676,11 +1676,11 @@ async fn search_project_texts_rejects_nonleading_backend_markers() {
         ),
         (
             "batch-search-late-marker",
-            "src/z.rs:1:needle\n{\"webcodex_search\":{\"backend\":\"rg\"}}\n".to_string(),
+            "src/z.rs:1:needle\n{\"codegpt_search\":{\"backend\":\"rg\"}}\n".to_string(),
         ),
         (
             "batch-search-truncated-marker",
-            "[output truncated to last 12000 bytes]\nsrc/z.rs:1:needle\n{\"webcodex_search\":{\"backend\":\"rg\"}}\n"
+            "[output truncated to last 12000 bytes]\nsrc/z.rs:1:needle\n{\"codegpt_search\":{\"backend\":\"rg\"}}\n"
                 .to_string(),
         ),
     ] {
@@ -1718,7 +1718,7 @@ async fn search_project_texts_timeout_tail_cannot_promote_late_marker_records() 
         "batch-search-timeout-tail-marker",
         timeout_query,
         -1,
-        "[output truncated to last 12000 bytes]\nsrc/z.rs:1:needle\n{\"webcodex_search\":{\"backend\":\"rg\"}}\n"
+        "[output truncated to last 12000 bytes]\nsrc/z.rs:1:needle\n{\"codegpt_search\":{\"backend\":\"rg\"}}\n"
             .to_string(),
         "command timed out after 1 seconds",
     )
@@ -1769,7 +1769,7 @@ async fn search_project_texts_mixed_batch_preserves_failure_and_empty_result_fid
         client_id,
         &failure.request_id,
         2,
-        "{\"webcodex_search\":{\"backend\":\"rg\",\"feature_unavailable\":false}}\n",
+        "{\"codegpt_search\":{\"backend\":\"rg\",\"feature_unavailable\":false}}\n",
         "private rg stderr at /private/runner/NEVER_RETURN",
     )
     .await;
@@ -1785,7 +1785,7 @@ async fn search_project_texts_mixed_batch_preserves_failure_and_empty_result_fid
         client_id,
         &empty.request_id,
         1,
-        "{\"webcodex_search\":{\"backend\":\"rg\",\"feature_unavailable\":false}}\n",
+        "{\"codegpt_search\":{\"backend\":\"rg\",\"feature_unavailable\":false}}\n",
         "",
     )
     .await;
@@ -1925,7 +1925,7 @@ async fn search_project_texts_isolates_validation_no_match_and_protected_path_re
         match request_pattern(&request).as_str() {
             "found" => complete_search_success(&runtime, client_id, &request, "src/found.rs").await,
             "absent" => {
-                let marker = r#"{"webcodex_search":{"backend":"rg","feature_unavailable":false}}
+                let marker = r#"{"codegpt_search":{"backend":"rg","feature_unavailable":false}}
 "#;
                 complete_patch_agent_request(
                     &runtime,
@@ -2352,7 +2352,7 @@ async fn search_project_texts_outer_recording_session_keeps_final_response_under
         ToolProtocolCapabilities, ToolTransport,
     };
     use crate::tool_runtime::sessions::SessionContextRevisionAck;
-    use webcodex_core::runtime_contract::MODEL_INSPECTION_MAX_RESULT_BYTES as MAX_SERIALIZED_OUTPUT_BYTES;
+    use codegpt_core::runtime_contract::MODEL_INSPECTION_MAX_RESULT_BYTES as MAX_SERIALIZED_OUTPUT_BYTES;
 
     let root = tempfile::tempdir().unwrap();
     let runtime = ToolRuntime::new_for_tests();
@@ -2395,7 +2395,7 @@ async fn search_project_texts_outer_recording_session_keeps_final_response_under
                         host_file_import_trust: HostFileImportTrust::Untrusted,
                     },
                     ToolInvocationMetadata {
-                        context_request: vec!["webcodex.workflow".to_string()],
+                        context_request: vec!["codegpt.workflow".to_string()],
                         ack_session_context_revision: SessionContextRevisionAck::Revision(0),
                         ..Default::default()
                     },
@@ -2431,7 +2431,7 @@ async fn search_project_texts_outer_recording_session_keeps_final_response_under
     assert!(result.output.get("session_context_revision").is_none());
     assert_eq!(
         result.output["context_projection"]["materials"][0]["key"],
-        "webcodex.workflow"
+        "codegpt.workflow"
     );
 
     assert!(result.output.get("output_truncated").is_none());

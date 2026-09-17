@@ -7,7 +7,7 @@ use serde_json::Value;
 
 /// `POST /api/projects/register` — thin REST wrapper over
 /// `ToolCall::RegisterProject`. Mutation with side effects; registers an
-/// existing directory as a WebCodex project on the selected Runner. Kept as a
+/// existing directory as a CodeGPT project on the selected Runner. Kept as a
 /// legacy REST compatibility endpoint; model-facing GPT Actions are projected
 /// from the canonical runtime surface instead.
 #[derive(Debug, Deserialize)]
@@ -27,7 +27,7 @@ struct RegisterProjectRequest {
 /// `POST /api/projects/create` — thin REST wrapper over
 /// `ToolCall::CreateProject`. Mutation with side effects; creates a new directory
 /// or explicitly adopts an existing empty directory on the selected Runner, then
-/// registers it as a WebCodex project. Kept as a legacy REST compatibility
+/// registers it as a CodeGPT project. Kept as a legacy REST compatibility
 /// endpoint; it does not define a GPT Action operation or model vocabulary.
 #[derive(Debug, Deserialize)]
 struct CreateProjectRequest {
@@ -101,7 +101,7 @@ pub async fn projects_list(req: &mut Request, depot: &mut Depot, res: &mut Respo
 }
 
 /// `ToolCall::RegisterProject`. Registers an existing directory as a
-/// WebCodex project on the selected Runner. Mutation with side effects; executes
+/// CodeGPT project on the selected Runner. Mutation with side effects; executes
 /// on the selected Runner and is constrained by Runner policy.
 #[handler]
 pub async fn projects_register(req: &mut Request, depot: &mut Depot, res: &mut Response) {
@@ -132,7 +132,7 @@ pub async fn projects_register(req: &mut Request, depot: &mut Depot, res: &mut R
 
 /// `ToolCall::CreateProject`. Creates a new directory or explicitly adopts an
 /// existing empty directory on the selected Runner, then registers it as a
-/// WebCodex project. Mutation with side effects; executes on the selected Runner
+/// CodeGPT project. Mutation with side effects; executes on the selected Runner
 /// and is constrained by Runner policy.
 #[handler]
 pub async fn projects_create(req: &mut Request, depot: &mut Depot, res: &mut Response) {

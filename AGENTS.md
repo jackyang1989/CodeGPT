@@ -1,8 +1,8 @@
-# AGENTS.md — WebCodex Repository Guide
+# AGENTS.md — CodeGPT Repository Guide
 
 These rules apply to ordinary repository work. Read linked domain guidance only when relevant; a deeper `AGENTS.md` governs its directory.
 
-WebCodex is actively developed. Requested features, fixes, and reliability improvements are welcome; preserve credential, process-tree, transport, durability, and boundedness contracts.
+CodeGPT is actively developed. Requested features, fixes, and reliability improvements are welcome; preserve credential, process-tree, transport, durability, and boundedness contracts.
 
 ## 1. Verify and preserve
 

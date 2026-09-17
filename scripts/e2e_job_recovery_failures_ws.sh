@@ -2,12 +2,12 @@
 set -euo pipefail
 
 # ============================================================================
-# WebCodex — Job recovery failure & compatibility paths E2E
+# CodeGPT — Job recovery failure & compatibility paths E2E
 #
 # Real-process harness for async Job recovery phase 2: the failure/compat
 # semantics the happy-path reconciliation script does NOT cover.
 #
-# Scenarios (all real `webcodex-server` + real WebSocket `webcodex-runner`,
+# Scenarios (all real `codegpt-server` + real WebSocket `codegpt-runner`,
 # temp dirs/ports/tokens/projects, bounded waits, trap cleanup, masked logs):
 #
 #   C — Runner permanently gone within the recovery window.
@@ -27,7 +27,7 @@ set -euo pipefail
 #
 #   E — Runner without reconciliation (no job_state_reconciliation) disconnect lost.
 #       Runner registered with the reconciliation capability disabled
-#       (WEBCODEX_RUNNER_DISABLE_JOB_STATE_RECONCILIATION=1). A job runs;
+#       (CODEGPT_RUNNER_DISABLE_JOB_STATE_RECONCILIATION=1). A job runs;
 #       the no-reconciliation Runner disconnects. The job deterministically becomes
 #       `lost` with `runner_disconnected_without_reconciliation`, stays lost after a server
 #       restart, no re-execution, no same-client takeover.
@@ -43,7 +43,7 @@ set -euo pipefail
 #       window is re-anchored (the in-process deadline is not persisted across
 #       the restart).
 #
-# Uses WEBCODEX_JOB_RECOVERY_GRACE_SECS=10 (above the 5s floor) so the deadline
+# Uses CODEGPT_JOB_RECOVERY_GRACE_SECS=10 (above the 5s floor) so the deadline
 # is bounded without waiting the 120s production default.
 #
 # Everything is temp/isolated: never reads or controls production services, no
@@ -63,7 +63,7 @@ PROJECT_ID="jobfail-proj"
 TIMEOUT_SECS="${E2E_TIMEOUT_SECS:-600}"
 RUNTIME_PROJECT_ID="agent:${CLIENT_ID}:${PROJECT_ID}"
 # Short bounded recovery grace for tests (clamped by the server to >=5s).
-export WEBCODEX_JOB_RECOVERY_GRACE_SECS="${WEBCODEX_JOB_RECOVERY_GRACE_SECS:-10}"
+export CODEGPT_JOB_RECOVERY_GRACE_SECS="${CODEGPT_JOB_RECOVERY_GRACE_SECS:-10}"
 
 PASS=0
 FAIL=0
@@ -202,13 +202,13 @@ if [ "${E2E_SKIP_RUN:-0}" = "1" ]; then
     exit 0
 fi
 
-log "building webcodex + webcodex-runner (debug profile)"
-"$CARGO_BIN" build --quiet -p webcodex -p webcodex-runner --bins
-SERVER_BIN="$PROJECT_DIR/target/debug/webcodex-server"
-RUNNER_BIN="$PROJECT_DIR/target/debug/webcodex-runner"
+log "building codegpt + codegpt-runner (debug profile)"
+"$CARGO_BIN" build --quiet -p codegpt -p codegpt-runner --bins
+SERVER_BIN="$PROJECT_DIR/target/debug/codegpt-server"
+RUNNER_BIN="$PROJECT_DIR/target/debug/codegpt-runner"
 
 PORT="${E2E_PORT:-$(find_free_port)}"
-TMP_ROOT="$(mktemp -d -t webcodex-jobfail-e2e-XXXXXX)"
+TMP_ROOT="$(mktemp -d -t codegpt-jobfail-e2e-XXXXXX)"
 COOKIE_JAR="$TMP_ROOT/cookies.txt"
 : >"$COOKIE_JAR"
 DATA_DIR="$TMP_ROOT/data"
@@ -219,7 +219,7 @@ TEST_REPO="$TMP_ROOT/jobfail-repo"
 SERVER_LOG="$TMP_ROOT/server.log"
 RUNNER_LOG="$TMP_ROOT/agent.log"
 mkdir -p "$DATA_DIR" "$PROJECTS_DIR" "$TEST_REPO"
-log "temp root: $TMP_ROOT (port $PORT, grace ${WEBCODEX_JOB_RECOVERY_GRACE_SECS}s)"
+log "temp root: $TMP_ROOT (port $PORT, grace ${CODEGPT_JOB_RECOVERY_GRACE_SECS}s)"
 
 (
     cd "$TEST_REPO"
@@ -267,10 +267,10 @@ EOF
 write_agent_toml "$AGENT_TOML"
 
 start_server() {
-    WEBCODEX_ADDR="127.0.0.1:${PORT}" \
-    WEBCODEX_DATA="$DATA_DIR" \
-    WEBCODEX_TOKEN="$TOKEN" \
-    WEBCODEX_JOB_RECOVERY_GRACE_SECS="$WEBCODEX_JOB_RECOVERY_GRACE_SECS" \
+    CODEGPT_ADDR="127.0.0.1:${PORT}" \
+    CODEGPT_DATA="$DATA_DIR" \
+    CODEGPT_TOKEN="$TOKEN" \
+    CODEGPT_JOB_RECOVERY_GRACE_SECS="$CODEGPT_JOB_RECOVERY_GRACE_SECS" \
     RUST_LOG="info" \
     "$SERVER_BIN" >>"$SERVER_LOG" 2>&1 &
     SERVER_PID=$!
@@ -428,7 +428,7 @@ wait_for_job_status "$JOB_ID_C" recovering >/dev/null || { fail "C: job did not 
 pass "C: job entered recovering"
 
 # Bound the deadline wait to grace + a sweep interval (30s) + slack.
-C_DEADLINE=$(( $(date +%s) + WEBCODEX_JOB_RECOVERY_GRACE_SECS + 35 ))
+C_DEADLINE=$(( $(date +%s) + CODEGPT_JOB_RECOVERY_GRACE_SECS + 35 ))
 C_LOST_BODY=""
 for _ in $(seq 1 80); do
     check_deadline
@@ -585,7 +585,7 @@ E_COMMAND="printf 'E-START\\n' >> '$E_MARKER_FILE'; sleep 300"
 write_agent_toml "$NO_RECONCILIATION_AGENT_TOML"
 start_server
 wait_for_server || { fail "E: server did not listen"; dump_logs; exit 1; }
-WEBCODEX_RUNNER_DISABLE_JOB_STATE_RECONCILIATION=1 start_runner "$NO_RECONCILIATION_AGENT_TOML"
+CODEGPT_RUNNER_DISABLE_JOB_STATE_RECONCILIATION=1 start_runner "$NO_RECONCILIATION_AGENT_TOML"
 wait_for_agent_online >/dev/null || { fail "E: no-reconciliation Runner did not register"; dump_logs; exit 1; }
 pass "E: no-reconciliation Runner registered without job_state_reconciliation"
 
@@ -635,7 +635,7 @@ assert_eq "E: command executed once (no re-execution)" "$E_START_COUNT" "1"
 
 # A same-client replacement submits no old inventory and cannot take over the
 # execution represented by this read-only terminal receipt.
-WEBCODEX_RUNNER_DISABLE_JOB_STATE_RECONCILIATION=1 start_runner "$NO_RECONCILIATION_AGENT_TOML"
+CODEGPT_RUNNER_DISABLE_JOB_STATE_RECONCILIATION=1 start_runner "$NO_RECONCILIATION_AGENT_TOML"
 wait_for_agent_online >/dev/null || { fail "E: second no-reconciliation Runner did not register"; dump_logs; exit 1; }
 sleep 2
 BODY_E3="$(job_status_call "$JOB_ID_E")"

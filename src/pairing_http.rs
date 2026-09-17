@@ -21,7 +21,7 @@ use crate::models::{
 use salvo::prelude::*;
 use serde::Deserialize;
 use serde_json::{json, Value};
-use webcodex_core::authority::SCOPE_RUNNER_MANAGE;
+use codegpt_core::authority::SCOPE_RUNNER_MANAGE;
 
 const DEFAULT_TTL_SECS: i64 = 600;
 const MIN_TTL_SECS: i64 = 60;
@@ -465,7 +465,7 @@ mod tests {
 
     fn test_db() -> Database {
         let tmp = tempfile::tempdir().unwrap();
-        let path = tmp.path().join("webcodex.db");
+        let path = tmp.path().join("codegpt.db");
         std::mem::forget(tmp);
         Database::open(&path).unwrap()
     }

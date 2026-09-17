@@ -10,7 +10,7 @@ const MAX_GIT_LOG_LIMIT: usize = 100;
 const MAX_GIT_LOG_SKIP: usize = 10_000;
 const GIT_LOG_RECORD_SEP: char = '\u{1e}';
 const GIT_LOG_UNIT_SEP: char = '\u{1f}';
-const GIT_LOG_SNAPSHOT_MARKER: &str = "__WEBCODEX_GIT_LOG_HEAD__=";
+const GIT_LOG_SNAPSHOT_MARKER: &str = "__CODEGPT_GIT_LOG_HEAD__=";
 const GIT_LOG_SNAPSHOT_UNAVAILABLE_EXIT: i32 = 42;
 
 pub(crate) fn normalize_git_log_limit(limit: Option<usize>) -> usize {

@@ -7,7 +7,7 @@ use crate::runner_protocol::{RunnerCapabilities, RunnerJobUpdateRequest, RunnerR
 use serde_json::json;
 use std::sync::Arc;
 use tempfile::TempDir;
-use webcodex_store::{JobTerminalDeliveryState, JobTerminalWaitState};
+use codegpt_store::{JobTerminalDeliveryState, JobTerminalWaitState};
 
 async fn attention_runtime() -> (TempDir, ToolRuntime, Arc<crate::Database>) {
     let temp = tempfile::tempdir().unwrap();
@@ -259,7 +259,7 @@ async fn retained_terminal_receipt_reconciles_waiting_registration_after_store_r
     let waiting = db
         .create_job_terminal_wait(
             &principal,
-            webcodex_store::NewJobTerminalWait {
+            codegpt_store::NewJobTerminalWait {
                 source,
                 idempotency_key: "e3-restart-wait".to_string(),
                 expires_at: snapshot.wait_expires_at,

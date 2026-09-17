@@ -54,7 +54,7 @@ pub(crate) const CONTEXT_MATERIAL_SPECS: &[ContextMaterialSpec] = &[
         surface: ContextMaterialSurface::AnySidecar,
     },
     ContextMaterialSpec {
-        key: "webcodex.workflow",
+        key: "codegpt.workflow",
         project_required: false,
         scope_policy: ContextMaterialScopePolicy::Public,
         surface: ContextMaterialSurface::AnySidecar,
@@ -75,7 +75,7 @@ pub(crate) const CONTEXT_MATERIAL_SPECS: &[ContextMaterialSpec] = &[
         key: "memory.bootstrap",
         project_required: true,
         scope_policy: ContextMaterialScopePolicy::RequireAll(
-            webcodex_core::authority::MEMORY_READ_SCOPES,
+            codegpt_core::authority::MEMORY_READ_SCOPES,
         ),
         surface: ContextMaterialSurface::MemorySurface,
     },
@@ -249,7 +249,7 @@ impl ToolRuntime {
                                 Err(reason_code) => unavailable(key, reason_code),
                             }
                         }
-                        "webcodex.workflow" => json!({
+                        "codegpt.workflow" => json!({
                             "key": key,
                             "status": "available",
                             "projection": builtin_coding_workflow_projection(),

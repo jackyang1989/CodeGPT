@@ -1,7 +1,7 @@
 //! Compatibility facade for the canonical durable store crate.
 
 pub(crate) use crate::workspace_activity_store::WorkspaceActivityStore;
-pub use webcodex_store::*;
+pub use codegpt_store::*;
 
 #[cfg(test)]
 #[path = "db/agent_wake_tests.rs"]

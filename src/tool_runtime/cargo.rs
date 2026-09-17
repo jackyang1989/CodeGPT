@@ -23,11 +23,11 @@ use crate::runner_protocol::{
     ShellCommandExecutionState, ShellJobOpRequest, ShellJobValidationMetadata,
     ShellJobValidationStep,
 };
-use webcodex_core::runner_job_lifecycle::RunnerJobLifecycle;
-use webcodex_core::runtime_contract::STRUCTURED_EXECUTION_SYNC_WAIT_MAX_SECS;
-use webcodex_core::workflow_session_contract::ExecutionPurpose;
-use webcodex_validation::execution_purpose_for_validation_kind;
-pub(crate) use webcodex_validation::parse_cargo_test_run_metadata;
+use codegpt_core::runner_job_lifecycle::RunnerJobLifecycle;
+use codegpt_core::runtime_contract::STRUCTURED_EXECUTION_SYNC_WAIT_MAX_SECS;
+use codegpt_core::workflow_session_contract::ExecutionPurpose;
+use codegpt_validation::execution_purpose_for_validation_kind;
+pub(crate) use codegpt_validation::parse_cargo_test_run_metadata;
 
 const CARGO_STDIO_TAIL_CHARS: usize = 12_000;
 const CARGO_VALIDATION_FAILURE_KIND: &str = "validation_failed";
@@ -918,7 +918,7 @@ impl ToolRuntime {
         let adapter = validation_adapter_for_tool(tool_name)
             .expect("structured validation profile must register the read-only tool");
         let validation_identity_kind =
-            webcodex_tool_contracts::runtime_tool_session_evidence_policy(tool_name)
+            codegpt_tool_contracts::runtime_tool_session_evidence_policy(tool_name)
                 .validation_identity;
         let validation_target_id = super::tool_audit::structured_validation_target_identity(
             validation_identity_kind,
@@ -1663,7 +1663,7 @@ struct ValidationHandoff {
     minimum_tests: Option<u64>,
     require_tests: Option<bool>,
     no_run: Option<bool>,
-    auth: Option<webcodex_runner_registry::RunnerAccess>,
+    auth: Option<codegpt_runner_registry::RunnerAccess>,
 }
 
 /// Build the canonical structured validation step for a read-only validation tool
@@ -1800,7 +1800,7 @@ fn apply_validation_projection_fields(payload: &mut Value, projection: &Value) {
 struct ValidationCleanupGuard {
     clients: std::sync::Arc<crate::runner_http::RunnerRegistry>,
     job_id: String,
-    auth: Option<webcodex_runner_registry::RunnerAccess>,
+    auth: Option<codegpt_runner_registry::RunnerAccess>,
     armed: bool,
 }
 
@@ -1808,7 +1808,7 @@ impl ValidationCleanupGuard {
     fn new(
         clients: std::sync::Arc<crate::runner_http::RunnerRegistry>,
         job_id: String,
-        auth: Option<webcodex_runner_registry::RunnerAccess>,
+        auth: Option<codegpt_runner_registry::RunnerAccess>,
     ) -> Self {
         Self {
             clients,

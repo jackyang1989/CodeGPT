@@ -5,7 +5,7 @@ use crate::job_terminal_attention::{
     JobTerminalDeliveryAttempt,
 };
 use serde_json::json;
-use webcodex_store::{JobTerminalWaitRecord, JobTerminalWaitState, NewJobTerminalWait};
+use codegpt_store::{JobTerminalWaitRecord, JobTerminalWaitState, NewJobTerminalWait};
 
 #[cfg(test)]
 #[derive(Debug, Clone)]

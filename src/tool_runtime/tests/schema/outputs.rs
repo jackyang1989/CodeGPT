@@ -179,7 +179,7 @@ fn browser_output_schemas_accept_canonical_results_and_reject_leaked_fields() {
 #[test]
 fn read_files_output_schema_rejects_sparse_item_over_default_limit() {
     let schema = crate::tool_runtime::registry::output_schema_for_tool("read_files");
-    let default_limit = webcodex_workspace::file_read_range::EffectiveRange::new(None, None).limit;
+    let default_limit = codegpt_workspace::file_read_range::EffectiveRange::new(None, None).limit;
     let sparse_batch_over_default_limit = json!({
         "success": true,
         "output": {

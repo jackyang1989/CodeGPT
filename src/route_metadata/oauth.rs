@@ -4,7 +4,7 @@ use super::{
     route, AuditClass::*, RouteId::*, RouteMethod::*, RouteOpenApiProjection::*, RouteSpec,
     RouteSurface::*,
 };
-use webcodex_core::authority::{OAuthRouteScopePolicy::*, SCOPE_RUNTIME_READ};
+use codegpt_core::authority::{OAuthRouteScopePolicy::*, SCOPE_RUNTIME_READ};
 
 pub(super) const PUBLIC_ROUTES: &[RouteSpec] = &[
     route(

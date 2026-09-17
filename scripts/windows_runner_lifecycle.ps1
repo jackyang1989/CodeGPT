@@ -153,8 +153,8 @@ function New-WindowsRunnerLifecycleExpectedSpec {
     $supervisor = Resolve-WindowsRunnerLifecycleExistingPath -Path $SupervisorPath -Kind File -Description 'Supervisor'
     $working = Resolve-WindowsRunnerLifecycleExistingPath -Path $WorkingDirectory -Kind Directory -Description 'Working directory'
     if ([string]::IsNullOrWhiteSpace($TaskName)) { throw 'TaskName is required' }
-    if (-not $TaskName.StartsWith('WebCodex ', [System.StringComparison]::OrdinalIgnoreCase)) { throw 'TaskName must identify a WebCodex task (prefix: WebCodex )' }
-    if ($TaskPath -ne '\') { throw 'Only the root Scheduled Task path is supported for the WebCodex Windows Runner lifecycle' }
+    if (-not $TaskName.StartsWith('CodeGPT ', [System.StringComparison]::OrdinalIgnoreCase)) { throw 'TaskName must identify a CodeGPT task (prefix: CodeGPT )' }
+    if ($TaskPath -ne '\') { throw 'Only the root Scheduled Task path is supported for the CodeGPT Windows Runner lifecycle' }
 
     $identity = [System.Security.Principal.WindowsIdentity]::GetCurrent()
     $userSid = [string]$identity.User.Value
@@ -204,7 +204,7 @@ function New-WindowsRunnerScheduledTaskDefinition {
         -Trigger $trigger `
         -Principal $principal `
         -Settings $settings `
-        -Description 'WebCodex Windows Runner lifecycle: Scheduled Task -> PowerShell supervisor -> WMI Win32_Process.Create -> primary Runner.'
+        -Description 'CodeGPT Windows Runner lifecycle: Scheduled Task -> PowerShell supervisor -> WMI Win32_Process.Create -> primary Runner.'
 }
 
 function Get-WindowsRunnerLifecycleTaskObservation {
@@ -214,11 +214,11 @@ function Get-WindowsRunnerLifecycleTaskObservation {
         [string]$ExpectedSupervisorPath
     )
 
-    if (-not $TaskName.StartsWith('WebCodex ', [System.StringComparison]::OrdinalIgnoreCase)) {
-        throw 'TaskName must identify a WebCodex task (prefix: WebCodex )'
+    if (-not $TaskName.StartsWith('CodeGPT ', [System.StringComparison]::OrdinalIgnoreCase)) {
+        throw 'TaskName must identify a CodeGPT task (prefix: CodeGPT )'
     }
     if ($TaskPath -ne '\') {
-        throw 'Only the root Scheduled Task path is supported for the WebCodex Windows Runner lifecycle'
+        throw 'Only the root Scheduled Task path is supported for the CodeGPT Windows Runner lifecycle'
     }
 
     $tasks = @(Get-ScheduledTask -TaskPath $TaskPath -ErrorAction Stop | Where-Object { [string]$_.TaskName -ieq $TaskName })
@@ -288,7 +288,7 @@ function Get-WindowsRunnerLifecycleTaskObservation {
         ActionArguments = $arguments
         WorkingDirectory = $working
         SupervisorPath = $supervisor
-        IsLifecycleLike = ($actions.Count -eq 1 -and $isPowerShell -and $supervisor -and $TaskName.StartsWith('WebCodex ', [System.StringComparison]::OrdinalIgnoreCase) -and $ownsExpectedSupervisor)
+        IsLifecycleLike = ($actions.Count -eq 1 -and $isPowerShell -and $supervisor -and $TaskName.StartsWith('CodeGPT ', [System.StringComparison]::OrdinalIgnoreCase) -and $ownsExpectedSupervisor)
         PrincipalSid = $principalSid
         PrincipalLogonType = [string]$task.Principal.LogonType
         PrincipalRunLevel = [string]$task.Principal.RunLevel
@@ -324,7 +324,7 @@ function Get-RunnerConfigPathFromPrimaryIdentity {
 }
 
 function Get-WindowsRunnerPrimaryInventory {
-    $records = @(Get-CimInstance Win32_Process -Filter "Name = 'webcodex-runner.exe'" -ErrorAction Stop)
+    $records = @(Get-CimInstance Win32_Process -Filter "Name = 'codegpt-runner.exe'" -ErrorAction Stop)
     $paths = @($records | Where-Object { $_.ExecutablePath } | ForEach-Object {
         try { [System.IO.Path]::GetFullPath([string]$_.ExecutablePath) } catch { $null }
     } | Where-Object { $_ } | Sort-Object -Unique)
@@ -398,7 +398,7 @@ function Get-WindowsRunnerLifecyclePlan {
             -ExpectedSupervisorPath ([string]$ExpectedSpec.SupervisorPath)
         if (-not $CurrentTask.IsLifecycleLike -or -not $ownsExpectedSupervisor) {
             $blocked = $true
-            $taskMismatches += [pscustomobject]@{ field = 'task_identity'; expected = 'WebCodex lifecycle task owned by the exact expected supervisor path'; observed = 'unrecognized or differently-owned existing task' }
+            $taskMismatches += [pscustomobject]@{ field = 'task_identity'; expected = 'CodeGPT lifecycle task owned by the exact expected supervisor path'; observed = 'unrecognized or differently-owned existing task' }
         }
         if (-not $ownsExpectedSupervisor) {
             $taskMismatches += [pscustomobject]@{ field = 'task_supervisor_path'; expected = $ExpectedSpec.SupervisorPath; observed = $CurrentTask.SupervisorPath }
@@ -513,53 +513,53 @@ function Assert-WindowsRunnerLifecycleEffectStillSafe {
     return $FreshPlan
 }
 
-function Test-WebCodexOpsRunnerSupport {
+function Test-CodeGPTOpsRunnerSupport {
     param([Parameter(Mandatory = $true)][string]$Path)
     try {
         $output = @(& $Path ops runner --help 2>&1)
         $code = $LASTEXITCODE
         if ($code -ne 0) { return $false }
-        return (($output -join "`n").IndexOf('Usage: webcodex ops runner', [System.StringComparison]::OrdinalIgnoreCase) -ge 0)
+        return (($output -join "`n").IndexOf('Usage: codegpt ops runner', [System.StringComparison]::OrdinalIgnoreCase) -ge 0)
     } catch {
         return $false
     }
 }
 
-function Resolve-WebCodexOperatorCliPath {
+function Resolve-CodeGPTOperatorCliPath {
     param(
         [string]$ExplicitPath,
         [Parameter(Mandatory = $true)][string]$RepoRoot,
-        [string]$InstalledPath = "$env:USERPROFILE\.local\bin\webcodex.exe",
-        [scriptblock]$SupportsOpsRunner = { param($Path) Test-WebCodexOpsRunnerSupport -Path $Path }
+        [string]$InstalledPath = "$env:USERPROFILE\.local\bin\codegpt.exe",
+        [scriptblock]$SupportsOpsRunner = { param($Path) Test-CodeGPTOpsRunnerSupport -Path $Path }
     )
 
     if (-not [string]::IsNullOrWhiteSpace($ExplicitPath)) {
-        $path = Resolve-WindowsRunnerLifecycleExistingPath -Path $ExplicitPath -Kind File -Description 'Explicit WebCodex CLI'
+        $path = Resolve-WindowsRunnerLifecycleExistingPath -Path $ExplicitPath -Kind File -Description 'Explicit CodeGPT CLI'
         if (-not (& $SupportsOpsRunner $path)) {
-            throw "Explicit WebCodex CLI does not support 'webcodex ops runner': $path"
+            throw "Explicit CodeGPT CLI does not support 'codegpt ops runner': $path"
         }
         return [pscustomobject]@{ Path = $path; Source = 'explicit' }
     }
 
-    $repo = [System.IO.Path]::GetFullPath((Join-Path $RepoRoot 'target\dogfood\webcodex.exe'))
+    $repo = [System.IO.Path]::GetFullPath((Join-Path $RepoRoot 'target\dogfood\codegpt.exe'))
     if (Test-Path -LiteralPath $repo -PathType Leaf) {
         if (-not (& $SupportsOpsRunner $repo)) {
-            throw "Repo dogfood WebCodex CLI exists but does not support 'webcodex ops runner': $repo"
+            throw "Repo dogfood CodeGPT CLI exists but does not support 'codegpt ops runner': $repo"
         }
         return [pscustomobject]@{ Path = $repo; Source = 'repo_dogfood' }
     }
 
     if (-not (Test-Path -LiteralPath $InstalledPath -PathType Leaf)) {
-        throw "No supported WebCodex operator CLI found; build target\dogfood\webcodex.exe or pass -WebCodexCliPath explicitly"
+        throw "No supported CodeGPT operator CLI found; build target\dogfood\codegpt.exe or pass -CodeGPTCliPath explicitly"
     }
-    $installed = Resolve-WindowsRunnerLifecycleExistingPath -Path $InstalledPath -Kind File -Description 'Installed WebCodex CLI'
+    $installed = Resolve-WindowsRunnerLifecycleExistingPath -Path $InstalledPath -Kind File -Description 'Installed CodeGPT CLI'
     if (-not (& $SupportsOpsRunner $installed)) {
-        throw "Installed WebCodex CLI is stale or unsupported and does not support 'webcodex ops runner': $installed"
+        throw "Installed CodeGPT CLI is stale or unsupported and does not support 'codegpt ops runner': $installed"
     }
     return [pscustomobject]@{ Path = $installed; Source = 'installed' }
 }
 
-function Resolve-WebCodexRunnerCandidatePath {
+function Resolve-CodeGPTRunnerCandidatePath {
     param(
         [string]$ExplicitPath,
         [Parameter(Mandatory = $true)][string]$RepoRoot
@@ -569,9 +569,9 @@ function Resolve-WebCodexRunnerCandidatePath {
         $path = Resolve-WindowsRunnerLifecycleExistingPath -Path $ExplicitPath -Kind File -Description 'Explicit Runner candidate' -RequireExe
         return [pscustomobject]@{ Path = $path; Source = 'explicit' }
     }
-    $repo = [System.IO.Path]::GetFullPath((Join-Path $RepoRoot 'target\dogfood\webcodex-runner.exe'))
+    $repo = [System.IO.Path]::GetFullPath((Join-Path $RepoRoot 'target\dogfood\codegpt-runner.exe'))
     if (-not (Test-Path -LiteralPath $repo -PathType Leaf)) {
-        throw "Runner candidate is unavailable; build target\dogfood\webcodex-runner.exe or pass -CandidatePath explicitly"
+        throw "Runner candidate is unavailable; build target\dogfood\codegpt-runner.exe or pass -CandidatePath explicitly"
     }
     return [pscustomobject]@{ Path = $repo; Source = 'repo_dogfood' }
 }

@@ -13,8 +13,8 @@ use std::path::Path;
 pub(in crate::tool_runtime::tests) fn init_git_repo(root: &Path) {
     for cmd in [
         "git init",
-        "git config user.email webcodex-test@example.com",
-        "git config user.name 'WebCodex Test'",
+        "git config user.email codegpt-test@example.com",
+        "git config user.name 'CodeGPT Test'",
         "git config core.autocrlf false",
         "git config core.longpaths true",
     ] {
@@ -46,7 +46,7 @@ pub(in crate::tool_runtime::tests) fn commit_file(
         String::from_utf8_lossy(&add.stderr)
     );
 
-    let message_path = root.join(".git").join("webcodex-test-commit-message");
+    let message_path = root.join(".git").join("codegpt-test-commit-message");
     fs::write(&message_path, subject).unwrap();
     let commit = std::process::Command::new("git")
         .args(["commit", "-F"])

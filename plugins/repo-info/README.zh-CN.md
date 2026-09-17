@@ -1,8 +1,8 @@
 # repo-info Native Tool Plugin
 
-`repo-info` 是一个很小的只读 first-party Native Tool Plugin，用于 dogfood WebCodex 的 TypeScript Plugin SDK 和 authoring workflow。它只提供一个 `git_summary` 工具，观察对象由 provider 配置中的 `cwd` 精确决定。
+`repo-info` 是一个很小的只读 first-party Native Tool Plugin，用于 dogfood CodeGPT 的 TypeScript Plugin SDK 和 authoring workflow。它只提供一个 `git_summary` 工具，观察对象由 provider 配置中的 `cwd` 精确决定。
 
-仓库中的这份 Plugin 最初由 `webcodex plugin init plugins/repo-info --id repo-info` 真实创建，随后把 scaffold 默认的 published SDK dependency 改为 `file:../../npm/plugin-sdk`，使 repository CI 始终验证当前 checkout，而不依赖 npm registry 可用性。普通外部项目通过 `plugin init` 生成时仍精确依赖公开的 `@yyjeqhc/webcodex-plugin-sdk@0.1.0`。
+仓库中的这份 Plugin 最初由 `codegpt plugin init plugins/repo-info --id repo-info` 真实创建，随后把 scaffold 默认的 published SDK dependency 改为 `file:../../npm/plugin-sdk`，使 repository CI 始终验证当前 checkout，而不依赖 npm registry 可用性。普通外部项目通过 `plugin init` 生成时仍精确依赖公开的 `@yyjeqhc/codegpt-plugin-sdk@0.1.0`。
 
 ## 安装、构建和测试
 
@@ -24,7 +24,7 @@ npm test
 id = "repo-info"
 name = "Repo Info"
 command = "node"
-args = ["/absolute/path/to/webcodex/plugins/repo-info/dist/plugin.js"]
+args = ["/absolute/path/to/codegpt/plugins/repo-info/dist/plugin.js"]
 cwd = "/absolute/path/to/repository"
 timeout_secs = 30
 ```
@@ -36,10 +36,10 @@ timeout_secs = 30
 ## Author loop
 
 ```text
-webcodex plugin check --runner <runner> --plugin repo-info
-webcodex plugin reload --runner <runner>
-webcodex plugin list --runner <runner> --plugin repo-info
-webcodex plugin describe --runner <runner> --plugin repo-info --tool git_summary
+codegpt plugin check --runner <runner> --plugin repo-info
+codegpt plugin reload --runner <runner>
+codegpt plugin list --runner <runner> --plugin repo-info
+codegpt plugin describe --runner <runner> --plugin repo-info --tool git_summary
 ```
 
-实际调用继续使用现有 canonical `plugin_tool describe -> call`；这里刻意没有 `webcodex plugin call`。这个 Plugin 首先是 authoring/dogfood 示例，不是 WebCodex 内建 Git 工具的替代品。
+实际调用继续使用现有 canonical `plugin_tool describe -> call`；这里刻意没有 `codegpt plugin call`。这个 Plugin 首先是 authoring/dogfood 示例，不是 CodeGPT 内建 Git 工具的替代品。

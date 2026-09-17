@@ -6,7 +6,7 @@ use super::tool_definition::{
 };
 use super::validation_events::CurrentValidationEvidenceProjection;
 
-pub(crate) use webcodex_workflow_session::{
+pub(crate) use codegpt_workflow_session::{
     continuation_feedback_value, not_applicable_continuation_feedback_value,
     validation_delta_value, ContinuationFeedbackInput, ContinuationProjectionHooks,
     ContinuationToolFailureSnapshot, ContinuationValidationSnapshot, EXPLORATION_CONTINUITY_ACTION,

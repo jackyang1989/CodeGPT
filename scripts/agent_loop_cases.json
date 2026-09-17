@@ -17,7 +17,7 @@
     {
       "id": "readonly_review",
       "title": "Read-only review",
-      "target": "webcodex_repository",
+      "target": "codegpt_repository",
       "prompt": "Perform a read-only review. Inspect git status, read src/tool_runtime/window_activity.rs and docs/architecture/tool-composition-research.md, search for project_window_loop_timings references, inspect the current git diff, and report concrete findings. Do not modify files and do not run mutation tools.",
       "correctness": {
         "workspace_must_remain_clean": true,
@@ -77,7 +77,7 @@
     {
       "id": "long_validation_handoff",
       "title": "Long validation and same-execution Job handoff",
-      "target": "webcodex_repository",
+      "target": "codegpt_repository",
       "prompt": "Do not modify files. Start cargo test --lib with sync_wait_secs=1 and a sufficient total timeout. If it hands off, preserve that exact Job identity; while it runs, independently inspect the timing terminology in docs/architecture/tool-composition-research.md, then observe the same Job to terminal completion. Do not redispatch cargo test. If the validation finishes synchronously before handoff, report that this run does not satisfy the handoff case instead of fabricating one.",
       "correctness": {
         "workspace_must_remain_clean": true,

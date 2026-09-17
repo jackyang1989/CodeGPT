@@ -6,7 +6,7 @@ import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
-const PROTOCOL_VERSION = "webcodex-plugin-v1";
+const PROTOCOL_VERSION = "codegpt-plugin-v1";
 const STATUS_MAX_BYTES = 32 * 1024;
 const here = path.dirname(fileURLToPath(import.meta.url));
 const pluginPath = path.join(here, "dist", "plugin.js");
@@ -55,7 +55,7 @@ const EXPECTED_GIT_SUMMARY_TOOL = {
 };
 
 function tempRoot() {
-  return fs.mkdtempSync(path.join(os.tmpdir(), "webcodex-repo-info-"));
+  return fs.mkdtempSync(path.join(os.tmpdir(), "codegpt-repo-info-"));
 }
 
 function git(cwd, args, options = {}) {
@@ -80,9 +80,9 @@ function initRepository() {
   git(root, ["add", "tracked.txt"]);
   git(root, [
     "-c",
-    "user.name=WebCodex Test",
+    "user.name=CodeGPT Test",
     "-c",
-    "user.email=webcodex-test@example.invalid",
+    "user.email=codegpt-test@example.invalid",
     "-c",
     "commit.gpgSign=false",
     "-c",

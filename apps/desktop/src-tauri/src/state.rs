@@ -15,9 +15,9 @@ use crate::operation::{
 };
 use crate::process::{MachineEventReceiver, ProcessKind, ProcessPhase, ProcessSupervisor};
 use crate::tunnel_config::{TunnelConfig, TunnelConfigRequest};
-use crate::webcodex::{
+use crate::codegpt::{
     inspect_project_path, ProjectRuntimeIdentity, QuickShareReadyEvent, RegularTunnelReadyEvent,
-    WebCodexAdapter,
+    CodeGPTAdapter,
 };
 use serde_json::Value;
 #[cfg(unix)]
@@ -50,7 +50,7 @@ type SharedSupervisor = Arc<Mutex<ProcessSupervisor>>;
 #[derive(Debug, Clone)]
 struct ChatGptActivityProbe {
     identity: ProjectRuntimeIdentity,
-    webcodex: PathBuf,
+    codegpt: PathBuf,
 }
 
 pub struct AppState {
@@ -159,8 +159,8 @@ impl AppState {
             };
             probe
         };
-        let observation = WebCodexAdapter::chatgpt_activity_with_binary(
-            &probe.webcodex,
+        let observation = CodeGPTAdapter::chatgpt_activity_with_binary(
+            &probe.codegpt,
             &probe.identity,
             &cancellation,
         )
@@ -472,7 +472,7 @@ impl AppState {
         let (operation, cancellation, mut core, baseline) = self
             .begin_operation(DesktopOperationKind::RuntimeRefresh, true)
             .await?;
-        let result = crate::webcodex::run_test_bounded(
+        let result = crate::codegpt::run_test_bounded(
             &executable,
             &args,
             Some(&payload),
@@ -548,7 +548,7 @@ pub struct DesktopCore {
     config: StoredDesktopConfig,
     tunnel_config: TunnelConfig,
     snapshot: DesktopStateSnapshot,
-    adapter: WebCodexAdapter,
+    adapter: CodeGPTAdapter,
     supervisor: SharedSupervisor,
     activity: ActivityLog,
     published: Arc<RwLock<DesktopStateSnapshot>>,
@@ -590,7 +590,7 @@ impl DesktopCore {
             config,
             tunnel_config,
             snapshot,
-            adapter: WebCodexAdapter::new(Some(resource_dir.join("webcodex-runtime"))),
+            adapter: CodeGPTAdapter::new(Some(resource_dir.join("codegpt-runtime"))),
             supervisor,
             activity,
             published,
@@ -641,8 +641,8 @@ impl DesktopCore {
             return None;
         }
         let identity = identity_from_config(&self.config)?;
-        let webcodex = self.adapter.binaries().ok()?.webcodex.clone();
-        Some(ChatGptActivityProbe { identity, webcodex })
+        let codegpt = self.adapter.binaries().ok()?.codegpt.clone();
+        Some(ChatGptActivityProbe { identity, codegpt })
     }
 
     fn apply_chatgpt_activity_observation(
@@ -1085,7 +1085,7 @@ impl DesktopCore {
                         DesktopError::new(
                             "default_project_unavailable",
                             "Desktop could not prepare its default management project",
-                            "Check that the WebCodex Desktop install directory is writable, or choose another project from Change runtime mode.",
+                            "Check that the CodeGPT Desktop install directory is writable, or choose another project from Change runtime mode.",
                         )
                         .with_details(serde_json::json!({ "io_kind": format!("{:?}", error.kind()) }))
                     })?;
@@ -1108,7 +1108,7 @@ impl DesktopCore {
             ActivityEventKind::LocalSetupPreparing,
             "desktop",
             ActivityLevel::Info,
-            "Preparing WebCodex on this computer",
+            "Preparing CodeGPT on this computer",
         );
         self.snapshot.topology = Some(RuntimeTopology {
             experience: Experience::Full,
@@ -1127,7 +1127,7 @@ impl DesktopCore {
         self.publish_snapshot();
 
         let local_dir = self.data_dir.join("runtime").join("local");
-        let env_file = local_dir.join("webcodex.env");
+        let env_file = local_dir.join("codegpt.env");
         let data_dir = local_dir.join("data");
         tokio::fs::create_dir_all(&local_dir).await.map_err(|_| {
             DesktopError::new(
@@ -1175,7 +1175,7 @@ impl DesktopCore {
             if server_deadline.is_elapsed() {
                 return Err(readiness_timeout_error(
                     "server_unreachable",
-                    "WebCodex Service did not become ready",
+                    "CodeGPT Service did not become ready",
                     "Check the local Service diagnostics and retry.",
                 ));
             }
@@ -1447,7 +1447,7 @@ impl DesktopCore {
             ActivityEventKind::LocalRuntimeReady,
             "desktop",
             ActivityLevel::Info,
-            "Local WebCodex runtime is ready",
+            "Local CodeGPT runtime is ready",
         );
         self.get_state().await
     }
@@ -1460,7 +1460,7 @@ impl DesktopCore {
         cancellation: &CancellationContext,
     ) -> DesktopResult<DesktopStateSnapshot> {
         cancellation.check()?;
-        let server_url = crate::webcodex::validate_server_url(server_url)?;
+        let server_url = crate::codegpt::validate_server_url(server_url)?;
         let project = self.adapter.inspect_project(project_path).await?;
         cancellation.check()?;
         let binaries = self.adapter.ensure_binaries(cancellation).await?.clone();
@@ -1500,7 +1500,7 @@ impl DesktopCore {
             ActivityEventKind::RemoteConnecting,
             "desktop",
             ActivityLevel::Info,
-            "Connecting this computer to the existing WebCodex Server",
+            "Connecting this computer to the existing CodeGPT Server",
         );
         self.publish_snapshot();
 
@@ -1528,7 +1528,7 @@ impl DesktopCore {
                 if !pairing_code.starts_with("wc_pair_") {
                     return Err(DesktopError::new(
                             "pairing_code_invalid",
-                            "The saved Runner identity is not reusable and no new WebCodex pairing code was provided",
+                            "The saved Runner identity is not reusable and no new CodeGPT pairing code was provided",
                             "Refresh this Runner connection with a new wc_pair_… code.",
                         ));
                 }
@@ -1581,7 +1581,7 @@ impl DesktopCore {
                 if server_deadline.is_elapsed() {
                     return Err(readiness_timeout_error(
                         "server_unreachable",
-                        "The existing WebCodex Server did not respond before the readiness deadline",
+                        "The existing CodeGPT Server did not respond before the readiness deadline",
                         "Check the Server URL and network path, then retry.",
                     ));
                 }
@@ -1592,7 +1592,7 @@ impl DesktopCore {
         if !server_status.http_reachable {
             return Err(DesktopError::new(
                 "server_unreachable",
-                "The existing WebCodex Server is not reachable",
+                "The existing CodeGPT Server is not reachable",
                 "Check the Server URL and network path, then retry.",
             ));
         }
@@ -1698,7 +1698,7 @@ impl DesktopCore {
             ActivityEventKind::RemoteConnected,
             "desktop",
             ActivityLevel::Info,
-            "This computer is connected to the existing WebCodex Server",
+            "This computer is connected to the existing CodeGPT Server",
         );
         self.get_state().await
     }
@@ -1834,9 +1834,9 @@ impl DesktopCore {
             Err(_) => {
                 self.stop_process(ProcessKind::QuickShare).await;
                 return Err(DesktopError::new(
-                    "webcodex_contract_invalid",
+                    "codegpt_contract_invalid",
                     "Quick Share returned an invalid readiness event",
-                    "Verify that Desktop and WebCodex binaries come from the same source baseline.",
+                    "Verify that Desktop and CodeGPT binaries come from the same source baseline.",
                 ));
             }
         };
@@ -1848,9 +1848,9 @@ impl DesktopCore {
         {
             self.stop_process(ProcessKind::QuickShare).await;
             return Err(DesktopError::new(
-                "webcodex_contract_invalid",
+                "codegpt_contract_invalid",
                 "Quick Share readiness identity is incomplete",
-                "Update Desktop and WebCodex together.",
+                "Update Desktop and CodeGPT together.",
             ));
         }
         cancellation.check()?;
@@ -1930,7 +1930,7 @@ impl DesktopCore {
             DesktopError::new(
                 "runtime_not_ready",
                 "Local Full Runtime has not been configured",
-                "Set up WebCodex on this computer before starting the secure tunnel.",
+                "Set up CodeGPT on this computer before starting the secure tunnel.",
             )
         })?;
         if topology.experience != Experience::Full
@@ -1938,7 +1938,7 @@ impl DesktopCore {
         {
             return Err(DesktopError::new(
                 "unsupported_topology",
-                "Regular OpenAI Secure Tunnel is only started for a local WebCodex Server",
+                "Regular OpenAI Secure Tunnel is only started for a local CodeGPT Server",
                 "Manage external exposure on the remote Server instead.",
             ));
         }
@@ -1970,7 +1970,7 @@ impl DesktopCore {
         if !current.readiness.runtime_ready {
             return Err(DesktopError::new(
                 "runtime_not_ready",
-                "Local WebCodex runtime is not ready",
+                "Local CodeGPT runtime is not ready",
                 "Restore the Server and Runner readiness before starting the secure tunnel.",
             ));
         }
@@ -2101,9 +2101,9 @@ impl DesktopCore {
                 self.stop_process(ProcessKind::RegularTunnel).await;
                 self.snapshot.regular_tunnel = None;
                 return Err(DesktopError::new(
-                    "webcodex_contract_invalid",
+                    "codegpt_contract_invalid",
                     "Regular Tunnel returned an invalid readiness event",
-                    "Verify that Desktop and WebCodex binaries come from the same source baseline.",
+                    "Verify that Desktop and CodeGPT binaries come from the same source baseline.",
                 ));
             }
         };
@@ -2116,9 +2116,9 @@ impl DesktopCore {
             self.stop_process(ProcessKind::RegularTunnel).await;
             self.snapshot.regular_tunnel = None;
             return Err(DesktopError::new(
-                "webcodex_contract_invalid",
+                "codegpt_contract_invalid",
                 "Regular Tunnel readiness identity is incomplete",
-                "Update Desktop and WebCodex together.",
+                "Update Desktop and CodeGPT together.",
             ));
         }
         cancellation.check()?;
@@ -2268,7 +2268,7 @@ impl DesktopCore {
                 .await;
                 return Err(readiness_timeout_error(
                     "server_unreachable",
-                    "WebCodex Service did not become ready",
+                    "CodeGPT Service did not become ready",
                     "Check the local Service diagnostics and retry.",
                 ));
             }
@@ -2282,7 +2282,7 @@ impl DesktopCore {
                     .await;
                     return Err(DesktopError::new(
                         "server_start_failed",
-                        "The Desktop-owned WebCodex Server exited during startup",
+                        "The Desktop-owned CodeGPT Server exited during startup",
                         "Open Activity for safe diagnostics and retry.",
                     ));
                 }
@@ -2311,7 +2311,7 @@ impl DesktopCore {
                 .await;
                 return Err(readiness_timeout_error(
                     "server_unreachable",
-                    "WebCodex Service did not become ready",
+                    "CodeGPT Service did not become ready",
                     "Check the local Service diagnostics and retry.",
                 ));
             }
@@ -2525,9 +2525,9 @@ fn ensure_desktop_server_defaults(path: &Path) -> DesktopResult<()> {
         })
     };
     let mut additions = Vec::new();
-    if !has_key("WEBCODEX_MCP_COMPACT_SCHEMAS") {
+    if !has_key("CODEGPT_MCP_COMPACT_SCHEMAS") {
         additions.push(format!(
-            "WEBCODEX_MCP_COMPACT_SCHEMAS={DESKTOP_MCP_COMPACT_SCHEMAS}"
+            "CODEGPT_MCP_COMPACT_SCHEMAS={DESKTOP_MCP_COMPACT_SCHEMAS}"
         ));
     }
     if additions.is_empty() {
@@ -2878,7 +2878,7 @@ fn desktop_state_corrupt() -> DesktopError {
     DesktopError::new(
         "desktop_state_corrupt",
         "Desktop saved state is corrupt and no valid recovery snapshot is available",
-        "Restore or remove the Desktop state files explicitly, then restart WebCodex Desktop.",
+        "Restore or remove the Desktop state files explicitly, then restart CodeGPT Desktop.",
     )
     .with_details(serde_json::json!({ "category": "state_corrupt" }))
 }
@@ -2895,7 +2895,7 @@ fn reserve_loopback_address() -> DesktopResult<String> {
     let listener = TcpListener::bind(("127.0.0.1", 0)).map_err(|_| {
         DesktopError::new(
             "local_port_unavailable",
-            "Desktop could not reserve a loopback port for WebCodex",
+            "Desktop could not reserve a loopback port for CodeGPT",
             "Check local networking and retry.",
         )
     })?;
@@ -3143,8 +3143,8 @@ mod tests {
 
     #[test]
     fn default_management_project_uses_safe_platform_location() {
-        let data = PathBuf::from(r"C:\Users\test\AppData\Local\WebCodex");
-        let resources = PathBuf::from(r"D:\Apps\WebCodex Desktop");
+        let data = PathBuf::from(r"C:\Users\test\AppData\Local\CodeGPT");
+        let resources = PathBuf::from(r"D:\Apps\CodeGPT Desktop");
         let project = default_management_project_dir(&data, &resources);
         #[cfg(windows)]
         assert_eq!(project, resources);
@@ -3156,18 +3156,18 @@ mod tests {
     fn desktop_server_defaults_append_missing_values_and_preserve_explicit_config() {
         let dir = unique_state_dir("server-defaults-explicit");
         std::fs::create_dir_all(&dir).unwrap();
-        let env_file = dir.join("webcodex.env");
+        let env_file = dir.join("codegpt.env");
         std::fs::write(
             &env_file,
-            "WEBCODEX_TOKEN=secret\nWEBCODEX_MCP_COMPACT_SCHEMAS=false\n",
+            "CODEGPT_TOKEN=secret\nCODEGPT_MCP_COMPACT_SCHEMAS=false\n",
         )
         .unwrap();
 
         ensure_desktop_server_defaults(&env_file).unwrap();
         let once = std::fs::read_to_string(&env_file).unwrap();
-        assert!(once.contains("WEBCODEX_TOKEN=secret\n"));
-        assert!(once.contains("WEBCODEX_MCP_COMPACT_SCHEMAS=false\n"));
-        assert_eq!(once.matches("WEBCODEX_MCP_COMPACT_SCHEMAS=").count(), 1);
+        assert!(once.contains("CODEGPT_TOKEN=secret\n"));
+        assert!(once.contains("CODEGPT_MCP_COMPACT_SCHEMAS=false\n"));
+        assert_eq!(once.matches("CODEGPT_MCP_COMPACT_SCHEMAS=").count(), 1);
 
         ensure_desktop_server_defaults(&env_file).unwrap();
         assert_eq!(std::fs::read_to_string(&env_file).unwrap(), once);
@@ -3178,19 +3178,19 @@ mod tests {
     fn desktop_server_defaults_add_both_values_to_fresh_server_env() {
         let dir = unique_state_dir("server-defaults-fresh");
         std::fs::create_dir_all(&dir).unwrap();
-        let env_file = dir.join("webcodex.env");
-        std::fs::write(&env_file, "WEBCODEX_ADDR=127.0.0.1:12345").unwrap();
+        let env_file = dir.join("codegpt.env");
+        std::fs::write(&env_file, "CODEGPT_ADDR=127.0.0.1:12345").unwrap();
 
         ensure_desktop_server_defaults(&env_file).unwrap();
         let content = std::fs::read_to_string(&env_file).unwrap();
-        assert!(content.starts_with("WEBCODEX_ADDR=127.0.0.1:12345\n"));
-        assert!(content.contains("WEBCODEX_MCP_COMPACT_SCHEMAS=true\n"));
+        assert!(content.starts_with("CODEGPT_ADDR=127.0.0.1:12345\n"));
+        assert!(content.contains("CODEGPT_MCP_COMPACT_SCHEMAS=true\n"));
         std::fs::remove_dir_all(dir).unwrap();
     }
 
     fn unique_state_dir(name: &str) -> PathBuf {
         std::env::temp_dir().join(format!(
-            "webcodex-desktop-state-{name}-{}-{}",
+            "codegpt-desktop-state-{name}-{}-{}",
             std::process::id(),
             std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
@@ -3482,7 +3482,7 @@ mod tests {
     fn stored_runtime_contains_paths_not_credentials() {
         let runtime = StoredRuntime {
             server_url: "https://example.com".to_string(),
-            server_env_file: Some(PathBuf::from("webcodex.env")),
+            server_env_file: Some(PathBuf::from("codegpt.env")),
             runner_config: Some(PathBuf::from("runner.toml")),
             user_token_file: Some(PathBuf::from("user-token")),
             runner_client_id: Some("desktop-runner".to_string()),
@@ -3660,7 +3660,7 @@ mod tests {
     #[tokio::test]
     async fn control_plane_stays_observable_and_cancel_is_exact_while_mutation_is_stuck() {
         let data_dir = std::env::temp_dir().join(format!(
-            "webcodex-desktop-control-plane-{}-{}",
+            "codegpt-desktop-control-plane-{}-{}",
             std::process::id(),
             std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
@@ -3806,7 +3806,7 @@ mod tests {
     #[tokio::test]
     async fn shutdown_cancels_stuck_one_shot_and_reclaims_all_desktop_owned_trees() {
         let data_dir = std::env::temp_dir().join(format!(
-            "webcodex-desktop-shutdown-{}-{}",
+            "codegpt-desktop-shutdown-{}-{}",
             std::process::id(),
             std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
@@ -3825,7 +3825,7 @@ mod tests {
         long_command.args([
             "-c",
             "sleep 8 & descendant=$!; printf '%s %s\\n' \"$$\" \"$descendant\" > \"$1\"; wait \"$descendant\"",
-            "webcodex-long-lived-shutdown",
+            "codegpt-long-lived-shutdown",
             &long_marker.to_string_lossy(),
         ]);
         state
@@ -3853,7 +3853,7 @@ mod tests {
         let args = vec![
             "-c".to_string(),
             "sleep 8 & descendant=$!; printf '%s %s\\n' \"$$\" \"$descendant\" > \"$1\"; wait \"$descendant\"".to_string(),
-            "webcodex-one-shot-shutdown".to_string(),
+            "codegpt-one-shot-shutdown".to_string(),
             one_shot_marker.to_string_lossy().to_string(),
         ];
         let operation_state = Arc::clone(&state);
@@ -3953,8 +3953,8 @@ mod tests {
     #[tokio::test]
     #[ignore = "requires current-source dogfood binaries and a temporary project"]
     async fn native_local_full_dogfood_reuses_enrollment_and_stops_owned_runtime() {
-        let project = std::env::var("WEBCODEX_DESKTOP_DOGFOOD_PROJECT")
-            .expect("WEBCODEX_DESKTOP_DOGFOOD_PROJECT must point to the temporary fixture");
+        let project = std::env::var("CODEGPT_DESKTOP_DOGFOOD_PROJECT")
+            .expect("CODEGPT_DESKTOP_DOGFOOD_PROJECT must point to the temporary fixture");
         // The Server only accepts lowercase local pairing usernames. Pin a
         // mixed-case OS username so the compatibility path is exercised on
         // every machine, not only where the login name already fails. The
@@ -3967,7 +3967,7 @@ mod tests {
             .canonicalize()
             .expect("resolve the native temporary fixture root");
         let data_dir = temporary_root.join(format!(
-            "webcodex-desktop-local-dogfood-{}",
+            "codegpt-desktop-local-dogfood-{}",
             std::process::id()
         ));
         let _ = std::fs::remove_dir_all(&data_dir);
@@ -3987,7 +3987,7 @@ mod tests {
                     .map(|entry| entry.event_kind)
                     .collect();
                 let readiness = core.snapshot.readiness.clone();
-                let initialized = data_dir.join("runtime/local/webcodex.env").is_file();
+                let initialized = data_dir.join("runtime/local/codegpt.env").is_file();
                 core.supervisor.lock().await.stop_all().await;
                 let _ = std::fs::remove_dir_all(&data_dir);
                 panic!(
@@ -4193,10 +4193,10 @@ mod tests {
         if !cfg!(windows) {
             return;
         }
-        let project = std::env::var("WEBCODEX_DESKTOP_DOGFOOD_PROJECT")
-            .expect("WEBCODEX_DESKTOP_DOGFOOD_PROJECT must point to the temporary fixture");
+        let project = std::env::var("CODEGPT_DESKTOP_DOGFOOD_PROJECT")
+            .expect("CODEGPT_DESKTOP_DOGFOOD_PROJECT must point to the temporary fixture");
         let data_dir = std::env::temp_dir().join(format!(
-            "webcodex-desktop-share-dogfood-{}",
+            "codegpt-desktop-share-dogfood-{}",
             std::process::id()
         ));
         let _ = std::fs::remove_dir_all(&data_dir);
@@ -4242,13 +4242,13 @@ mod tests {
         if !cfg!(windows) {
             return;
         }
-        let project = std::env::var("WEBCODEX_DESKTOP_DOGFOOD_PROJECT")
-            .expect("WEBCODEX_DESKTOP_DOGFOOD_PROJECT must point to the temporary fixture");
+        let project = std::env::var("CODEGPT_DESKTOP_DOGFOOD_PROJECT")
+            .expect("CODEGPT_DESKTOP_DOGFOOD_PROJECT must point to the temporary fixture");
         let suffix = std::process::id();
         let host_data =
-            std::env::temp_dir().join(format!("webcodex-desktop-remote-host-dogfood-{suffix}"));
+            std::env::temp_dir().join(format!("codegpt-desktop-remote-host-dogfood-{suffix}"));
         let client_data =
-            std::env::temp_dir().join(format!("webcodex-desktop-remote-client-dogfood-{suffix}"));
+            std::env::temp_dir().join(format!("codegpt-desktop-remote-client-dogfood-{suffix}"));
         let _ = std::fs::remove_dir_all(&host_data);
         let _ = std::fs::remove_dir_all(&client_data);
 
@@ -4256,7 +4256,7 @@ mod tests {
             .expect("create remote dogfood host state");
         let cancellation = CancellationContext::never();
         let host_runtime = host_data.join("runtime");
-        let env_file = host_runtime.join("webcodex.env");
+        let env_file = host_runtime.join("codegpt.env");
         let data_dir = host_runtime.join("data");
         tokio::fs::create_dir_all(&host_runtime)
             .await
@@ -4421,7 +4421,7 @@ mod tests {
     #[tokio::test]
     async fn windows_failed_regular_tunnel_child_cannot_leave_fake_green_readiness() {
         let data_dir = std::env::temp_dir().join(format!(
-            "webcodex-desktop-tunnel-failure-{}-{}",
+            "codegpt-desktop-tunnel-failure-{}-{}",
             std::process::id(),
             std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)

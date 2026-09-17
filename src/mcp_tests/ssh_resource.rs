@@ -1,6 +1,6 @@
 use super::*;
 use std::sync::Arc;
-use webcodex_core::ssh_resource::{
+use codegpt_core::ssh_resource::{
     SshResourceInventoryEntry, SshResourceResponse, SshResourceSource,
 };
 
@@ -508,11 +508,11 @@ async fn ssh_resource_accepts_collaboration_ack_but_rejects_other_stateless_wrap
     };
     let ack_request = wait_for_request(&runtime, "instance-a").await;
     assert_eq!(ack_request.kind, "ssh_resource");
-    let business: webcodex_core::ssh_resource::SshResourceRequest =
+    let business: codegpt_core::ssh_resource::SshResourceRequest =
         serde_json::from_str(ack_request.content.as_deref().unwrap()).unwrap();
     assert_eq!(
         business,
-        webcodex_core::ssh_resource::SshResourceRequest::List
+        codegpt_core::ssh_resource::SshResourceRequest::List
     );
     assert!(!ack_request
         .content
@@ -546,7 +546,7 @@ async fn ssh_resource_accepts_collaboration_ack_but_rejects_other_stateless_wrap
             json!({
                 "action":"list",
                 "runner":"runner-a",
-                crate::tool_runtime::context_projection::TOOL_CALL_CONTEXT_REQUEST_FIELD: ["webcodex.workflow"]
+                crate::tool_runtime::context_projection::TOOL_CALL_CONTEXT_REQUEST_FIELD: ["codegpt.workflow"]
             }),
         ),
         (
@@ -649,7 +649,7 @@ async fn generic_runtime_ssh_resource_dispatch_preserves_native_requests_and_res
     use crate::tool_runtime::kernel::{
         HostFileImportTrust, ToolCallContext, ToolCallRequest, ToolTransport,
     };
-    use webcodex_core::ssh_resource::SshResourceRequest;
+    use codegpt_core::ssh_resource::SshResourceRequest;
 
     let runtime = Arc::new(test_runtime());
     let auth = ssh_auth();

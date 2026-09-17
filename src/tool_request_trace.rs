@@ -1,7 +1,7 @@
 //! Gated lifecycle and forensic tracing for model-facing tool invocations.
 //!
-//! `WEBCODEX_TOOL_REQUEST_TRACE=true|metadata` preserves the historical
-//! metadata-only behavior. `WEBCODEX_TOOL_REQUEST_TRACE=full` additionally
+//! `CODEGPT_TOOL_REQUEST_TRACE=true|metadata` preserves the historical
+//! metadata-only behavior. `CODEGPT_TOOL_REQUEST_TRACE=full` additionally
 //! persists semantic JSON request/argument/result payloads on the Server host.
 //! Full payloads are zstd-compressed files under a bounded trace directory; they
 //! are deliberately not stored in the canonical runtime database. Compression,
@@ -10,7 +10,7 @@
 //!
 //! Full tracing is an explicit self-hosted operator diagnostic mode. It may
 //! contain file contents, command input/output, user messages, or other tool
-//! payload data. The trace path never reads WebCodex ingress HTTP Authorization
+//! payload data. The trace path never reads CodeGPT ingress HTTP Authorization
 //! headers; credential-like values that are themselves part of a tool/Runner
 //! payload are captured like any other payload field. Trace persistence is
 //! fail-open: storage, compression, pruning, correlation failures, or writer
@@ -321,7 +321,7 @@ impl TraceWriter {
     fn start() -> io::Result<Self> {
         let (sender, receiver) = mpsc::sync_channel(TRACE_WRITER_QUEUE_CAPACITY);
         thread::Builder::new()
-            .name("webcodex-tool-trace-writer".to_string())
+            .name("codegpt-tool-trace-writer".to_string())
             .spawn(move || trace_writer_loop(receiver))?;
         Ok(Self { sender })
     }
@@ -817,7 +817,7 @@ fn directory_stats(path: &Path) -> io::Result<(u64, SystemTime)> {
     Ok((bytes, modified))
 }
 
-const TRACE_OWNER_MARKER: &str = ".webcodex-tool-trace";
+const TRACE_OWNER_MARKER: &str = ".codegpt-tool-trace";
 
 fn trace_dir_owned_by_store(path: &Path, active_trace_id: &str) -> bool {
     let Some(name) = path.file_name().and_then(|name| name.to_str()) else {
@@ -2044,26 +2044,26 @@ mod tests {
             value: json!({"escaped": "line\n\"quoted\"", "unicode": "你好"}),
         };
 
-        env.remove("WEBCODEX_TOOL_REQUEST_TRACE");
+        env.remove("CODEGPT_TOOL_REQUEST_TRACE");
         assert!(estimate_json_bytes(&measured).is_none());
         assert_eq!(calls.load(Ordering::SeqCst), 0);
 
-        env.set("WEBCODEX_TOOL_REQUEST_TRACE", "true");
+        env.set("CODEGPT_TOOL_REQUEST_TRACE", "true");
         assert_eq!(
             estimate_json_bytes(&measured),
             Some(serde_json::to_vec(&measured.value).unwrap().len())
         );
         assert_eq!(calls.load(Ordering::SeqCst), 1);
-        env.remove("WEBCODEX_TOOL_REQUEST_TRACE");
+        env.remove("CODEGPT_TOOL_REQUEST_TRACE");
     }
 
     #[test]
     fn metadata_mode_never_creates_raw_payload_store() {
         let temp = tempfile::tempdir().unwrap();
         let mut env = crate::test_support::TestEnvGuard::new();
-        env.set("WEBCODEX_TOOL_REQUEST_TRACE", "true");
+        env.set("CODEGPT_TOOL_REQUEST_TRACE", "true");
         env.set(
-            "WEBCODEX_TOOL_REQUEST_TRACE_DIR",
+            "CODEGPT_TOOL_REQUEST_TRACE_DIR",
             temp.path().to_string_lossy().as_ref(),
         );
         let guard = ToolRequestLifecycle::new(
@@ -2082,7 +2082,7 @@ mod tests {
         let temp = tempfile::tempdir().unwrap();
         let mut env = crate::test_support::TestEnvGuard::new();
 
-        env.remove("WEBCODEX_TOOL_REQUEST_TRACE");
+        env.remove("CODEGPT_TOOL_REQUEST_TRACE");
         let off_calls = AtomicUsize::new(0);
         let off = ToolRequestLifecycle::new(
             "mcp",
@@ -2098,7 +2098,7 @@ mod tests {
         assert_eq!(off_calls.load(Ordering::SeqCst), 0);
         drop(off);
 
-        env.set("WEBCODEX_TOOL_REQUEST_TRACE", "true");
+        env.set("CODEGPT_TOOL_REQUEST_TRACE", "true");
         let metadata_calls = AtomicUsize::new(0);
         let metadata = ToolRequestLifecycle::new(
             "mcp",
@@ -2114,12 +2114,12 @@ mod tests {
         assert_eq!(metadata_calls.load(Ordering::SeqCst), 0);
         drop(metadata);
 
-        env.set("WEBCODEX_TOOL_REQUEST_TRACE", "full");
+        env.set("CODEGPT_TOOL_REQUEST_TRACE", "full");
         env.set(
-            "WEBCODEX_TOOL_REQUEST_TRACE_DIR",
+            "CODEGPT_TOOL_REQUEST_TRACE_DIR",
             temp.path().to_string_lossy().as_ref(),
         );
-        env.set("WEBCODEX_TOOL_REQUEST_TRACE_MAX_TOTAL_BYTES", "8388608");
+        env.set("CODEGPT_TOOL_REQUEST_TRACE_MAX_TOTAL_BYTES", "8388608");
         reset_trace_store_accounting();
 
         let full_calls = AtomicUsize::new(0);
@@ -2169,12 +2169,12 @@ mod tests {
     fn full_mode_lifecycle_persists_only_hashed_client_window_metadata() {
         let temp = tempfile::tempdir().unwrap();
         let mut env = crate::test_support::TestEnvGuard::new();
-        env.set("WEBCODEX_TOOL_REQUEST_TRACE", "full");
+        env.set("CODEGPT_TOOL_REQUEST_TRACE", "full");
         env.set(
-            "WEBCODEX_TOOL_REQUEST_TRACE_DIR",
+            "CODEGPT_TOOL_REQUEST_TRACE_DIR",
             temp.path().to_string_lossy().as_ref(),
         );
-        env.set("WEBCODEX_TOOL_REQUEST_TRACE_MAX_TOTAL_BYTES", "8388608");
+        env.set("CODEGPT_TOOL_REQUEST_TRACE_MAX_TOTAL_BYTES", "8388608");
         reset_trace_store_accounting();
 
         let raw_window = "chatgpt-window-opaque-secret";
@@ -2235,12 +2235,12 @@ mod tests {
     fn full_mode_persists_complete_compressed_payload() {
         let temp = tempfile::tempdir().unwrap();
         let mut env = crate::test_support::TestEnvGuard::new();
-        env.set("WEBCODEX_TOOL_REQUEST_TRACE", "full");
+        env.set("CODEGPT_TOOL_REQUEST_TRACE", "full");
         env.set(
-            "WEBCODEX_TOOL_REQUEST_TRACE_DIR",
+            "CODEGPT_TOOL_REQUEST_TRACE_DIR",
             temp.path().to_string_lossy().as_ref(),
         );
-        env.set("WEBCODEX_TOOL_REQUEST_TRACE_MAX_TOTAL_BYTES", "8388608");
+        env.set("CODEGPT_TOOL_REQUEST_TRACE_MAX_TOTAL_BYTES", "8388608");
         let guard = ToolRequestLifecycle::new(
             "mcp",
             "trace-full".into(),
@@ -2269,12 +2269,12 @@ mod tests {
     fn full_mode_trace_reader_lists_then_reads_verified_payload_without_native_paths() {
         let temp = tempfile::tempdir().unwrap();
         let mut env = crate::test_support::TestEnvGuard::new();
-        env.set("WEBCODEX_TOOL_REQUEST_TRACE", "full");
+        env.set("CODEGPT_TOOL_REQUEST_TRACE", "full");
         env.set(
-            "WEBCODEX_TOOL_REQUEST_TRACE_DIR",
+            "CODEGPT_TOOL_REQUEST_TRACE_DIR",
             temp.path().to_string_lossy().as_ref(),
         );
-        env.set("WEBCODEX_TOOL_REQUEST_TRACE_MAX_TOTAL_BYTES", "8388608");
+        env.set("CODEGPT_TOOL_REQUEST_TRACE_MAX_TOTAL_BYTES", "8388608");
         reset_trace_store_accounting();
 
         let trace_id = Uuid::new_v4().to_string();
@@ -2308,12 +2308,12 @@ mod tests {
     fn full_mode_trace_reader_rejects_unsafe_refs_and_never_returns_oversize_payload() {
         let temp = tempfile::tempdir().unwrap();
         let mut env = crate::test_support::TestEnvGuard::new();
-        env.set("WEBCODEX_TOOL_REQUEST_TRACE", "full");
+        env.set("CODEGPT_TOOL_REQUEST_TRACE", "full");
         env.set(
-            "WEBCODEX_TOOL_REQUEST_TRACE_DIR",
+            "CODEGPT_TOOL_REQUEST_TRACE_DIR",
             temp.path().to_string_lossy().as_ref(),
         );
-        env.set("WEBCODEX_TOOL_REQUEST_TRACE_MAX_TOTAL_BYTES", "8388608");
+        env.set("CODEGPT_TOOL_REQUEST_TRACE_MAX_TOTAL_BYTES", "8388608");
         reset_trace_store_accounting();
 
         let unsafe_ref = read_full_trace("../etc/passwd", None, None, None).unwrap_err();
@@ -2340,12 +2340,12 @@ mod tests {
     fn read_tool_trace_lifecycle_never_recursively_captures_payloads() {
         let temp = tempfile::tempdir().unwrap();
         let mut env = crate::test_support::TestEnvGuard::new();
-        env.set("WEBCODEX_TOOL_REQUEST_TRACE", "full");
+        env.set("CODEGPT_TOOL_REQUEST_TRACE", "full");
         env.set(
-            "WEBCODEX_TOOL_REQUEST_TRACE_DIR",
+            "CODEGPT_TOOL_REQUEST_TRACE_DIR",
             temp.path().to_string_lossy().as_ref(),
         );
-        env.set("WEBCODEX_TOOL_REQUEST_TRACE_MAX_TOTAL_BYTES", "8388608");
+        env.set("CODEGPT_TOOL_REQUEST_TRACE_MAX_TOTAL_BYTES", "8388608");
         reset_trace_store_accounting();
 
         let trace_id = Uuid::new_v4().to_string();
@@ -2373,12 +2373,12 @@ mod tests {
     fn agent_continuation_app_lifecycle_never_captures_host_binding_or_resume_secrets() {
         let temp = tempfile::tempdir().unwrap();
         let mut env = crate::test_support::TestEnvGuard::new();
-        env.set("WEBCODEX_TOOL_REQUEST_TRACE", "full");
+        env.set("CODEGPT_TOOL_REQUEST_TRACE", "full");
         env.set(
-            "WEBCODEX_TOOL_REQUEST_TRACE_DIR",
+            "CODEGPT_TOOL_REQUEST_TRACE_DIR",
             temp.path().to_string_lossy().as_ref(),
         );
-        env.set("WEBCODEX_TOOL_REQUEST_TRACE_MAX_TOTAL_BYTES", "8388608");
+        env.set("CODEGPT_TOOL_REQUEST_TRACE_MAX_TOTAL_BYTES", "8388608");
         reset_trace_store_accounting();
 
         for tool_name in [
@@ -2429,12 +2429,12 @@ mod tests {
     fn full_mode_capture_does_not_wait_for_trace_io_lock() {
         let temp = tempfile::tempdir().unwrap();
         let mut env = crate::test_support::TestEnvGuard::new();
-        env.set("WEBCODEX_TOOL_REQUEST_TRACE", "full");
+        env.set("CODEGPT_TOOL_REQUEST_TRACE", "full");
         env.set(
-            "WEBCODEX_TOOL_REQUEST_TRACE_DIR",
+            "CODEGPT_TOOL_REQUEST_TRACE_DIR",
             temp.path().to_string_lossy().as_ref(),
         );
-        env.set("WEBCODEX_TOOL_REQUEST_TRACE_MAX_TOTAL_BYTES", "8388608");
+        env.set("CODEGPT_TOOL_REQUEST_TRACE_MAX_TOTAL_BYTES", "8388608");
         reset_trace_store_accounting();
 
         let io_guard = trace_io_state().lock().unwrap();
@@ -2471,9 +2471,9 @@ mod tests {
         let not_a_directory = temp.path().join("trace-file");
         fs::write(&not_a_directory, b"occupied").unwrap();
         let mut env = crate::test_support::TestEnvGuard::new();
-        env.set("WEBCODEX_TOOL_REQUEST_TRACE", "full");
+        env.set("CODEGPT_TOOL_REQUEST_TRACE", "full");
         env.set(
-            "WEBCODEX_TOOL_REQUEST_TRACE_DIR",
+            "CODEGPT_TOOL_REQUEST_TRACE_DIR",
             not_a_directory.to_string_lossy().as_ref(),
         );
         let guard = ToolRequestLifecycle::new(
@@ -2493,12 +2493,12 @@ mod tests {
     fn full_mode_omits_payload_that_cannot_fit_disk_budget() {
         let temp = tempfile::tempdir().unwrap();
         let mut env = crate::test_support::TestEnvGuard::new();
-        env.set("WEBCODEX_TOOL_REQUEST_TRACE", "full");
+        env.set("CODEGPT_TOOL_REQUEST_TRACE", "full");
         env.set(
-            "WEBCODEX_TOOL_REQUEST_TRACE_DIR",
+            "CODEGPT_TOOL_REQUEST_TRACE_DIR",
             temp.path().to_string_lossy().as_ref(),
         );
-        env.set("WEBCODEX_TOOL_REQUEST_TRACE_MAX_TOTAL_BYTES", "1");
+        env.set("CODEGPT_TOOL_REQUEST_TRACE_MAX_TOTAL_BYTES", "1");
         let guard = ToolRequestLifecycle::new(
             "mcp",
             "trace-budget".into(),
@@ -2516,12 +2516,12 @@ mod tests {
     fn full_mode_accounting_tracks_writes_without_rescanning_hot_path() {
         let temp = tempfile::tempdir().unwrap();
         let mut env = crate::test_support::TestEnvGuard::new();
-        env.set("WEBCODEX_TOOL_REQUEST_TRACE", "full");
+        env.set("CODEGPT_TOOL_REQUEST_TRACE", "full");
         env.set(
-            "WEBCODEX_TOOL_REQUEST_TRACE_DIR",
+            "CODEGPT_TOOL_REQUEST_TRACE_DIR",
             temp.path().to_string_lossy().as_ref(),
         );
-        env.set("WEBCODEX_TOOL_REQUEST_TRACE_MAX_TOTAL_BYTES", "8388608");
+        env.set("CODEGPT_TOOL_REQUEST_TRACE_MAX_TOTAL_BYTES", "8388608");
         reset_trace_store_accounting();
 
         let trace_id = "trace-accounting-hot-path";
@@ -2550,10 +2550,10 @@ mod tests {
         let first_root = tempfile::tempdir().unwrap();
         let second_root = tempfile::tempdir().unwrap();
         let mut env = crate::test_support::TestEnvGuard::new();
-        env.set("WEBCODEX_TOOL_REQUEST_TRACE", "full");
-        env.set("WEBCODEX_TOOL_REQUEST_TRACE_MAX_TOTAL_BYTES", "8388608");
+        env.set("CODEGPT_TOOL_REQUEST_TRACE", "full");
+        env.set("CODEGPT_TOOL_REQUEST_TRACE_MAX_TOTAL_BYTES", "8388608");
         env.set(
-            "WEBCODEX_TOOL_REQUEST_TRACE_DIR",
+            "CODEGPT_TOOL_REQUEST_TRACE_DIR",
             first_root.path().to_string_lossy().as_ref(),
         );
         reset_trace_store_accounting();
@@ -2561,7 +2561,7 @@ mod tests {
         let first_scans = accounting_snapshot().3;
 
         env.set(
-            "WEBCODEX_TOOL_REQUEST_TRACE_DIR",
+            "CODEGPT_TOOL_REQUEST_TRACE_DIR",
             second_root.path().to_string_lossy().as_ref(),
         );
         assert!(persist_metadata_event("trace-second-root", json!({"event": "second"})).unwrap());
@@ -2579,19 +2579,19 @@ mod tests {
     fn full_mode_accounting_rebuilds_when_same_root_config_changes() {
         let temp = tempfile::tempdir().unwrap();
         let mut env = crate::test_support::TestEnvGuard::new();
-        env.set("WEBCODEX_TOOL_REQUEST_TRACE", "full");
+        env.set("CODEGPT_TOOL_REQUEST_TRACE", "full");
         env.set(
-            "WEBCODEX_TOOL_REQUEST_TRACE_DIR",
+            "CODEGPT_TOOL_REQUEST_TRACE_DIR",
             temp.path().to_string_lossy().as_ref(),
         );
-        env.set("WEBCODEX_TOOL_REQUEST_TRACE_RETENTION_HOURS", "2");
-        env.set("WEBCODEX_TOOL_REQUEST_TRACE_MAX_TOTAL_BYTES", "8388608");
+        env.set("CODEGPT_TOOL_REQUEST_TRACE_RETENTION_HOURS", "2");
+        env.set("CODEGPT_TOOL_REQUEST_TRACE_MAX_TOTAL_BYTES", "8388608");
         reset_trace_store_accounting();
         assert!(persist_metadata_event("trace-config", json!({"event": "first"})).unwrap());
         let first_scans = accounting_snapshot().3;
 
-        env.set("WEBCODEX_TOOL_REQUEST_TRACE_RETENTION_HOURS", "3");
-        env.set("WEBCODEX_TOOL_REQUEST_TRACE_MAX_TOTAL_BYTES", "16777216");
+        env.set("CODEGPT_TOOL_REQUEST_TRACE_RETENTION_HOURS", "3");
+        env.set("CODEGPT_TOOL_REQUEST_TRACE_MAX_TOTAL_BYTES", "16777216");
         assert!(persist_metadata_event("trace-config", json!({"event": "second"})).unwrap());
         let accounting = trace_io_state().lock().unwrap();
         assert_eq!(accounting.filesystem_scans, first_scans + 1);
@@ -2606,12 +2606,12 @@ mod tests {
     fn full_mode_due_maintenance_reconciles_external_owned_drift() {
         let temp = tempfile::tempdir().unwrap();
         let mut env = crate::test_support::TestEnvGuard::new();
-        env.set("WEBCODEX_TOOL_REQUEST_TRACE", "full");
+        env.set("CODEGPT_TOOL_REQUEST_TRACE", "full");
         env.set(
-            "WEBCODEX_TOOL_REQUEST_TRACE_DIR",
+            "CODEGPT_TOOL_REQUEST_TRACE_DIR",
             temp.path().to_string_lossy().as_ref(),
         );
-        env.set("WEBCODEX_TOOL_REQUEST_TRACE_MAX_TOTAL_BYTES", "8388608");
+        env.set("CODEGPT_TOOL_REQUEST_TRACE_MAX_TOTAL_BYTES", "8388608");
         reset_trace_store_accounting();
         assert!(persist_metadata_event("trace-known", json!({"event": "first"})).unwrap());
         let first_scans = accounting_snapshot().3;
@@ -2636,12 +2636,12 @@ mod tests {
     fn full_mode_invalidated_accounting_rebuilds_on_next_write() {
         let temp = tempfile::tempdir().unwrap();
         let mut env = crate::test_support::TestEnvGuard::new();
-        env.set("WEBCODEX_TOOL_REQUEST_TRACE", "full");
+        env.set("CODEGPT_TOOL_REQUEST_TRACE", "full");
         env.set(
-            "WEBCODEX_TOOL_REQUEST_TRACE_DIR",
+            "CODEGPT_TOOL_REQUEST_TRACE_DIR",
             temp.path().to_string_lossy().as_ref(),
         );
-        env.set("WEBCODEX_TOOL_REQUEST_TRACE_MAX_TOTAL_BYTES", "8388608");
+        env.set("CODEGPT_TOOL_REQUEST_TRACE_MAX_TOTAL_BYTES", "8388608");
         reset_trace_store_accounting();
         let trace_id = "trace-rebuild-invalidated";
         assert!(persist_metadata_event(trace_id, json!({"event": "first"})).unwrap());
@@ -2663,13 +2663,13 @@ mod tests {
         let event = json!({"event": "budget", "padding": "x".repeat(128)});
         let line_len = event_line_len(&event);
         let mut env = crate::test_support::TestEnvGuard::new();
-        env.set("WEBCODEX_TOOL_REQUEST_TRACE", "full");
+        env.set("CODEGPT_TOOL_REQUEST_TRACE", "full");
         env.set(
-            "WEBCODEX_TOOL_REQUEST_TRACE_DIR",
+            "CODEGPT_TOOL_REQUEST_TRACE_DIR",
             temp.path().to_string_lossy().as_ref(),
         );
         env.set(
-            "WEBCODEX_TOOL_REQUEST_TRACE_MAX_TOTAL_BYTES",
+            "CODEGPT_TOOL_REQUEST_TRACE_MAX_TOTAL_BYTES",
             &(line_len * 2).to_string(),
         );
         reset_trace_store_accounting();
@@ -2701,13 +2701,13 @@ mod tests {
         let event = json!({"event": "active", "padding": "x".repeat(64)});
         let line_len = event_line_len(&event);
         let mut env = crate::test_support::TestEnvGuard::new();
-        env.set("WEBCODEX_TOOL_REQUEST_TRACE", "full");
+        env.set("CODEGPT_TOOL_REQUEST_TRACE", "full");
         env.set(
-            "WEBCODEX_TOOL_REQUEST_TRACE_DIR",
+            "CODEGPT_TOOL_REQUEST_TRACE_DIR",
             temp.path().to_string_lossy().as_ref(),
         );
         env.set(
-            "WEBCODEX_TOOL_REQUEST_TRACE_MAX_TOTAL_BYTES",
+            "CODEGPT_TOOL_REQUEST_TRACE_MAX_TOTAL_BYTES",
             &line_len.to_string(),
         );
         reset_trace_store_accounting();
@@ -2725,13 +2725,13 @@ mod tests {
         let event = json!({"event": "ownership", "padding": "x".repeat(64)});
         let line_len = event_line_len(&event);
         let mut env = crate::test_support::TestEnvGuard::new();
-        env.set("WEBCODEX_TOOL_REQUEST_TRACE", "full");
+        env.set("CODEGPT_TOOL_REQUEST_TRACE", "full");
         env.set(
-            "WEBCODEX_TOOL_REQUEST_TRACE_DIR",
+            "CODEGPT_TOOL_REQUEST_TRACE_DIR",
             temp.path().to_string_lossy().as_ref(),
         );
         env.set(
-            "WEBCODEX_TOOL_REQUEST_TRACE_MAX_TOTAL_BYTES",
+            "CODEGPT_TOOL_REQUEST_TRACE_MAX_TOTAL_BYTES",
             &line_len.to_string(),
         );
         reset_trace_store_accounting();
@@ -2753,13 +2753,13 @@ mod tests {
     fn full_mode_retention_prunes_owned_non_active_cached_trace() {
         let temp = tempfile::tempdir().unwrap();
         let mut env = crate::test_support::TestEnvGuard::new();
-        env.set("WEBCODEX_TOOL_REQUEST_TRACE", "full");
+        env.set("CODEGPT_TOOL_REQUEST_TRACE", "full");
         env.set(
-            "WEBCODEX_TOOL_REQUEST_TRACE_DIR",
+            "CODEGPT_TOOL_REQUEST_TRACE_DIR",
             temp.path().to_string_lossy().as_ref(),
         );
-        env.set("WEBCODEX_TOOL_REQUEST_TRACE_RETENTION_HOURS", "1");
-        env.set("WEBCODEX_TOOL_REQUEST_TRACE_MAX_TOTAL_BYTES", "8388608");
+        env.set("CODEGPT_TOOL_REQUEST_TRACE_RETENTION_HOURS", "1");
+        env.set("CODEGPT_TOOL_REQUEST_TRACE_MAX_TOTAL_BYTES", "8388608");
         reset_trace_store_accounting();
         assert!(persist_metadata_event("trace-expired", json!({"event": "old"})).unwrap());
 
@@ -2781,12 +2781,12 @@ mod tests {
         ensure_trace_owner_marker(&existing).unwrap();
         fs::write(existing.join("events.jsonl"), vec![b'x'; 257]).unwrap();
         let mut env = crate::test_support::TestEnvGuard::new();
-        env.set("WEBCODEX_TOOL_REQUEST_TRACE", "full");
+        env.set("CODEGPT_TOOL_REQUEST_TRACE", "full");
         env.set(
-            "WEBCODEX_TOOL_REQUEST_TRACE_DIR",
+            "CODEGPT_TOOL_REQUEST_TRACE_DIR",
             temp.path().to_string_lossy().as_ref(),
         );
-        env.set("WEBCODEX_TOOL_REQUEST_TRACE_MAX_TOTAL_BYTES", "8388608");
+        env.set("CODEGPT_TOOL_REQUEST_TRACE_MAX_TOTAL_BYTES", "8388608");
         reset_trace_store_accounting();
 
         let event = json!({"event": "after-restart"});
@@ -2807,12 +2807,12 @@ mod tests {
         fs::write(unrelated.join("keep.bin"), vec![b'x'; 16 * 1024]).unwrap();
 
         let mut env = crate::test_support::TestEnvGuard::new();
-        env.set("WEBCODEX_TOOL_REQUEST_TRACE", "full");
+        env.set("CODEGPT_TOOL_REQUEST_TRACE", "full");
         env.set(
-            "WEBCODEX_TOOL_REQUEST_TRACE_DIR",
+            "CODEGPT_TOOL_REQUEST_TRACE_DIR",
             temp.path().to_string_lossy().as_ref(),
         );
-        env.set("WEBCODEX_TOOL_REQUEST_TRACE_MAX_TOTAL_BYTES", "8192");
+        env.set("CODEGPT_TOOL_REQUEST_TRACE_MAX_TOTAL_BYTES", "8192");
         let trace_id = new_trace_id();
         let guard = ToolRequestLifecycle::new(
             "mcp",
@@ -2834,12 +2834,12 @@ mod tests {
     fn full_mode_trace_storage_is_private_on_unix() {
         let temp = tempfile::tempdir().unwrap();
         let mut env = crate::test_support::TestEnvGuard::new();
-        env.set("WEBCODEX_TOOL_REQUEST_TRACE", "full");
+        env.set("CODEGPT_TOOL_REQUEST_TRACE", "full");
         env.set(
-            "WEBCODEX_TOOL_REQUEST_TRACE_DIR",
+            "CODEGPT_TOOL_REQUEST_TRACE_DIR",
             temp.path().to_string_lossy().as_ref(),
         );
-        env.set("WEBCODEX_TOOL_REQUEST_TRACE_MAX_TOTAL_BYTES", "8388608");
+        env.set("CODEGPT_TOOL_REQUEST_TRACE_MAX_TOTAL_BYTES", "8388608");
         let trace_id = new_trace_id();
         let guard = ToolRequestLifecycle::new(
             "mcp",
@@ -2868,7 +2868,7 @@ mod tests {
     #[tokio::test]
     async fn window_correlation_without_tracing_does_not_retain_runner_requests() {
         let mut env = crate::test_support::TestEnvGuard::new();
-        env.set("WEBCODEX_TOOL_REQUEST_TRACE", "off");
+        env.set("CODEGPT_TOOL_REQUEST_TRACE", "off");
         let guard = ToolRequestLifecycle::new(
             "mcp",
             new_trace_id(),
@@ -2923,7 +2923,7 @@ mod tests {
         let metadata_request_id = format!("request-metadata-{}", Uuid::new_v4());
         let metadata_job_id = format!("job-metadata-{}", Uuid::new_v4());
 
-        env.set("WEBCODEX_TOOL_REQUEST_TRACE", "true");
+        env.set("CODEGPT_TOOL_REQUEST_TRACE", "true");
         let metadata_guard = ToolRequestLifecycle::new(
             "mcp",
             metadata_trace_id,
@@ -2964,12 +2964,12 @@ mod tests {
         finalize_runner_job_correlation(Some(&metadata_request_id), &metadata_job_id);
         drop(metadata_guard);
 
-        env.set("WEBCODEX_TOOL_REQUEST_TRACE", "full");
+        env.set("CODEGPT_TOOL_REQUEST_TRACE", "full");
         env.set(
-            "WEBCODEX_TOOL_REQUEST_TRACE_DIR",
+            "CODEGPT_TOOL_REQUEST_TRACE_DIR",
             temp.path().to_string_lossy().as_ref(),
         );
-        env.set("WEBCODEX_TOOL_REQUEST_TRACE_MAX_TOTAL_BYTES", "8388608");
+        env.set("CODEGPT_TOOL_REQUEST_TRACE_MAX_TOTAL_BYTES", "8388608");
         reset_trace_store_accounting();
         let full_trace_id = format!("trace-runner-full-{}", Uuid::new_v4());
         let full_request_id = format!("request-full-{}", Uuid::new_v4());
@@ -3033,9 +3033,9 @@ mod tests {
     async fn runner_correlation_survives_original_dispatch_scope() {
         let temp = tempfile::tempdir().unwrap();
         let mut env = crate::test_support::TestEnvGuard::new();
-        env.set("WEBCODEX_TOOL_REQUEST_TRACE", "full");
+        env.set("CODEGPT_TOOL_REQUEST_TRACE", "full");
         env.set(
-            "WEBCODEX_TOOL_REQUEST_TRACE_DIR",
+            "CODEGPT_TOOL_REQUEST_TRACE_DIR",
             temp.path().to_string_lossy().as_ref(),
         );
         let guard = ToolRequestLifecycle::new(
@@ -3120,7 +3120,7 @@ mod tests {
     #[test]
     fn incomplete_drop_is_safe_when_disabled() {
         let mut env = crate::test_support::TestEnvGuard::new();
-        env.remove("WEBCODEX_TOOL_REQUEST_TRACE");
+        env.remove("CODEGPT_TOOL_REQUEST_TRACE");
         let guard = ToolRequestLifecycle::new(
             "mcp",
             "trace-test".into(),
@@ -3136,18 +3136,18 @@ mod tests {
     #[test]
     fn completed_drop_is_silent() {
         let mut env = crate::test_support::TestEnvGuard::new();
-        env.set("WEBCODEX_TOOL_REQUEST_TRACE", "true");
+        env.set("CODEGPT_TOOL_REQUEST_TRACE", "true");
         let guard =
             ToolRequestLifecycle::new("api", "trace-ok".into(), "-", "POST /api/tools/call", None);
         guard.handler_returned(200, Some(12), Some(true), Some(true), "ok");
         drop(guard);
-        env.remove("WEBCODEX_TOOL_REQUEST_TRACE");
+        env.remove("CODEGPT_TOOL_REQUEST_TRACE");
     }
 
     #[test]
     fn completion_timing_preserves_subsecond_monotonic_precision() {
         let mut env = crate::test_support::TestEnvGuard::new();
-        env.remove("WEBCODEX_TOOL_REQUEST_TRACE");
+        env.remove("CODEGPT_TOOL_REQUEST_TRACE");
         let guard = ToolRequestLifecycle::new(
             "mcp",
             "trace-precise".into(),

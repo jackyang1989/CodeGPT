@@ -52,7 +52,7 @@ fn init_git_repo(root: &Path) {
     assert!(status.success());
     for (key, value) in [
         ("user.email", "tests@example.invalid"),
-        ("user.name", "WebCodex Tests"),
+        ("user.name", "CodeGPT Tests"),
     ] {
         let status = std::process::Command::new("git")
             .args(["config", key, value])

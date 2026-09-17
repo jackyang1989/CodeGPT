@@ -2,13 +2,13 @@
 set -eu
 
 ENV_FILE=.env
-RECEIPT_FILE=.webcodex-bootstrap.receipt
+RECEIPT_FILE=.codegpt-bootstrap.receipt
 RECEIPT_VERSION=1
 BUILD_OVERLAY=compose.build.yaml
 HOST_IP=127.0.0.1
 HOST_PORT=8080
 ZERO_TOKEN=0000000000000000000000000000000000000000000000000000000000000000
-HEALTH_WAIT_SECS=${WEBCODEX_BOOTSTRAP_HEALTH_WAIT_SECS:-90}
+HEALTH_WAIT_SECS=${CODEGPT_BOOTSTRAP_HEALTH_WAIT_SECS:-90}
 TEMP_FILES=
 
 cleanup_temps() {
@@ -33,8 +33,8 @@ Usage:
   $0 rollback
 
 Examples:
-  $0 https://webcodex.example.com
-  $0 https://webcodex.example.com --build-from-source
+  $0 https://codegpt.example.com
+  $0 https://codegpt.example.com --build-from-source
   $0 status
   $0 resume
   $0 rollback
@@ -395,23 +395,23 @@ validate_committed_env() {
     lines=$(wc -l < "$ENV_FILE" | tr -d ' ')
     [ "$lines" -eq "$expected_lines" ] || fail "$ENV_FILE does not match the canonical bootstrap layout"
     for expected in \
-        "WEBCODEX_PUBLIC_URL=$PUBLIC_URL" \
-        "WEBCODEX_HOST_IP=$HOST_IP" \
-        "WEBCODEX_HOST_PORT=$HOST_PORT" \
+        "CODEGPT_PUBLIC_URL=$PUBLIC_URL" \
+        "CODEGPT_HOST_IP=$HOST_IP" \
+        "CODEGPT_HOST_PORT=$HOST_PORT" \
         "RUST_LOG=info" \
         "COMPOSE_FILE=$COMPOSE_FILE"; do
         [ "$(grep -Fxc "$expected" "$ENV_FILE" || true)" -eq 1 ] \
             || fail "$ENV_FILE does not match the installation receipt"
     done
     if [ "$MODE" = image ]; then
-        [ "$(grep -Fxc "WEBCODEX_SERVER_IMAGE=$SERVER_IMAGE" "$ENV_FILE" || true)" -eq 1 ] \
+        [ "$(grep -Fxc "CODEGPT_SERVER_IMAGE=$SERVER_IMAGE" "$ENV_FILE" || true)" -eq 1 ] \
             || fail "$ENV_FILE does not match the recorded Server image"
-    elif grep -q '^WEBCODEX_SERVER_IMAGE=' "$ENV_FILE"; then
+    elif grep -q '^CODEGPT_SERVER_IMAGE=' "$ENV_FILE"; then
         fail "$ENV_FILE unexpectedly contains a Server image for source mode"
     fi
-    [ "$(grep -c '^WEBCODEX_TOKEN=' "$ENV_FILE" || true)" -eq 1 ] \
+    [ "$(grep -c '^CODEGPT_TOKEN=' "$ENV_FILE" || true)" -eq 1 ] \
         || fail "$ENV_FILE does not contain exactly one administrator token"
-    token=$(sed -n 's/^WEBCODEX_TOKEN=//p' "$ENV_FILE")
+    token=$(sed -n 's/^CODEGPT_TOKEN=//p' "$ENV_FILE")
     [ "${#token}" -eq 64 ] || fail "$ENV_FILE administrator token has an invalid length"
     case "$token" in
         *[!0-9a-f]*) fail "$ENV_FILE administrator token is not lowercase hex" ;;
@@ -454,40 +454,40 @@ preflight_fresh_install() {
     require_runtime_dependencies
 
     if [ "$MODE" = source ]; then
-        [ "${WEBCODEX_RELEASE_BOOTSTRAP:-false}" != true ] || fail "release bootstrap assets do not support --build-from-source"
+        [ "${CODEGPT_RELEASE_BOOTSTRAP:-false}" != true ] || fail "release bootstrap assets do not support --build-from-source"
         [ -f "$BUILD_OVERLAY" ] || fail "$BUILD_OVERLAY is required for --build-from-source"
         [ -f Dockerfile ] || fail "Dockerfile is required for --build-from-source"
     fi
 
     if [ "$MODE" = source ]; then
-        WEBCODEX_TOKEN=$ZERO_TOKEN WEBCODEX_PUBLIC_URL="$PUBLIC_URL" \
+        CODEGPT_TOKEN=$ZERO_TOKEN CODEGPT_PUBLIC_URL="$PUBLIC_URL" \
             compose_full config >/dev/null || fail "source Compose configuration is invalid"
     else
         if [ -z "$SERVER_IMAGE" ]; then
-            SERVER_IMAGE=$(WEBCODEX_TOKEN=$ZERO_TOKEN WEBCODEX_PUBLIC_URL="$PUBLIC_URL" compose_base config --images)
+            SERVER_IMAGE=$(CODEGPT_TOKEN=$ZERO_TOKEN CODEGPT_PUBLIC_URL="$PUBLIC_URL" compose_base config --images)
         fi
         validate_server_image "$SERVER_IMAGE" || {
-            echo "invalid WEBCODEX_SERVER_IMAGE: expected a Docker image reference" >&2
+            echo "invalid CODEGPT_SERVER_IMAGE: expected a Docker image reference" >&2
             exit 2
         }
-        WEBCODEX_TOKEN=$ZERO_TOKEN WEBCODEX_PUBLIC_URL="$PUBLIC_URL" WEBCODEX_SERVER_IMAGE="$SERVER_IMAGE" \
+        CODEGPT_TOKEN=$ZERO_TOKEN CODEGPT_PUBLIC_URL="$PUBLIC_URL" CODEGPT_SERVER_IMAGE="$SERVER_IMAGE" \
             compose_base config >/dev/null || fail "Compose configuration is invalid"
     fi
 
     if [ "$MODE" = image ]; then
-        existing=$(WEBCODEX_TOKEN=$ZERO_TOKEN WEBCODEX_PUBLIC_URL="$PUBLIC_URL" WEBCODEX_SERVER_IMAGE="$SERVER_IMAGE" \
-            compose_full ps -aq webcodex 2>/dev/null || true)
+        existing=$(CODEGPT_TOKEN=$ZERO_TOKEN CODEGPT_PUBLIC_URL="$PUBLIC_URL" CODEGPT_SERVER_IMAGE="$SERVER_IMAGE" \
+            compose_full ps -aq codegpt 2>/dev/null || true)
     else
-        existing=$(WEBCODEX_TOKEN=$ZERO_TOKEN WEBCODEX_PUBLIC_URL="$PUBLIC_URL" \
-            compose_full ps -aq webcodex 2>/dev/null || true)
+        existing=$(CODEGPT_TOKEN=$ZERO_TOKEN CODEGPT_PUBLIC_URL="$PUBLIC_URL" \
+            compose_full ps -aq codegpt 2>/dev/null || true)
     fi
-    [ -z "$existing" ] || fail "an existing WebCodex Compose container was found without an installation receipt; refusing to adopt it implicitly"
+    [ -z "$existing" ] || fail "an existing CodeGPT Compose container was found without an installation receipt; refusing to adopt it implicitly"
     port_preflight
 
     if [ "$MODE" = image ]; then
-        WEBCODEX_TOKEN=$ZERO_TOKEN WEBCODEX_PUBLIC_URL="$PUBLIC_URL" WEBCODEX_SERVER_IMAGE="$SERVER_IMAGE" \
-            compose_base pull webcodex || {
-                echo "could not pull the published WebCodex Server image: $SERVER_IMAGE" >&2
+        CODEGPT_TOKEN=$ZERO_TOKEN CODEGPT_PUBLIC_URL="$PUBLIC_URL" CODEGPT_SERVER_IMAGE="$SERVER_IMAGE" \
+            compose_base pull codegpt || {
+                echo "could not pull the published CodeGPT Server image: $SERVER_IMAGE" >&2
                 echo "If the official image is not published/public yet, retry with --build-from-source." >&2
                 exit 1
             }
@@ -524,14 +524,14 @@ commit_secret_env() {
     TEMP_FILES=$tmp
     umask 077
     {
-        printf 'WEBCODEX_PUBLIC_URL=%s\n' "$PUBLIC_URL"
-        printf 'WEBCODEX_TOKEN=%s\n' "$TOKEN"
-        printf 'WEBCODEX_HOST_IP=%s\n' "$HOST_IP"
-        printf 'WEBCODEX_HOST_PORT=%s\n' "$HOST_PORT"
+        printf 'CODEGPT_PUBLIC_URL=%s\n' "$PUBLIC_URL"
+        printf 'CODEGPT_TOKEN=%s\n' "$TOKEN"
+        printf 'CODEGPT_HOST_IP=%s\n' "$HOST_IP"
+        printf 'CODEGPT_HOST_PORT=%s\n' "$HOST_PORT"
         printf 'RUST_LOG=info\n'
         printf 'COMPOSE_FILE=%s\n' "$COMPOSE_FILE"
         if [ "$MODE" = image ]; then
-            printf 'WEBCODEX_SERVER_IMAGE=%s\n' "$SERVER_IMAGE"
+            printf 'CODEGPT_SERVER_IMAGE=%s\n' "$SERVER_IMAGE"
         fi
     } > "$tmp"
     atomic_commit "$ENV_FILE" "$tmp" || return 1
@@ -540,22 +540,22 @@ commit_secret_env() {
 }
 
 prepare_source_build_identity() {
-    WEBCODEX_GIT_COMMIT=
-    WEBCODEX_GIT_DIRTY=
+    CODEGPT_GIT_COMMIT=
+    CODEGPT_GIT_DIRTY=
     if command -v git >/dev/null 2>&1 && git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-        WEBCODEX_GIT_COMMIT=$(git rev-parse --short=12 HEAD)
+        CODEGPT_GIT_COMMIT=$(git rev-parse --short=12 HEAD)
         if [ -n "$(git status --porcelain --untracked-files=normal)" ]; then
-            WEBCODEX_GIT_DIRTY=true
+            CODEGPT_GIT_DIRTY=true
         else
-            WEBCODEX_GIT_DIRTY=false
+            CODEGPT_GIT_DIRTY=false
         fi
     fi
-    WEBCODEX_BUILT_AT=$(date +%s)
-    export WEBCODEX_GIT_COMMIT WEBCODEX_GIT_DIRTY WEBCODEX_BUILT_AT
+    CODEGPT_BUILT_AT=$(date +%s)
+    export CODEGPT_GIT_COMMIT CODEGPT_GIT_DIRTY CODEGPT_BUILT_AT
 }
 
 container_id() {
-    compose_full ps -q webcodex 2>/dev/null || true
+    compose_full ps -q codegpt 2>/dev/null || true
 }
 
 start_container_if_needed() {
@@ -576,36 +576,36 @@ start_container_if_needed() {
         compose_base up -d --no-build --pull never || return 1
     fi
     existing=$(container_id)
-    [ -n "$existing" ] || fail "docker compose up returned success but no webcodex container exists"
+    [ -n "$existing" ] || fail "docker compose up returned success but no codegpt container exists"
     write_receipt ContainerStarted "$ENV_DIGEST"
 }
 
 wait_for_server_health() {
     cid=$(container_id)
-    [ -n "$cid" ] || fail "WebCodex container is missing; run '$0 rollback' and retry resume"
+    [ -n "$cid" ] || fail "CodeGPT container is missing; run '$0 rollback' and retry resume"
     waited=0
     while [ "$waited" -le "$HEALTH_WAIT_SECS" ]; do
         health=$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' "$cid" 2>/dev/null || true)
         case "$health" in
             healthy)
-                compose_full exec -T webcodex curl -fsS http://127.0.0.1:8080/openapi.json >/dev/null \
-                    || fail "WebCodex healthcheck is healthy but /openapi.json verification failed"
+                compose_full exec -T codegpt curl -fsS http://127.0.0.1:8080/openapi.json >/dev/null \
+                    || fail "CodeGPT healthcheck is healthy but /openapi.json verification failed"
                 write_receipt ServerHealthy "$ENV_DIGEST"
                 return 0
                 ;;
             unhealthy|exited|dead)
-                fail "WebCodex container became $health before the Server was ready; fix the cause and run '$0 resume'"
+                fail "CodeGPT container became $health before the Server was ready; fix the cause and run '$0 resume'"
                 ;;
         esac
         sleep 2
         waited=$((waited + 2))
     done
-    fail "timed out waiting for WebCodex Server health; run '$0 status' and '$0 resume' after fixing the cause"
+    fail "timed out waiting for CodeGPT Server health; run '$0 status' and '$0 resume' after fixing the cause"
 }
 
 create_pairing_code() {
-    PAIRING_OUTPUT=$(compose_full exec -T webcodex sh -lc \
-        'webcodex pairing create --server-url "$WEBCODEX_PUBLIC_URL" --username admin --ttl-secs 600') \
+    PAIRING_OUTPUT=$(compose_full exec -T codegpt sh -lc \
+        'codegpt pairing create --server-url "$CODEGPT_PUBLIC_URL" --username admin --ttl-secs 600') \
         || fail "Server is healthy but pairing-code creation failed; run '$0 resume' to retry only this final stage"
     printf '%s\n' "$PAIRING_OUTPUT"
     write_receipt PairingReady "$ENV_DIGEST"
@@ -619,7 +619,7 @@ print_success() {
     fi
     cat <<EOF_DONE
 
-WebCodex server is healthy.
+CodeGPT server is healthy.
 Bootstrap phase:          PairingReady
 Deployment source:       $DEPLOYMENT_SOURCE
 Installation receipt:    $RECEIPT_FILE
@@ -630,20 +630,20 @@ Console:               $PUBLIC_URL/console
 OpenAPI:               $PUBLIC_URL/openapi.json
 MCP:                   $PUBLIC_URL/mcp
 
-This Compose stack runs webcodex-server only. It does not run webcodex-runner
+This Compose stack runs codegpt-server only. It does not run codegpt-runner
 and does not mount any source repository.
 
 A short-lived pairing code was created only after the Server became healthy.
 If that code expires, create another with:
-  docker compose -f "$COMPOSE_FILE" exec webcodex sh -lc 'webcodex pairing create --server-url "\$WEBCODEX_PUBLIC_URL" --username admin --ttl-secs 600'
+  docker compose -f "$COMPOSE_FILE" exec codegpt sh -lc 'codegpt pairing create --server-url "\$CODEGPT_PUBLIC_URL" --username admin --ttl-secs 600'
 
 On each repository machine, redeem only the short-lived pairing code as the
 ordinary user who will run project commands:
-  webcodex login "$PUBLIC_URL" --code <wc_pair_...> --allowed-root "\$HOME/git"
-  webcodex runner install --scope user --config <login-reported-agent-config>
+  codegpt login "$PUBLIC_URL" --code <wc_pair_...> --allowed-root "\$HOME/git"
+  codegpt runner install --scope user --config <login-reported-agent-config>
 
 Keep $ENV_FILE private. It contains the bootstrap administrator token. Do not copy
-that token to a repository machine or pass it to webcodex connect; connect is
+that token to a repository machine or pass it to codegpt connect; connect is
 the separate hosted shared-key path.
 EOF_DONE
 }
@@ -683,7 +683,7 @@ show_status() {
         if [ -e "$ENV_FILE" ]; then
             fail "$ENV_FILE exists without an installation receipt; this deployment predates recoverable bootstrap state"
         fi
-        echo "WebCodex bootstrap status: not started"
+        echo "CodeGPT bootstrap status: not started"
         return 0
     fi
     load_receipt
@@ -697,7 +697,7 @@ show_status() {
         env_status=yes
     fi
     cat <<EOF_STATUS
-WebCodex bootstrap status
+CodeGPT bootstrap status
   phase:       $PHASE
   mode:        $MODE
   public URL:  $PUBLIC_URL
@@ -711,7 +711,7 @@ rollback_install() {
         if [ -e "$ENV_FILE" ]; then
             fail "$ENV_FILE exists without an installation receipt; refusing to delete an untracked administrator token"
         fi
-        echo "WebCodex bootstrap rollback: nothing to do"
+        echo "CodeGPT bootstrap rollback: nothing to do"
         return 0
     fi
     load_receipt
@@ -725,12 +725,12 @@ rollback_install() {
     fi
     if [ "$PHASE" = AssetsPrepared ]; then
         rm -f "$RECEIPT_FILE"
-        echo "WebCodex bootstrap rollback: returned to Preflight; no administrator token existed"
+        echo "CodeGPT bootstrap rollback: returned to Preflight; no administrator token existed"
         return 0
     fi
 
     require_runtime_dependencies
-    existing=$(compose_full ps -aq webcodex 2>/dev/null || true)
+    existing=$(compose_full ps -aq codegpt 2>/dev/null || true)
     if [ -n "$existing" ]; then
         compose_full down || fail "rollback could not stop/remove the Compose container; receipt and administrator token were preserved"
     fi
@@ -738,7 +738,7 @@ rollback_install() {
     # after the Server may have initialized durable state can create a real lockout.
     write_receipt SecretCommitted "$ENV_DIGEST"
     cat <<EOF_ROLLBACK
-WebCodex bootstrap rollback stopped runtime effects and returned to SecretCommitted.
+CodeGPT bootstrap rollback stopped runtime effects and returned to SecretCommitted.
 $ENV_FILE and the named data volume were preserved intentionally.
 After fixing the failure, run:
   $0 resume
@@ -749,7 +749,7 @@ ACTION=install
 BUILD_FROM_SOURCE=false
 PUBLIC_URL=
 COMPOSE_FILE=${COMPOSE_FILE:-compose.yaml}
-SERVER_IMAGE=${WEBCODEX_SERVER_IMAGE:-}
+SERVER_IMAGE=${CODEGPT_SERVER_IMAGE:-}
 MODE=image
 PHASE=
 COMPOSE_DIGEST=-

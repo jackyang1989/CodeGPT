@@ -31,7 +31,7 @@ function app() {
   return {
     nodes, sent,
     result(presentation, source) {
-      deliver({ method: "ui/notifications/tool-result", params: { _meta: { "webcodex/presentation": presentation } } }, source);
+      deliver({ method: "ui/notifications/tool-result", params: { _meta: { "codegpt/presentation": presentation } } }, source);
     },
     initialize(outcome) {
       if (outcome === "timeout") timers.get(1)();

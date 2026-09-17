@@ -1,18 +1,18 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if [ "${WEBCODEX_E2E_CLAUDE_PROVIDER:-0}" != "1" ]; then
-    printf '[claude-provider-e2e] skipped (set WEBCODEX_E2E_CLAUDE_PROVIDER=1)\n'
+if [ "${CODEGPT_E2E_CLAUDE_PROVIDER:-0}" != "1" ]; then
+    printf '[claude-provider-e2e] skipped (set CODEGPT_E2E_CLAUDE_PROVIDER=1)\n'
     exit 0
 fi
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 CARGO_BIN="${CARGO_BIN:-cargo}"
-CLAUDE_BIN="${WEBCODEX_E2E_CLAUDE_BIN:-claude}"
+CLAUDE_BIN="${CODEGPT_E2E_CLAUDE_BIN:-claude}"
 CLIENT_ID="claude-provider-e2e"
 PROJECT_ID="fixture"
 RUNTIME_PROJECT="agent:${CLIENT_ID}:${PROJECT_ID}"
-TOKEN="webcodex-claude-provider-e2e-only"
+TOKEN="codegpt-claude-provider-e2e-only"
 TMP_ROOT=""
 SERVER_PID=""
 RUNNER_PID=""
@@ -202,7 +202,7 @@ start_runner() {
     XDG_CACHE_HOME="$ISOLATED_HOME/.cache" \
     CLAUDE_CONFIG_DIR="$ISOLATED_HOME/.claude-e2e" \
     RUST_LOG=warn \
-        "$ROOT/target/debug/webcodex-runner" --config "$RUNNER_CONFIG" \
+        "$ROOT/target/debug/codegpt-runner" --config "$RUNNER_CONFIG" \
         >"$RUNNER_LOG" 2>&1 &
     RUNNER_PID=$!
     wait_for_agent || fail "agent did not register"
@@ -237,11 +237,11 @@ require_command "$CARGO_BIN"
 require_command "$CLAUDE_BIN"
 
 cd "$ROOT"
-if [ "${WEBCODEX_E2E_SKIP_BUILD:-0}" != "1" ]; then
-    "$CARGO_BIN" build --quiet -p webcodex -p webcodex-runner --bins
+if [ "${CODEGPT_E2E_SKIP_BUILD:-0}" != "1" ]; then
+    "$CARGO_BIN" build --quiet -p codegpt -p codegpt-runner --bins
 fi
 
-TMP_ROOT="$(mktemp -d -t webcodex-claude-provider-e2e-XXXXXX)"
+TMP_ROOT="$(mktemp -d -t codegpt-claude-provider-e2e-XXXXXX)"
 PORT="$(find_port)"
 DATA_DIR="$TMP_ROOT/data"
 PROJECTS_DIR="$TMP_ROOT/project-registry"
@@ -256,7 +256,7 @@ mkdir -p "$DATA_DIR" "$PROJECTS_DIR" "$FIXTURE" \
 
 git -C "$FIXTURE" init -b main >/dev/null
 git -C "$FIXTURE" config user.email e2e@example.invalid
-git -C "$FIXTURE" config user.name 'WebCodex E2E'
+git -C "$FIXTURE" config user.name 'CodeGPT E2E'
 printf 'before\nneedle\n' >"$FIXTURE/fixture.txt"
 git -C "$FIXTURE" add fixture.txt
 git -C "$FIXTURE" commit -m fixture >/dev/null
@@ -269,9 +269,9 @@ allow_patch = true
 kind = "text"
 EOF
 
-HOME="$ISOLATED_HOME" WEBCODEX_ADDR="127.0.0.1:${PORT}" \
-WEBCODEX_DATA="$DATA_DIR" WEBCODEX_TOKEN="$TOKEN" RUST_LOG=warn \
-    "$ROOT/target/debug/webcodex-server" >"$SERVER_LOG" 2>&1 &
+HOME="$ISOLATED_HOME" CODEGPT_ADDR="127.0.0.1:${PORT}" \
+CODEGPT_DATA="$DATA_DIR" CODEGPT_TOKEN="$TOKEN" RUST_LOG=warn \
+    "$ROOT/target/debug/codegpt-server" >"$SERVER_LOG" 2>&1 &
 SERVER_PID=$!
 wait_for_port "$PORT" || fail "server port did not open"
 ok "isolated server started"
@@ -387,7 +387,7 @@ assert d["success"]
 items = (d.get("output") or {}).get("items") or []
 assert len(items) == 1 and not items[0]["success"]
 out = items[0].get("output") or {}
-assert out.get("format") == "webcodex.external_provider_error.v1"
+assert out.get("format") == "codegpt.external_provider_error.v1"
 assert out.get("code") == "provider_capability_unavailable"
 ' || fail "strict Claude search did not surface a deterministic capability error"
 wait_for_provider_call claude_code false failure provider_capability_unavailable \

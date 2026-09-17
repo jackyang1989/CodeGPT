@@ -67,7 +67,7 @@ fn tool_call_parser_name_gate_matches_tool_definitions() {
         }
     }
 
-    let err = ToolCall::from_tool_name("__not_a_webcodex_tool__", Value::Null).unwrap_err();
+    let err = ToolCall::from_tool_name("__not_a_codegpt_tool__", Value::Null).unwrap_err();
     assert!(
         err.contains("unknown tool"),
         "unknown tool names must stay rejected by the parser gate: {err}"

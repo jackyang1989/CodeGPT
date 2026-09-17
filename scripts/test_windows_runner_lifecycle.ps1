@@ -58,10 +58,10 @@ function New-TestTaskObservation {
     }
 }
 
-$tempRoot = Join-Path ([System.IO.Path]::GetTempPath()) ('webcodex-lifecycle-test-' + [guid]::NewGuid().ToString('N'))
+$tempRoot = Join-Path ([System.IO.Path]::GetTempPath()) ('codegpt-lifecycle-test-' + [guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Path $tempRoot | Out-Null
 try {
-    $runnerPath = Join-Path $tempRoot 'webcodex-runner.exe'
+    $runnerPath = Join-Path $tempRoot 'codegpt-runner.exe'
     $configPath = Join-Path $tempRoot 'runner.toml'
     $supervisorPath = Join-Path $tempRoot 'runner supervisor.ps1'
     $workingDirectory = Join-Path $tempRoot 'work'
@@ -72,8 +72,8 @@ try {
     New-Item -ItemType Directory -Path $workingDirectory | Out-Null
 
     # A. Deterministic install plan and idempotence.
-    $expected = New-WindowsRunnerLifecycleExpectedSpec -RunnerPath $runnerPath -RunnerConfigPath $configPath -SupervisorPath $supervisorPath -TaskName 'WebCodex Test Runner' -WorkingDirectory $workingDirectory
-    $expectedAgain = New-WindowsRunnerLifecycleExpectedSpec -RunnerPath $runnerPath -RunnerConfigPath $configPath -SupervisorPath $supervisorPath -TaskName 'WebCodex Test Runner' -WorkingDirectory $workingDirectory
+    $expected = New-WindowsRunnerLifecycleExpectedSpec -RunnerPath $runnerPath -RunnerConfigPath $configPath -SupervisorPath $supervisorPath -TaskName 'CodeGPT Test Runner' -WorkingDirectory $workingDirectory
+    $expectedAgain = New-WindowsRunnerLifecycleExpectedSpec -RunnerPath $runnerPath -RunnerConfigPath $configPath -SupervisorPath $supervisorPath -TaskName 'CodeGPT Test Runner' -WorkingDirectory $workingDirectory
     Assert-Equal ($expected | ConvertTo-Json -Compress) ($expectedAgain | ConvertTo-Json -Compress) 'fresh lifecycle spec was not deterministic'
     Assert-Equal 'Limited' $expected.PrincipalRunLevel 'first-class lifecycle must use the least-privileged Scheduled Task run level'
     Assert-Equal $expected.SupervisorPath (Get-PowerShellFileArgument -Arguments $expected.ActionArguments) 'supported supervisor argv was not recognized'
@@ -83,11 +83,11 @@ try {
     Assert-True (Test-WindowsRunnerLifecycleSupervisorOwnership -ObservedSupervisorPath $expected.SupervisorPath -ExpectedSupervisorPath $expected.SupervisorPath) 'exact expected supervisor path did not establish lifecycle ownership'
 
     $differentSupervisorPath = Join-Path $tempRoot 'different supervisor.ps1'
-    $webCodexBackupSupervisorPath = Join-Path $tempRoot 'webcodex-backup.ps1'
+    $codeGptBackupSupervisorPath = Join-Path $tempRoot 'codegpt-backup.ps1'
     Set-Content -LiteralPath $differentSupervisorPath -Encoding UTF8 -Value '# different fixture supervisor'
-    Set-Content -LiteralPath $webCodexBackupSupervisorPath -Encoding UTF8 -Value '# unrelated webcodex-named fixture supervisor'
+    Set-Content -LiteralPath $codeGptBackupSupervisorPath -Encoding UTF8 -Value '# unrelated codegpt-named fixture supervisor'
     Assert-False (Test-WindowsRunnerLifecycleSupervisorOwnership -ObservedSupervisorPath $differentSupervisorPath -ExpectedSupervisorPath $expected.SupervisorPath) 'different supervisor path established lifecycle ownership'
-    Assert-False (Test-WindowsRunnerLifecycleSupervisorOwnership -ObservedSupervisorPath $webCodexBackupSupervisorPath -ExpectedSupervisorPath $expected.SupervisorPath) 'path merely containing webcodex established lifecycle ownership'
+    Assert-False (Test-WindowsRunnerLifecycleSupervisorOwnership -ObservedSupervisorPath $codeGptBackupSupervisorPath -ExpectedSupervisorPath $expected.SupervisorPath) 'path merely containing codegpt established lifecycle ownership'
 
     $definition = New-WindowsRunnerScheduledTaskDefinition -ExpectedSpec $expected
     Assert-Equal 1 @($definition.Actions).Count 'task definition action count changed'
@@ -140,12 +140,12 @@ try {
     Assert-HasMismatch $differentSupervisorPlan.task_mismatches 'task_identity' 'different supervisor ownership did not report task identity mismatch'
     Assert-HasMismatch $differentSupervisorPlan.task_mismatches 'task_supervisor_path' 'different supervisor ownership did not report supervisor mismatch'
 
-    $webCodexBackupTask = New-TestTaskObservation -Expected $expected
-    $webCodexBackupTask.SupervisorPath = [System.IO.Path]::GetFullPath($webCodexBackupSupervisorPath)
-    $webCodexBackupTask.ActionArguments = Get-WindowsRunnerSupervisorArguments -SupervisorPath $webCodexBackupTask.SupervisorPath
-    $webCodexBackupTask.IsLifecycleLike = $false
-    $webCodexBackupPlan = Get-WindowsRunnerLifecyclePlan -ExpectedSpec $expected -CurrentTask $webCodexBackupTask -PrimaryInventory @($exactPrimary)
-    Assert-False $webCodexBackupPlan.can_apply 'webcodex-named unrelated supervisor path established ownership'
+    $codeGptBackupTask = New-TestTaskObservation -Expected $expected
+    $codeGptBackupTask.SupervisorPath = [System.IO.Path]::GetFullPath($codeGptBackupSupervisorPath)
+    $codeGptBackupTask.ActionArguments = Get-WindowsRunnerSupervisorArguments -SupervisorPath $codeGptBackupTask.SupervisorPath
+    $codeGptBackupTask.IsLifecycleLike = $false
+    $codeGptBackupPlan = Get-WindowsRunnerLifecyclePlan -ExpectedSpec $expected -CurrentTask $codeGptBackupTask -PrimaryInventory @($exactPrimary)
+    Assert-False $codeGptBackupPlan.can_apply 'codegpt-named unrelated supervisor path established ownership'
 
     $driftArguments = $expected.ActionArguments.Replace('-WindowStyle Hidden', '-WindowStyle Normal')
     Assert-Equal $null (Get-PowerShellFileArgument -Arguments $driftArguments) 'noncanonical action drift was treated as safe for raw projection'
@@ -201,7 +201,7 @@ try {
     $readyEnabledStatus = New-WindowsRunnerLifecycleStatusProjection -ExpectedRunnerPath $expected.RunnerPath -TaskObservation $readyEnabledTask -PrimaryInventory @()
     Assert-True $readyEnabledStatus.task_enabled 'ready task with Settings.Enabled=true was reported disabled'
 
-    $otherRunner = Join-Path $tempRoot 'other\webcodex-runner.exe'
+    $otherRunner = Join-Path $tempRoot 'other\codegpt-runner.exe'
     New-Item -ItemType Directory -Path (Split-Path -Parent $otherRunner) | Out-Null
     New-Item -ItemType File -Path $otherRunner | Out-Null
     $wrongPrimary = [pscustomobject]@{ pid=303; process_creation_filetime=[uint64]404; normalized_executable_path=[System.IO.Path]::GetFullPath($otherRunner); runner_config_path=$expected.RunnerConfigPath; role='primary' }
@@ -216,11 +216,11 @@ try {
     $planText = $exactPlan | ConvertTo-Json -Depth 8 -Compress
     Assert-False $planText.Contains($secret) 'lifecycle plan leaked config secret contents'
 
-    $null = Assert-Throws { New-WindowsRunnerLifecycleExpectedSpec -RunnerPath (Join-Path $tempRoot 'missing.exe') -RunnerConfigPath $configPath -SupervisorPath $supervisorPath -TaskName 'WebCodex Test Runner' -WorkingDirectory $workingDirectory } 'does not exist|Cannot find path|PathNotFound'
-    $null = Assert-Throws { New-WindowsRunnerLifecycleExpectedSpec -RunnerPath $runnerPath -RunnerConfigPath (Join-Path $tempRoot 'missing.toml') -SupervisorPath $supervisorPath -TaskName 'WebCodex Test Runner' -WorkingDirectory $workingDirectory } 'does not exist|Cannot find path|PathNotFound'
-    $null = Assert-Throws { New-WindowsRunnerLifecycleExpectedSpec -RunnerPath $runnerPath -RunnerConfigPath $configPath -SupervisorPath (Join-Path $tempRoot 'missing.ps1') -TaskName 'WebCodex Test Runner' -WorkingDirectory $workingDirectory } 'does not exist|Cannot find path|PathNotFound'
-    $null = Assert-Throws { New-WindowsRunnerLifecycleExpectedSpec -RunnerPath $runnerPath -RunnerConfigPath $configPath -SupervisorPath $supervisorPath -TaskName 'WebCodex Test Runner' -WorkingDirectory (Join-Path $tempRoot 'missing-dir') } 'does not exist|Cannot find path|PathNotFound'
-    $null = Assert-Throws { New-WindowsRunnerLifecycleExpectedSpec -RunnerPath $runnerPath -RunnerConfigPath $configPath -SupervisorPath $supervisorPath -TaskName 'Unrelated Task' -WorkingDirectory $workingDirectory } 'TaskName must identify a WebCodex task'
+    $null = Assert-Throws { New-WindowsRunnerLifecycleExpectedSpec -RunnerPath (Join-Path $tempRoot 'missing.exe') -RunnerConfigPath $configPath -SupervisorPath $supervisorPath -TaskName 'CodeGPT Test Runner' -WorkingDirectory $workingDirectory } 'does not exist|Cannot find path|PathNotFound'
+    $null = Assert-Throws { New-WindowsRunnerLifecycleExpectedSpec -RunnerPath $runnerPath -RunnerConfigPath (Join-Path $tempRoot 'missing.toml') -SupervisorPath $supervisorPath -TaskName 'CodeGPT Test Runner' -WorkingDirectory $workingDirectory } 'does not exist|Cannot find path|PathNotFound'
+    $null = Assert-Throws { New-WindowsRunnerLifecycleExpectedSpec -RunnerPath $runnerPath -RunnerConfigPath $configPath -SupervisorPath (Join-Path $tempRoot 'missing.ps1') -TaskName 'CodeGPT Test Runner' -WorkingDirectory $workingDirectory } 'does not exist|Cannot find path|PathNotFound'
+    $null = Assert-Throws { New-WindowsRunnerLifecycleExpectedSpec -RunnerPath $runnerPath -RunnerConfigPath $configPath -SupervisorPath $supervisorPath -TaskName 'CodeGPT Test Runner' -WorkingDirectory (Join-Path $tempRoot 'missing-dir') } 'does not exist|Cannot find path|PathNotFound'
+    $null = Assert-Throws { New-WindowsRunnerLifecycleExpectedSpec -RunnerPath $runnerPath -RunnerConfigPath $configPath -SupervisorPath $supervisorPath -TaskName 'Unrelated Task' -WorkingDirectory $workingDirectory } 'TaskName must identify a CodeGPT task'
 
     # B. Status projection preserves exact PID+creation identity and handles cardinality/task state.
     $statusOne = New-WindowsRunnerLifecycleStatusProjection -ExpectedRunnerPath $expected.RunnerPath -TaskObservation $exactTask -PrimaryInventory @($exactPrimary)
@@ -236,7 +236,7 @@ try {
     $statusMany = New-WindowsRunnerLifecycleStatusProjection -ExpectedRunnerPath $expected.RunnerPath -TaskObservation $exactTask -PrimaryInventory @($exactPrimary,$secondPrimary)
     Assert-Equal 2 $statusMany.primary_runner_count 'multiple-primary status changed'
 
-    Assert-False (Test-PrimaryRunnerArguments -Arguments @('webcodex-runner.exe','--webcodex-internal-detached-supervisor','x')) 'canonical internal role classification regressed'
+    Assert-False (Test-PrimaryRunnerArguments -Arguments @('codegpt-runner.exe','--codegpt-internal-detached-supervisor','x')) 'canonical internal role classification regressed'
     $disabledTask = New-TestTaskObservation -Expected $expected -Enabled $false -State 'Disabled'
     $statusDisabled = New-WindowsRunnerLifecycleStatusProjection -ExpectedRunnerPath $expected.RunnerPath -TaskObservation $disabledTask -PrimaryInventory @()
     Assert-False $statusDisabled.task_enabled 'disabled task was reported enabled'
@@ -248,29 +248,29 @@ try {
     $repoRoot = Join-Path $tempRoot 'repo'
     $dogfoodDir = Join-Path $repoRoot 'target\dogfood'
     New-Item -ItemType Directory -Path $dogfoodDir -Force | Out-Null
-    $dogfoodCli = Join-Path $dogfoodDir 'webcodex.exe'
-    $dogfoodRunner = Join-Path $dogfoodDir 'webcodex-runner.exe'
-    $explicitCli = Join-Path $tempRoot 'explicit-webcodex.exe'
+    $dogfoodCli = Join-Path $dogfoodDir 'codegpt.exe'
+    $dogfoodRunner = Join-Path $dogfoodDir 'codegpt-runner.exe'
+    $explicitCli = Join-Path $tempRoot 'explicit-codegpt.exe'
     $explicitRunner = Join-Path $tempRoot 'explicit-runner.exe'
-    $installedCli = Join-Path $tempRoot 'installed-webcodex.exe'
+    $installedCli = Join-Path $tempRoot 'installed-codegpt.exe'
     foreach ($path in @($dogfoodCli,$dogfoodRunner,$explicitCli,$explicitRunner,$installedCli)) { New-Item -ItemType File -Path $path | Out-Null }
     $supportAll = { param($Path) return $true }
 
-    $cliSelection = Resolve-WebCodexOperatorCliPath -ExplicitPath $explicitCli -RepoRoot $repoRoot -InstalledPath $installedCli -SupportsOpsRunner $supportAll
+    $cliSelection = Resolve-CodeGPTOperatorCliPath -ExplicitPath $explicitCli -RepoRoot $repoRoot -InstalledPath $installedCli -SupportsOpsRunner $supportAll
     Assert-Equal 'explicit' $cliSelection.Source 'explicit CLI path did not win'
     Assert-Equal ([System.IO.Path]::GetFullPath($explicitCli)) $cliSelection.Path 'explicit CLI path changed'
 
-    $cliSelection = Resolve-WebCodexOperatorCliPath -RepoRoot $repoRoot -InstalledPath $installedCli -SupportsOpsRunner $supportAll
+    $cliSelection = Resolve-CodeGPTOperatorCliPath -RepoRoot $repoRoot -InstalledPath $installedCli -SupportsOpsRunner $supportAll
     Assert-Equal 'repo_dogfood' $cliSelection.Source 'repo dogfood CLI was not preferred'
     Assert-Equal ([System.IO.Path]::GetFullPath($dogfoodCli)) $cliSelection.Path 'repo dogfood CLI path changed'
 
     Remove-Item -LiteralPath $dogfoodCli -Force
     $supportNone = { param($Path) return $false }
-    $null = Assert-Throws { Resolve-WebCodexOperatorCliPath -RepoRoot $repoRoot -InstalledPath $installedCli -SupportsOpsRunner $supportNone } 'stale or unsupported.*ops runner'
+    $null = Assert-Throws { Resolve-CodeGPTOperatorCliPath -RepoRoot $repoRoot -InstalledPath $installedCli -SupportsOpsRunner $supportNone } 'stale or unsupported.*ops runner'
 
-    $candidateSelection = Resolve-WebCodexRunnerCandidatePath -ExplicitPath $explicitRunner -RepoRoot $repoRoot
+    $candidateSelection = Resolve-CodeGPTRunnerCandidatePath -ExplicitPath $explicitRunner -RepoRoot $repoRoot
     Assert-Equal 'explicit' $candidateSelection.Source 'explicit Runner candidate did not win'
-    $candidateSelection = Resolve-WebCodexRunnerCandidatePath -RepoRoot $repoRoot
+    $candidateSelection = Resolve-CodeGPTRunnerCandidatePath -RepoRoot $repoRoot
     Assert-Equal 'repo_dogfood' $candidateSelection.Source 'repo dogfood Runner candidate was not preferred'
 
     Write-Output 'Windows Runner lifecycle focused tests passed.'

@@ -10,7 +10,7 @@ const POLL_INTERVAL: Duration = Duration::from_millis(20);
 
 fn unique_marker(name: &str) -> PathBuf {
     std::env::temp_dir().join(format!(
-        "webcodex-desktop-{name}-{}-{}",
+        "codegpt-desktop-{name}-{}-{}",
         std::process::id(),
         SystemTime::now()
             .duration_since(UNIX_EPOCH)
@@ -107,7 +107,7 @@ async fn desktop_owned_group_kills_descendant_without_touching_unrelated_process
     owned
         .arg("-c")
         .arg("sleep 60 & descendant=$!; printf '%s\\n' \"$descendant\" > \"$1\"; wait \"$descendant\"")
-        .arg("webcodex-owned-tree")
+        .arg("codegpt-owned-tree")
         .arg(&marker);
 
     let mut control = TokioCommand::new("/bin/sleep")
@@ -159,7 +159,7 @@ async fn respawn_reclaims_descendants_from_a_terminal_previous_generation() {
     previous
         .arg("-c")
         .arg("nohup sleep 60 >/dev/null 2>&1 & descendant=$!; printf '%s\\n' \"$descendant\" > \"$1\"; exit 0")
-        .arg("webcodex-terminal-generation")
+        .arg("codegpt-terminal-generation")
         .arg(&marker);
 
     let activity = ActivityLog::default();
@@ -210,7 +210,7 @@ async fn regular_tunnel_stop_observes_stdin_eof_before_group_termination() {
     command
         .arg("-c")
         .arg("cat >/dev/null; printf 'eof\\n' > \"$1\"")
-        .arg("webcodex-tunnel-eof")
+        .arg("codegpt-tunnel-eof")
         .arg(&marker);
 
     let activity = ActivityLog::default();

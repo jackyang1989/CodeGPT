@@ -85,16 +85,16 @@ def fixture_metadata(
 def valid_policy_and_metadata() -> tuple[boundary.BoundaryPolicy, dict]:
     policy = fixture_policy(
         {
-            "webcodex-app": package_policy(
-                "application", normal=("webcodex-core",)
+            "codegpt-app": package_policy(
+                "application", normal=("codegpt-core",)
             ),
-            "webcodex-core": package_policy("leaf"),
+            "codegpt-core": package_policy("leaf"),
         }
     )
     metadata = fixture_metadata(
         {
-            "webcodex-app": [("webcodex-core", "normal", ())],
-            "webcodex-core": [],
+            "codegpt-app": [("codegpt-core", "normal", ())],
+            "codegpt-core": [],
         }
     )
     return policy, metadata
@@ -107,60 +107,60 @@ class MetadataBoundaryTests(unittest.TestCase):
 
     def test_unknown_new_workspace_member_is_reported(self) -> None:
         policy, metadata = valid_policy_and_metadata()
-        new_id = "path+file:///fixture#webcodex-new@0.4.0"
+        new_id = "path+file:///fixture#codegpt-new@0.4.0"
         metadata["packages"].append(
             {
                 "id": new_id,
-                "name": "webcodex-new",
+                "name": "codegpt-new",
                 "dependencies": [],
                 "features": {},
-                "manifest_path": "/fixture/webcodex-new/Cargo.toml",
+                "manifest_path": "/fixture/codegpt-new/Cargo.toml",
             }
         )
         metadata["workspace_members"].append(new_id)
         self.assertEqual(
             boundary.check_metadata(metadata, policy),
-            ["workspace package(s) missing from policy: webcodex-new"],
+            ["workspace package(s) missing from policy: codegpt-new"],
         )
 
     def test_policy_member_absent_from_workspace_is_reported(self) -> None:
         policy = fixture_policy(
             {
-                "webcodex-app": package_policy("application"),
-                "webcodex-ghost": package_policy("leaf"),
+                "codegpt-app": package_policy("application"),
+                "codegpt-ghost": package_policy("leaf"),
             }
         )
-        metadata = fixture_metadata({"webcodex-app": []})
+        metadata = fixture_metadata({"codegpt-app": []})
         self.assertEqual(
             boundary.check_metadata(metadata, policy),
-            ["policy package(s) absent from workspace: webcodex-ghost"],
+            ["policy package(s) absent from workspace: codegpt-ghost"],
         )
 
     def test_forbidden_direct_workspace_dependency_is_reported(self) -> None:
         policy = fixture_policy(
             {
-                "webcodex-app": package_policy(
-                    "application", normal=("webcodex-core",)
+                "codegpt-app": package_policy(
+                    "application", normal=("codegpt-core",)
                 ),
-                "webcodex-core": package_policy("leaf"),
-                "webcodex-helper": package_policy("leaf"),
+                "codegpt-core": package_policy("leaf"),
+                "codegpt-helper": package_policy("leaf"),
             }
         )
         metadata = fixture_metadata(
             {
-                "webcodex-app": [
-                    ("webcodex-core", "normal", ()),
-                    ("webcodex-helper", "normal", ()),
+                "codegpt-app": [
+                    ("codegpt-core", "normal", ()),
+                    ("codegpt-helper", "normal", ()),
                 ],
-                "webcodex-core": [],
-                "webcodex-helper": [],
+                "codegpt-core": [],
+                "codegpt-helper": [],
             }
         )
         self.assertEqual(
             boundary.check_metadata(metadata, policy),
             [
-                "package webcodex-app has unlisted normal workspace dependency(ies): "
-                "webcodex-helper"
+                "package codegpt-app has unlisted normal workspace dependency(ies): "
+                "codegpt-helper"
             ],
         )
 
@@ -169,7 +169,7 @@ class MetadataBoundaryTests(unittest.TestCase):
         app = next(
             package
             for package in metadata["packages"]
-            if package["name"] == "webcodex-app"
+            if package["name"] == "codegpt-app"
         )
         dependency = app["dependencies"][0]
         dependency["path"] = None
@@ -177,29 +177,29 @@ class MetadataBoundaryTests(unittest.TestCase):
         self.assertEqual(
             boundary.check_metadata(metadata, policy),
             [
-                "package webcodex-app policy lists absent normal workspace "
-                "dependency(ies): webcodex-core"
+                "package codegpt-app policy lists absent normal workspace "
+                "dependency(ies): codegpt-core"
             ],
         )
 
     def test_reverse_layer_dependency_is_reported_even_when_allowlisted(self) -> None:
         policy = fixture_policy(
             {
-                "webcodex-app": package_policy("application"),
-                "webcodex-core": package_policy("leaf", normal=("webcodex-app",)),
+                "codegpt-app": package_policy("application"),
+                "codegpt-core": package_policy("leaf", normal=("codegpt-app",)),
             }
         )
         metadata = fixture_metadata(
             {
-                "webcodex-app": [],
-                "webcodex-core": [("webcodex-app", "normal", ())],
+                "codegpt-app": [],
+                "codegpt-core": [("codegpt-app", "normal", ())],
             }
         )
         self.assertEqual(
             boundary.check_metadata(metadata, policy),
             [
-                "reverse layer dependency: webcodex-core (leaf:0) normal-depends on "
-                "webcodex-app (application:1)"
+                "reverse layer dependency: codegpt-core (leaf:0) normal-depends on "
+                "codegpt-app (application:1)"
             ],
         )
 
@@ -210,14 +210,14 @@ class MetadataBoundaryTests(unittest.TestCase):
     def test_explicit_dev_only_exception_can_cross_layers(self) -> None:
         policy = fixture_policy(
             {
-                "webcodex-app": package_policy("application"),
-                "webcodex-core": package_policy("leaf", dev=("webcodex-app",)),
+                "codegpt-app": package_policy("application"),
+                "codegpt-core": package_policy("leaf", dev=("codegpt-app",)),
             }
         )
         metadata = fixture_metadata(
             {
-                "webcodex-app": [],
-                "webcodex-core": [("webcodex-app", "dev", ())],
+                "codegpt-app": [],
+                "codegpt-core": [("codegpt-app", "dev", ())],
             }
         )
         self.assertEqual(boundary.check_metadata(metadata, policy), [])
@@ -225,64 +225,64 @@ class MetadataBoundaryTests(unittest.TestCase):
     def test_root_test_support_is_allowed_only_as_explicit_dev_ownership(self) -> None:
         valid_policy = fixture_policy(
             {
-                "webcodex-app": package_policy("application"),
-                "webcodex-core": package_policy(
+                "codegpt-app": package_policy("application"),
+                "codegpt-core": package_policy(
                     "leaf",
-                    dev=("webcodex-app",),
-                    test_support=("webcodex-app",),
+                    dev=("codegpt-app",),
+                    test_support=("codegpt-app",),
                 ),
             },
-            providers=("webcodex-app",),
+            providers=("codegpt-app",),
         )
         valid_metadata = fixture_metadata(
             {
-                "webcodex-app": [],
-                "webcodex-core": [
-                    ("webcodex-app", "dev", ("root-test-support",))
+                "codegpt-app": [],
+                "codegpt-core": [
+                    ("codegpt-app", "dev", ("root-test-support",))
                 ],
             },
-            package_features={"webcodex-app": ("root-test-support",)},
+            package_features={"codegpt-app": ("root-test-support",)},
         )
         self.assertEqual(boundary.check_metadata(valid_metadata, valid_policy), [])
 
         production_policy = fixture_policy(
             {
-                "webcodex-app": package_policy("application"),
-                "webcodex-core": package_policy("leaf", normal=("webcodex-app",)),
+                "codegpt-app": package_policy("application"),
+                "codegpt-core": package_policy("leaf", normal=("codegpt-app",)),
             },
-            providers=("webcodex-app",),
+            providers=("codegpt-app",),
         )
         production_metadata = fixture_metadata(
             {
-                "webcodex-app": [],
-                "webcodex-core": [
-                    ("webcodex-app", "normal", ("root-test-support",))
+                "codegpt-app": [],
+                "codegpt-core": [
+                    ("codegpt-app", "normal", ("root-test-support",))
                 ],
             },
-            package_features={"webcodex-app": ("root-test-support",)},
+            package_features={"codegpt-app": ("root-test-support",)},
         )
         violations = boundary.check_metadata(production_metadata, production_policy)
         self.assertIn(
-            "package webcodex-core enables root-test-support on non-dev workspace "
-            "dependency webcodex-app",
+            "package codegpt-core enables root-test-support on non-dev workspace "
+            "dependency codegpt-app",
             violations,
         )
         self.assertIn(
-            "reverse layer dependency: webcodex-core (leaf:0) normal-depends on "
-            "webcodex-app (application:1)",
+            "reverse layer dependency: codegpt-core (leaf:0) normal-depends on "
+            "codegpt-app (application:1)",
             violations,
         )
 
     def test_forbidden_external_dependency_guardrail_is_preserved(self) -> None:
         policy = fixture_policy(
-            {"webcodex-core": package_policy("leaf")},
-            forbidden_external={"webcodex-core": ["salvo"]},
+            {"codegpt-core": package_policy("leaf")},
+            forbidden_external={"codegpt-core": ["salvo"]},
         )
-        metadata = fixture_metadata({"webcodex-core": [("salvo", "normal", ())]})
+        metadata = fixture_metadata({"codegpt-core": [("salvo", "normal", ())]})
         self.assertEqual(
             boundary.check_metadata(metadata, policy),
             [
-                "package webcodex-core directly depends on forbidden external "
+                "package codegpt-core directly depends on forbidden external "
                 "package(s): salvo"
             ],
         )
@@ -290,15 +290,15 @@ class MetadataBoundaryTests(unittest.TestCase):
     def test_diagnostics_are_deterministic(self) -> None:
         policy = fixture_policy(
             {
-                "webcodex-app": package_policy(
-                    "application", normal=("webcodex-core",)
+                "codegpt-app": package_policy(
+                    "application", normal=("codegpt-core",)
                 ),
-                "webcodex-core": package_policy("leaf"),
-                "webcodex-policy-only": package_policy("leaf"),
+                "codegpt-core": package_policy("leaf"),
+                "codegpt-policy-only": package_policy("leaf"),
             }
         )
         metadata = fixture_metadata(
-            {"webcodex-app": [], "webcodex-core": [], "webcodex-new": []}
+            {"codegpt-app": [], "codegpt-core": [], "codegpt-new": []}
         )
         first = boundary.check_metadata(metadata, policy)
         second = boundary.check_metadata(metadata, policy)
@@ -306,10 +306,10 @@ class MetadataBoundaryTests(unittest.TestCase):
         self.assertEqual(
             first,
             [
-                "workspace package(s) missing from policy: webcodex-new",
-                "policy package(s) absent from workspace: webcodex-policy-only",
-                "package webcodex-app policy lists absent normal workspace "
-                "dependency(ies): webcodex-core",
+                "workspace package(s) missing from policy: codegpt-new",
+                "policy package(s) absent from workspace: codegpt-policy-only",
+                "package codegpt-app policy lists absent normal workspace "
+                "dependency(ies): codegpt-core",
             ],
         )
 
@@ -326,16 +326,16 @@ class PolicyParsingTests(unittest.TestCase):
         with self.assertRaisesRegex(boundary.PolicyError, "must be sorted"):
             fixture_policy(
                 {
-                    "webcodex-app": {
+                    "codegpt-app": {
                         "layer": "application",
                         "role": "fixture",
-                        "normal": ["webcodex-z", "webcodex-a"],
+                        "normal": ["codegpt-z", "codegpt-a"],
                         "dev": [],
                         "build": [],
                         "test_support": [],
                     },
-                    "webcodex-a": package_policy("leaf"),
-                    "webcodex-z": package_policy("leaf"),
+                    "codegpt-a": package_policy("leaf"),
+                    "codegpt-z": package_policy("leaf"),
                 }
             )
 
@@ -343,8 +343,8 @@ class PolicyParsingTests(unittest.TestCase):
         with self.assertRaisesRegex(boundary.PolicyError, "unknown package"):
             fixture_policy(
                 {
-                    "webcodex-core": package_policy(
-                        "leaf", normal=("webcodex-typo",)
+                    "codegpt-core": package_policy(
+                        "leaf", normal=("codegpt-typo",)
                     )
                 }
             )

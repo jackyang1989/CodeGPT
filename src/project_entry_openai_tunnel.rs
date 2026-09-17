@@ -28,7 +28,7 @@ const TUNNEL_CLIENT_DOCTOR_TIMEOUT: Duration = Duration::from_secs(30);
 const TUNNEL_CLIENT_CONTROL_PLANE_PROBE_TIMEOUT: Duration = Duration::from_secs(20);
 const TUNNEL_CLIENT_READY_PROBE_TIMEOUT: Duration = Duration::from_secs(2);
 const TUNNEL_CLIENT_HEALTH_URL_BYTES: usize = 512;
-const TUNNEL_CLIENT_OVERRIDE: &str = "WEBCODEX_TUNNEL_CLIENT_BIN";
+const TUNNEL_CLIENT_OVERRIDE: &str = "CODEGPT_TUNNEL_CLIENT_BIN";
 #[cfg(windows)]
 const CREATE_NO_WINDOW: u32 = 0x0800_0000;
 
@@ -61,7 +61,7 @@ impl OpenAiTunnel {
         Err(ProductError::new(
             "tunnel_unavailable",
             format!("OpenAI Secure MCP Tunnel stopped unexpectedly ({status})"),
-            Some("Check the OpenAI tunnel-client and network connectivity, then retry webcodex share --tunnel openai."),
+            Some("Check the OpenAI tunnel-client and network connectivity, then retry codegpt share --tunnel openai."),
         ))
     }
 
@@ -137,7 +137,7 @@ fn configure_runtime_command(
         // The local Server bootstrap key may be a process-environment override.
         // The daemon receives only the generated Authorization file, never the
         // bootstrap credential as inherited environment state.
-        .env_remove("WEBCODEX_TOKEN")
+        .env_remove("CODEGPT_TOKEN")
         .arg("--mcp.server-url")
         .arg(format!("url={mcp_url},channel=main"))
         .arg("--mcp.extra-headers")
@@ -277,7 +277,7 @@ async fn wait_until_ready(
         .no_proxy()
         .build()
         .map_err(|_| {
-            tunnel_runtime_error("WebCodex could not initialize the local tunnel readiness probe")
+            tunnel_runtime_error("CodeGPT could not initialize the local tunnel readiness probe")
         })?;
     let mut health_base = None;
 
@@ -289,7 +289,7 @@ async fn wait_until_ready(
             return Err(ProductError::new(
                 "tunnel_unavailable",
                 format!("OpenAI tunnel-client exited before becoming ready ({status})"),
-                Some("Check the Tunnel ID, runtime API key permissions, local WebCodex authentication, and network access, then retry."),
+                Some("Check the Tunnel ID, runtime API key permissions, local CodeGPT authentication, and network access, then retry."),
             ));
         }
 
@@ -403,8 +403,8 @@ async fn resolve_tunnel_client() -> Result<PathBuf, ProductError> {
         if !binary.is_file() {
             return Err(ProductError::new(
                 "tunnel_unavailable",
-                "WEBCODEX_TUNNEL_CLIENT_BIN does not point to a tunnel-client file",
-                Some("Fix or unset WEBCODEX_TUNNEL_CLIENT_BIN, then retry webcodex share --tunnel openai."),
+                "CODEGPT_TUNNEL_CLIENT_BIN does not point to a tunnel-client file",
+                Some("Fix or unset CODEGPT_TUNNEL_CLIENT_BIN, then retry codegpt share --tunnel openai."),
             ));
         }
         verify_tunnel_client_version(binary).await?;
@@ -473,7 +473,7 @@ fn tunnel_client_asset_for(os: &str, arch: &str) -> Result<TunnelClientAsset, Pr
             return Err(ProductError::new(
                 "tunnel_unavailable",
                 format!("automatic OpenAI tunnel-client installation is unsupported on {os}/{arch}"),
-                Some("Install the pinned OpenAI tunnel-client and set WEBCODEX_TUNNEL_CLIENT_BIN, or use another WebCodex tunnel provider."),
+                Some("Install the pinned OpenAI tunnel-client and set CODEGPT_TUNNEL_CLIENT_BIN, or use another CodeGPT tunnel provider."),
             ))
         }
     };
@@ -501,26 +501,26 @@ fn managed_tunnel_client_root_from(
         if !path.is_absolute() {
             return Err(managed_user_root_error("XDG_STATE_HOME"));
         }
-        return Ok(path.join("webcodex/tools/tunnel-client"));
+        return Ok(path.join("codegpt/tools/tunnel-client"));
     }
     if let Some(path) = home.filter(|value| !value.is_empty()) {
         let path = PathBuf::from(path);
         if !path.is_absolute() {
             return Err(managed_user_root_error("HOME"));
         }
-        return Ok(path.join(".local/state/webcodex/tools/tunnel-client"));
+        return Ok(path.join(".local/state/codegpt/tools/tunnel-client"));
     }
     if let Some(path) = local_app_data.filter(|value| !value.is_empty()) {
         let path = PathBuf::from(path);
         if !path.is_absolute() {
             return Err(managed_user_root_error("LOCALAPPDATA"));
         }
-        return Ok(path.join("WebCodex/tools/tunnel-client"));
+        return Ok(path.join("CodeGPT/tools/tunnel-client"));
     }
     Err(ProductError::new(
         "tunnel_unavailable",
-        "WebCodex cannot choose a private user directory for managed OpenAI tunnel-client",
-        Some("Set HOME/XDG_STATE_HOME, ensure LOCALAPPDATA is available on Windows, set WEBCODEX_TUNNEL_CLIENT_BIN, or use another WebCodex tunnel provider."),
+        "CodeGPT cannot choose a private user directory for managed OpenAI tunnel-client",
+        Some("Set HOME/XDG_STATE_HOME, ensure LOCALAPPDATA is available on Windows, set CODEGPT_TUNNEL_CLIENT_BIN, or use another CodeGPT tunnel provider."),
     ))
 }
 
@@ -542,7 +542,7 @@ async fn ensure_managed_tunnel_client_at(
     }
 
     eprintln!(
-        "WebCodex: tunnel-client was not found; downloading verified OpenAI tunnel-client {TUNNEL_CLIENT_VERSION}..."
+        "CodeGPT: tunnel-client was not found; downloading verified OpenAI tunnel-client {TUNNEL_CLIENT_VERSION}..."
     );
     let temporary = install_dir.join(format!(".install-{}", uuid::Uuid::new_v4().simple()));
     create_private_tool_dir(&temporary)?;
@@ -559,8 +559,8 @@ async fn ensure_managed_tunnel_client_at(
         fs::rename(&candidate, &destination).map_err(|_| {
             ProductError::new(
                 "tunnel_unavailable",
-                "WebCodex could not install its managed OpenAI tunnel-client atomically",
-                Some("Check user-state filesystem permissions, then retry webcodex share --tunnel openai."),
+                "CodeGPT could not install its managed OpenAI tunnel-client atomically",
+                Some("Check user-state filesystem permissions, then retry codegpt share --tunnel openai."),
             )
         })?;
         if !managed_binary_is_valid(&destination, asset).await {
@@ -603,7 +603,7 @@ async fn download_tunnel_client_asset(url: &str, destination: &Path) -> Result<(
         .get(url)
         .header(
             USER_AGENT,
-            format!("webcodex/{}", env!("CARGO_PKG_VERSION")),
+            format!("codegpt/{}", env!("CARGO_PKG_VERSION")),
         )
         .send()
         .await
@@ -738,7 +738,7 @@ fn verify_sha256(path: &Path, expected: &str, label: &str) -> Result<(), Product
         return Err(ProductError::new(
             "tunnel_unavailable",
             format!("{label} failed SHA-256 verification"),
-            Some("Retry webcodex share --tunnel openai; if the failure persists, set WEBCODEX_TUNNEL_CLIENT_BIN to the pinned trusted binary."),
+            Some("Retry codegpt share --tunnel openai; if the failure persists, set CODEGPT_TUNNEL_CLIENT_BIN to the pinned trusted binary."),
         ));
     }
     Ok(())
@@ -782,31 +782,31 @@ fn managed_user_root_error(name: &str) -> ProductError {
     ProductError::new(
         "tunnel_unavailable",
         format!("{name} must be an absolute path for managed OpenAI tunnel-client"),
-        Some("Fix the user-state environment, set WEBCODEX_TUNNEL_CLIENT_BIN, or use another WebCodex tunnel provider."),
+        Some("Fix the user-state environment, set CODEGPT_TUNNEL_CLIENT_BIN, or use another CodeGPT tunnel provider."),
     )
 }
 
 fn managed_tool_path_error() -> ProductError {
     ProductError::new(
         "tunnel_unavailable",
-        "WebCodex could not create or protect its managed OpenAI tunnel-client files",
-        Some("Check user-state filesystem permissions, then retry webcodex share --tunnel openai."),
+        "CodeGPT could not create or protect its managed OpenAI tunnel-client files",
+        Some("Check user-state filesystem permissions, then retry codegpt share --tunnel openai."),
     )
 }
 
 fn download_error(detail: &str) -> ProductError {
     ProductError::new(
         "tunnel_unavailable",
-        format!("WebCodex could not download verified OpenAI tunnel-client: {detail}"),
-        Some("Check network/proxy connectivity and retry, or set WEBCODEX_TUNNEL_CLIENT_BIN to the pinned trusted binary."),
+        format!("CodeGPT could not download verified OpenAI tunnel-client: {detail}"),
+        Some("Check network/proxy connectivity and retry, or set CODEGPT_TUNNEL_CLIENT_BIN to the pinned trusted binary."),
     )
 }
 
 fn extraction_error(detail: &str) -> ProductError {
     ProductError::new(
         "tunnel_unavailable",
-        format!("WebCodex could not unpack verified OpenAI tunnel-client: {detail}"),
-        Some("Retry webcodex share --tunnel openai or set WEBCODEX_TUNNEL_CLIENT_BIN to the pinned trusted binary."),
+        format!("CodeGPT could not unpack verified OpenAI tunnel-client: {detail}"),
+        Some("Retry codegpt share --tunnel openai or set CODEGPT_TUNNEL_CLIENT_BIN to the pinned trusted binary."),
     )
 }
 
@@ -814,7 +814,7 @@ fn verification_error() -> ProductError {
     ProductError::new(
         "tunnel_unavailable",
         format!("OpenAI tunnel-client failed pinned {TUNNEL_CLIENT_VERSION} verification"),
-        Some("Remove the managed tunnel-client file and retry, or set WEBCODEX_TUNNEL_CLIENT_BIN to the pinned trusted binary."),
+        Some("Remove the managed tunnel-client file and retry, or set CODEGPT_TUNNEL_CLIENT_BIN to the pinned trusted binary."),
     )
 }
 
@@ -822,7 +822,7 @@ fn tunnel_runtime_error(message: &'static str) -> ProductError {
     ProductError::new(
         "tunnel_unavailable",
         message,
-        Some("Check the OpenAI tunnel-client configuration and retry webcodex share --tunnel openai."),
+        Some("Check the OpenAI tunnel-client configuration and retry codegpt share --tunnel openai."),
     )
 }
 

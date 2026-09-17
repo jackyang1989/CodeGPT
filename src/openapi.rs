@@ -6,7 +6,7 @@ use crate::model_surface::{
     adaptive_runtime_gateway_target_route, AdaptiveRuntimeGatewayTargetRoute,
     ADAPTIVE_RUNTIME_GATEWAY_TOOL_NAME,
 };
-use webcodex_tool_contracts::{
+use codegpt_tool_contracts::{
     gpt_action_direct_tool_definitions, model_visible_tool_definitions, registered_tool_specs,
     ToolApprovalPolicy, ToolDefinition, ToolSpec, GPT_ACTION_DESCRIPTION_MAX_CHARS,
 };
@@ -17,7 +17,7 @@ const GPT_ACTION_OPENAPI_IMPORT_BUDGET_BYTES: usize = 800_000;
 const GPT_ACTION_PATH_PREFIX: &str = "/api/actions/";
 
 pub(crate) fn public_url() -> String {
-    std::env::var("WEBCODEX_PUBLIC_URL")
+    std::env::var("CODEGPT_PUBLIC_URL")
         .ok()
         .map(|s| s.trim().trim_end_matches('/').to_string())
         .filter(|s| !s.is_empty())
@@ -62,18 +62,18 @@ pub(crate) fn build_openapi_spec() -> Value {
     let spec = json!({
         "openapi": "3.1.0",
         "info": {
-            "title": "WebCodex GPT Actions",
+            "title": "CodeGPT GPT Actions",
             "version": env!("CARGO_PKG_VERSION"),
-            "description": "Custom GPT OpenAPI compatibility surface for the canonical WebCodex Adaptive Runtime. Adaptive direct tools are direct operations; supported long-tail tools use call_runtime_tool. MCP remains the primary ChatGPT integration."
+            "description": "Custom GPT OpenAPI compatibility surface for the canonical CodeGPT Adaptive Runtime. Adaptive direct tools are direct operations; supported long-tail tools use call_runtime_tool. MCP remains the primary ChatGPT integration."
         },
-        "servers": [{"url": public_url(), "description": "WebCodex Server"}],
+        "servers": [{"url": public_url(), "description": "CodeGPT Server"}],
         "paths": Value::Object(paths),
         "components": {
             "securitySchemes": {
                 "bearerAuth": {
                     "type": "http",
                     "scheme": "bearer",
-                    "description": "WebCodex Bearer credential. Authorization, Project authority, permission gates, Runner capability checks, and destructive policy remain enforced by the canonical ToolRuntime kernel."
+                    "description": "CodeGPT Bearer credential. Authorization, Project authority, permission gates, Runner capability checks, and destructive policy remain enforced by the canonical ToolRuntime kernel."
                 }
             }
         },
@@ -380,7 +380,7 @@ mod tests {
 
     #[test]
     fn gpt_action_direct_surface_inherits_adaptive_direct_without_duplicate_rank() {
-        let adaptive = webcodex_tool_contracts::adaptive_runtime_direct_tool_definitions();
+        let adaptive = codegpt_tool_contracts::adaptive_runtime_direct_tool_definitions();
         let expected = adaptive
             .iter()
             .copied()
@@ -394,7 +394,7 @@ mod tests {
         assert_eq!(actual, expected);
         let ranks = actual
             .iter()
-            .map(|name| webcodex_tool_contracts::runtime_tool_adaptive_direct_rank(name).unwrap())
+            .map(|name| codegpt_tool_contracts::runtime_tool_adaptive_direct_rank(name).unwrap())
             .collect::<Vec<_>>();
         assert!(ranks.windows(2).all(|pair| pair[0] < pair[1]));
         assert!(actual.contains(&"apply_text_edits"));
@@ -450,7 +450,7 @@ mod tests {
             "export_project_artifact",
             "present_work_result",
         ] {
-            assert!(!webcodex_tool_contracts::gpt_action_tool_supported(tool));
+            assert!(!codegpt_tool_contracts::gpt_action_tool_supported(tool));
             assert!(!serialized.contains(&format!("\"{tool}\"")));
         }
     }

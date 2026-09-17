@@ -63,7 +63,7 @@ def _platform_contract(root: Path) -> str:
         raise DoctorError(
             f"Desktop release platform contract drift: actual={tuple(collector.DESKTOP_PLATFORMS)}"
         )
-    manifest_path = root / "npm/webcodex/manifest.example.json"
+    manifest_path = root / "npm/codegpt/manifest.example.json"
     try:
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
@@ -136,15 +136,15 @@ def _workflow_contract(root: Path) -> str:
             ("prepare_desktop_bundle_macos.py", build),
             ("desktop_install_macos_smoke.sh", build),
             ("desktop_artifacts", build),
-            ("webcodex-desktop-v$env:VERSION-$env:WEBCODEX_RELEASE_PLATFORM-setup.exe", build),
-            ("webcodex-desktop-v$VERSION-$WEBCODEX_RELEASE_PLATFORM.dmg", build),
+            ("codegpt-desktop-v$env:VERSION-$env:CODEGPT_RELEASE_PLATFORM-setup.exe", build),
+            ("codegpt-desktop-v$VERSION-$CODEGPT_RELEASE_PLATFORM.dmg", build),
             ('desktop_dist="$GITHUB_WORKSPACE/dist"', build),
             ('$installerPath = Join-Path $desktopDist $installerName', build),
             ("DESKTOP_INSTALLER_PATH=$installerPath", build),
             ('--dmg "${{ steps.desktop_dmg.outputs.path }}"', build),
             ("-Installer $env:DESKTOP_INSTALLER_PATH", build),
-            ("dist/webcodex-desktop-*.dmg", build),
-            ("dist/webcodex-desktop-*-${{ matrix.platform }}-setup.exe", build),
+            ("dist/codegpt-desktop-*.dmg", build),
+            ("dist/codegpt-desktop-*-${{ matrix.platform }}-setup.exe", build),
             ("signing_mode=adhoc", build),
             ('export APPLE_SIGNING_IDENTITY="-"', build),
         ),

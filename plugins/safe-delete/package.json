@@ -1,5 +1,5 @@
 {
-  "name": "@yyjeqhc/webcodex-safe-delete-plugin",
+  "name": "@yyjeqhc/codegpt-safe-delete-plugin",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -9,7 +9,7 @@
     "test": "npm run build --silent && node --test plugin.test.mjs"
   },
   "dependencies": {
-    "@yyjeqhc/webcodex-plugin-sdk": "file:../../npm/plugin-sdk"
+    "@yyjeqhc/codegpt-plugin-sdk": "file:../../npm/plugin-sdk"
   },
   "devDependencies": {
     "@types/node": "^18.19.0",

@@ -11,7 +11,7 @@ use sha2::{Digest, Sha256};
 
 pub(crate) const MCP_SESSION_HEADER: &str = "mcp-session-id";
 const OPENAI_CONVERSATION_HEADER: &str = "openai-conversation-id";
-const WINDOW_COOKIE: &str = "webcodex_window";
+const WINDOW_COOKIE: &str = "codegpt_window";
 const WINDOW_COOKIE_MAX_AGE_SECS: i64 = 60 * 60 * 24 * 90;
 const MAX_OPAQUE_ID_BYTES: usize = 256;
 pub(crate) const PEER_ID_PREFIX: &str = "wc_peer_";
@@ -27,7 +27,7 @@ impl ClientWindow {
     pub(crate) fn from_opaque(source: &'static str, value: &str) -> Option<Self> {
         let value = valid_opaque_id(value)?;
         let mut hasher = Sha256::new();
-        hasher.update(b"webcodex.client-window.v1\0");
+        hasher.update(b"codegpt.client-window.v1\0");
         hasher.update(source.as_bytes());
         hasher.update(b"\0");
         hasher.update(value.as_bytes());

@@ -22,7 +22,7 @@ def _state(root: Path, *, phase: str) -> dict:
     return {
         "schema_version": plan.STATE_SCHEMA_VERSION,
         "kind": plan.KIND,
-        "repo": "yyjeqhc/webcodex",
+        "repo": "yyjeqhc/codegpt",
         "version": VERSION,
         "tag": TAG,
         "source_sha": SOURCE,
@@ -65,7 +65,7 @@ class ReleasePlanStateTests(unittest.TestCase):
             work = root / "release-work"
             with mock.patch.object(publication, "preflight_release", return_value={"version": VERSION}) as preflight:
                 summary = plan.init_plan(
-                    repo="yyjeqhc/webcodex",
+                    repo="yyjeqhc/codegpt",
                     version=VERSION,
                     source_sha=SOURCE,
                     root=root,

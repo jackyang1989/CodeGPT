@@ -34,7 +34,7 @@ async fn handle_with_server_apps_enabled(
 
 #[tokio::test]
 async fn final_changes_descriptor_is_explicit_v3_and_lazy_diff_is_app_only() {
-    assert_eq!(MCP_CHANGES_UI_RESOURCE_URI, "ui://webcodex/changes/v3");
+    assert_eq!(MCP_CHANGES_UI_RESOURCE_URI, "ui://codegpt/changes/v3");
     let runtime = test_runtime();
 
     let ui = handle_with_server_apps_enabled(
@@ -276,7 +276,7 @@ fn final_changes_html_is_bounded_lazy_display_only_ui() {
         "ui/resource-teardown",
         "pagehide",
         "beforeunload",
-        "WebCodex Changes",
+        "CodeGPT Changes",
     ] {
         assert!(
             MCP_CHANGES_APP_HTML.contains(required),

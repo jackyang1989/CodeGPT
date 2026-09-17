@@ -11,7 +11,7 @@ use super::*;
 #[tokio::test]
 async fn mcp_tools_list_exposes_canonical_coding_bootstrap_and_runtime_status_ux_flags() {
     let mut env = crate::test_support::TestEnvGuard::new();
-    env.remove("WEBCODEX_MCP_COMPACT_SCHEMAS");
+    env.remove("CODEGPT_MCP_COMPACT_SCHEMAS");
     let runtime = test_runtime();
     let outcome = handle_mcp_request(
         &runtime,
@@ -210,14 +210,14 @@ async fn mcp_tools_call_runtime_status_returns_content() {
     assert_eq!(value["result"]["content"][0]["type"], "text");
     assert_eq!(
         value["result"]["content"][0]["text"],
-        "WebCodex tool completed successfully."
+        "CodeGPT tool completed successfully."
     );
     // structuredContent carries the ToolResult shape exactly once; content.text
     // must not serialize the structured payload again.
     assert!(value["result"]["structuredContent"].is_object());
     assert_eq!(value["result"]["structuredContent"]["success"], true);
     let out = &value["result"]["structuredContent"]["output"];
-    assert_eq!(out["service"], "webcodex");
+    assert_eq!(out["service"], "codegpt");
     assert_eq!(out["version"], env!("CARGO_PKG_VERSION"));
     assert!(!value["result"]["content"][0]["text"]
         .as_str()

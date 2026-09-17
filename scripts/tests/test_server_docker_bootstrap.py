@@ -17,8 +17,8 @@ BUILD_COMPOSE = ROOT / "compose.build.yaml"
 DOCKERFILE = ROOT / "Dockerfile"
 DIGEST = "sha256:" + "a" * 64
 PINNED_IMAGE = f"{assets.SERVER_IMAGE}@{DIGEST}"
-PUBLIC_URL = "https://webcodex.example.com"
-RECEIPT = ".webcodex-bootstrap.receipt"
+PUBLIC_URL = "https://codegpt.example.com"
+RECEIPT = ".codegpt-bootstrap.receipt"
 TOKEN = "b" * 64
 SECOND_TOKEN = "c" * 64
 
@@ -41,7 +41,7 @@ class DeploymentAssetTests(unittest.TestCase):
             self.assertNotIn(f"{assets.SERVER_IMAGE}:latest", generated)
             self.assertIn(f"compose_target={assets.MATERIALIZED_COMPOSE}", generated)
             self.assertIn("cmp -s", generated)
-            self.assertIn("WEBCODEX_RELEASE_BOOTSTRAP=true", generated)
+            self.assertIn("CODEGPT_RELEASE_BOOTSTRAP=true", generated)
             self.assertNotIn("release_public_url=", generated)
             self.assertEqual(generated.count("validate_public_url()"), 1)
             self.assertEqual(
@@ -79,15 +79,15 @@ class BootstrapTests(unittest.TestCase):
             'case "$args" in\n'
             '  *" config --images"*) printf "%s\\n" "$FAKE_PINNED_IMAGE"; exit 0 ;;\n'
             '  *" config"*) exit 0 ;;\n'
-            '  *" pull webcodex"*) exit "${FAKE_PULL_EXIT:-0}" ;;\n'
-            '  *" ps -aq webcodex"*|*" ps -q webcodex"*)\n'
+            '  *" pull codegpt"*) exit "${FAKE_PULL_EXIT:-0}" ;;\n'
+            '  *" ps -aq codegpt"*|*" ps -q codegpt"*)\n'
             '    if [ -f "$FAKE_CONTAINER_STATE" ]; then printf "fake-container\\n"; fi; exit 0 ;;\n'
             '  *" up "*)\n'
             '    if [ "${FAKE_UP_LEAVES_CONTAINER:-0}" = 1 ]; then : > "$FAKE_CONTAINER_STATE"; fi\n'
             '    if [ "${FAKE_UP_EXIT:-0}" != 0 ]; then exit "$FAKE_UP_EXIT"; fi\n'
             '    : > "$FAKE_CONTAINER_STATE"; exit 0 ;;\n'
-            '  *" exec -T webcodex curl "*) exit "${FAKE_OPENAPI_EXIT:-0}" ;;\n'
-            '  *" exec -T webcodex sh -lc "*)\n'
+            '  *" exec -T codegpt curl "*) exit "${FAKE_OPENAPI_EXIT:-0}" ;;\n'
+            '  *" exec -T codegpt sh -lc "*)\n'
             '    if [ "${FAKE_PAIRING_EXIT:-0}" != 0 ]; then exit "$FAKE_PAIRING_EXIT"; fi\n'
             '    printf "wc_pair_test_123\\n"; exit 0 ;;\n'
             '  *" down"*) rm -f "$FAKE_CONTAINER_STATE"; exit "${FAKE_DOWN_EXIT:-0}" ;;\n'
@@ -110,9 +110,9 @@ class BootstrapTests(unittest.TestCase):
             "#!/bin/sh\n"
             'case "${FAKE_SYNC_FAIL_FOR:-}" in\n'
             '  env) case "$*" in *".env."*) exit 31 ;; esac ;;\n'
-            '  receipt) case "$*" in *".webcodex-bootstrap.receipt."*) exit 32 ;; esac ;;\n'
+            '  receipt) case "$*" in *".codegpt-bootstrap.receipt."*) exit 32 ;; esac ;;\n'
             '  receipt_after_env)\n'
-            '    case "$*" in *".webcodex-bootstrap.receipt."*) [ -f .env ] && exit 33 ;; esac ;;\n'
+            '    case "$*" in *".codegpt-bootstrap.receipt."*) [ -f .env ] && exit 33 ;; esac ;;\n'
             'esac\n'
             "exit 0\n",
             encoding="utf-8",
@@ -139,16 +139,16 @@ class BootstrapTests(unittest.TestCase):
                 "FAKE_CONTAINER_STATE": str(state),
                 "FAKE_PINNED_IMAGE": PINNED_IMAGE,
                 "FAKE_TOKEN_COUNT": str(token_count),
-                "WEBCODEX_BOOTSTRAP_HEALTH_WAIT_SECS": "2",
+                "CODEGPT_BOOTSTRAP_HEALTH_WAIT_SECS": "2",
             }
         )
         env.pop("COMPOSE_FILE", None)
-        env.pop("WEBCODEX_SERVER_IMAGE", None)
-        env.pop("WEBCODEX_RELEASE_BOOTSTRAP", None)
+        env.pop("CODEGPT_SERVER_IMAGE", None)
+        env.pop("CODEGPT_RELEASE_BOOTSTRAP", None)
         return env
 
     def _generated_workspace(self) -> tuple[Path, dict[str, str], str]:
-        root = Path(tempfile.mkdtemp(prefix="webcodex-bootstrap-test-"))
+        root = Path(tempfile.mkdtemp(prefix="codegpt-bootstrap-test-"))
         self.addCleanup(shutil.rmtree, root, True)
         generated = root / "generated"
         assets.prepare_assets(
@@ -163,7 +163,7 @@ class BootstrapTests(unittest.TestCase):
     def _source_workspace(
         self, *, include_overlay: bool = True, include_dockerfile: bool = True
     ) -> tuple[Path, dict[str, str], str]:
-        root = Path(tempfile.mkdtemp(prefix="webcodex-bootstrap-source-test-"))
+        root = Path(tempfile.mkdtemp(prefix="codegpt-bootstrap-source-test-"))
         self.addCleanup(shutil.rmtree, root, True)
         shutil.copy2(BOOTSTRAP, root / "bootstrap.sh")
         shutil.copy2(COMPOSE, root / "compose.yaml")
@@ -213,7 +213,7 @@ class BootstrapTests(unittest.TestCase):
         self.assertEqual(stat.S_IMODE(env_file.stat().st_mode), 0o600)
         text = env_file.read_text(encoding="utf-8")
         self.assertIn(f"COMPOSE_FILE={assets.MATERIALIZED_COMPOSE}\n", text)
-        self.assertIn(f"WEBCODEX_SERVER_IMAGE={PINNED_IMAGE}\n", text)
+        self.assertIn(f"CODEGPT_SERVER_IMAGE={PINNED_IMAGE}\n", text)
 
         receipt = self._receipt(root)
         self.assertEqual(receipt["phase"], "PairingReady")
@@ -223,16 +223,16 @@ class BootstrapTests(unittest.TestCase):
         self.assertEqual(stat.S_IMODE((root / RECEIPT).stat().st_mode), 0o600)
 
         self.assertIn("wc_pair_test_123", result.stdout)
-        self.assertIn("WebCodex server is healthy", result.stdout)
+        self.assertIn("CodeGPT server is healthy", result.stdout)
         self.assertNotIn("server container started", result.stdout.lower())
-        self.assertIn("webcodex login", result.stdout)
-        self.assertIn("webcodex runner install --scope user", result.stdout)
+        self.assertIn("codegpt login", result.stdout)
+        self.assertIn("codegpt runner install --scope user", result.stdout)
         self.assertIn("Do not copy", result.stdout)
-        self.assertIn("webcodex connect", result.stdout)
+        self.assertIn("codegpt connect", result.stdout)
 
         calls = self._docker_log(root)
         self.assertIn(f"compose -f {assets.MATERIALIZED_COMPOSE} config --images", calls)
-        self.assertIn(f"compose -f {assets.MATERIALIZED_COMPOSE} pull webcodex", calls)
+        self.assertIn(f"compose -f {assets.MATERIALIZED_COMPOSE} pull codegpt", calls)
         self.assertIn(
             f"compose -f {assets.MATERIALIZED_COMPOSE} up -d --no-build --pull never", calls
         )
@@ -276,7 +276,7 @@ class BootstrapTests(unittest.TestCase):
         self.assertEqual(receipt["mode"], "source")
         self.assertEqual(receipt["phase"], "PairingReady")
         self.assertNotEqual(receipt["overlay_sha256"], "-")
-        self.assertNotIn("WEBCODEX_SERVER_IMAGE=", (root / ".env").read_text(encoding="utf-8"))
+        self.assertNotIn("CODEGPT_SERVER_IMAGE=", (root / ".env").read_text(encoding="utf-8"))
         self.assertIn("-f compose.build.yaml up -d --build", self._docker_log(root))
 
     def test_up_failure_preserves_secret_and_resume_reuses_it(self) -> None:
@@ -360,7 +360,7 @@ class BootstrapTests(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertFalse((root / RECEIPT).exists())
         self.assertFalse((root / ".env").exists())
-        self.assertEqual(list(root.glob(".webcodex-bootstrap.receipt.*.tmp")), [])
+        self.assertEqual(list(root.glob(".codegpt-bootstrap.receipt.*.tmp")), [])
 
     def test_receipt_failure_after_env_commit_reconciles_without_regenerating_token(self) -> None:
         root, env, script = self._generated_workspace()
@@ -436,7 +436,7 @@ class BootstrapTests(unittest.TestCase):
         self.assertIn("already listening", result.stderr)
         self.assertFalse((root / RECEIPT).exists())
         self.assertFalse((root / ".env").exists())
-        self.assertNotIn("pull webcodex", self._docker_log(root))
+        self.assertNotIn("pull codegpt", self._docker_log(root))
 
     def test_public_url_accepts_only_strict_https_origins(self) -> None:
         invalid = [
@@ -490,13 +490,13 @@ class BootstrapTests(unittest.TestCase):
 
     def test_unmanaged_env_is_never_overwritten_or_rolled_back(self) -> None:
         root, env, script = self._generated_workspace()
-        (root / ".env").write_text("WEBCODEX_TOKEN=keep-me\n", encoding="utf-8")
+        (root / ".env").write_text("CODEGPT_TOKEN=keep-me\n", encoding="utf-8")
         install = self._run(root, env, script)
         self.assertNotEqual(install.returncode, 0)
         self.assertIn("without an installation receipt", install.stderr)
         rollback = self._run(root, env, script, "rollback")
         self.assertNotEqual(rollback.returncode, 0)
-        self.assertEqual((root / ".env").read_text(encoding="utf-8"), "WEBCODEX_TOKEN=keep-me\n")
+        self.assertEqual((root / ".env").read_text(encoding="utf-8"), "CODEGPT_TOKEN=keep-me\n")
 
 
 if __name__ == "__main__":

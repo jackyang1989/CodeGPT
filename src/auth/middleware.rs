@@ -33,7 +33,7 @@ pub(crate) fn bearer_token(req: &Request) -> Option<String> {
         .map(|v| v.to_string())
 }
 
-const PROJECT_SHARE_MCP_QUERY_TOKEN_ENV: &str = "WEBCODEX_PROJECT_SHARE_MCP_QUERY_TOKEN_ENABLED";
+const PROJECT_SHARE_MCP_QUERY_TOKEN_ENV: &str = "CODEGPT_PROJECT_SHARE_MCP_QUERY_TOKEN_ENABLED";
 
 fn allow_project_share_mcp_query_token(path: &str, project_mode: bool, enabled: bool) -> bool {
     project_mode && enabled && path == "/mcp"
@@ -287,7 +287,7 @@ impl Handler for AuthMiddleware {
 
         // When no token is present and auth is enabled, reject immediately
         // unless the server was explicitly started with `--open`
-        // (WEBCODEX_ALLOW_ANONYMOUS=true), in which case the anonymous caller
+        // (CODEGPT_ALLOW_ANONYMOUS=true), in which case the anonymous caller
         // is granted a non-admin open-group context.
         // When auth is disabled, the verifier chain handles the bootstrap
         // fallback — we still call authenticate with a dummy token so the
@@ -418,7 +418,7 @@ impl Handler for AuthMiddleware {
             Ok(None) => {
                 // Token not recognized by any verifier. When shared-key
                 // quick-start mode is enabled and the token does not look
-                // like a WebCodex managed credential (wc_*), treat it as a
+                // like a CodeGPT managed credential (wc_*), treat it as a
                 // lightweight shared key. Managed-prefix tokens that failed
                 // verification are always rejected.
                 let trimmed = token.trim();
@@ -599,7 +599,7 @@ fn is_unspecified_host(host: &str) -> bool {
 }
 
 fn configured_public_origin() -> Option<HttpOrigin> {
-    let value = std::env::var("WEBCODEX_PUBLIC_URL").ok()?;
+    let value = std::env::var("CODEGPT_PUBLIC_URL").ok()?;
     let value = value.trim();
     if value.is_empty() {
         return None;
@@ -664,7 +664,7 @@ pub(crate) fn require_mcp_request_authority(
         return Err((
             403,
             "untrusted_request_authority",
-            "request Host is not an allowed WebCodex authority",
+            "request Host is not an allowed CodeGPT authority",
         ));
     }
 

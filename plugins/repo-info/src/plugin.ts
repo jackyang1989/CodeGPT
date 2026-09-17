@@ -7,8 +7,8 @@ import {
   runPlugin,
   schema,
   textResult,
-} from "@yyjeqhc/webcodex-plugin-sdk";
-import type { ToolResult } from "@yyjeqhc/webcodex-plugin-sdk";
+} from "@yyjeqhc/codegpt-plugin-sdk";
+import type { ToolResult } from "@yyjeqhc/codegpt-plugin-sdk";
 
 const GIT_TIMEOUT_MS = 5_000;
 const STATUS_MAX_BYTES = 32 * 1024;

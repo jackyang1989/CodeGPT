@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate the checked-in WebCodex Cargo workspace dependency policy."""
+"""Validate the checked-in CodeGPT Cargo workspace dependency policy."""
 
 from __future__ import annotations
 

@@ -80,8 +80,8 @@ pub fn show_main_window(app: &AppHandle) -> DesktopResult<()> {
     let window = app.get_webview_window(MAIN_WINDOW_LABEL).ok_or_else(|| {
         DesktopError::new(
             "desktop_window_unavailable",
-            "The main WebCodex window is unavailable",
-            "Quit WebCodex and start it again.",
+            "The main CodeGPT window is unavailable",
+            "Quit CodeGPT and start it again.",
         )
     })?;
     let visible = window.is_visible().map_err(window_error)?;
@@ -103,8 +103,8 @@ pub fn hide_main_window(app: &AppHandle) -> DesktopResult<()> {
     let window = app.get_webview_window(MAIN_WINDOW_LABEL).ok_or_else(|| {
         DesktopError::new(
             "desktop_window_unavailable",
-            "The main WebCodex window is unavailable",
-            "Quit WebCodex and start it again.",
+            "The main CodeGPT window is unavailable",
+            "Quit CodeGPT and start it again.",
         )
     })?;
     window.hide().map_err(window_error)
@@ -164,16 +164,16 @@ mod tests {
 
     #[test]
     fn background_startup_detection_is_exact() {
-        assert!(is_background_launch(["WebCodex", "--background"]));
-        assert!(!is_background_launch(["WebCodex", "--backgroundish"]));
-        assert!(!is_background_launch(["WebCodex"]));
+        assert!(is_background_launch(["CodeGPT", "--background"]));
+        assert!(!is_background_launch(["CodeGPT", "--backgroundish"]));
+        assert!(!is_background_launch(["CodeGPT"]));
     }
 
     #[test]
     fn second_instance_normal_launch_requests_focus_but_background_does_not() {
-        assert!(second_instance_requests_focus(&["WebCodex".into()]));
+        assert!(second_instance_requests_focus(&["CodeGPT".into()]));
         assert!(!second_instance_requests_focus(&[
-            "WebCodex".into(),
+            "CodeGPT".into(),
             "--background".into(),
         ]));
     }

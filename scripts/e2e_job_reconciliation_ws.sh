@@ -2,11 +2,11 @@
 set -euo pipefail
 
 # ============================================================================
-# WebCodex — active Job reconciliation across a Server restart E2E
+# CodeGPT — active Job reconciliation across a Server restart E2E
 #
 # Real-process harness for the async Job recovery phase 1 acceptance:
 #   Scenario A — a running Job survives a Server restart.
-#     1. Boots a real `webcodex-server` and a real WebSocket `webcodex-runner`.
+#     1. Boots a real `codegpt-server` and a real WebSocket `codegpt-runner`.
 #     2. Waits for the runner online and the `job_state_reconciliation`
 #        capability.
 #     3. Starts a long-running job with deterministic marker output.
@@ -205,13 +205,13 @@ if [ "${E2E_SKIP_RUN:-0}" = "1" ]; then
 fi
 
 # Build once so restarts reuse the same binaries.
-log "building webcodex + webcodex-runner (debug profile)"
-"$CARGO_BIN" build --quiet -p webcodex -p webcodex-runner --bins
-SERVER_BIN="$PROJECT_DIR/target/debug/webcodex-server"
-RUNNER_BIN="$PROJECT_DIR/target/debug/webcodex-runner"
+log "building codegpt + codegpt-runner (debug profile)"
+"$CARGO_BIN" build --quiet -p codegpt -p codegpt-runner --bins
+SERVER_BIN="$PROJECT_DIR/target/debug/codegpt-server"
+RUNNER_BIN="$PROJECT_DIR/target/debug/codegpt-runner"
 
 PORT="${E2E_PORT:-$(find_free_port)}"
-TMP_ROOT="$(mktemp -d -t webcodex-jobrecon-e2e-XXXXXX)"
+TMP_ROOT="$(mktemp -d -t codegpt-jobrecon-e2e-XXXXXX)"
 COOKIE_JAR="$TMP_ROOT/cookies.txt"
 : >"$COOKIE_JAR"
 DATA_DIR="$TMP_ROOT/data"
@@ -287,9 +287,9 @@ max_output_bytes = 262144
 EOF
 
 start_server() {
-    WEBCODEX_ADDR="127.0.0.1:${PORT}" \
-    WEBCODEX_DATA="$DATA_DIR" \
-    WEBCODEX_TOKEN="$TOKEN" \
+    CODEGPT_ADDR="127.0.0.1:${PORT}" \
+    CODEGPT_DATA="$DATA_DIR" \
+    CODEGPT_TOKEN="$TOKEN" \
     RUST_LOG="info" \
     "$SERVER_BIN" >>"$SERVER_LOG" 2>&1 &
     SERVER_PID=$!

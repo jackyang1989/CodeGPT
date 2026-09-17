@@ -206,7 +206,7 @@ impl WindowActivityRegistry {
     ) -> WindowActivityGuard {
         let meaningful = method == "tools/call"
             && tool_name.is_some_and(|tool| {
-                webcodex_tool_contracts::runtime_tool_activity_interaction(tool).is_meaningful()
+                codegpt_tool_contracts::runtime_tool_activity_interaction(tool).is_meaningful()
             });
         let mut inner = self.inner.lock().expect("Window activity mutex poisoned");
         let continuity_key = principal.map(|(kind, id)| WindowContinuityKey {
@@ -470,7 +470,7 @@ fn classify_transition_and_mark_overlap(
         // Once a meaningful sequence overlaps, there is no unambiguous adjacent
         // serial predecessor. Clear the prior anchor and mark every in-flight
         // member of this Window+principal overlap group so none can later
-        // manufacture an outside-WebCodex gap. A later clean completion will
+        // manufacture an outside-CodeGPT gap. A later clean completion will
         // establish a fresh anchor for the following call.
         inner.previous_meaningful.remove(key);
         for request in inner.by_trace.values_mut() {
@@ -531,7 +531,7 @@ pub(crate) async fn window_event_visible_cached(
     runtime: &super::ToolRuntime,
     auth: &AuthContext,
     cache: &mut HashMap<String, bool>,
-    event: &webcodex_store::models::WindowActivityEventRecord,
+    event: &codegpt_store::models::WindowActivityEventRecord,
 ) -> bool {
     if event.project.is_some() {
         return window_project_visible_cached(runtime, auth, cache, event.project.as_deref()).await;
@@ -567,7 +567,7 @@ pub(crate) async fn active_window_request_visible_cached(
         return true;
     }
     request.tool_name.as_deref().is_some_and(|tool| {
-        !webcodex_tool_contracts::runtime_tool_activity_interaction(tool).is_meaningful()
+        !codegpt_tool_contracts::runtime_tool_activity_interaction(tool).is_meaningful()
     })
 }
 
@@ -954,7 +954,7 @@ mod tests {
         assert_eq!(
             after_overlap.transition(),
             WindowLoopTransition::Unavailable,
-            "an overlap group must invalidate the serial anchor instead of leaking WebCodex overlap time into an outside gap"
+            "an overlap group must invalidate the serial anchor instead of leaking CodeGPT overlap time into an outside gap"
         );
         after_overlap.complete(completion(1_500, 1_550), true);
 

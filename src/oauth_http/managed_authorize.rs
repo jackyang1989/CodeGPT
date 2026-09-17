@@ -353,7 +353,7 @@ pub(super) fn validate_authorize_resource(
 }
 
 /// Cookie name carrying the opaque authorize session id.
-pub(super) const AUTHORIZE_SESSION_COOKIE: &str = "webcodex_authorize_session";
+pub(super) const AUTHORIZE_SESSION_COOKIE: &str = "codegpt_authorize_session";
 
 /// Authorize session lifetime in seconds (10 minutes). Short on purpose:
 /// the session only bridges the login form to the consent decision.
@@ -577,7 +577,7 @@ pub(crate) async fn oauth_authorize_login(
             res.status_code(StatusCode::UNAUTHORIZED);
             res.render(Text::Html(authorize_login_html(
                 &return_to_owned,
-                Some("a WebCodex token is required"),
+                Some("a CodeGPT token is required"),
             )));
             return;
         }
@@ -859,7 +859,7 @@ pub(super) fn is_authorize_identity_allowed(ctx: &AuthContext) -> bool {
 /// accepts either:
 /// 1. a first-party Bearer PAT (with a concrete `user_id`) → direct
 ///    authorization-code issuance, or
-/// 2. a short-lived `webcodex_authorize_session` cookie → consent page, or
+/// 2. a short-lived `codegpt_authorize_session` cookie → consent page, or
 /// 3. neither → minimal HTML login page.
 ///
 /// The handler itself validates token/session/client/redirect/scope/PKCE.

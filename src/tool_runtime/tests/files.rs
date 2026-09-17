@@ -1379,7 +1379,7 @@ fn validate_project_relative_path_rejects_absolute_and_parent_traversal() {
 
 #[test]
 fn parse_search_matches_is_bounded_and_strips_dot_slash() {
-    let stdout = "{\"webcodex_search\":{\"backend\":\"rg\"}}\n./src/main.rs:10:fn main() {}\n./src/lib.rs:3:pub fn x()\n./src/a:1:1\n";
+    let stdout = "{\"codegpt_search\":{\"backend\":\"rg\"}}\n./src/main.rs:10:fn main() {}\n./src/lib.rs:3:pub fn x()\n./src/a:1:1\n";
     let options = SearchOptions::normalize(SearchRequest {
         limit: Some(2),
         ..raw_search_request()
@@ -1408,7 +1408,7 @@ fn parse_search_matches_is_bounded_and_strips_dot_slash() {
 #[test]
 fn search_match_read_hint_is_deterministic_and_centers_later_matches() {
     let stdout =
-        "{\"webcodex_search\":{\"backend\":\"rg\"}}\nsrc/lib.rs:42:needle\nsrc/lib.rs:120:later\n";
+        "{\"codegpt_search\":{\"backend\":\"rg\"}}\nsrc/lib.rs:42:needle\nsrc/lib.rs:120:later\n";
     let options = SearchOptions::normalize(SearchRequest {
         limit: Some(10),
         ..raw_search_request()
@@ -1429,7 +1429,7 @@ fn search_match_read_hint_is_deterministic_and_centers_later_matches() {
 #[test]
 fn parse_search_matches_skips_lines_without_line_number() {
     // Binary file matches or malformed lines are skipped, not counted.
-    let stdout = "{\"webcodex_search\":{\"backend\":\"rg\"}}\nbinary:file\nsrc/main.rs:5:hit\n";
+    let stdout = "{\"codegpt_search\":{\"backend\":\"rg\"}}\nbinary:file\nsrc/main.rs:5:hit\n";
     let options = SearchOptions::normalize(SearchRequest {
         limit: Some(10),
         ..raw_search_request()
@@ -1444,7 +1444,7 @@ fn parse_search_matches_skips_lines_without_line_number() {
 #[test]
 fn parse_search_matches_drops_claude_worktree_records() {
     let stdout = concat!(
-        "{\"webcodex_search\":{\"backend\":\"native\"}}\n",
+        "{\"codegpt_search\":{\"backend\":\"native\"}}\n",
         ".claude/worktrees/stale/src/lib.rs:1:needle stale\n",
         "src/lib.rs:1:needle active\n",
     );
@@ -1869,10 +1869,10 @@ fn parse_search_project_text_output_accepts_leading_canonical_marker_and_reports
     let stdout = concat!(
         "\n",
         " \r\n",
-        "{\"webcodex_search\":{\"backend\":\"rg\",\"feature_unavailable\":false}}\n",
+        "{\"codegpt_search\":{\"backend\":\"rg\",\"feature_unavailable\":false}}\n",
         "src/a.rs:1:needle one\n",
         "src/b.rs:2:needle two\n",
-        "{\"webcodex_search\":{\"backend\":\"grep\"}}\n",
+        "{\"codegpt_search\":{\"backend\":\"grep\"}}\n",
     );
     let options = SearchOptions::normalize(SearchRequest {
         limit: Some(1),
@@ -2040,7 +2040,7 @@ fn search_timeout_uses_structured_failure_with_effective_timeout() {
     let result = search_project_text_output(
         "demo",
         &options,
-        "{\"webcodex_search\":{\"backend\":\"rg\"}}\n",
+        "{\"codegpt_search\":{\"backend\":\"rg\"}}\n",
         Some(-1),
         "Command timed out after 1 seconds",
     );
@@ -2140,7 +2140,7 @@ fn search_backend_exit_codes_map_to_results() {
         })
         .unwrap();
         let marker = format!(
-            "{{\"webcodex_search\":{{\"backend\":\"{}\",\"feature_unavailable\":false}}}}\n",
+            "{{\"codegpt_search\":{{\"backend\":\"{}\",\"feature_unavailable\":false}}}}\n",
             case.backend
         );
         let stdout = format!("{marker}{}{marker}", case.match_line.unwrap_or(""));
@@ -2208,8 +2208,8 @@ fn search_backend_identity_requires_leading_canonical_namespaced_marker() {
     let options = SearchOptions::normalize(raw_search_request()).unwrap();
     for stdout in [
         "{\"backend\":\"rg\"}\nsrc/a.rs:1:needle\n",
-        "src/z.rs:1:needle\n{\"webcodex_search\":{\"backend\":\"rg\"}}\n",
-        "[output truncated to last 12000 bytes]\nsrc/z.rs:1:needle\n{\"webcodex_search\":{\"backend\":\"rg\"}}\n",
+        "src/z.rs:1:needle\n{\"codegpt_search\":{\"backend\":\"rg\"}}\n",
+        "[output truncated to last 12000 bytes]\nsrc/z.rs:1:needle\n{\"codegpt_search\":{\"backend\":\"rg\"}}\n",
     ] {
         let result = search_project_text_output("demo", &options, stdout, Some(0), "");
         assert!(!result.success, "stdout={stdout:?}");
@@ -2228,9 +2228,9 @@ fn search_backend_identity_requires_leading_canonical_namespaced_marker() {
 fn search_invalid_backend_marker_reports_protocol_provenance() {
     let options = SearchOptions::normalize(raw_search_request()).unwrap();
     for stdout in [
-        "{\"webcodex_search\":{\"backend\":\"unknown\"}}\n",
-        "{\"webcodex_search\":{\"backend\":\"rg\",\"feature_unavailable\":\"no\"}}\n",
-        "{\"webcodex_search\":\n",
+        "{\"codegpt_search\":{\"backend\":\"unknown\"}}\n",
+        "{\"codegpt_search\":{\"backend\":\"rg\",\"feature_unavailable\":\"no\"}}\n",
+        "{\"codegpt_search\":\n",
     ] {
         let result = search_project_text_output("demo", &options, stdout, Some(0), "");
         assert!(!result.success, "stdout={stdout:?}");
@@ -2245,7 +2245,7 @@ fn search_invalid_backend_marker_reports_protocol_provenance() {
 #[test]
 fn search_missing_completion_status_cannot_prove_success() {
     let options = SearchOptions::normalize(raw_search_request()).unwrap();
-    let stdout = "{\"webcodex_search\":{\"backend\":\"rg\",\"feature_unavailable\":false}}\n";
+    let stdout = "{\"codegpt_search\":{\"backend\":\"rg\",\"feature_unavailable\":false}}\n";
     let result = search_project_text_output("demo", &options, stdout, None, "");
 
     assert!(!result.success);
@@ -2260,7 +2260,7 @@ fn search_missing_completion_status_cannot_prove_success() {
 #[test]
 fn search_status_and_records_must_agree_before_empty_is_trusted() {
     let options = SearchOptions::normalize(raw_search_request()).unwrap();
-    let marker = "{\"webcodex_search\":{\"backend\":\"rg\",\"feature_unavailable\":false}}\n";
+    let marker = "{\"codegpt_search\":{\"backend\":\"rg\",\"feature_unavailable\":false}}\n";
     for (stdout, exit_code) in [
         (marker.to_string(), 0),
         (marker.to_string(), 141),
@@ -2281,7 +2281,7 @@ fn search_status_and_records_must_agree_before_empty_is_trusted() {
     }
 
     let provider_marker =
-        "{\"webcodex_search\":{\"backend\":\"claude_code\",\"feature_unavailable\":false}}\n";
+        "{\"codegpt_search\":{\"backend\":\"claude_code\",\"feature_unavailable\":false}}\n";
     let unproven = search_project_text_output("demo", &options, provider_marker, Some(0), "");
     assert!(!unproven.success);
     assert_eq!(
@@ -2302,7 +2302,7 @@ fn search_count_uses_backend_evidence_without_claiming_filtered_absence() {
         ..raw_search_request()
     })
     .unwrap();
-    let marker = "{\"webcodex_search\":{\"backend\":\"rg\",\"feature_unavailable\":false}}\n";
+    let marker = "{\"codegpt_search\":{\"backend\":\"rg\",\"feature_unavailable\":false}}\n";
 
     let no_match = search_project_text_output("demo", &options, marker, Some(1), "");
     assert!(no_match.success, "{:?}", no_match.error);
@@ -2471,7 +2471,7 @@ fn search_command_illegal_regex_is_not_swallowed_by_head() {
 }
 
 #[cfg(unix)]
-fn count_webcodex_search_status_files(dir: &std::path::Path) -> usize {
+fn count_codegpt_search_status_files(dir: &std::path::Path) -> usize {
     let mut count = 0usize;
     let Ok(entries) = std::fs::read_dir(dir) else {
         return 0;
@@ -2479,11 +2479,11 @@ fn count_webcodex_search_status_files(dir: &std::path::Path) -> usize {
     for entry in entries.flatten() {
         let name = entry.file_name();
         let name = name.to_string_lossy();
-        if name.starts_with("webcodex-search-") {
+        if name.starts_with("codegpt-search-") {
             count += 1;
         }
         if entry.path().is_dir() {
-            count += count_webcodex_search_status_files(&entry.path());
+            count += count_codegpt_search_status_files(&entry.path());
         }
     }
     count
@@ -2517,8 +2517,8 @@ fn search_status_tmpdir_relative_does_not_use_worktree() {
     );
     let (exit_code, stdout, stderr, _) = run_command_sync(&cmd, &root, 10);
     assert_eq!(exit_code, 0, "stderr={stderr} stdout={stdout}");
-    assert_eq!(count_webcodex_search_status_files(&root), 0);
-    assert_eq!(count_webcodex_search_status_files(&rel_tmp), 0);
+    assert_eq!(count_codegpt_search_status_files(&root), 0);
+    assert_eq!(count_codegpt_search_status_files(&rel_tmp), 0);
     let result = search_project_text_output("demo", &options, &stdout, Some(exit_code), &stderr);
     assert!(result.success, "{:?}", result.error);
 }
@@ -2552,7 +2552,7 @@ fn search_status_tmpdir_project_root_does_not_use_worktree() {
     );
     let (exit_code, stdout, stderr, _) = run_command_sync(&cmd, &root, 10);
     assert_eq!(exit_code, 0, "stderr={stderr} stdout={stdout}");
-    assert_eq!(count_webcodex_search_status_files(&root), 0);
+    assert_eq!(count_codegpt_search_status_files(&root), 0);
     let result = search_project_text_output("demo", &options, &stdout, Some(exit_code), &stderr);
     assert!(result.success, "{:?}", result.error);
 }
@@ -2589,11 +2589,11 @@ fn search_status_tmpdir_symlink_into_worktree_is_rejected() {
     let (exit_code, stdout, stderr, _) = run_command_sync(&cmd, &root, 10);
     assert_eq!(exit_code, 0, "stderr={stderr} stdout={stdout}");
     assert_eq!(
-        count_webcodex_search_status_files(&root),
+        count_codegpt_search_status_files(&root),
         0,
         "symlink-into-worktree TMPDIR must not create status files under the project"
     );
-    assert_eq!(count_webcodex_search_status_files(&inside), 0);
+    assert_eq!(count_codegpt_search_status_files(&inside), 0);
     let result = search_project_text_output("demo", &options, &stdout, Some(exit_code), &stderr);
     assert!(result.success, "{:?}", result.error);
 }
@@ -2624,10 +2624,10 @@ fn search_status_file_is_removed_after_successful_run() {
         shell_escape_simple(&safe_tmp.to_string_lossy()),
         search_project_text_command(&options)
     );
-    let before = count_webcodex_search_status_files(&safe_tmp);
+    let before = count_codegpt_search_status_files(&safe_tmp);
     let (exit_code, stdout, stderr, _) = run_command_sync(&cmd, &root, 10);
     assert_eq!(exit_code, 0, "stderr={stderr} stdout={stdout}");
-    let after = count_webcodex_search_status_files(&safe_tmp);
+    let after = count_codegpt_search_status_files(&safe_tmp);
     assert_eq!(before, 0);
     assert_eq!(after, 0, "status files must be cleaned after success");
     let result = search_project_text_output("demo", &options, &stdout, Some(exit_code), &stderr);
@@ -2664,9 +2664,9 @@ fn search_early_stop_reaps_process_group_and_status_files() {
         shell_escape_simple(&safe_tmp.to_string_lossy()),
         search_project_text_command(&options)
     );
-    let before = count_webcodex_search_status_files(&safe_tmp);
+    let before = count_codegpt_search_status_files(&safe_tmp);
     let (exit_code, stdout, stderr, _) = run_command_sync(&cmd, &root, 10);
-    let after = count_webcodex_search_status_files(&safe_tmp);
+    let after = count_codegpt_search_status_files(&safe_tmp);
     assert_eq!(before, 0);
     assert_eq!(after, 0, "status files must be cleaned after early stop");
     // Exit 141 = the backend was SIGPIPEd by the head budget, an intentional
@@ -2684,7 +2684,7 @@ fn search_status_cleanup_trap_removes_file_on_term() {
     // Mirrors production cleanup_search_status + signal trap; verifies TERM path
     // without a long sleep. File removal is the contract.
     let tmp = tempfile::tempdir().unwrap();
-    let status = tmp.path().join("webcodex-search-term-test");
+    let status = tmp.path().join("codegpt-search-term-test");
     let script = format!(
         r#"status_file={path}
 cleanup_search_status() {{
@@ -3124,7 +3124,7 @@ async fn search_agent_command_timeout_returns_search_timeout() {
             request_id: req.request_id,
             exit_code: Some(-1),
             stdout: Some(
-                "{\"webcodex_search\":{\"backend\":\"rg\",\"feature_unavailable\":false}}\n"
+                "{\"codegpt_search\":{\"backend\":\"rg\",\"feature_unavailable\":false}}\n"
                     .to_string(),
             ),
             stderr: Some("command timed out after 1 seconds".to_string()),
@@ -3176,7 +3176,7 @@ async fn search_agent_execution_failure_is_structured_and_does_not_leak_diagnost
             request_id: req.request_id,
             exit_code: Some(9),
             stdout: Some(
-                "{\"webcodex_search\":{\"backend\":\"rg\",\"feature_unavailable\":false}}\n"
+                "{\"codegpt_search\":{\"backend\":\"rg\",\"feature_unavailable\":false}}\n"
                     .to_string(),
             ),
             stderr: Some(private_diagnostic.to_string()),
@@ -3295,7 +3295,7 @@ async fn search_agent_timeout_with_complete_records_returns_partial_success() {
             request_id: req.request_id,
             exit_code: Some(-1),
             stdout: Some(
-                "{\"webcodex_search\":{\"backend\":\"rg\",\"feature_unavailable\":false}}\n\
+                "{\"codegpt_search\":{\"backend\":\"rg\",\"feature_unavailable\":false}}\n\
                  src/a.rs:1:needle\n"
                     .to_string(),
             ),
@@ -4529,7 +4529,7 @@ fn validate_edit_file_path_rejects_unsafe_and_sensitive_paths() {
         "agent.toml",
         "config/agent.toml",
         "agent.toml.bak",
-        "webcodex.env",
+        "codegpt.env",
         ".env",
         ".env.local",
         "secrets/projects.d/x",

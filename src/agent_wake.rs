@@ -128,7 +128,7 @@ pub(crate) enum McpAppBindingState {
 fn validate_mcp_app_binding_id(binding_id: &str) -> Result<(), CommunicationStoreError> {
     if !binding_id
         .strip_prefix(MCP_APP_BINDING_ID_PREFIX)
-        .is_some_and(|suffix| webcodex_core::compact::decode::<16>(suffix).is_some())
+        .is_some_and(|suffix| codegpt_core::compact::decode::<16>(suffix).is_some())
     {
         return Err(CommunicationStoreError::new(
             "invalid_host_binding_id",
@@ -145,7 +145,7 @@ fn mcp_app_recovery_fingerprint(
     binding_id: &str,
 ) -> String {
     let mut hasher = Sha256::new();
-    hasher.update(b"webcodex:mcp-app-restart-recovery:v1\0");
+    hasher.update(b"codegpt:mcp-app-restart-recovery:v1\0");
     hasher.update(agent_id.as_bytes());
     hasher.update(b"\0");
     hasher.update(endpoint_id.as_bytes());
@@ -274,7 +274,7 @@ impl AgentContinuationController {
             mpsc::sync_channel::<String>(Self::DISPATCH_QUEUE_CAPACITY);
         let worker_state = state.clone();
         std::thread::Builder::new()
-            .name("webcodex-agent-continuations".to_string())
+            .name("codegpt-agent-continuations".to_string())
             .spawn(move || {
                 while let Ok(agent_id) = dispatch_rx.recv() {
                     loop {

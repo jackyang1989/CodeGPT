@@ -25,7 +25,7 @@ const CLOUDFLARED_VERIFY_TIMEOUT: Duration = Duration::from_secs(10);
 const CLOUDFLARED_MAX_CA_FILE_BYTES: usize = 4 * 1024 * 1024;
 const NPM_CONFIG_QUERY_TIMEOUT: Duration = Duration::from_secs(3);
 const NPM_CONFIG_MAX_VALUE_BYTES: usize = 4 * 1024 * 1024;
-const NPM_WRAPPER_MARKER: &str = "WEBCODEX_NPM_WRAPPER";
+const NPM_WRAPPER_MARKER: &str = "CODEGPT_NPM_WRAPPER";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 struct CloudflaredAsset {
@@ -310,7 +310,7 @@ pub(super) fn build_managed_download_client(
 }
 
 pub(super) async fn resolve_cloudflared() -> Result<PathBuf, ProductError> {
-    let override_bin = std::env::var_os("WEBCODEX_CLOUDFLARED_BIN").map(PathBuf::from);
+    let override_bin = std::env::var_os("CODEGPT_CLOUDFLARED_BIN").map(PathBuf::from);
     if let Some(binary) =
         existing_cloudflared_from(override_bin.as_deref(), std::env::var_os("PATH").as_deref())?
     {
@@ -333,8 +333,8 @@ fn existing_cloudflared_from(
         }
         return Err(ProductError::new(
             "tunnel_unavailable",
-            "WEBCODEX_CLOUDFLARED_BIN does not point to a cloudflared file",
-            Some("Fix or unset WEBCODEX_CLOUDFLARED_BIN, then retry webcodex share."),
+            "CODEGPT_CLOUDFLARED_BIN does not point to a cloudflared file",
+            Some("Fix or unset CODEGPT_CLOUDFLARED_BIN, then retry codegpt share."),
         ));
     }
     let Some(path) = path else {
@@ -386,14 +386,14 @@ fn cloudflared_asset_for(os: &str, arch: &str) -> Result<CloudflaredAsset, Produ
             return Err(ProductError::new(
                 "tunnel_unavailable",
                 format!("automatic cloudflared installation is unavailable on {os}/{arch}: Cloudflare {CLOUDFLARED_VERSION} publishes no Windows ARM64 artifact"),
-                Some("Set WEBCODEX_CLOUDFLARED_BIN to a trusted compatible cloudflared binary, or use webcodex share --tunnel openai / --tunnel none."),
+                Some("Set CODEGPT_CLOUDFLARED_BIN to a trusted compatible cloudflared binary, or use codegpt share --tunnel openai / --tunnel none."),
             ))
         }
         _ => {
             return Err(ProductError::new(
                 "tunnel_unavailable",
                 format!("automatic cloudflared installation is unsupported on {os}/{arch}"),
-                Some("Install cloudflared and set WEBCODEX_CLOUDFLARED_BIN, or use webcodex share --tunnel none."),
+                Some("Install cloudflared and set CODEGPT_CLOUDFLARED_BIN, or use codegpt share --tunnel none."),
             ))
         }
     };
@@ -421,26 +421,26 @@ fn managed_cloudflared_root_from(
         if !path.is_absolute() {
             return Err(managed_user_root_error("XDG_STATE_HOME"));
         }
-        return Ok(path.join("webcodex/tools/cloudflared"));
+        return Ok(path.join("codegpt/tools/cloudflared"));
     }
     if let Some(path) = home.filter(|value| !value.is_empty()) {
         let path = PathBuf::from(path);
         if !path.is_absolute() {
             return Err(managed_user_root_error("HOME"));
         }
-        return Ok(path.join(".local/state/webcodex/tools/cloudflared"));
+        return Ok(path.join(".local/state/codegpt/tools/cloudflared"));
     }
     if let Some(path) = local_app_data.filter(|value| !value.is_empty()) {
         let path = PathBuf::from(path);
         if !path.is_absolute() {
             return Err(managed_user_root_error("LOCALAPPDATA"));
         }
-        return Ok(path.join("WebCodex/tools/cloudflared"));
+        return Ok(path.join("CodeGPT/tools/cloudflared"));
     }
     Err(ProductError::new(
         "tunnel_unavailable",
-        "WebCodex cannot choose a private user directory for managed cloudflared",
-        Some("Set HOME/XDG_STATE_HOME, ensure LOCALAPPDATA is available on Windows, set WEBCODEX_CLOUDFLARED_BIN, or use webcodex share --tunnel none."),
+        "CodeGPT cannot choose a private user directory for managed cloudflared",
+        Some("Set HOME/XDG_STATE_HOME, ensure LOCALAPPDATA is available on Windows, set CODEGPT_CLOUDFLARED_BIN, or use codegpt share --tunnel none."),
     ))
 }
 
@@ -463,7 +463,7 @@ async fn ensure_managed_cloudflared_at(
     }
 
     eprintln!(
-        "WebCodex: cloudflared was not found; downloading verified Cloudflare Tunnel {CLOUDFLARED_VERSION}..."
+        "CodeGPT: cloudflared was not found; downloading verified Cloudflare Tunnel {CLOUDFLARED_VERSION}..."
     );
     let temporary = install_dir.join(format!(".install-{}", uuid::Uuid::new_v4().simple()));
     create_private_tool_dir(&temporary)?;
@@ -488,15 +488,15 @@ async fn ensure_managed_cloudflared_at(
         fs::rename(&candidate, &destination).map_err(|_| {
             ProductError::new(
                 "tunnel_unavailable",
-                "WebCodex could not install its managed cloudflared binary atomically",
-                Some("Check user-state filesystem permissions, then retry webcodex share."),
+                "CodeGPT could not install its managed cloudflared binary atomically",
+                Some("Check user-state filesystem permissions, then retry codegpt share."),
             )
         })?;
         if !managed_binary_is_valid(&destination, asset).await {
             return Err(ProductError::new(
                 "tunnel_unavailable",
                 "the installed cloudflared binary failed post-install verification",
-                Some("Remove the managed cloudflared file and retry webcodex share, or set WEBCODEX_CLOUDFLARED_BIN."),
+                Some("Remove the managed cloudflared file and retry codegpt share, or set CODEGPT_CLOUDFLARED_BIN."),
             ));
         }
         Ok(destination.clone())
@@ -529,8 +529,8 @@ fn create_private_tool_dir(path: &Path) -> Result<(), ProductError> {
     fs::create_dir_all(path).map_err(|_| {
         ProductError::new(
             "tunnel_unavailable",
-            "WebCodex could not create its managed cloudflared directory",
-            Some("Check user-state filesystem permissions, then retry webcodex share."),
+            "CodeGPT could not create its managed cloudflared directory",
+            Some("Check user-state filesystem permissions, then retry codegpt share."),
         )
     })?;
     #[cfg(unix)]
@@ -539,8 +539,8 @@ fn create_private_tool_dir(path: &Path) -> Result<(), ProductError> {
         fs::set_permissions(path, fs::Permissions::from_mode(0o700)).map_err(|_| {
             ProductError::new(
                 "tunnel_unavailable",
-                "WebCodex could not protect its managed cloudflared directory",
-                Some("Check user-state filesystem permissions, then retry webcodex share."),
+                "CodeGPT could not protect its managed cloudflared directory",
+                Some("Check user-state filesystem permissions, then retry codegpt share."),
             )
         })?;
     }
@@ -548,8 +548,8 @@ fn create_private_tool_dir(path: &Path) -> Result<(), ProductError> {
     super::windows_private_state::protect_private_directory(path).map_err(|_| {
         ProductError::new(
             "tunnel_unavailable",
-            "WebCodex could not protect its managed cloudflared directory on Windows",
-            Some("Check user-state filesystem permissions and reparse points, then retry webcodex share."),
+            "CodeGPT could not protect its managed cloudflared directory on Windows",
+            Some("Check user-state filesystem permissions and reparse points, then retry codegpt share."),
         )
     })?;
     Ok(())
@@ -571,7 +571,7 @@ async fn download_cloudflared_asset_with_network(
         .get(url)
         .header(
             USER_AGENT,
-            format!("webcodex/{}", env!("CARGO_PKG_VERSION")),
+            format!("codegpt/{}", env!("CARGO_PKG_VERSION")),
         )
         .send()
         .await
@@ -614,8 +614,8 @@ fn write_private_file(path: &Path, bytes: &[u8]) -> Result<(), ProductError> {
         return super::windows_private_state::write_new_private_file(path, bytes).map_err(|_| {
             ProductError::new(
                 "tunnel_unavailable",
-                "WebCodex could not securely create the temporary cloudflared download on Windows",
-                Some("Check user-state filesystem permissions and reparse points, then retry webcodex share."),
+                "CodeGPT could not securely create the temporary cloudflared download on Windows",
+                Some("Check user-state filesystem permissions and reparse points, then retry codegpt share."),
             )
         });
     }
@@ -631,15 +631,15 @@ fn write_private_file(path: &Path, bytes: &[u8]) -> Result<(), ProductError> {
         let mut file = options.open(path).map_err(|_| {
             ProductError::new(
                 "tunnel_unavailable",
-                "WebCodex could not create the temporary cloudflared download",
-                Some("Check user-state filesystem permissions, then retry webcodex share."),
+                "CodeGPT could not create the temporary cloudflared download",
+                Some("Check user-state filesystem permissions, then retry codegpt share."),
             )
         })?;
         file.write_all(bytes).map_err(|_| {
             ProductError::new(
                 "tunnel_unavailable",
-                "WebCodex could not write the temporary cloudflared download",
-                Some("Check user-state filesystem permissions, then retry webcodex share."),
+                "CodeGPT could not write the temporary cloudflared download",
+                Some("Check user-state filesystem permissions, then retry codegpt share."),
             )
         })
     }
@@ -686,7 +686,7 @@ fn verify_sha256(path: &Path, expected: &str, label: &str) -> Result<(), Product
         return Err(ProductError::new(
             "tunnel_unavailable",
             format!("{label} failed SHA-256 verification"),
-            Some("Retry webcodex share; if the failure persists, set WEBCODEX_CLOUDFLARED_BIN to a trusted cloudflared binary."),
+            Some("Retry codegpt share; if the failure persists, set CODEGPT_CLOUDFLARED_BIN to a trusted cloudflared binary."),
         ));
     }
     Ok(())
@@ -701,8 +701,8 @@ fn make_private_executable(path: &Path) -> Result<(), ProductError> {
         fs::set_permissions(path, fs::Permissions::from_mode(0o700)).map_err(|_| {
             ProductError::new(
                 "tunnel_unavailable",
-                "WebCodex could not make managed cloudflared executable",
-                Some("Check user-state filesystem permissions, then retry webcodex share."),
+                "CodeGPT could not make managed cloudflared executable",
+                Some("Check user-state filesystem permissions, then retry codegpt share."),
             )
         })?;
     }
@@ -732,15 +732,15 @@ fn managed_user_root_error(name: &str) -> ProductError {
     ProductError::new(
         "tunnel_unavailable",
         format!("{name} must be an absolute path for managed cloudflared"),
-        Some("Fix the user-state environment, set WEBCODEX_CLOUDFLARED_BIN, or use webcodex share --tunnel none."),
+        Some("Fix the user-state environment, set CODEGPT_CLOUDFLARED_BIN, or use codegpt share --tunnel none."),
     )
 }
 
 fn managed_tool_path_error() -> ProductError {
     ProductError::new(
         "tunnel_unavailable",
-        "WebCodex could not resolve its managed cloudflared path",
-        Some("Set WEBCODEX_CLOUDFLARED_BIN or use webcodex share --tunnel none."),
+        "CodeGPT could not resolve its managed cloudflared path",
+        Some("Set CODEGPT_CLOUDFLARED_BIN or use codegpt share --tunnel none."),
     )
 }
 
@@ -757,24 +757,24 @@ fn download_request_failure(error: &reqwest::Error) -> &'static str {
 fn network_config_error(detail: &str) -> ProductError {
     ProductError::new(
         "tunnel_unavailable",
-        format!("WebCodex could not apply network settings for managed cloudflared: {detail}"),
-        Some("Check npm/system proxy and CA configuration, then retry webcodex share; or set WEBCODEX_CLOUDFLARED_BIN / use --tunnel none."),
+        format!("CodeGPT could not apply network settings for managed cloudflared: {detail}"),
+        Some("Check npm/system proxy and CA configuration, then retry codegpt share; or set CODEGPT_CLOUDFLARED_BIN / use --tunnel none."),
     )
 }
 
 fn download_error(detail: &str) -> ProductError {
     ProductError::new(
         "tunnel_unavailable",
-        format!("WebCodex could not download verified cloudflared: {detail}"),
-        Some("Check network/proxy connectivity and retry webcodex share, set WEBCODEX_CLOUDFLARED_BIN, or use --tunnel none."),
+        format!("CodeGPT could not download verified cloudflared: {detail}"),
+        Some("Check network/proxy connectivity and retry codegpt share, set CODEGPT_CLOUDFLARED_BIN, or use --tunnel none."),
     )
 }
 
 fn extraction_error(detail: &str) -> ProductError {
     ProductError::new(
         "tunnel_unavailable",
-        format!("WebCodex could not unpack verified cloudflared: {detail}"),
-        Some("Ensure the system tar command is available, then retry webcodex share; or set WEBCODEX_CLOUDFLARED_BIN."),
+        format!("CodeGPT could not unpack verified cloudflared: {detail}"),
+        Some("Ensure the system tar command is available, then retry codegpt share; or set CODEGPT_CLOUDFLARED_BIN."),
     )
 }
 
@@ -782,7 +782,7 @@ fn verification_error() -> ProductError {
     ProductError::new(
         "tunnel_unavailable",
         "managed cloudflared failed integrity or version verification",
-        Some("Retry webcodex share, or set WEBCODEX_CLOUDFLARED_BIN to a trusted cloudflared binary."),
+        Some("Retry codegpt share, or set CODEGPT_CLOUDFLARED_BIN to a trusted cloudflared binary."),
     )
 }
 

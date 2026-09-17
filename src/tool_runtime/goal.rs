@@ -168,7 +168,7 @@ fn serialized_goal_success<T: Serialize>(value: T) -> ToolResult {
 }
 
 fn event_visibility_budget_available(
-    event: &webcodex_store::models::WindowActivityEventRecord,
+    event: &codegpt_store::models::WindowActivityEventRecord,
     cache: &HashMap<String, bool>,
 ) -> bool {
     let mut unknown = BTreeSet::new();

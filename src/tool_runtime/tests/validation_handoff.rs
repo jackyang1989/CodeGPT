@@ -1444,11 +1444,11 @@ async fn e3_cargo_test_lib_handoff_arms_terminal_attention_without_polling() {
         .unwrap();
     assert_eq!(
         triggered.state,
-        webcodex_store::JobTerminalWaitState::Triggered
+        codegpt_store::JobTerminalWaitState::Triggered
     );
     assert_eq!(
         triggered.delivery_state,
-        webcodex_store::JobTerminalDeliveryState::Pending
+        codegpt_store::JobTerminalDeliveryState::Pending
     );
     assert_eq!(triggered.terminal_status.as_deref(), Some("completed"));
     assert_eq!(triggered.terminal_outcome.as_deref(), Some("succeeded"));
@@ -2187,7 +2187,7 @@ async fn handoff_job_total_timeout_is_classified_timeout() {
             &request.request_id,
             &job_id,
             "timeout",
-            "Compiling webcodex...\n",
+            "Compiling codegpt...\n",
             "Command timed out after 3600 seconds\n",
             Some(-1),
             completed_progress(),

@@ -3,7 +3,7 @@ use super::{
     route, AuditClass::*, RouteAuth, RouteId::*, RouteMethod::*, RouteOpenApiProjection::*,
     RouteSpec, RouteSurface::*,
 };
-use webcodex_core::authority::{OAuthRouteScopePolicy::*, SCOPE_ACCOUNT_MANAGE};
+use codegpt_core::authority::{OAuthRouteScopePolicy::*, SCOPE_ACCOUNT_MANAGE};
 
 pub(super) const PUBLIC_WEB_ROUTES: &[RouteSpec] = &[route(
     OpenApiDocument,

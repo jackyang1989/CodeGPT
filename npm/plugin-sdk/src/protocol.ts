@@ -1,4 +1,4 @@
-export const PLUGIN_PROTOCOL_VERSION = "webcodex-plugin-v1" as const;
+export const PLUGIN_PROTOCOL_VERSION = "codegpt-plugin-v1" as const;
 
 export type JsonRpcId = string | number;
 

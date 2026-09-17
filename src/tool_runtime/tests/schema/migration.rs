@@ -147,7 +147,7 @@ fn tool_definition_surface_counts_and_action_projection_stay_canonical() {
         .flat_map(|methods| methods.as_object().unwrap().values())
         .map(|operation| operation["operationId"].as_str().unwrap())
         .collect::<BTreeSet<_>>();
-    let expected = webcodex_tool_contracts::gpt_action_direct_tool_definitions()
+    let expected = codegpt_tool_contracts::gpt_action_direct_tool_definitions()
         .into_iter()
         .map(|definition| definition.name)
         .chain(std::iter::once(

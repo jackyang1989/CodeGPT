@@ -4,7 +4,7 @@ import {
   runPlugin,
   schema,
   textResult,
-} from "@yyjeqhc/webcodex-plugin-sdk";
+} from "@yyjeqhc/codegpt-plugin-sdk";
 
 const echo = defineTool({
   name: "echo",

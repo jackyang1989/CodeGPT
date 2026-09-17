@@ -15,7 +15,7 @@ export function ActivityPanel({ activity }: { activity: ActivityEntry[] }) {
       .toLocaleLowerCase().includes(query.trim().toLocaleLowerCase());
   });
   return (
-    <section className="page-section" aria-labelledby="activity-title" data-webcodex-page="activity">
+    <section className="page-section" aria-labelledby="activity-title" data-codegpt-page="activity">
       <div className="eyebrow">{t("activity.eyebrow")}</div>
       <h1 id="activity-title">{t("activity.title")}</h1>
       <p className="lede">{t("activity.description")}</p>

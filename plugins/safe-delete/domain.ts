@@ -1,4 +1,4 @@
-// WebCodex Safe Delete Native Tool Plugin domain logic.
+// CodeGPT Safe Delete Native Tool Plugin domain logic.
 //
 // Moves one file or directory under the configured Plugin cwd to the operating
 // system Trash/Recycle Bin. It never permanently deletes the requested path as a fallback.
@@ -9,8 +9,8 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
-import { errorResult, textResult } from "@yyjeqhc/webcodex-plugin-sdk";
-import type { ToolResult } from "@yyjeqhc/webcodex-plugin-sdk";
+import { errorResult, textResult } from "@yyjeqhc/codegpt-plugin-sdk";
+import type { ToolResult } from "@yyjeqhc/codegpt-plugin-sdk";
 
 export const MAX_PATH_CHARS = 4096;
 const BACKEND_TIMEOUT_MS = 10_000;
@@ -359,7 +359,7 @@ function run(argv) {
 const WINDOWS_TRASH_SCRIPT = String.raw`
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName Microsoft.VisualBasic
-$target = $env:WEBCODEX_SAFE_DELETE_TARGET
+$target = $env:CODEGPT_SAFE_DELETE_TARGET
 if ([string]::IsNullOrWhiteSpace($target)) { throw 'missing target' }
 $item = Get-Item -LiteralPath $target -Force
 $ui = [Microsoft.VisualBasic.FileIO.UIOption]::OnlyErrorDialogs
@@ -417,7 +417,7 @@ export function moveToFreedesktopTrash(
     const name = `${base}.${suffix}`;
     const candidateDestination = path.join(filesDir, name);
     const candidateInfo = path.join(infoDir, `${name}.trashinfo`);
-    const candidateTemp = path.join(infoDir, `.${name}.trashinfo.webcodex-tmp`);
+    const candidateTemp = path.join(infoDir, `.${name}.trashinfo.codegpt-tmp`);
     if (
       !fs.existsSync(candidateDestination) &&
       !fs.existsSync(candidateInfo) &&
@@ -494,7 +494,7 @@ export function runTrashBackend(target: string, options: BackendOptions = {}): T
   }
 
   if (platform === "win32") {
-    const childEnv = { ...env, WEBCODEX_SAFE_DELETE_TARGET: target };
+    const childEnv = { ...env, CODEGPT_SAFE_DELETE_TARGET: target };
     const args = ["-NoLogo", "-NoProfile", "-NonInteractive", "-Command", WINDOWS_TRASH_SCRIPT];
     const powershell = spawnBackend(spawnSync, "powershell.exe", args, { env: childEnv });
     if (powershell.state !== "missing") return { backend: "powershell", ...powershell };

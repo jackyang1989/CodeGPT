@@ -1,6 +1,6 @@
 //! Root adapter keeps SQLite out of the authoritative registry crate.
 use std::sync::Arc;
-use webcodex_runner_registry::{JobReceiptStore, RetainedJobReceipt, RunnerRegistry};
+use codegpt_runner_registry::{JobReceiptStore, RetainedJobReceipt, RunnerRegistry};
 
 struct SqliteJobReceiptStore(Arc<crate::Database>);
 

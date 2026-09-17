@@ -2,11 +2,11 @@
 
 [English](CODING_WORKFLOW.md) | [简体中文](CODING_WORKFLOW.zh-CN.md)
 
-This guide is for ordinary WebCodex coding/review work. It describes the model-facing workflow, not the internal continuity, audit, or transport protocols used to implement it.
+This guide is for ordinary CodeGPT coding/review work. It describes the model-facing workflow, not the internal continuity, audit, or transport protocols used to implement it.
 
 ## Normal loop
 
-The ordinary WebCodex coding loop is intentionally small:
+The ordinary CodeGPT coding loop is intentionally small:
 
 ```text
 work_on_project
@@ -22,9 +22,9 @@ By default it also returns a small bounded `extensions` catalog for selection: S
 
 ## Start or continue a task
 
-Use `work_on_project` for both a new coding task and an explicit continuation. WebCodex keeps bounded Workflow Session evidence so validation, review, and handoff can refer to the same unit of work, but that Session is not an authentication credential and does not widen project access.
+Use `work_on_project` for both a new coding task and an explicit continuation. CodeGPT keeps bounded Workflow Session evidence so validation, review, and handoff can refer to the same unit of work, but that Session is not an authentication credential and does not widen project access.
 
-For ordinary use you do not need to reason about WebCodex's internal continuity or audit fields. Those are implementation/maintainer contracts.
+For ordinary use you do not need to reason about CodeGPT's internal continuity or audit fields. Those are implementation/maintainer contracts.
 
 The built-in default guidance is the ordinary implementation workflow. A normal
 “implement/fix/refactor” task needs no role name: carry authorized work to a
@@ -70,7 +70,7 @@ For `matching_mode_rejected`, keep the matching guard and do not switch to `firs
 
 For deterministic `context_mismatch`, consume the bounded `read_files` recovery and regenerate against current source; do not blindly repeat the same patch. If the result is `outcome_unknown`, inspect the workspace before deciding whether any write should be retried.
 
-The exact matching metadata and transactional protocol are maintainer details; see the tool contract/tests when developing WebCodex itself.
+The exact matching metadata and transactional protocol are maintainer details; see the tool contract/tests when developing CodeGPT itself.
 
 ## Validation
 
@@ -94,7 +94,7 @@ Review the actual workspace/diff after editing and validation. Passing tests do 
 
 ## Long-running work
 
-A command or validation that outlives the synchronous grace period continues as the same WebCodex Job. Keep its exact Job identity and parser-ready continuation. If useful independent work remains, continue that work and observe the Job later; do not repeatedly poll a running Job merely to keep it visible. When the next useful action actually depends on the terminal result, use the provided bounded `wait_secs=100, wake_on=terminal` continuation. For one Job or when any terminal result unblocks progress, use `terminal`; when every Job in a predetermined set is required before progress, use `all_terminal`. Recovery/continuation hints never authorize a retry of an uncertain effect.
+A command or validation that outlives the synchronous grace period continues as the same CodeGPT Job. Keep its exact Job identity and parser-ready continuation. If useful independent work remains, continue that work and observe the Job later; do not repeatedly poll a running Job merely to keep it visible. When the next useful action actually depends on the terminal result, use the provided bounded `wait_secs=100, wake_on=terminal` continuation. For one Job or when any terminal result unblocks progress, use `terminal`; when every Job in a predetermined set is required before progress, use `all_terminal`. Recovery/continuation hints never authorize a retry of an uncertain effect.
 
 ## Manual multi-window collaboration
 
@@ -118,7 +118,7 @@ calls, and token cost. Do not infer a success-rate improvement from schema tests
 
 ## Internal protocol details
 
-When developing WebCodex itself, use the maintainer contracts rather than expanding this user guide:
+When developing CodeGPT itself, use the maintainer contracts rather than expanding this user guide:
 
 - [Session model](agent/session-model.md) — Workflow Session continuity, messages, and evidence semantics.
 - [Authority model](agent/permission-model.md) — execution authority and hard-safety layering.

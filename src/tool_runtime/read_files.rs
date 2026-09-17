@@ -8,8 +8,8 @@ use futures_util::{stream, StreamExt};
 use serde_json::{json, Value};
 use std::time::Duration;
 use tokio::time::Instant;
-use webcodex_core::runtime_contract::MODEL_INSPECTION_MAX_RESULT_BYTES as MAX_SERIALIZED_OUTPUT_BYTES;
-use webcodex_workspace::file_read_normalize::MODEL_RESULT_ENVELOPE_RESERVE_BYTES;
+use codegpt_core::runtime_contract::MODEL_INSPECTION_MAX_RESULT_BYTES as MAX_SERIALIZED_OUTPUT_BYTES;
+use codegpt_workspace::file_read_normalize::MODEL_RESULT_ENVELOPE_RESERVE_BYTES;
 
 pub(crate) const MAX_READ_FILES_ITEMS: usize = 8;
 // A max-size read batch may issue all eight independent read-only requests in
@@ -17,7 +17,7 @@ pub(crate) const MAX_READ_FILES_ITEMS: usize = 8;
 // and downstream Runner admission (for example polling capacity) remain hard bounds.
 pub(crate) const MAX_READ_FILES_CONCURRENCY: usize = 8;
 pub(crate) const DEFAULT_READ_FILES_DEADLINE: Duration = Duration::from_secs(30);
-pub(crate) use webcodex_core::runtime_contract::{
+pub(crate) use codegpt_core::runtime_contract::{
     DEFAULT_READ_FILES_RESULT_BYTES, MIN_READ_FILES_RESULT_BYTES,
 };
 
@@ -919,7 +919,7 @@ mod tests {
     fn default_complete_item(index: usize, lines: &[String]) -> Value {
         let returned_lines = lines.len();
         let default_limit =
-            webcodex_workspace::file_read_range::EffectiveRange::new(None, None).limit;
+            codegpt_workspace::file_read_range::EffectiveRange::new(None, None).limit;
         json!({
             "index": index,
             "path": format!("src/{index}.rs"),
@@ -1507,11 +1507,11 @@ mod tests {
     fn inspection_ceiling_is_independent_from_single_file_read_cap() {
         assert_eq!(MAX_SERIALIZED_OUTPUT_BYTES, 512 * 1024);
         assert_eq!(
-            webcodex_workspace::file_read_range::MAX_SERIALIZED_OUTPUT_BYTES,
+            codegpt_workspace::file_read_range::MAX_SERIALIZED_OUTPUT_BYTES,
             256 * 1024
         );
         assert_eq!(
-            webcodex_workspace::file_read_range::MAX_RANGE_CONTENT_BYTES,
+            codegpt_workspace::file_read_range::MAX_RANGE_CONTENT_BYTES,
             192 * 1024
         );
     }

@@ -222,7 +222,7 @@ impl AdminProjectLifecycleService {
     }
 
     /// Narrow project-authorized unregister entry used by ordinary runtime
-    /// callers such as the hosted `webcodex disconnect` flow. Authorization is
+    /// callers such as the hosted `codegpt disconnect` flow. Authorization is
     /// still resolved through the caller-visible Runner/project inventory; this
     /// does not grant access to any other admin lifecycle operation.
     pub(crate) async fn unregister_authorized(

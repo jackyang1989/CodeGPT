@@ -633,7 +633,7 @@ fn rewrite_gpt_action_file_params(arguments: &mut Value) -> Result<(), String> {
 fn gpt_action_admit_target(path_tool: &str, target: &str) -> Result<(), String> {
     use crate::model_surface::AdaptiveRuntimeGatewayTargetRoute;
 
-    if !webcodex_tool_contracts::gpt_action_tool_supported(target) {
+    if !codegpt_tool_contracts::gpt_action_tool_supported(target) {
         return Err(format!(
             "runtime tool '{target}' is not available through GPT Actions"
         ));
@@ -673,7 +673,7 @@ fn gpt_action_suggested_tool_call_route(
 ) -> crate::model_surface::SuggestedToolCallRoute {
     use crate::model_surface::{AdaptiveRuntimeGatewayTargetRoute, SuggestedToolCallRoute};
 
-    if !webcodex_tool_contracts::gpt_action_tool_supported(target) {
+    if !codegpt_tool_contracts::gpt_action_tool_supported(target) {
         return SuggestedToolCallRoute::Unavailable;
     }
     match crate::model_surface::adaptive_runtime_gateway_target_route(target) {

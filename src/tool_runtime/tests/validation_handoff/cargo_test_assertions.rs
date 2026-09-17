@@ -341,7 +341,7 @@ async fn handoff_cargo_test_authoritative_count_passes_session_validation() {
     update.test_count_evidence = Some(crate::runner_protocol::ShellJobTestCountEvidence {
         tests_detected: true,
         tests_run_count: Some(120),
-        status: webcodex_core::validation_evidence::CargoTestCountEvidenceStatus::CompleteSummary,
+        status: codegpt_core::validation_evidence::CargoTestCountEvidenceStatus::CompleteSummary,
     });
     runtime.runner_registry.update_job(update).await.unwrap();
 

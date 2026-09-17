@@ -29,7 +29,7 @@ fn repo(name: &str) -> (tempfile::TempDir, PathBuf, PathBuf) {
     git(
         &[
             "-c",
-            "user.name=WebCodex Test",
+            "user.name=CodeGPT Test",
             "-c",
             "user.email=test@example.invalid",
             "commit",
@@ -78,7 +78,7 @@ fn console_assets_are_validated_and_passed_only_to_the_serve_child() {
         .unwrap();
     assert_eq!(canonical, fs::canonicalize(&directory).unwrap());
 
-    let mut command = tokio::process::Command::new("webcodex");
+    let mut command = tokio::process::Command::new("codegpt");
     configure_console_assets_environment(&mut command, Some(&canonical));
     let configured = command
         .as_std()
@@ -88,7 +88,7 @@ fn console_assets_are_validated_and_passed_only_to_the_serve_child() {
         .map(PathBuf::from);
     assert_eq!(configured, Some(canonical));
 
-    let mut embedded_command = tokio::process::Command::new("webcodex");
+    let mut embedded_command = tokio::process::Command::new("codegpt");
     configure_console_assets_environment(&mut embedded_command, None);
     assert!(embedded_command
         .as_std()
@@ -103,11 +103,11 @@ fn console_assets_are_validated_and_passed_only_to_the_serve_child() {
 
 #[test]
 fn npm_wrapper_network_credentials_are_removed_from_runtime_children() {
-    let mut command = tokio::process::Command::new("webcodex-runner");
+    let mut command = tokio::process::Command::new("codegpt-runner");
     for key in NPM_WRAPPER_NETWORK_ENV_KEYS {
         command.env(key, "credential-like-value");
     }
-    command.env("WEBCODEX_TEST_UNRELATED_ENV", "preserved");
+    command.env("CODEGPT_TEST_UNRELATED_ENV", "preserved");
 
     remove_npm_wrapper_network_environment(&mut command);
     let envs: Vec<_> = command.as_std().get_envs().collect();
@@ -119,22 +119,22 @@ fn npm_wrapper_network_credentials_are_removed_from_runtime_children() {
         );
     }
     assert!(envs.iter().any(|(key, value)| {
-        key.to_str() == Some("WEBCODEX_TEST_UNRELATED_ENV")
+        key.to_str() == Some("CODEGPT_TEST_UNRELATED_ENV")
             && value.and_then(|value| value.to_str()) == Some("preserved")
     }));
 }
 
 #[test]
 fn runner_parent_credentials_are_removed_before_spawn() {
-    let mut command = tokio::process::Command::new("webcodex-runner");
-    for key in ["WEBCODEX_TOKEN", "WEBCODEX_PAT", "WEBCODEX_AGENT_TOKEN"] {
+    let mut command = tokio::process::Command::new("codegpt-runner");
+    for key in ["CODEGPT_TOKEN", "CODEGPT_PAT", "CODEGPT_AGENT_TOKEN"] {
         command.env(key, "credential-like-value");
     }
-    command.env("WEBCODEX_TEST_UNRELATED_ENV", "preserved");
+    command.env("CODEGPT_TEST_UNRELATED_ENV", "preserved");
 
     remove_runner_parent_credentials(&mut command);
     let envs: Vec<_> = command.as_std().get_envs().collect();
-    for key in ["WEBCODEX_TOKEN", "WEBCODEX_PAT", "WEBCODEX_AGENT_TOKEN"] {
+    for key in ["CODEGPT_TOKEN", "CODEGPT_PAT", "CODEGPT_AGENT_TOKEN"] {
         assert!(
             envs.iter()
                 .any(|(candidate, value)| { candidate.to_str() == Some(key) && value.is_none() }),
@@ -142,7 +142,7 @@ fn runner_parent_credentials_are_removed_before_spawn() {
         );
     }
     assert!(envs.iter().any(|(key, value)| {
-        key.to_str() == Some("WEBCODEX_TEST_UNRELATED_ENV")
+        key.to_str() == Some("CODEGPT_TEST_UNRELATED_ENV")
             && value.and_then(|value| value.to_str()) == Some("preserved")
     }));
 }
@@ -162,7 +162,7 @@ fn assert_no_project_state_artifacts(root: &Path) {
         "project.toml",
         "runs",
         "results",
-        ".webcodex",
+        ".codegpt",
     ] {
         assert!(
             !root.join(relative).exists(),
@@ -176,7 +176,7 @@ async fn state_directory_boundary_is_shared_and_has_no_failure_side_effects() {
     let (temp, root, _) = repo("state-boundary");
 
     let relative_inside = ProjectCommandOptions {
-        state_dir: Some(PathBuf::from(".webcodex")),
+        state_dir: Some(PathBuf::from(".codegpt")),
         ..options(root.clone(), temp.path().join("unused"))
     };
     let relative_error =
@@ -185,7 +185,7 @@ async fn state_directory_boundary_is_shared_and_has_no_failure_side_effects() {
     assert_eq!(relative_error.code, "state_directory_unsafe");
     assert_no_project_state_artifacts(&root);
 
-    for state in [root.clone(), root.join(".webcodex")] {
+    for state in [root.clone(), root.join(".codegpt")] {
         let unsafe_options = options(root.clone(), state);
         let setup_error = setup(&unsafe_options).unwrap_err();
         assert_eq!(setup_error.code, "state_directory_unsafe");
@@ -241,7 +241,7 @@ fn default_state_base_preserves_home_and_has_windows_localappdata_fallback() {
             Some(OsStr::new("/local")),
         )
         .unwrap(),
-        PathBuf::from("/state/webcodex/projects")
+        PathBuf::from("/state/codegpt/projects")
     );
     assert_eq!(
         setup_service::default_state_base_from(
@@ -250,11 +250,11 @@ fn default_state_base_preserves_home_and_has_windows_localappdata_fallback() {
             Some(OsStr::new("/local")),
         )
         .unwrap(),
-        PathBuf::from("/home/user/.local/state/webcodex/projects")
+        PathBuf::from("/home/user/.local/state/codegpt/projects")
     );
     assert_eq!(
         setup_service::default_state_base_from(None, None, Some(OsStr::new("/local"))).unwrap(),
-        PathBuf::from("/local/WebCodex/state/projects")
+        PathBuf::from("/local/CodeGPT/state/projects")
     );
     assert!(setup_service::default_state_base_from(None, None, None).is_err());
 }
@@ -267,7 +267,7 @@ fn state_directory_rejects_symlink_that_resolves_into_checkout() {
     let (temp, root, _) = repo("symlink-state");
     let link = temp.path().join("state-link");
     symlink(&root, &link).unwrap();
-    let unsafe_state = link.join(".webcodex");
+    let unsafe_state = link.join(".codegpt");
     let error = setup(&options(root.clone(), unsafe_state)).unwrap_err();
 
     assert_eq!(error.code, "state_directory_unsafe");
@@ -351,7 +351,7 @@ fn fresh_setup_is_minimal_idempotent_and_does_not_expose_internal_ids() {
             "default setup output leaked {forbidden}: {output}"
         );
     }
-    assert!(output.contains("Next:\n  webcodex doctor"));
+    assert!(output.contains("Next:\n  codegpt doctor"));
 }
 
 #[test]
@@ -583,7 +583,7 @@ fn doctor_reports_not_setup_and_invalid_workspace_with_stable_actions() {
     assert_eq!(missing.connection, "not configured");
     let finding = fact(&missing, "project_not_configured");
     assert_eq!(finding.status, ReadinessStatus::Fail);
-    assert_eq!(finding.next_action.as_deref(), Some("webcodex setup"));
+    assert_eq!(finding.next_action.as_deref(), Some("codegpt setup"));
 
     setup(&options).unwrap();
     fs::remove_dir_all(root).unwrap();

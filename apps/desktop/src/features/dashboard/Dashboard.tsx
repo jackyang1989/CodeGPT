@@ -55,19 +55,19 @@ export function Dashboard({
       className="page-section dashboard-page"
       aria-labelledby="home-title"
       aria-busy={refreshing}
-      data-webcodex-page="home"
+      data-codegpt-page="home"
     >
       <div className="page-heading-row">
         <div>
           <div className="eyebrow">{t("home.eyebrow")}</div>
-          <h1 id="home-title">WebCodex</h1>
+          <h1 id="home-title">CodeGPT</h1>
           <p className="lede">{t("workspace.description")}</p>
         </div>
         <button
           className="secondary-button"
           onClick={onRefresh}
           disabled={refreshing || operationBusy}
-          data-webcodex-action="refresh-runtime"
+          data-codegpt-action="refresh-runtime"
         >
           {refreshing ? t("home.checking") : t("home.refresh")}
         </button>
@@ -85,12 +85,12 @@ export function Dashboard({
         </div>
         <div className="readiness-actions">
           {canResumeRuntime && (
-            <button className="primary-button" onClick={onResumeRuntime} disabled={operationBusy || refreshing} data-webcodex-action="resume-runtime">
+            <button className="primary-button" onClick={onResumeRuntime} disabled={operationBusy || refreshing} data-codegpt-action="resume-runtime">
               {t("home.resumeRuntime")}
             </button>
           )}
           {canConnectChatGpt && (
-            <button className="primary-button" onClick={onConnectChatGpt} disabled={operationBusy} data-webcodex-action="connect-chatgpt">
+            <button className="primary-button" onClick={onConnectChatGpt} disabled={operationBusy} data-codegpt-action="connect-chatgpt">
               {t("home.connectChatGpt")}
             </button>
           )}
@@ -121,7 +121,7 @@ export function Dashboard({
             {state.quick_share.mcp_url && <code>{state.quick_share.mcp_url}</code>}
             <span>{quickShareClipboardLabel(state.quick_share.clipboard_state, state.quick_share.clipboard_contains, t)}</span>
           </div>
-          <button className="danger-button" onClick={onStopQuickShare} disabled={operationBusy} data-webcodex-action="stop-quick-share">{t("home.stopShare")}</button>
+          <button className="danger-button" onClick={onStopQuickShare} disabled={operationBusy} data-codegpt-action="stop-quick-share">{t("home.stopShare")}</button>
         </div>
       )}
 
@@ -181,9 +181,9 @@ export function Dashboard({
           <div className="runtime-actions">
             <span>{t("home.runtimeOwnership")}</span>
             <div className="runtime-action-buttons">
-              <button className="secondary-button" onClick={onChangeSetup} disabled={operationBusy} data-webcodex-action="change-runtime-setup">{t("home.changeSetup")}</button>
+              <button className="secondary-button" onClick={onChangeSetup} disabled={operationBusy} data-codegpt-action="change-runtime-setup">{t("home.changeSetup")}</button>
               {state.readiness.runtime_ready && (
-                <button className="secondary-button" onClick={onStopRuntime} disabled={operationBusy} data-webcodex-action="stop-runtime">{t("home.stopRuntime")}</button>
+                <button className="secondary-button" onClick={onStopRuntime} disabled={operationBusy} data-codegpt-action="stop-runtime">{t("home.stopRuntime")}</button>
               )}
             </div>
           </div>

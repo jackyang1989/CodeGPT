@@ -4,9 +4,9 @@
 
 ## Purpose
 
-E1 tests one hypothesis: WebCodex can move bounded read-only orchestration below the model round-trip boundary while keeping every real Project operation inside the existing canonical `ToolRuntime`.
+E1 tests one hypothesis: CodeGPT can move bounded read-only orchestration below the model round-trip boundary while keeping every real Project operation inside the existing canonical `ToolRuntime`.
 
-One model-visible `code_mode_exec` call evaluates a bounded JavaScript program. The program may invoke several explicitly admitted read-only WebCodex tools, use ordinary JavaScript control flow, overlap independent observations with `Promise.all`, make later calls conditional on earlier results, and emit only the useful aggregate with `text(value)`.
+One model-visible `code_mode_exec` call evaluates a bounded JavaScript program. The program may invoke several explicitly admitted read-only CodeGPT tools, use ordinary JavaScript control flow, overlap independent observations with `Promise.all`, make later calls conditional on earlier results, and emit only the useful aggregate with `text(value)`.
 
 E1 does **not** add a second filesystem, shell, permission system, Project resolver, Session recorder, Runner protocol, or workflow engine.
 
@@ -15,19 +15,19 @@ E1 does **not** add a second filesystem, shell, permission system, Project resol
 The experiment is disabled by default.
 
 ```bash
-cargo check -p webcodex-code-mode
-cargo test -p webcodex-code-mode --features v8-runtime
+cargo check -p codegpt-code-mode
+cargo test -p codegpt-code-mode --features v8-runtime
 cargo check --features experimental-code-mode --all-targets
 ```
 
 The root `experimental-code-mode` feature enables:
 
-- the optional `webcodex-code-mode` dependency;
-- `webcodex-code-mode/v8-runtime`;
-- `webcodex-tool-contracts/experimental-code-mode`;
-- `webcodex-tool-runtime-contracts/experimental-code-mode`.
+- the optional `codegpt-code-mode` dependency;
+- `codegpt-code-mode/v8-runtime`;
+- `codegpt-tool-contracts/experimental-code-mode`;
+- `codegpt-tool-runtime-contracts/experimental-code-mode`.
 
-Without that feature, `code_mode_exec`, `code_mode_exec_effectful`, and `code_mode_exec_mutating` are absent from the canonical `ToolDefinition`, `ToolSpec`, `ToolCall`, discovery, Adaptive Runtime, OpenAPI, and MCP surfaces. The default `webcodex-code-mode` crate contains only lightweight transport-neutral contracts and does not compile or link V8.
+Without that feature, `code_mode_exec`, `code_mode_exec_effectful`, and `code_mode_exec_mutating` are absent from the canonical `ToolDefinition`, `ToolSpec`, `ToolCall`, discovery, Adaptive Runtime, OpenAPI, and MCP surfaces. The default `codegpt-code-mode` crate contains only lightweight transport-neutral contracts and does not compile or link V8.
 
 ## Architecture
 
@@ -58,17 +58,17 @@ canonical parsing / OAuth / Project authority
 permission evaluation / Session evidence
 Runner routing / ToolResult projection
 
-webcodex-code-mode (V8 thread)
+codegpt-code-mode (V8 thread)
   |
   | tools.<name>(args) Promise
   +---- CodeModeHost callback ----> V8CodeModeHost
 ```
 
-`webcodex-code-mode` does not depend on the root WebCodex crate, `ToolRuntime`, `AuthContext`, `RunnerRegistry`, or Session storage. It owns only one-shot JavaScript execution, JSON/V8 conversion, bounded output, nested-call scheduling, termination, and the transport-neutral `CodeModeHost` callback contract.
+`codegpt-code-mode` does not depend on the root CodeGPT crate, `ToolRuntime`, `AuthContext`, `RunnerRegistry`, or Session storage. It owns only one-shot JavaScript execution, JSON/V8 conversion, bounded output, nested-call scheduling, termination, and the transport-neutral `CodeModeHost` callback contract.
 
 The root-side canonical callback implementation is intentionally no longer V8-specific. `CanonicalOrchestrationHost` owns the reusable authority-preserving nested-tool boundary; `V8CodeModeHost` only adapts the Code Mode crate's request/response types. Canonical target, recorder, context/ACK, result-expectation, and private wrapper fields are denied by the host itself; a frontend policy may add restrictions but cannot opt those Server-owned fields back in. This is an E1.x architectural probe, not a new workflow engine or stable extension API.
 
-The V8 integration follows the minimal runtime/thread, Promise callback, microtask-checkpoint, JSON conversion, and thread-safe isolate termination patterns used by OpenAI Codex's Apache-2.0-licensed code-mode implementation. WebCodex E1 does not copy Codex's persistent cells, remote sessions, stored values, media, module ecosystem, notification protocol, or full Code Mode subsystem.
+The V8 integration follows the minimal runtime/thread, Promise callback, microtask-checkpoint, JSON conversion, and thread-safe isolate termination patterns used by OpenAI Codex's Apache-2.0-licensed code-mode implementation. CodeGPT E1 does not copy Codex's persistent cells, remote sessions, stored values, media, module ecosystem, notification protocol, or full Code Mode subsystem.
 
 ### E1.x frontend/host separation
 
@@ -85,7 +85,7 @@ CanonicalOrchestrationHost
 canonical ToolRuntime
 ```
 
-Only the V8 frontend exists today. The separation is meant to answer a narrower architectural question: can different orchestration representations share one authority, evidence, canonical dispatch, and composition-accounting boundary instead of each reimplementing WebCodex semantics? The frontend/runtime still owns program evaluation, scheduling/concurrency limits, timeout/cancellation, and output shaping. This does not add a TypeScript Composition Plugin, a Rust plan executor, bidirectional Native Plugin RPC, or another durable workflow lifecycle.
+Only the V8 frontend exists today. The separation is meant to answer a narrower architectural question: can different orchestration representations share one authority, evidence, canonical dispatch, and composition-accounting boundary instead of each reimplementing CodeGPT semantics? The frontend/runtime still owns program evaluation, scheduling/concurrency limits, timeout/cancellation, and output shaping. This does not add a TypeScript Composition Plugin, a Rust plan executor, bidirectional Native Plugin RPC, or another durable workflow lifecycle.
 
 Native Tool Plugins remain capability providers. A future reusable TypeScript composition layer, if dogfood justifies one, should consume this same canonical host boundary rather than teaching the existing stdin/stdout Native Plugin protocol to call back recursively into ToolRuntime.
 
@@ -189,11 +189,11 @@ The adapter injects the exact outer Project and Session and re-enters `ToolRunti
 
 Therefore nested calls continue to produce ordinary `tool_call_started` / `tool_call_finished` evidence in the same Workflow Session. E1 reduces model round trips; it does not collapse or hide canonical tool evidence.
 
-The outer durable request audit records only bounded metadata such as Project, source byte count, and timeout. It does not persist the JavaScript source body. The durable result audit likewise retains only failure kind and orchestration stats; it does not copy emitted `content` or detailed runtime error text into Session evidence. Model-facing failures keep their detailed runtime message in the ordinary bounded ToolResult output while the durable error summary uses a fixed generic failure string. Raw request tracing follows the existing WebCodex trace policy; E1 does not introduce a separate secret or tracing system.
+The outer durable request audit records only bounded metadata such as Project, source byte count, and timeout. It does not persist the JavaScript source body. The durable result audit likewise retains only failure kind and orchestration stats; it does not copy emitted `content` or detailed runtime error text into Session evidence. Model-facing failures keep their detailed runtime message in the ordinary bounded ToolResult output while the durable error summary uses a fixed generic failure string. Raw request tracing follows the existing CodeGPT trace policy; E1 does not introduce a separate secret or tracing system.
 
 ## No ambient host authority
 
-The V8 isolate is not a Server shell and exposes no WebCodex host filesystem, network, process, database, environment, Runner socket, Node, or Deno API.
+The V8 isolate is not a Server shell and exposes no CodeGPT host filesystem, network, process, database, environment, Runner socket, Node, or Deno API.
 
 E1 removes or does not provide at least:
 
@@ -228,7 +228,7 @@ The current server-owned E1 limits are intentionally simple and bounded:
 
 The V8 runtime runs on its own OS thread. A Tokio timeout is not treated as proof that CPU-bound JavaScript stopped. At the deadline, the async driver calls `v8::IsolateHandle::terminate_execution()`, signals the runtime thread, joins it, and returns a bounded timeout failure. A regression test covers `while (true) {}`.
 
-E1 V8 execution is **Server-side**, not Runner-side. The process admits two simultaneously active Code Mode executions by default; `WEBCODEX_CODE_MODE_MAX_CONCURRENT_EXECUTIONS` may raise or lower this process-local limit within 1..64 for host-specific dogfood capacity. Waiting for a slot consumes the same wall-clock deadline. Nested Project observations still execute on the owning Runner through canonical ToolRuntime dispatch. Therefore dogfood requires a Server binary built with `--features experimental-code-mode`; existing compatible Runners do not need the feature or a protocol upgrade. Rebuilding a Runner from the same source commit is optional when exact source-alignment telemetry is desired.
+E1 V8 execution is **Server-side**, not Runner-side. The process admits two simultaneously active Code Mode executions by default; `CODEGPT_CODE_MODE_MAX_CONCURRENT_EXECUTIONS` may raise or lower this process-local limit within 1..64 for host-specific dogfood capacity. Waiting for a slot consumes the same wall-clock deadline. Nested Project observations still execute on the owning Runner through canonical ToolRuntime dispatch. Therefore dogfood requires a Server binary built with `--features experimental-code-mode`; existing compatible Runners do not need the feature or a protocol upgrade. Rebuilding a Runner from the same source commit is optional when exact source-alignment telemetry is desired.
 
 ## Outer result
 
@@ -268,7 +268,7 @@ nested_tool_counts
 
 `nested_raw_result_bytes_total` is the sum of serialized canonical child `ToolResult` sizes before JavaScript selection/projection. Together with `returned_bytes`, it gives a direct projection/compression ratio without retaining any nested payload. `slot_wait_ms` measures only time waiting for the process-wide V8 execution permit, so it can be separated from the remaining Code Mode interval. Tracing RuntimeMetrics exposes the same observations as `code_mode_nested_raw_result_bytes_total` and `code_mode_slot_wait_seconds`; the durable composition summary keeps the millisecond field above. `nested_tool_counts` is limited to the explicit admitted tool set. Composition telemetry never stores JavaScript source, nested arguments, nested outputs, paths, queries, commands, credentials, raw Window identity, or arbitrary nested error text. RuntimeMetrics remains fail-open: metrics failure cannot change the `ToolResult`.
 
-Nested canonical calls deliberately use no fabricated `ClientWindow`. One host/model-visible `code_mode_exec` request therefore remains one meaningful outer Window call, while the Runtime Console can project the bounded child summary from that outer ActionAudit row. This lets operators distinguish WebCodex-owned outer service time, Code Mode internal time, and the following outside-WebCodex inter-call gap without reclassifying nested calls as host round trips.
+Nested canonical calls deliberately use no fabricated `ClientWindow`. One host/model-visible `code_mode_exec` request therefore remains one meaningful outer Window call, while the Runtime Console can project the bounded child summary from that outer ActionAudit row. This lets operators distinguish CodeGPT-owned outer service time, Code Mode internal time, and the following outside-CodeGPT inter-call gap without reclassifying nested calls as host round trips.
 
 ## Validation evidence
 
@@ -295,8 +295,8 @@ Use a real review task twice against the same repository state and comparable mo
 | outer model-facing tool calls | count | count | primary round-trip surface |
 | canonical tool invocations | count | count | child work should not disappear |
 | nested tool invocations | 0 | count | composition work moved below the model boundary |
-| WebCodex-owned outer duration | per call / total | per call / total | service time owned by WebCodex |
-| Window inter-call gaps | bounded samples | bounded samples | outside-WebCodex gap, not reasoning time |
+| CodeGPT-owned outer duration | per call / total | per call / total | service time owned by CodeGPT |
+| Window inter-call gaps | bounded samples | bounded samples | outside-CodeGPT gap, not reasoning time |
 | Code Mode internal duration | n/a | per outer call | total Code Mode interval, including any slot wait |
 | Code Mode slot wait | n/a | `slot_wait_ms` | process-wide V8 capacity contention |
 | nested raw result bytes | n/a | `nested_raw_result_bytes_total` | canonical child payload before projection |
@@ -305,7 +305,7 @@ Use a real review task twice against the same repository state and comparable mo
 | task end-to-end wall time | observed | observed | user-visible completion interval |
 | analysis/review findings quality | findings + evidence | findings + evidence | correctness/usefulness guardrail |
 
-Canonical child calls are expected to remain visible as canonical runtime and Session evidence; Code Mode is successful only if it reduces useful **outer model/tool round trips** without degrading review quality. Do not claim that an outside-WebCodex Window gap is model reasoning time: it can include inference, network latency, host scheduling, UI work, or user interaction. Likewise, a synthetic V8 microbenchmark can characterize runtime overhead but cannot establish model-level speedup.
+Canonical child calls are expected to remain visible as canonical runtime and Session evidence; Code Mode is successful only if it reduces useful **outer model/tool round trips** without degrading review quality. Do not claim that an outside-CodeGPT Window gap is model reasoning time: it can include inference, network latency, host scheduling, UI work, or user interaction. Likewise, a synthetic V8 microbenchmark can characterize runtime overhead but cannot establish model-level speedup.
 
 Prefer real ChatGPT dogfood traces over a bespoke benchmark runner while the existing telemetry is sufficient. If repeated real branch reviews do not show a meaningful round-trip, wall-time, or workflow-quality benefit, do not advance to effectful Code Mode merely because the local JavaScript runtime is fast.
 
@@ -374,7 +374,7 @@ If JavaScript throws or times out after consequential dispatch, the parent failu
 
 ### Session and Job continuation
 
-Each nested validator records its own ordinary canonical `tool_call_started` / `tool_call_finished`, validation, permission/scope, and Job evidence in the exact outer Workflow Session. The parent is not a fake validation event and does not compress children into one transaction. Server-owned nested fields, including Project/Session selection, context ACK, Session-message resolution, result expectations, and private `__webcodex_*` fields, remain forbidden inside JavaScript.
+Each nested validator records its own ordinary canonical `tool_call_started` / `tool_call_finished`, validation, permission/scope, and Job evidence in the exact outer Workflow Session. The parent is not a fake validation event and does not compress children into one transaction. Server-owned nested fields, including Project/Session selection, context ACK, Session-message resolution, result expectations, and private `__codegpt_*` fields, remain forbidden inside JavaScript.
 
 Unlike re-observable E1, consequential E2a participates in normal Session continuity. After already-started children have drained, the outer response is decorated from the latest monotonic Session state; it never fabricates an ACK and never derives authority from `ClientWindow`.
 
@@ -394,7 +394,7 @@ It intentionally does **not** admit `cargo_check`, `cargo_test`, `cargo_fmt`, ge
 
 `apply_text_edits` is canonically `Sequential`, but composition eligibility remains independent from frontend admission: E1 and E2a still cannot call it. One E2b cell may attempt a canonical mutation at most once. The budget is classified from canonical `ToolEffect::Mutate`, counts failed/pre-start attempts as attempts, and rejects a second mutation before canonical business dispatch. `apply_text_edits` already supports transactional multi-file batches, so E2b does not add an in-cell mutation retry engine or a second patch protocol.
 
-Across independent Code Mode cells, orchestration-originated mutation is serialized by a small process-local registry keyed by the canonical resolved Project id. The Project fence is shared by cloned `ToolRuntime` state and is held only through the canonical mutation `ToolRuntime` result. Different Projects retain independent mutation lanes. Read-only orchestration and E2a validation do not acquire this fence, and ordinary direct `apply_text_edits` intentionally remains outside it. This is coarse Code Mode containment, not a global WebCodex write lock or generic resource-lock framework.
+Across independent Code Mode cells, orchestration-originated mutation is serialized by a small process-local registry keyed by the canonical resolved Project id. The Project fence is shared by cloned `ToolRuntime` state and is held only through the canonical mutation `ToolRuntime` result. Different Projects retain independent mutation lanes. Read-only orchestration and E2a validation do not acquire this fence, and ordinary direct `apply_text_edits` intentionally remains outside it. This is coarse Code Mode containment, not a global CodeGPT write lock or generic resource-lock framework.
 
 Mutation effect receipts preserve canonical state-change truth. A known mutation result is `known_result` only when the canonical child returns an authoritative boolean `state_changed`; otherwise the receipt fails closed to `outcome_unknown` and omits the field. Pre-start results that prove the mutation never began are not retained as effects. No-op and dry-run edits can therefore be known with `state_changed=false`, while a completed write carries `state_changed=true`. Parent JavaScript failure or frontend timeout does not erase a completed mutation; the same bounded five-second post-frontend reconciliation used by E2a either learns the canonical result or leaves the dispatched mutation `outcome_unknown`. E2b never retries automatically.
 

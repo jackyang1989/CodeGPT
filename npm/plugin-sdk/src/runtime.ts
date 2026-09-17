@@ -18,8 +18,8 @@ import {
   type ToolResult,
 } from "./types.js";
 
-const HANDLER_FAILURE_DIAGNOSTIC = "webcodex plugin handler failed; provider will stop\n";
-const RUNTIME_FAILURE_DIAGNOSTIC = "webcodex plugin runtime failed; provider will stop\n";
+const HANDLER_FAILURE_DIAGNOSTIC = "codegpt plugin handler failed; provider will stop\n";
+const RUNTIME_FAILURE_DIAGNOSTIC = "codegpt plugin runtime failed; provider will stop\n";
 
 export interface PluginStreams {
   readonly input: Readable;

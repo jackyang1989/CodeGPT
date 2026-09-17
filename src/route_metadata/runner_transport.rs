@@ -3,7 +3,7 @@ use super::{
     route, AuditClass::*, RouteId::*, RouteMethod::*, RouteOpenApiProjection::*, RouteSpec,
     RouteSurface::*,
 };
-use webcodex_core::authority::OAuthRouteScopePolicy::*;
+use codegpt_core::authority::OAuthRouteScopePolicy::*;
 
 pub(super) const ROUTES: &[RouteSpec] = &[
     route(

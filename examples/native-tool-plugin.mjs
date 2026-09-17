@@ -1,9 +1,9 @@
-// Minimal WebCodex Native Tool Plugin. No MCP SDK and no third-party package.
+// Minimal CodeGPT Native Tool Plugin. No MCP SDK and no third-party package.
 // Protocol: one JSON-RPC 2.0 request/response per line on stdin/stdout.
 
 import readline from "node:readline";
 
-const PROTOCOL_VERSION = "webcodex-plugin-v1";
+const PROTOCOL_VERSION = "codegpt-plugin-v1";
 
 const tools = [
   {

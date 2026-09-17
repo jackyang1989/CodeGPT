@@ -49,7 +49,7 @@ export function PowerShellInstallGuidance({
   const presentation = error ? desktopErrorPresentation(error, t) : null;
 
   return (
-    <article className="detail-card tunnel-config-diagnostics" role="status" data-webcodex-diagnostic="powershell-7">
+    <article className="detail-card tunnel-config-diagnostics" role="status" data-codegpt-diagnostic="powershell-7">
       <span className="section-kicker">{t("powershell7.kicker")}</span>
       <strong>{t("powershell7.title")}</strong>
       <p>
@@ -67,7 +67,7 @@ export function PowerShellInstallGuidance({
           className="secondary-button"
           onClick={() => void openGuide()}
           disabled={busy !== null}
-          data-webcodex-action="open-powershell-install-guide"
+          data-codegpt-action="open-powershell-install-guide"
         >
           {t("powershell7.openGuide")}
         </button>
@@ -76,7 +76,7 @@ export function PowerShellInstallGuidance({
           className="secondary-button"
           onClick={() => void recheck()}
           disabled={busy !== null}
-          data-webcodex-action="recheck-powershell-7"
+          data-codegpt-action="recheck-powershell-7"
         >
           {busy === "recheck" ? t("powershell7.rechecking") : t("powershell7.recheck")}
         </button>

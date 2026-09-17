@@ -20,7 +20,7 @@ use super::tool_inputs::ListToolsOptions;
 use super::tool_result::ToolResult;
 use serde_json::{json, Value};
 use std::collections::{BTreeMap, HashMap};
-use webcodex_tool_contracts::ToolSpec;
+use codegpt_tool_contracts::ToolSpec;
 
 const TOOL_MANIFEST_SELECTION_DESCRIPTION_MAX_CHARS: usize = 180;
 const TOOL_MANIFEST_CANONICAL_KEYS: &[&str] = &[

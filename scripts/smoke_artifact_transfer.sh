@@ -2,24 +2,24 @@
 set -euo pipefail
 
 # ============================================================================
-# WebCodex - Artifact Transfer Smoke
+# CodeGPT - Artifact Transfer Smoke
 #
 # Default mode is documentation-only: it prints the required environment and
 # checklist, then exits without reading secrets or contacting a server.
 #
 # Active mode:
-#   WEBCODEX_SMOKE_RUN=1 \
-#   WEBCODEX_PUBLIC_URL="https://webcodex.example.com" \
-#   WEBCODEX_TOKEN="<wc_pat_or_allowed_shared_key>" \
-#   WEBCODEX_SMOKE_PROJECT_ID="agent:<client_id>:<smoke-project>" \
+#   CODEGPT_SMOKE_RUN=1 \
+#   CODEGPT_PUBLIC_URL="https://codegpt.example.com" \
+#   CODEGPT_TOKEN="<wc_pat_or_allowed_shared_key>" \
+#   CODEGPT_SMOKE_PROJECT_ID="agent:<client_id>:<smoke-project>" \
 #   bash scripts/smoke_artifact_transfer.sh
 #
 # This script never prints the token. It uses a pre-registered smoke project
 # and writes only fixed smoke artifact paths before deleting them again.
 # ============================================================================
 
-DEFAULT_ARTIFACT_PATH="artifacts/smoke/webcodex-artifact-transfer.txt"
-DEFAULT_ABORT_PATH="artifacts/smoke/webcodex-artifact-transfer-abort.txt"
+DEFAULT_ARTIFACT_PATH="artifacts/smoke/codegpt-artifact-transfer.txt"
+DEFAULT_ABORT_PATH="artifacts/smoke/codegpt-artifact-transfer-abort.txt"
 DEFAULT_EXPECTED_OPERATION_COUNT="25"
 DEFAULT_MAX_OPERATION_COUNT="30"
 
@@ -32,27 +32,27 @@ contact a server, write files, or delete files.
 
 To run the HTTP smoke explicitly:
 
-  WEBCODEX_SMOKE_RUN=1 \\
-  WEBCODEX_PUBLIC_URL="https://webcodex.example.com" \\
-  WEBCODEX_TOKEN="<wc_pat_or_allowed_shared_key>" \\
-  WEBCODEX_SMOKE_PROJECT_ID="agent:<client_id>:<smoke-project>" \\
+  CODEGPT_SMOKE_RUN=1 \\
+  CODEGPT_PUBLIC_URL="https://codegpt.example.com" \\
+  CODEGPT_TOKEN="<wc_pat_or_allowed_shared_key>" \\
+  CODEGPT_SMOKE_PROJECT_ID="agent:<client_id>:<smoke-project>" \\
   bash scripts/smoke_artifact_transfer.sh
 
-`WEBCODEX_SMOKE_PROJECT_ID` is required in active mode and must name an
+`CODEGPT_SMOKE_PROJECT_ID` is required in active mode and must name an
 explicitly registered smoke project.
 
 Optional environment:
-  WEBCODEX_SMOKE_ARTIFACT_PATH   default: $DEFAULT_ARTIFACT_PATH
-  WEBCODEX_SMOKE_ABORT_PATH      default: $DEFAULT_ABORT_PATH
-  WEBCODEX_EXPECTED_OPERATION_COUNT default: $DEFAULT_EXPECTED_OPERATION_COUNT
-  WEBCODEX_MAX_OPERATION_COUNT      default: $DEFAULT_MAX_OPERATION_COUNT
+  CODEGPT_SMOKE_ARTIFACT_PATH   default: $DEFAULT_ARTIFACT_PATH
+  CODEGPT_SMOKE_ABORT_PATH      default: $DEFAULT_ABORT_PATH
+  CODEGPT_EXPECTED_OPERATION_COUNT default: $DEFAULT_EXPECTED_OPERATION_COUNT
+  CODEGPT_MAX_OPERATION_COUNT      default: $DEFAULT_MAX_OPERATION_COUNT
   SMOKE_TIMEOUT                  default: 20 seconds per HTTP call
 
 Preconditions:
 
-  1. The public WebCodex URL is reachable.
+  1. The public CodeGPT URL is reachable.
   2. The token is a managed wc_pat_* token or a deployment-allowed shared key.
-     Do not use wc_agent_*; that token type is only for webcodex-runner.
+     Do not use wc_agent_*; that token type is only for codegpt-runner.
   3. The smoke project is registered, Runner-backed, online, and a git repo.
   4. The smoke project is disposable and clean before the run.
 
@@ -68,43 +68,43 @@ Checks covered by active mode:
   8. git_status and show_changes report a clean worktree after cleanup.
 
 Active mode refuses non-smoke project ids unless
-WEBCODEX_SMOKE_ALLOW_NON_SMOKE_PROJECT=1 is set. Custom artifact paths must stay
-under artifacts/smoke/ unless WEBCODEX_SMOKE_ALLOW_CUSTOM_PATHS=1 is set.
+CODEGPT_SMOKE_ALLOW_NON_SMOKE_PROJECT=1 is set. Custom artifact paths must stay
+under artifacts/smoke/ unless CODEGPT_SMOKE_ALLOW_CUSTOM_PATHS=1 is set.
 EOF
 }
 
-if [ "${WEBCODEX_SMOKE_RUN:-0}" != "1" ]; then
+if [ "${CODEGPT_SMOKE_RUN:-0}" != "1" ]; then
     print_checklist
     exit 0
 fi
 
-BASE_URL="${WEBCODEX_PUBLIC_URL:-${BASE_URL:-}}"
-TOKEN="${WEBCODEX_TOKEN:-${TOKEN:-}}"
-PROJECT_ID="${WEBCODEX_SMOKE_PROJECT_ID:-${PROJECT_ID:-}}"
-ARTIFACT_PATH="${WEBCODEX_SMOKE_ARTIFACT_PATH:-$DEFAULT_ARTIFACT_PATH}"
-ABORT_PATH="${WEBCODEX_SMOKE_ABORT_PATH:-$DEFAULT_ABORT_PATH}"
-EXPECTED_OPERATION_COUNT="${WEBCODEX_EXPECTED_OPERATION_COUNT:-$DEFAULT_EXPECTED_OPERATION_COUNT}"
-MAX_OPERATION_COUNT="${WEBCODEX_MAX_OPERATION_COUNT:-$DEFAULT_MAX_OPERATION_COUNT}"
+BASE_URL="${CODEGPT_PUBLIC_URL:-${BASE_URL:-}}"
+TOKEN="${CODEGPT_TOKEN:-${TOKEN:-}}"
+PROJECT_ID="${CODEGPT_SMOKE_PROJECT_ID:-${PROJECT_ID:-}}"
+ARTIFACT_PATH="${CODEGPT_SMOKE_ARTIFACT_PATH:-$DEFAULT_ARTIFACT_PATH}"
+ABORT_PATH="${CODEGPT_SMOKE_ABORT_PATH:-$DEFAULT_ABORT_PATH}"
+EXPECTED_OPERATION_COUNT="${CODEGPT_EXPECTED_OPERATION_COUNT:-$DEFAULT_EXPECTED_OPERATION_COUNT}"
+MAX_OPERATION_COUNT="${CODEGPT_MAX_OPERATION_COUNT:-$DEFAULT_MAX_OPERATION_COUNT}"
 TIMEOUT="${SMOKE_TIMEOUT:-20}"
 
 if [ -z "$BASE_URL" ]; then
-    echo "[smoke] WEBCODEX_PUBLIC_URL (or BASE_URL) is required" >&2
+    echo "[smoke] CODEGPT_PUBLIC_URL (or BASE_URL) is required" >&2
     exit 2
 fi
 if [ -z "$TOKEN" ]; then
-    echo "[smoke] WEBCODEX_TOKEN (or TOKEN) is required" >&2
+    echo "[smoke] CODEGPT_TOKEN (or TOKEN) is required" >&2
     exit 2
 fi
 if [ -z "$PROJECT_ID" ]; then
-    echo "[smoke] WEBCODEX_SMOKE_PROJECT_ID (or PROJECT_ID) is required in active mode" >&2
+    echo "[smoke] CODEGPT_SMOKE_PROJECT_ID (or PROJECT_ID) is required in active mode" >&2
     exit 2
 fi
 
 case "$PROJECT_ID" in
     *smoke*) ;;
     *)
-        if [ "${WEBCODEX_SMOKE_ALLOW_NON_SMOKE_PROJECT:-0}" != "1" ]; then
-            echo "[smoke] refusing non-smoke project id; set WEBCODEX_SMOKE_ALLOW_NON_SMOKE_PROJECT=1 to override" >&2
+        if [ "${CODEGPT_SMOKE_ALLOW_NON_SMOKE_PROJECT:-0}" != "1" ]; then
+            echo "[smoke] refusing non-smoke project id; set CODEGPT_SMOKE_ALLOW_NON_SMOKE_PROJECT=1 to override" >&2
             exit 2
         fi
         ;;
@@ -113,8 +113,8 @@ esac
 case "$ARTIFACT_PATH:$ABORT_PATH" in
     artifacts/smoke/*:artifacts/smoke/*) ;;
     *)
-        if [ "${WEBCODEX_SMOKE_ALLOW_CUSTOM_PATHS:-0}" != "1" ]; then
-            echo "[smoke] refusing artifact paths outside artifacts/smoke/; set WEBCODEX_SMOKE_ALLOW_CUSTOM_PATHS=1 to override" >&2
+        if [ "${CODEGPT_SMOKE_ALLOW_CUSTOM_PATHS:-0}" != "1" ]; then
+            echo "[smoke] refusing artifact paths outside artifacts/smoke/; set CODEGPT_SMOKE_ALLOW_CUSTOM_PATHS=1 to override" >&2
             exit 2
         fi
         ;;
@@ -139,7 +139,7 @@ pass() { PASS=$((PASS + 1)); printf '[smoke][ok]   %s\n' "$*"; }
 warn() { WARN=$((WARN + 1)); printf '[smoke][warn] %s\n' "$*" >&2; }
 fail() { FAIL=$((FAIL + 1)); printf '[smoke][FAIL] %s\n' "$*" >&2; }
 
-AUTH_HEADER_FILE="$(mktemp -t webcodex-artifact-smoke-auth-XXXXXX)"
+AUTH_HEADER_FILE="$(mktemp -t codegpt-artifact-smoke-auth-XXXXXX)"
 trap 'rm -f "$AUTH_HEADER_FILE"' INT TERM EXIT
 printf 'Authorization: Bearer %s\n' "$TOKEN" > "$AUTH_HEADER_FILE"
 chmod 600 "$AUTH_HEADER_FILE"
@@ -449,7 +449,7 @@ import base64
 import hashlib
 import json
 
-data = b"WebCodex artifact transfer smoke\n"
+data = b"CodeGPT artifact transfer smoke\n"
 print(json.dumps({
     "bytes": len(data),
     "sha256": hashlib.sha256(data).hexdigest(),

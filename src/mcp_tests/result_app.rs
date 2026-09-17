@@ -162,15 +162,15 @@ fn result_tool_app_metadata_is_capability_scoped_compact_safe_and_merge_safe() {
 async fn result_app_descriptor_and_resource_exposure_require_ui_operator_capability() {
     const PUBLIC_URL: &str = "https://self-host.example";
     let runtime = test_runtime_with_public_url(PUBLIC_URL);
-    assert_eq!(MCP_RESULT_UI_RESOURCE_URI, "ui://webcodex/changes/v2");
+    assert_eq!(MCP_RESULT_UI_RESOURCE_URI, "ui://codegpt/changes/v2");
     assert_eq!(
         MCP_WORK_RESULT_UI_RESOURCE_URI,
-        "ui://webcodex/work-result/v1"
+        "ui://codegpt/work-result/v1"
     );
-    assert!(MCP_RESULT_UI_RESOURCE_LEGACY_URIS.contains(&"ui://webcodex/changes/v1"));
-    assert!(MCP_RESULT_UI_RESOURCE_LEGACY_URIS.contains(&"ui://webcodex/result/v1"));
-    assert!(MCP_RESULT_UI_RESOURCE_LEGACY_URIS.contains(&"ui://webcodex/result/v2"));
-    assert!(MCP_RESULT_UI_RESOURCE_LEGACY_URIS.contains(&"ui://webcodex/result/v3"));
+    assert!(MCP_RESULT_UI_RESOURCE_LEGACY_URIS.contains(&"ui://codegpt/changes/v1"));
+    assert!(MCP_RESULT_UI_RESOURCE_LEGACY_URIS.contains(&"ui://codegpt/result/v1"));
+    assert!(MCP_RESULT_UI_RESOURCE_LEGACY_URIS.contains(&"ui://codegpt/result/v2"));
+    assert!(MCP_RESULT_UI_RESOURCE_LEGACY_URIS.contains(&"ui://codegpt/result/v3"));
     assert!(mcp_result_app_resource_meta(None)["ui"]
         .get("domain")
         .is_none());
@@ -1702,7 +1702,7 @@ fn result_app_html_is_display_only_and_uses_safe_dom_rendering() {
         "ui/initialize",
         "ui/notifications/initialized",
         "ui/notifications/tool-result",
-        "webcodex/presentation",
+        "codegpt/presentation",
         "textContent",
         "document.createElement",
         "document.createElement(\"details\")",
@@ -1718,7 +1718,7 @@ fn result_app_html_is_display_only_and_uses_safe_dom_rendering() {
         "View diff",
         "Hide diff",
         "boundedDiffString",
-        "No bounded WebCodex presentation metadata was attached.",
+        "No bounded CodeGPT presentation metadata was attached.",
         "!presentation || typeof presentation !== \"object\" || presentation.version !== 1",
         "Committed review",
         "Cargo Test",

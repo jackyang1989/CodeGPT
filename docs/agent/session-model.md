@@ -1,6 +1,6 @@
 # Session Model — Two Non-Interchangeable Concepts
 
-WebCodex uses the word **session** for two independent systems. They share
+CodeGPT uses the word **session** for two independent systems. They share
 casual vocabulary only. They must not be merged, cross-wired, or inferred from
 each other.
 
@@ -87,13 +87,13 @@ identity. Adjacent meaningful MCP calls are eligible to pair only when the hashe
 `ClientWindow` and canonical authenticated principal correlation both match.
 Project remains an event dimension and current-visibility boundary, not the
 continuity identity. A matching Window does not prove a matching model turn:
-WebCodex receives no reliable turn/generation/response id and never infers one
+CodeGPT receives no reliable turn/generation/response id and never infers one
 from elapsed time. Missing or malformed host Window metadata therefore leaves
 loop continuity unavailable rather than falling back to Workflow Session,
 credential, Project, connection, trace, or MCP Session identity.
 
 For a later successful meaningful Project tool call with no explicit recorder,
-WebCodex may diagnose a **recorder continuity gap** when the same hashed Window,
+CodeGPT may diagnose a **recorder continuity gap** when the same hashed Window,
 canonical principal, and exact Project have a recent explicit Session affinity.
 The candidate must still be Active, match the exact Project, and pass the current
 caller through the ordinary Session authority check. The diagnostic may suggest
@@ -173,7 +173,7 @@ Model ergonomics telemetry schema v5 retains eligibility, ACK presence, bounded 
 
 This watermark is independent of `ack_session_message_ids` and the Session message-observation revision: message ACKs mean only that specific ACK-required Session/Peer message is retained for one request, while context ACKs describe the retained model-facing Workflow Session checkpoint watermark. Neither implicitly acknowledges or resolves the other.
 
-Stateless MCP 2026 tools also accept an explicit bounded `context_request` wrapper sidecar request. It is independent of both ACK protocols and is removed before concrete `ToolCall` parsing. A static canonical material registry authorizes every requested material before its provider is read: `webcodex.workflow` is public; `project.instructions` requires the resolved Project plus `project:read`; `skills.catalog` additionally requires the admitted Skill runtime protocol capability; `plugins.catalog` requires the resolved Project plus both `project:read` and `plugin:inspect`; and `memory.bootstrap` requires the admitted Memory protocol capability plus both `project:read` and `memory:read`. Scope or material-capability denial is nonfatal to the main ToolResult and returns a bounded unavailable material without provider content. Unknown material keys are nonfatal and remain open-ended at the MCP schema layer. Sidecar material is projected only after the main tool effect or observation has completed, never grants authority, never retroactively makes requested guidance a precondition of that effect, never records caller-read state, and never infers a Project or model-memory state from a Workflow Session, connection, credential, `Mcp-Session-Id`, or hidden window identity. A model that has lost Project rules or durable Memory guidance must recover `project.instructions` and/or `memory.bootstrap` on an observation call, use `memory_read` when detailed Memory content is needed, reason over that context, and only then issue a later mutation that must obey it. Legacy MCP and generic REST/GPT Actions/OpenAPI do not expose this sidecar request contract.
+Stateless MCP 2026 tools also accept an explicit bounded `context_request` wrapper sidecar request. It is independent of both ACK protocols and is removed before concrete `ToolCall` parsing. A static canonical material registry authorizes every requested material before its provider is read: `codegpt.workflow` is public; `project.instructions` requires the resolved Project plus `project:read`; `skills.catalog` additionally requires the admitted Skill runtime protocol capability; `plugins.catalog` requires the resolved Project plus both `project:read` and `plugin:inspect`; and `memory.bootstrap` requires the admitted Memory protocol capability plus both `project:read` and `memory:read`. Scope or material-capability denial is nonfatal to the main ToolResult and returns a bounded unavailable material without provider content. Unknown material keys are nonfatal and remain open-ended at the MCP schema layer. Sidecar material is projected only after the main tool effect or observation has completed, never grants authority, never retroactively makes requested guidance a precondition of that effect, never records caller-read state, and never infers a Project or model-memory state from a Workflow Session, connection, credential, `Mcp-Session-Id`, or hidden window identity. A model that has lost Project rules or durable Memory guidance must recover `project.instructions` and/or `memory.bootstrap` on an observation call, use `memory_read` when detailed Memory content is needed, reason over that context, and only then issue a later mutation that must obey it. Legacy MCP and generic REST/GPT Actions/OpenAPI do not expose this sidecar request contract.
 
 Project Memory is a separate durable knowledge plane from Workflow Session continuity. `memory_search`/`memory_read` require both `project:read` and `memory:read`; `memory_set`/`memory_delete` require both `project:write` and `memory:manage`, with mutations still passing the independent permission evaluator. Direct shared-key runtime credentials explicitly carry both Memory scopes, while Open Anonymous, ProjectCredential, Project Share, and legacy/default OAuth client scope sets do not gain them from project scopes. A Memory `memory_key` is logical semantic identity, `memory_id` identifies the current incarnation, the internal `definition_hash` identifies canonical model-relevant content, and model-facing `revision` is a generation-bound state ETag/CAS identity; delete and identical recreate therefore produce a different `memory_id` and `revision`. Session events never create or consolidate Memory automatically. `ack_session_context_revision` proves only the caller-held Session checkpoint prefix and never acknowledges Memory content, while `ack_session_message_ids` is limited to ACK-required collaboration messages and never acknowledges Memory. Memory reads/searches may leave bounded metadata-only consequences in Session history, but Memory bodies, summaries, search results, and `memory.bootstrap` projections are not copied into durable Session recovery. Re-registering the same runtime Project id to a different authoritative registered root resolves to a distinct internal Memory scope rather than inheriting the old root's Memory.
 
@@ -440,7 +440,7 @@ The durable projection stores only:
 The canonical hash input is the principal kind/id, transport, already-hashed
 stable window identity, resolved project, and already-hashed canonical
 repository root. It uses fixed field order and length prefixes under
-`webcodex.workflow-current-binding.v1`. Raw MCP session ids, hosted
+`codegpt.workflow-current-binding.v1`. Raw MCP session ids, hosted
 conversation ids, cookies, credentials, authorization headers, and repository
 paths never enter this projection, and neither binding hashes nor component
 hashes are returned to the model.
@@ -532,7 +532,7 @@ a `finish_coding_task` verdict.
   `insufficient_scope_identity`, `validation_not_requested`). Count deltas are
   signed integers (a decrease in passed tests yields a negative `passed_delta`);
   zero-test success never resolves a prior test failure.
-- **Async terminal validation evidence:** structured validation Job metadata carries the same opaque `validation_target_id` as the originating validation attempt. When an authorized validation-summary or Runtime Console Session read observes a retained terminal Job, WebCodex idempotently materializes one bounded `validation_job_terminal` event in that exact Workflow Session before projecting validation state. Idempotence does not depend on that event remaining in the 200-event Session FIFO: the version-1 ledger also persists a serde-defaulted exact Job-id marker set bounded to the Runner authoritative terminal inventory limit (64), and a new materialization evicts only markers absent from the current terminal-candidate snapshot. The marker check, marker insertion, and event append commit under one Session-store mutation, so concurrent reconcilers append at most once and restart restoration keeps the same suppression identity. Terminal reconciliation also serializes authoritative candidate-snapshot acquisition through marker/event materialization within one runtime: a later snapshot cannot commit first, so an older snapshot never gains eviction authority over a marker established from newer inventory. Synthetic evidence uses the authoritative Job `finished_at`; reconciliation never advances Session activity to the wall-clock read time. This is recovery/materialization only: it never re-runs validation, never treats acceptance/handoff as terminal success, and never exposes raw Job output. A later terminal success for the same structured target can therefore resolve an older retained failure even after the acceptance event is gone; the materialized terminal evidence then follows normal Session persistence/retention across Server restart.
+- **Async terminal validation evidence:** structured validation Job metadata carries the same opaque `validation_target_id` as the originating validation attempt. When an authorized validation-summary or Runtime Console Session read observes a retained terminal Job, CodeGPT idempotently materializes one bounded `validation_job_terminal` event in that exact Workflow Session before projecting validation state. Idempotence does not depend on that event remaining in the 200-event Session FIFO: the version-1 ledger also persists a serde-defaulted exact Job-id marker set bounded to the Runner authoritative terminal inventory limit (64), and a new materialization evicts only markers absent from the current terminal-candidate snapshot. The marker check, marker insertion, and event append commit under one Session-store mutation, so concurrent reconcilers append at most once and restart restoration keeps the same suppression identity. Terminal reconciliation also serializes authoritative candidate-snapshot acquisition through marker/event materialization within one runtime: a later snapshot cannot commit first, so an older snapshot never gains eviction authority over a marker established from newer inventory. Synthetic evidence uses the authoritative Job `finished_at`; reconciliation never advances Session activity to the wall-clock read time. This is recovery/materialization only: it never re-runs validation, never treats acceptance/handoff as terminal success, and never exposes raw Job output. A later terminal success for the same structured target can therefore resolve an older retained failure even after the acceptance event is gone; the materialized terminal evidence then follows normal Session persistence/retention across Server restart.
 - **Cargo test-count postconditions:** a `cargo_test` caller may require a
   bounded minimum count with `require_tests` / `min_tests`. These are
   request-scoped evidence assertions: they are persisted with local and Runner
@@ -782,7 +782,7 @@ part of this contract.
 | Aspect | Contract |
 |---|---|
 | ID form | UUID string (or client-supplied id via headers/query), **not** `wc_sess_*` |
-| Request affinity | Headers `x-action-session-id` / `x-webcodex-session-id`, or query `action_session_id` |
+| Request affinity | Headers `x-action-session-id` / `x-codegpt-session-id`, or query `action_session_id` |
 | Default creation | Server may create a new UUID when no open recent session is reused |
 | Durable caller attribution | `principal_kind`, optional `principal_user_id`, OAuth-only `oauth_client_id`; legacy rows remain `NULL` and are never inferred from target project or session |
 | Stats exposure | `/api/audit/stats` aggregates credential kinds and OAuth client usage; ordinary `/api/audit/session` event views do not expose principal/user/client attribution fields |
@@ -892,7 +892,7 @@ renamed without an explicit compatibility migration:
 - `POST /api/audit/sessions`
 - `POST /api/audit/session`
 - `POST /api/audit/stats`
-- Request affinity: `x-action-session-id`, `x-webcodex-session-id`,
+- Request affinity: `x-action-session-id`, `x-codegpt-session-id`,
   query `action_session_id`
 
 ### JSON / type shapes (illustrative)

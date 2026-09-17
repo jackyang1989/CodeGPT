@@ -19,9 +19,9 @@ use std::sync::{Arc, Mutex, OnceLock};
 use std::time::{Duration, Instant};
 use tokio::sync::{mpsc, OwnedSemaphorePermit, Semaphore};
 
-pub(super) const MCP_ARTIFACT_EXPORT_URI_PREFIX: &str = "webcodex-artifact://export/";
+pub(super) const MCP_ARTIFACT_EXPORT_URI_PREFIX: &str = "codegpt-artifact://export/";
 pub(super) const MCP_ARTIFACT_EXPORT_ID_PREFIX: &str = "wc_export_";
-pub(super) const MCP_SNAPSHOT_RESOURCE_URI_PREFIX: &str = "webcodex-snapshot://view/";
+pub(super) const MCP_SNAPSHOT_RESOURCE_URI_PREFIX: &str = "codegpt-snapshot://view/";
 pub(super) const MCP_SNAPSHOT_RESOURCE_ID_PREFIX: &str = "wc_snapshot_";
 pub(super) const MCP_SNAPSHOT_RESOURCE_TTL: Duration = Duration::from_secs(5 * 60);
 pub(super) const MAX_MCP_SNAPSHOT_RESOURCES: usize = 32;
@@ -36,35 +36,35 @@ pub(super) const MAX_MCP_ARTIFACT_EXPORTS: usize = 128;
 pub(super) const MAX_MCP_ARTIFACT_EXPORTS_PER_CALLER: usize = 16;
 pub(super) const MCP_ARTIFACT_EXPORT_BUSY_CODE: i64 = -32029;
 pub(super) const MCP_UI_EXTENSION: &str = "io.modelcontextprotocol/ui";
-pub(super) const MCP_COMPUTER_UI_RESOURCE_URI: &str = "ui://webcodex/computer/v12";
+pub(super) const MCP_COMPUTER_UI_RESOURCE_URI: &str = "ui://codegpt/computer/v12";
 pub(super) const MCP_COMPUTER_UI_RESOURCE_LEGACY_URIS: &[&str] = &[
-    "ui://webcodex/computer/v1",
-    "ui://webcodex/computer/v2",
-    "ui://webcodex/computer/v3",
-    "ui://webcodex/computer/v4",
-    "ui://webcodex/computer/v5",
-    "ui://webcodex/computer/v6",
-    "ui://webcodex/computer/v7",
-    "ui://webcodex/computer/v8",
-    "ui://webcodex/computer/v9",
-    "ui://webcodex/computer/v10",
-    "ui://webcodex/computer/v11",
+    "ui://codegpt/computer/v1",
+    "ui://codegpt/computer/v2",
+    "ui://codegpt/computer/v3",
+    "ui://codegpt/computer/v4",
+    "ui://codegpt/computer/v5",
+    "ui://codegpt/computer/v6",
+    "ui://codegpt/computer/v7",
+    "ui://codegpt/computer/v8",
+    "ui://codegpt/computer/v9",
+    "ui://codegpt/computer/v10",
+    "ui://codegpt/computer/v11",
 ];
 // Temporary gray-card diagnostic: force the host to re-read the canonical App
 // resource for every card so resource reuse/cache is not an unobserved variable.
 pub(super) const MCP_COMPUTER_UI_RESOURCE_TTL_MS: u64 = 0;
-pub(super) const MCP_RESULT_UI_RESOURCE_URI: &str = "ui://webcodex/changes/v2";
+pub(super) const MCP_RESULT_UI_RESOURCE_URI: &str = "ui://codegpt/changes/v2";
 pub(super) const MCP_RESULT_UI_RESOURCE_LEGACY_URIS: &[&str] = &[
-    "ui://webcodex/changes/v1",
-    "ui://webcodex/result/v1",
-    "ui://webcodex/result/v2",
-    "ui://webcodex/result/v3",
+    "ui://codegpt/changes/v1",
+    "ui://codegpt/result/v1",
+    "ui://codegpt/result/v2",
+    "ui://codegpt/result/v3",
 ];
-pub(super) const MCP_WORK_RESULT_UI_RESOURCE_URI: &str = "ui://webcodex/work-result/v1";
-pub(super) const MCP_CHANGES_UI_RESOURCE_URI: &str = "ui://webcodex/changes/v3";
-pub(super) const MCP_GOAL_PLAN_UI_RESOURCE_URI: &str = "ui://webcodex/goal-plan/v2";
+pub(super) const MCP_WORK_RESULT_UI_RESOURCE_URI: &str = "ui://codegpt/work-result/v1";
+pub(super) const MCP_CHANGES_UI_RESOURCE_URI: &str = "ui://codegpt/changes/v3";
+pub(super) const MCP_GOAL_PLAN_UI_RESOURCE_URI: &str = "ui://codegpt/goal-plan/v2";
 pub(super) const MCP_AGENT_CONTINUATION_UI_RESOURCE_URI: &str =
-    "ui://webcodex/agent-continuation/v17";
+    "ui://codegpt/agent-continuation/v17";
 pub(super) const MCP_UI_RESOURCE_MIME_TYPE: &str = "text/html;profile=mcp-app";
 pub(super) const MCP_COMPUTER_APP_HTML: &str = include_str!("../mcp_computer_app.html");
 pub(super) const MCP_RESULT_APP_HTML: &str = include_str!("../mcp_result_app.html");
@@ -112,8 +112,8 @@ pub(super) fn mcp_computer_app_resources_list(domain: Option<&str>) -> Value {
     json!({
         "resources": [{
             "uri": MCP_COMPUTER_UI_RESOURCE_URI,
-            "name": "WebCodex Computer",
-            "description": "Minimal read-only WebCodex Computer screenshot card that performs only the standard MCP Apps handshake and renders native images returned by computer_observe snapshot actions.",
+            "name": "CodeGPT Computer",
+            "description": "Minimal read-only CodeGPT Computer screenshot card that performs only the standard MCP Apps handshake and renders native images returned by computer_observe snapshot actions.",
             "mimeType": MCP_UI_RESOURCE_MIME_TYPE,
             "_meta": mcp_computer_app_resource_meta(domain)
         }]
@@ -131,7 +131,7 @@ pub(super) fn mcp_app_resources_list(domain: Option<&str>) -> Value {
         .expect("computer App resource list must be an array")
         .push(json!({
             "uri": MCP_WORK_RESULT_UI_RESOURCE_URI,
-            "name": "WebCodex Work",
+            "name": "CodeGPT Work",
             "description": "Persistent read-only coding Work Result for one explicitly presented project-scoped Workflow Session. The initial present_work_result ToolResult is the authoritative snapshot; the mounted App stays static until the user explicitly refreshes, then performs one exact bounded state read. Ordinary work tools keep native Host presentation. Legacy Changes resources remain hidden readable compatibility aliases.",
             "mimeType": MCP_UI_RESOURCE_MIME_TYPE,
             "_meta": mcp_app_resource_meta(domain)
@@ -141,7 +141,7 @@ pub(super) fn mcp_app_resources_list(domain: Option<&str>) -> Value {
         .expect("App resource list must be an array")
         .push(json!({
             "uri": MCP_CHANGES_UI_RESOURCE_URI,
-            "name": "WebCodex Changes",
+            "name": "CodeGPT Changes",
             "description": "One final frozen coding workspace summary for an explicitly presented Workflow Session. Initial payload is bounded file metadata only; user expansion performs app-only bounded lazy reads from the exact frozen snapshot. Presentation is optional UX and grants no execution authority.",
             "mimeType": MCP_UI_RESOURCE_MIME_TYPE,
             "_meta": mcp_app_resource_meta(domain)
@@ -151,7 +151,7 @@ pub(super) fn mcp_app_resources_list(domain: Option<&str>) -> Value {
         .expect("App resource list must be an array")
         .push(json!({
             "uri": MCP_GOAL_PLAN_UI_RESOURCE_URI,
-            "name": "WebCodex Goal Plan",
+            "name": "CodeGPT Goal Plan",
             "description": "Sparse read-only durable Goal presentation. One explicit present_goal_plan call creates the card; the View converges by app-only exact polling of authoritative Goal state and never owns execution or lifecycle state.",
             "mimeType": MCP_UI_RESOURCE_MIME_TYPE,
             "_meta": mcp_app_resource_meta(domain)
@@ -161,7 +161,7 @@ pub(super) fn mcp_app_resources_list(domain: Option<&str>) -> Value {
         .expect("App resource list must be an array")
         .push(json!({
             "uri": MCP_AGENT_CONTINUATION_UI_RESOURCE_URI,
-            "name": "WebCodex Agent Continuation",
+            "name": "CodeGPT Agent Continuation",
             "description": "Sparse Host controller for one explicit Durable Agent Endpoint generation. The View is a process-local carrier only: SQLite Wake/Wake Delivery Attempt remains authoritative, and Host dispatch is considered actually resumed only after exact consume_agent_wake.",
             "mimeType": MCP_UI_RESOURCE_MIME_TYPE,
             "_meta": mcp_app_resource_meta(domain)
@@ -244,7 +244,7 @@ pub(super) fn mcp_changes_app_resource_read(uri: &str, domain: Option<&str>) -> 
 
 pub(super) fn is_mcp_goal_plan_app_resource_uri(uri: &str) -> bool {
     // Hidden read alias for existing cards; discovery advertises only v2.
-    uri == MCP_GOAL_PLAN_UI_RESOURCE_URI || uri == "ui://webcodex/goal-plan/v1"
+    uri == MCP_GOAL_PLAN_UI_RESOURCE_URI || uri == "ui://codegpt/goal-plan/v1"
 }
 
 pub(super) fn mcp_goal_plan_app_resource_read(uri: &str, domain: Option<&str>) -> Option<Value> {
@@ -265,22 +265,22 @@ pub(super) fn is_mcp_agent_continuation_app_resource_uri(uri: &str) -> bool {
     uri == MCP_AGENT_CONTINUATION_UI_RESOURCE_URI
         || matches!(
             uri,
-            "ui://webcodex/agent-continuation/v1"
-                | "ui://webcodex/agent-continuation/v2"
-                | "ui://webcodex/agent-continuation/v3"
-                | "ui://webcodex/agent-continuation/v4"
-                | "ui://webcodex/agent-continuation/v5"
-                | "ui://webcodex/agent-continuation/v6"
-                | "ui://webcodex/agent-continuation/v7"
-                | "ui://webcodex/agent-continuation/v8"
-                | "ui://webcodex/agent-continuation/v9"
-                | "ui://webcodex/agent-continuation/v10"
-                | "ui://webcodex/agent-continuation/v11"
-                | "ui://webcodex/agent-continuation/v12"
-                | "ui://webcodex/agent-continuation/v13"
-                | "ui://webcodex/agent-continuation/v14"
-                | "ui://webcodex/agent-continuation/v15"
-                | "ui://webcodex/agent-continuation/v16"
+            "ui://codegpt/agent-continuation/v1"
+                | "ui://codegpt/agent-continuation/v2"
+                | "ui://codegpt/agent-continuation/v3"
+                | "ui://codegpt/agent-continuation/v4"
+                | "ui://codegpt/agent-continuation/v5"
+                | "ui://codegpt/agent-continuation/v6"
+                | "ui://codegpt/agent-continuation/v7"
+                | "ui://codegpt/agent-continuation/v8"
+                | "ui://codegpt/agent-continuation/v9"
+                | "ui://codegpt/agent-continuation/v10"
+                | "ui://codegpt/agent-continuation/v11"
+                | "ui://codegpt/agent-continuation/v12"
+                | "ui://codegpt/agent-continuation/v13"
+                | "ui://codegpt/agent-continuation/v14"
+                | "ui://codegpt/agent-continuation/v15"
+                | "ui://codegpt/agent-continuation/v16"
         )
 }
 
@@ -725,7 +725,7 @@ pub(super) fn mcp_artifact_export_tool_result(
             "uri": uri,
             "name": snapshot.name,
             "mimeType": snapshot.mime_type,
-            "description": "Short-lived authenticated WebCodex project artifact export. Read this URI with MCP resources/read to retrieve the complete bounded binary."
+            "description": "Short-lived authenticated CodeGPT project artifact export. Read this URI with MCP resources/read to retrieve the complete bounded binary."
         }],
         "structuredContent": {
             "success": true,
@@ -899,7 +899,7 @@ pub(super) fn mcp_native_image_tool_result(
                 .unwrap_or_else(|poisoned| poisoned.into_inner())
                 .insert(record);
             tracing::info!(
-                target: "webcodex::mcp",
+                target: "codegpt::mcp",
                 tool_name,
                 file_bytes,
                 "mcp_snapshot_resource_link_issued"
@@ -910,7 +910,7 @@ pub(super) fn mcp_native_image_tool_result(
                 "name": name,
                 "mimeType": mime_type,
                 "size": file_bytes,
-                "description": "Short-lived authenticated WebCodex screenshot resource. No project artifact was created."
+                "description": "Short-lived authenticated CodeGPT screenshot resource. No project artifact was created."
             })
         });
     let mut content = Vec::with_capacity(if snapshot_link.is_some() { 3 } else { 2 });
@@ -1258,7 +1258,7 @@ pub(super) fn mcp_artifact_export_stream_suffix() -> Result<Vec<u8>, McpArtifact
             .map_err(|_| McpArtifactExportReadError::Unsafe)?,
     );
     output.extend_from_slice(
-        b",\"_meta\":{\"io.modelcontextprotocol/serverInfo\":{\"name\":\"webcodex\",\"version\":",
+        b",\"_meta\":{\"io.modelcontextprotocol/serverInfo\":{\"name\":\"codegpt\",\"version\":",
     );
     output.extend_from_slice(
         &serde_json::to_vec(env!("CARGO_PKG_VERSION"))
@@ -1625,7 +1625,7 @@ pub(super) async fn handle_read(
             }
         }
         tracing::info!(
-            target: "webcodex::mcp",
+            target: "codegpt::mcp",
             resource_kind = ?record.kind,
             file_bytes = record.bytes.len(),
             "mcp_snapshot_resource_read"

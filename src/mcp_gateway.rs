@@ -1,10 +1,10 @@
 //! Built-in MCP gateway for Runner-owned local stdio providers.
 //!
 //! Public model-facing behavior is layered here; bounded Server↔Runner wire
-//! types stay in `webcodex-core`. Exact Runner/provider identities never leave
+//! types stay in `codegpt-core`. Exact Runner/provider identities never leave
 //! this module's internal dispatch path.
 
-pub(crate) use webcodex_core::mcp_gateway::*;
+pub(crate) use codegpt_core::mcp_gateway::*;
 
 use crate::auth::{AuthContext, SCOPE_MCP_LOCAL};
 use crate::tool_runtime::ToolRuntime;
@@ -132,7 +132,7 @@ pub(crate) fn authorized(auth: Option<&AuthContext>) -> bool {
 pub(crate) fn tool_spec() -> Value {
     json!({
         "name": MCP_TOOL_NAME,
-        "description": "Access explicitly authorized Runner-owned local MCP servers through WebCodex's built-in gateway. No-argument action=list reports registration routing resolvability. action=status with server passively reports bounded provider lifecycle state without starting, initializing, or pinging the provider; healthy means the retained connection's child is still running, not an end-to-end protocol probe. action=list with server and action=describe interact with the provider. Use action=describe before action=call, and re-describe when WebCodex reports a schema change. Provider process identities, paths, stderr, environment, and schema revision tokens are intentionally hidden.",
+        "description": "Access explicitly authorized Runner-owned local MCP servers through CodeGPT's built-in gateway. No-argument action=list reports registration routing resolvability. action=status with server passively reports bounded provider lifecycle state without starting, initializing, or pinging the provider; healthy means the retained connection's child is still running, not an end-to-end protocol probe. action=list with server and action=describe interact with the provider. Use action=describe before action=call, and re-describe when CodeGPT reports a schema change. Provider process identities, paths, stderr, environment, and schema revision tokens are intentionally hidden.",
         "inputSchema": {
             "type": "object",
             "properties": {
@@ -385,7 +385,7 @@ async fn call_upstream(
         .ok_or_else(|| {
             GatewayError::local(
                 "describe_required",
-                "describe this tool before calling it so WebCodex can bind the current schema",
+                "describe this tool before calling it so CodeGPT can bind the current schema",
             )
             .recovery("Call mcp_tool with action=describe for this server and tool, then retry with the described schema.")
         })?;
@@ -438,7 +438,7 @@ async fn call_upstream(
         if error.code == "stale_provider" {
             gateway_error.code = "provider_replaced".to_string();
             gateway_error.recovery = Some(
-                "The exact provider instance changed. Re-list or re-describe; WebCodex did not retarget or replay the call.",
+                "The exact provider instance changed. Re-list or re-describe; CodeGPT did not retarget or replay the call.",
             );
         }
         return Err(gateway_error);
@@ -549,7 +549,7 @@ async fn execute_exact(
                 )
             };
             GatewayError::local(code, public_message).recovery(
-                "Re-list or re-describe the MCP server. WebCodex did not retarget or replay this operation.",
+                "Re-list or re-describe the MCP server. CodeGPT did not retarget or replay this operation.",
             )
         })?;
 
@@ -618,11 +618,11 @@ fn response_tools(response: McpGatewayResponse) -> Result<Vec<McpGatewayTool>, G
         };
         let recovery = if stale_provider {
             Some(
-                "The exact provider instance changed. Re-list or re-describe; WebCodex did not retarget or replay the operation.",
+                "The exact provider instance changed. Re-list or re-describe; CodeGPT did not retarget or replay the operation.",
             )
         } else if response.dispatch_state == McpGatewayDispatchState::OutcomeUnknown {
             Some(
-                "The failed provider connection was retired. A later explicit list or describe request may establish a fresh connection under the same provider identity; WebCodex did not replay the failed request.",
+                "The failed provider connection was retired. A later explicit list or describe request may establish a fresh connection under the same provider identity; CodeGPT did not replay the failed request.",
             )
         } else {
             None
@@ -734,7 +734,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn webcodex_generated_gateway_results_keep_canonical_data_only_in_structured_content() {
+    fn codegpt_generated_gateway_results_keep_canonical_data_only_in_structured_content() {
         let metadata = json!({
             "server": "repo-tools",
             "tools": [{"name": "search_symbol"}]

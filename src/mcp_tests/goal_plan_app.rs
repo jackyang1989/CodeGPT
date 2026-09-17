@@ -71,7 +71,7 @@ async fn handle_with_server_apps_enabled(
 
 #[tokio::test]
 async fn goal_plan_app_descriptor_is_sparse_app_only_resource_backed_and_adaptive_direct() {
-    assert_eq!(MCP_GOAL_PLAN_UI_RESOURCE_URI, "ui://webcodex/goal-plan/v2");
+    assert_eq!(MCP_GOAL_PLAN_UI_RESOURCE_URI, "ui://codegpt/goal-plan/v2");
     let (_temp, _db, adaptive) = goal_runtime();
     let auth = goal_auth("goal-plan-descriptor");
 
@@ -189,8 +189,8 @@ async fn goal_plan_app_descriptor_is_sparse_app_only_resource_backed_and_adaptiv
         .as_array()
         .unwrap()
         .iter()
-        .any(|resource| resource["uri"] == "ui://webcodex/goal-plan/v1"));
-    for uri in [MCP_GOAL_PLAN_UI_RESOURCE_URI, "ui://webcodex/goal-plan/v1"] {
+        .any(|resource| resource["uri"] == "ui://codegpt/goal-plan/v1"));
+    for uri in [MCP_GOAL_PLAN_UI_RESOURCE_URI, "ui://codegpt/goal-plan/v1"] {
         let read = handle_with_server_apps_enabled(
             &adaptive,
             rpc(

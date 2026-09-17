@@ -6,7 +6,7 @@ use super::{ResolvedProject, ToolResult, ToolRuntime};
 use crate::auth::AuthContext;
 use serde_json::json;
 use std::sync::Arc;
-use webcodex_code_mode::{
+use codegpt_code_mode::{
     CodeModeExecuteRequest, CodeModeHost, CodeModeHostError, CodeModeHostFuture,
     CodeModeTerminationMode, CodeModeToolRequest, CodeModeToolResponse,
 };
@@ -174,7 +174,7 @@ impl ToolRuntime {
         let host = Arc::new(V8CodeModeHost {
             orchestration: Arc::clone(&orchestration),
         });
-        let execution = webcodex_code_mode::execute(
+        let execution = codegpt_code_mode::execute(
             host as Arc<dyn CodeModeHost>,
             CodeModeExecuteRequest {
                 source,
@@ -261,7 +261,7 @@ impl ToolRuntime {
         let host = Arc::new(V8CodeModeHost {
             orchestration: Arc::clone(&orchestration),
         });
-        let execution = webcodex_code_mode::execute_with_termination_mode(
+        let execution = codegpt_code_mode::execute_with_termination_mode(
             host as Arc<dyn CodeModeHost>,
             CodeModeExecuteRequest {
                 source,
@@ -366,7 +366,7 @@ impl ToolRuntime {
         let host = Arc::new(V8CodeModeHost {
             orchestration: Arc::clone(&orchestration),
         });
-        let execution = webcodex_code_mode::execute_with_termination_mode(
+        let execution = codegpt_code_mode::execute_with_termination_mode(
             host as Arc<dyn CodeModeHost>,
             CodeModeExecuteRequest {
                 source,
@@ -450,7 +450,7 @@ impl ToolRuntime {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use webcodex_tool_contracts::{lookup_tool_definition, ToolEffect, ToolRisk};
+    use codegpt_tool_contracts::{lookup_tool_definition, ToolEffect, ToolRisk};
 
     #[test]
     fn e1_allowlist_remains_canonically_read_only() {
@@ -485,7 +485,7 @@ mod tests {
             "result_expectation",
             "accepted_exit_codes",
             "assertion_name",
-            "__webcodex_private",
+            "__codegpt_private",
         ] {
             assert!(
                 super::super::orchestration_host::is_server_owned_orchestration_argument(field),

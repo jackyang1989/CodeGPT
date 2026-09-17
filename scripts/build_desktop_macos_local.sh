@@ -14,8 +14,8 @@ usage() {
     cat <<'EOF'
 Usage: scripts/build_desktop_macos_local.sh
 
-Build an installable, ad-hoc signed macOS WebCodex Desktop DMG for local testing.
-The bundled WebCodex runtime uses the dogfood Cargo profile; this is not a
+Build an installable, ad-hoc signed macOS CodeGPT Desktop DMG for local testing.
+The bundled CodeGPT runtime uses the dogfood Cargo profile; this is not a
 formal release or publication workflow.
 
 Output:
@@ -47,9 +47,9 @@ fi
 
 SOURCE_SHA="$(git rev-parse HEAD)"
 SHORT_SOURCE="$(git rev-parse --short=12 HEAD)"
-VERSION="$(node -p "require('./npm/webcodex/package.json').version")"
+VERSION="$(node -p "require('./npm/codegpt/package.json').version")"
 BUILT_AT="$(git show -s --format=%ct HEAD)"
-export WEBCODEX_BUILT_AT="$BUILT_AT"
+export CODEGPT_BUILT_AT="$BUILT_AT"
 
 case "$(uname -m)" in
     arm64)
@@ -63,7 +63,7 @@ case "$(uname -m)" in
         ;;
 esac
 
-printf 'Building WebCodex Desktop local DMG\n'
+printf 'Building CodeGPT Desktop local DMG\n'
 printf '  source:   %s\n' "$SOURCE_SHA"
 printf '  version:  %s\n' "$VERSION"
 printf '  platform: %s\n' "$PLATFORM"
@@ -71,9 +71,9 @@ printf '  platform: %s\n' "$PLATFORM"
 npm ci --prefix apps/desktop
 
 cargo build --locked --profile dogfood \
-    -p webcodex \
-    -p webcodex-cli \
-    -p webcodex-runner
+    -p codegpt \
+    -p codegpt-cli \
+    -p codegpt-runner
 
 mkdir -p "$ROOT/target" "$OUTPUT_DIR" "$TAURI_TARGET"
 WORK_DIR="$(mktemp -d "$ROOT/target/desktop-local-stage.XXXXXX")"
@@ -112,7 +112,7 @@ if [ "${#candidates[@]}" -ne 1 ]; then
     fail "expected exactly one generated DMG, found ${#candidates[@]} in $BUNDLE_DIR"
 fi
 
-OUTPUT_DMG="$OUTPUT_DIR/webcodex-desktop-local-$SHORT_SOURCE-v$VERSION-$PLATFORM.dmg"
+OUTPUT_DMG="$OUTPUT_DIR/codegpt-desktop-local-$SHORT_SOURCE-v$VERSION-$PLATFORM.dmg"
 cp "${candidates[0]}" "$OUTPUT_DMG"
 
 bash scripts/desktop_install_macos_smoke.sh \

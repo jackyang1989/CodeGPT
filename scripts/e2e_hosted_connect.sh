@@ -26,11 +26,11 @@ die() {
 
 cleanup() {
     trap - EXIT INT TERM
-    if [ -n "$TMP_ROOT" ] && [ -n "$PROFILE" ] && [ -x "$REPO_DIR/target/debug/webcodex" ]; then
+    if [ -n "$TMP_ROOT" ] && [ -n "$PROFILE" ] && [ -x "$REPO_DIR/target/debug/codegpt" ]; then
         HOME="$TMP_ROOT/home" \
         XDG_CONFIG_HOME="$TMP_ROOT/config" \
         XDG_STATE_HOME="$TMP_ROOT/state" \
-        "$REPO_DIR/target/debug/webcodex" runner stop --profile "$PROFILE" >/dev/null 2>&1 || true
+        "$REPO_DIR/target/debug/codegpt" runner stop --profile "$PROFILE" >/dev/null 2>&1 || true
     fi
     if [ -n "$SERVER_PID" ] && kill -0 "$SERVER_PID" 2>/dev/null; then
         kill "$SERVER_PID" 2>/dev/null || true
@@ -38,7 +38,7 @@ cleanup() {
     fi
     if [ -n "$TMP_ROOT" ]; then
         case "$TMP_ROOT" in
-            /tmp/webcodex-hosted-connect-e2e.*)
+            /tmp/codegpt-hosted-connect-e2e.*)
                 rm -rf -- "$TMP_ROOT"
                 ;;
             *)
@@ -109,21 +109,21 @@ fi
 
 log "building Server, Runner, and CLI binaries"
 "$CARGO_BIN" build --quiet \
-    -p webcodex --bin webcodex-server \
-    -p webcodex-runner --bin webcodex-runner \
-    -p webcodex-cli --bin webcodex
+    -p codegpt --bin codegpt-server \
+    -p codegpt-runner --bin codegpt-runner \
+    -p codegpt-cli --bin codegpt
 
 PORT="$(free_port)"
 BOOTSTRAP_KEY="$(random_secret)"
 SHARED_KEY_A="hosted-a-$(random_secret)"
 SHARED_KEY_B="hosted-b-$(random_secret)"
-TMP_ROOT="$(mktemp -d /tmp/webcodex-hosted-connect-e2e.XXXXXX)"
+TMP_ROOT="$(mktemp -d /tmp/codegpt-hosted-connect-e2e.XXXXXX)"
 mkdir -p "$TMP_ROOT/data" "$TMP_ROOT/project" "$TMP_ROOT/second-project" "$TMP_ROOT/home"
 (
     cd "$TMP_ROOT/project"
     git init -q -b main
     git config user.email e2e@example.invalid
-    git config user.name "WebCodex E2E"
+    git config user.name "CodeGPT E2E"
     printf '# hosted connect smoke\n' > README.md
     git add README.md
     git commit -q -m init
@@ -132,7 +132,7 @@ printf '# second hosted project\n' >"$TMP_ROOT/second-project/README.md"
 
 log "exercising the real bounded hosted log writer"
 ROTATION_PROFILE="rotation-e2e"
-ROTATION_STATE="$TMP_ROOT/state/webcodex/clients/$ROTATION_PROFILE"
+ROTATION_STATE="$TMP_ROOT/state/codegpt/clients/$ROTATION_PROFILE"
 mkdir -p "$ROTATION_STATE"
 printf 'profile = "%s"\n' "$ROTATION_PROFILE" >"$ROTATION_STATE/hosted-connect"
 python3 -c '
@@ -143,7 +143,7 @@ for start in range(0, 350000, 1000):
         f"{line:06d} ".encode() + b"x" * 96 + b"\n"
         for line in range(start, min(start + 1000, 350000))
     ))
-' | timeout 45 "$REPO_DIR/target/debug/webcodex" \
+' | timeout 45 "$REPO_DIR/target/debug/codegpt" \
     __hosted-log-writer "$ROTATION_STATE"
 for log_file in runner.log runner.log.1 runner.log.2; do
     [ -f "$ROTATION_STATE/$log_file" ] \
@@ -159,7 +159,7 @@ ROTATION_TOTAL="$(du -cb "$ROTATION_STATE"/runner.log* | tail -1 | awk '{print $
 HOME="$TMP_ROOT/home" \
 XDG_CONFIG_HOME="$TMP_ROOT/config" \
 XDG_STATE_HOME="$TMP_ROOT/state" \
-"$REPO_DIR/target/debug/webcodex" runner logs --profile "$ROTATION_PROFILE" --lines 100 \
+"$REPO_DIR/target/debug/codegpt" runner logs --profile "$ROTATION_PROFILE" --lines 100 \
     >"$TMP_ROOT/rotation-tail.out"
 [ "$(head -1 "$TMP_ROOT/rotation-tail.out" | cut -d' ' -f1)" = "349900" ] \
     || die "bounded runner logs did not return the expected first tail line"
@@ -167,12 +167,12 @@ XDG_STATE_HOME="$TMP_ROOT/state" \
     || die "bounded runner logs did not return the expected final tail line"
 
 log "starting temporary shared-key-enabled Server"
-WEBCODEX_ADDR="127.0.0.1:${PORT}" \
-WEBCODEX_DATA="$TMP_ROOT/data" \
-WEBCODEX_TOKEN="$BOOTSTRAP_KEY" \
-WEBCODEX_SHARED_KEY_ENABLED=true \
+CODEGPT_ADDR="127.0.0.1:${PORT}" \
+CODEGPT_DATA="$TMP_ROOT/data" \
+CODEGPT_TOKEN="$BOOTSTRAP_KEY" \
+CODEGPT_SHARED_KEY_ENABLED=true \
 RUST_LOG=warn \
-"$REPO_DIR/target/debug/webcodex-server" >"$TMP_ROOT/server.log" 2>&1 &
+"$REPO_DIR/target/debug/codegpt-server" >"$TMP_ROOT/server.log" 2>&1 &
 SERVER_PID=$!
 
 for _ in $(seq 1 80); do
@@ -189,7 +189,7 @@ log "running the real one-command connection"
 HOME="$TMP_ROOT/home" \
 XDG_CONFIG_HOME="$TMP_ROOT/config" \
 XDG_STATE_HOME="$TMP_ROOT/state" \
-"$REPO_DIR/target/debug/webcodex" connect "http://127.0.0.1:${PORT}" \
+"$REPO_DIR/target/debug/codegpt" connect "http://127.0.0.1:${PORT}" \
     --key "$SHARED_KEY_A" \
     --project "$TMP_ROOT/project" \
     >"$TMP_ROOT/connect-first.out"
@@ -202,8 +202,8 @@ RUNTIME_PROJECT="$(awk '$0 ~ /^Runtime project:/ {sub(/^Runtime project:[[:space
 [ "$RUNTIME_PROJECT" = "agent:${CLIENT_ID}:project" ] \
     || die "connect returned an unexpected runtime project id"
 
-PROFILE_DIR="$TMP_ROOT/config/webcodex/clients/$PROFILE"
-STATE_DIR="$TMP_ROOT/state/webcodex/clients/$PROFILE"
+PROFILE_DIR="$TMP_ROOT/config/codegpt/clients/$PROFILE"
+STATE_DIR="$TMP_ROOT/state/codegpt/clients/$PROFILE"
 [ "$(stat -c '%a' "$PROFILE_DIR/runner.toml")" = "600" ] \
     || die "runner.toml is not mode 0600"
 [ "$(stat -c '%a' "$STATE_DIR/runner.toml")" = "600" ] \
@@ -251,7 +251,7 @@ set +e
 HOME="$TMP_ROOT/home" \
 XDG_CONFIG_HOME="$TMP_ROOT/config" \
 XDG_STATE_HOME="$TMP_ROOT/state" \
-"$REPO_DIR/target/debug/webcodex" connect "http://127.0.0.1:${PORT}" \
+"$REPO_DIR/target/debug/codegpt" connect "http://127.0.0.1:${PORT}" \
     --key "$SHARED_KEY_B" \
     --client-id "$CLIENT_ID" \
     --project "$TMP_ROOT/project" \
@@ -261,7 +261,7 @@ set -e
 [ "$COLLISION_STATUS" -ne 0 ] || die "cross-key client-id collision unexpectedly succeeded"
 grep -q 'Runner logs:' "$TMP_ROOT/connect-collision.err" \
     || die "collision failure did not report the Runner log path"
-ACTIVE_STATE_COUNT="$(find "$TMP_ROOT/state/webcodex/clients" -name runner.toml -type f | wc -l)"
+ACTIVE_STATE_COUNT="$(find "$TMP_ROOT/state/codegpt/clients" -name runner.toml -type f | wc -l)"
 [ "$ACTIVE_STATE_COUNT" = "1" ] \
     || die "collision failure left an extra active Runner state"
 
@@ -269,7 +269,7 @@ log "re-running connect to verify profile, identity, and process reuse"
 HOME="$TMP_ROOT/home" \
 XDG_CONFIG_HOME="$TMP_ROOT/config" \
 XDG_STATE_HOME="$TMP_ROOT/state" \
-"$REPO_DIR/target/debug/webcodex" connect "http://127.0.0.1:${PORT}" \
+"$REPO_DIR/target/debug/codegpt" connect "http://127.0.0.1:${PORT}" \
     --key "$SHARED_KEY_A" \
     --project "$TMP_ROOT/project" \
     >"$TMP_ROOT/connect-second.out"
@@ -282,7 +282,7 @@ log "adding a second project without replacing the first"
 HOME="$TMP_ROOT/home" \
 XDG_CONFIG_HOME="$TMP_ROOT/config" \
 XDG_STATE_HOME="$TMP_ROOT/state" \
-"$REPO_DIR/target/debug/webcodex" connect "http://127.0.0.1:${PORT}" \
+"$REPO_DIR/target/debug/codegpt" connect "http://127.0.0.1:${PORT}" \
     --key "$SHARED_KEY_A" \
     --project "$TMP_ROOT/second-project" \
     >"$TMP_ROOT/connect-third.out"
@@ -299,7 +299,7 @@ raise SystemExit(0 if ids == expected else 1)
 HOME="$TMP_ROOT/home" \
 XDG_CONFIG_HOME="$TMP_ROOT/config" \
 XDG_STATE_HOME="$TMP_ROOT/state" \
-"$REPO_DIR/target/debug/webcodex" runner status --profile "$PROFILE" \
+"$REPO_DIR/target/debug/codegpt" runner status --profile "$PROFILE" \
     >"$TMP_ROOT/status.out"
 grep -q 'runner mode:.*hosted local process' "$TMP_ROOT/status.out" \
     || die "runner status did not recognize the hosted Runner"
@@ -319,7 +319,7 @@ done
 HOME="$TMP_ROOT/home" \
 XDG_CONFIG_HOME="$TMP_ROOT/config" \
 XDG_STATE_HOME="$TMP_ROOT/state" \
-"$REPO_DIR/target/debug/webcodex" runner stop --profile "$PROFILE" \
+"$REPO_DIR/target/debug/codegpt" runner stop --profile "$PROFILE" \
     >"$TMP_ROOT/stop.out"
 [ ! -f "$STATE_DIR/runner.toml" ] || die "runner stop left active Runner state"
 for _ in $(seq 1 40); do
@@ -334,7 +334,7 @@ fi
 HOME="$TMP_ROOT/home" \
 XDG_CONFIG_HOME="$TMP_ROOT/config" \
 XDG_STATE_HOME="$TMP_ROOT/state" \
-"$REPO_DIR/target/debug/webcodex" runner status --profile "$PROFILE" \
+"$REPO_DIR/target/debug/codegpt" runner status --profile "$PROFILE" \
     >"$TMP_ROOT/status-stopped.out"
 grep -q 'runner active:.*false' "$TMP_ROOT/status-stopped.out" \
     || die "runner status did not report the stopped Runner"

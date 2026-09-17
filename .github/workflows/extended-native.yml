@@ -66,7 +66,7 @@ jobs:
           test "$(uname -m)" = aarch64
           rust_host="$(rustc -vV | sed -n 's/^host: //p')"
           test "$rust_host" = aarch64-unknown-linux-gnu
-          cargo check --locked -p webcodex -p webcodex-cli -p webcodex-runner
+          cargo check --locked -p codegpt -p codegpt-cli -p codegpt-runner
           git diff --check
           test -z "$(git status --porcelain --untracked-files=all)"
 
@@ -102,7 +102,7 @@ jobs:
       - name: Check macOS Intel runtime surfaces
         run: |
           cargo check --locked --workspace
-          cargo test --locked -p webcodex-runner -p webcodex-computer
+          cargo test --locked -p codegpt-runner -p codegpt-computer
       - name: Install Desktop dependencies
         run: npm ci --prefix apps/desktop
       - name: Check Desktop frontend and Rust
@@ -119,11 +119,11 @@ jobs:
           set -euo pipefail
           source_sha="$(git rev-parse HEAD)"
           short_source="$(git rev-parse --short=12 HEAD)"
-          version="$(node -p "require('./npm/webcodex/package.json').version")"
+          version="$(node -p "require('./npm/codegpt/package.json').version")"
           built_at="$(git show -s --format=%ct HEAD)"
-          export WEBCODEX_BUILT_AT="$built_at"
-          cargo build --locked --profile dogfood -p webcodex -p webcodex-cli -p webcodex-runner
-          for name in webcodex webcodex-server webcodex-runner; do
+          export CODEGPT_BUILT_AT="$built_at"
+          cargo build --locked --profile dogfood -p codegpt -p codegpt-cli -p codegpt-runner
+          for name in codegpt codegpt-server codegpt-runner; do
             binary="target/dogfood/$name"
             actual="$($binary --version)"
             expected="$name $version (commit $short_source, dirty=false, built_at=$built_at)"
@@ -140,7 +140,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          stage="$RUNNER_TEMP/webcodex-extended-darwin-x64-bundle"
+          stage="$RUNNER_TEMP/codegpt-extended-darwin-x64-bundle"
           python3 scripts/prepare_desktop_bundle_macos.py \
             --bin-dir target/dogfood \
             --version "${{ steps.runtime.outputs.version }}" \
@@ -161,7 +161,7 @@ jobs:
           APPLE_SIGNING_IDENTITY: "-"
         run: |
           set -euo pipefail
-          export CARGO_TARGET_DIR="$RUNNER_TEMP/webcodex-extended-darwin-x64-tauri"
+          export CARGO_TARGET_DIR="$RUNNER_TEMP/codegpt-extended-darwin-x64-tauri"
           npm exec tauri -- build \
             --bundles dmg \
             --config "${{ steps.desktop_bundle.outputs.config }}" \
@@ -170,7 +170,7 @@ jobs:
           shopt -s nullglob
           candidates=("$bundle_dir"/*.dmg)
           test "${#candidates[@]}" -eq 1
-          dmg="$RUNNER_TEMP/webcodex-extended-darwin-x64.dmg"
+          dmg="$RUNNER_TEMP/codegpt-extended-darwin-x64.dmg"
           cp "${candidates[0]}" "$dmg"
           cd "$GITHUB_WORKSPACE"
           bash scripts/desktop_install_macos_smoke.sh \
@@ -216,7 +216,7 @@ jobs:
           if ($env:PROCESSOR_ARCHITECTURE -ne 'ARM64') { throw "Expected native Windows ARM64 host" }
           $hostLine = rustc -vV | Select-String '^host: '
           if ($hostLine.Line -ne 'host: aarch64-pc-windows-msvc') { throw "Unexpected Rust host: $($hostLine.Line)" }
-          cargo check --locked -p webcodex -p webcodex-cli -p webcodex-runner
+          cargo check --locked -p codegpt -p codegpt-cli -p codegpt-runner
           if ($LASTEXITCODE -ne 0) { throw "Windows ARM64 cargo check failed" }
       - name: Install Desktop dependencies
         run: npm ci --prefix apps/desktop
@@ -241,12 +241,12 @@ jobs:
           $ErrorActionPreference = "Stop"
           $source = (git rev-parse HEAD).Trim()
           $short = (git rev-parse --short=12 HEAD).Trim()
-          $version = (node -e "console.log(require('./npm/webcodex/package.json').version)").Trim()
+          $version = (node -e "console.log(require('./npm/codegpt/package.json').version)").Trim()
           $builtAt = [Int64]((git show -s --format=%ct HEAD).Trim())
-          $env:WEBCODEX_BUILT_AT = "$builtAt"
-          cargo build --locked --profile dogfood -p webcodex -p webcodex-cli -p webcodex-runner
+          $env:CODEGPT_BUILT_AT = "$builtAt"
+          cargo build --locked --profile dogfood -p codegpt -p codegpt-cli -p codegpt-runner
           if ($LASTEXITCODE -ne 0) { throw "Windows ARM64 runtime build failed" }
-          foreach ($name in @("webcodex", "webcodex-server", "webcodex-runner")) {
+          foreach ($name in @("codegpt", "codegpt-server", "codegpt-runner")) {
             $binary = Join-Path "target\dogfood" "$name.exe"
             $output = @(& $binary --version)
             $exitCode = $LASTEXITCODE
@@ -269,7 +269,7 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
-          $stage = Join-Path $env:RUNNER_TEMP "webcodex-extended-win32-arm64-bundle"
+          $stage = Join-Path $env:RUNNER_TEMP "codegpt-extended-win32-arm64-bundle"
           & .\scripts\prepare_desktop_bundle.ps1 `
             -BinDir "target\dogfood" `
             -Version "${{ steps.runtime.outputs.version }}" `
@@ -282,13 +282,13 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
-          $env:CARGO_TARGET_DIR = Join-Path $env:RUNNER_TEMP "webcodex-extended-win32-arm64-tauri"
+          $env:CARGO_TARGET_DIR = Join-Path $env:RUNNER_TEMP "codegpt-extended-win32-arm64-tauri"
           node node_modules/@tauri-apps/cli/tauri.js build --bundles nsis --config "${{ steps.desktop_bundle.outputs.config }}" --ci --no-sign -- --locked
           if ($LASTEXITCODE -ne 0) { throw "Tauri Windows ARM64 NSIS build failed" }
           $bundleDir = Join-Path $env:CARGO_TARGET_DIR "release\bundle\nsis"
           $built = @(Get-ChildItem -LiteralPath $bundleDir -Filter "*-setup.exe" -File)
           if ($built.Count -ne 1) { throw "Expected exactly one Windows ARM64 NSIS candidate, found $($built.Count)" }
-          $installer = Join-Path $env:RUNNER_TEMP "webcodex-extended-win32-arm64-setup.exe"
+          $installer = Join-Path $env:RUNNER_TEMP "codegpt-extended-win32-arm64-setup.exe"
           Copy-Item -LiteralPath $built[0].FullName -Destination $installer
           "DESKTOP_EXTENDED_INSTALLER=$installer" >> $env:GITHUB_ENV
       - name: Smoke Windows ARM64 Desktop installer

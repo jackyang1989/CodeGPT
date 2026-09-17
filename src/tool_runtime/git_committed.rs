@@ -37,7 +37,7 @@ pub(crate) fn committed_git_isolated_view_setup(head: &str, failure: &str) -> St
     format!(
         concat!(
             "object_dir=$(git rev-parse --path-format=absolute --git-path objects 2>/dev/null) || {{ {failure}; }}; ",
-            "view=$(mktemp -d /tmp/webcodex-git-review.XXXXXX 2>/dev/null) || {{ {failure}; }}; ",
+            "view=$(mktemp -d /tmp/codegpt-git-review.XXXXXX 2>/dev/null) || {{ {failure}; }}; ",
             "cleanup_git_review_view() {{ rm -rf -- \"$view\"; }}; ",
             "trap cleanup_git_review_view EXIT; trap 'exit 130' HUP INT TERM; ",
             "mkdir -p \"$view/refs\" \"$view/objects/info\" || {{ {failure}; }}; ",

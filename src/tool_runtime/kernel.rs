@@ -1006,7 +1006,7 @@ impl ToolRuntime {
             .as_object()
             .is_some_and(|output| output.contains_key("workflow_recording_attention"))
             && crate::json_measurement::serialized_json_len(&result).is_ok_and(|bytes| {
-                bytes > webcodex_workspace::file_read_range::MAX_SERIALIZED_OUTPUT_BYTES
+                bytes > codegpt_workspace::file_read_range::MAX_SERIALIZED_OUTPUT_BYTES
             })
         {
             if let Some(output) = result.output.as_object_mut() {
@@ -1047,7 +1047,7 @@ impl ToolRuntime {
         correlation: &super::window_activity::ToolCallCorrelation,
     ) -> Option<String> {
         if tool_name == "work_on_project"
-            || !webcodex_tool_contracts::runtime_tool_activity_interaction(tool_name)
+            || !codegpt_tool_contracts::runtime_tool_activity_interaction(tool_name)
                 .is_meaningful()
         {
             return None;
@@ -1194,13 +1194,13 @@ mod tests {
         }
         assert!(business_object
             .keys()
-            .all(|key| !key.starts_with("__webcodex_")));
+            .all(|key| !key.starts_with("__codegpt_")));
         crate::tool_runtime::ToolCall::from_tool_name("tool_manifest", business_arguments.clone())
             .expect("typed ToolCall parsing must accept business-only arguments");
 
         let invocation_metadata = ToolInvocationMetadata {
             ack_session_message_ids: vec![guidance.message_id],
-            context_request: vec!["webcodex.workflow".to_string()],
+            context_request: vec!["codegpt.workflow".to_string()],
             ack_session_context_revision: SessionContextRevisionAck::Revision(ack_revision),
             ..Default::default()
         };
@@ -1245,7 +1245,7 @@ mod tests {
         );
         assert_eq!(
             result.output["context_projection"]["materials"][0]["key"],
-            "webcodex.workflow"
+            "codegpt.workflow"
         );
     }
 

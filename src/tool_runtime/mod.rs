@@ -93,20 +93,20 @@ pub(crate) use tool_audit::session_log_result_for_tool as audit_safe_result_for_
 mod validation_events;
 pub(crate) mod validation_profile;
 pub(crate) mod window_activity;
-pub(crate) use webcodex_core::{
+pub(crate) use codegpt_core::{
     project_instructions, project_listing as file_listing, validation_evidence as validation_parser,
 };
-pub(crate) use webcodex_tool_contracts::{
+pub(crate) use codegpt_tool_contracts::{
     metadata, registry, tool_call, tool_catalog, tool_definition, tool_inputs,
 };
 #[cfg(test)]
-pub(crate) use webcodex_tool_runtime_contracts::recorder_metadata::parse_tool_call_with_recorder_metadata;
-pub(crate) use webcodex_tool_runtime_contracts::{tool_audit, tool_result};
+pub(crate) use codegpt_tool_runtime_contracts::recorder_metadata::parse_tool_call_with_recorder_metadata;
+pub(crate) use codegpt_tool_runtime_contracts::{tool_audit, tool_result};
 mod work_result;
 pub(crate) use window_activity::{ActiveWindowRequest, MAX_ACTIVE_REQUESTS_PER_WINDOW};
 
 #[cfg(test)]
-pub(crate) use webcodex_tool_contracts::MODEL_TOOL_DESCRIPTION_MAX_CHARS;
+pub(crate) use codegpt_tool_contracts::MODEL_TOOL_DESCRIPTION_MAX_CHARS;
 
 // Re-export the public API so `crate::tool_runtime::ToolCall` etc. still work.
 #[cfg(test)]
@@ -134,28 +134,28 @@ pub(crate) use tool_definition::{
     known_tool_names, model_hidden_tool_names, runtime_tool_category as tool_manifest_category,
     RunnerCapabilityRequirement,
 };
-pub use webcodex_tool_contracts::tool_call::{
+pub use codegpt_tool_contracts::tool_call::{
     AgentWaitEventSelectorCall, HostFileImportProvenance, ObserveJobsItem, ObserveJobsWakeOn,
     PluginToolCall, ProjectArtifactAction, ReadFilesItem, SearchPatternMode,
     SearchProjectTextsQuery, SearchResultMode, SshResourceToolCall, ToolCall,
 };
-pub(crate) use webcodex_tool_contracts::tool_call::{
+pub(crate) use codegpt_tool_contracts::tool_call::{
     TOOL_CALL_PARAMS_FIELD, TOOL_CALL_TOOL_FIELD, TOOL_CALL_WRAPPER_FIELDS,
 };
 #[cfg(test)]
-pub use webcodex_tool_contracts::tool_inputs::ApplyFileChangeInput;
+pub use codegpt_tool_contracts::tool_inputs::ApplyFileChangeInput;
 #[cfg(all(test, feature = "workspace-checkpoints"))]
-pub use webcodex_tool_contracts::tool_inputs::CheckpointValidationInput;
-pub use webcodex_tool_contracts::tool_inputs::{
+pub use codegpt_tool_contracts::tool_inputs::CheckpointValidationInput;
+pub use codegpt_tool_contracts::tool_inputs::{
     default_true, ExecutionPurpose, ExecutionShell, ListToolsOptions,
 };
 #[cfg(test)]
-pub use webcodex_tool_contracts::tool_inputs::{
+pub use codegpt_tool_contracts::tool_inputs::{
     ApplyFileChangeKind, ApplyTextEditInput, ApplyTextEditKind, SessionMode, StartupDetail,
 };
-pub use webcodex_tool_contracts::ToolSpec;
-pub use webcodex_tool_runtime_contracts::tool_result::ToolResult;
-pub(crate) use webcodex_tool_runtime_contracts::tool_result::{
+pub use codegpt_tool_contracts::ToolSpec;
+pub use codegpt_tool_runtime_contracts::tool_result::ToolResult;
+pub(crate) use codegpt_tool_runtime_contracts::tool_result::{
     ContinuationCarrier, ContinuationKind, ContinuationSemantics, RecoveryKind, SuggestedToolCall,
     RECOVERY_KIND_VALUES,
 };

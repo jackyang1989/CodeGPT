@@ -2,7 +2,7 @@
 """Coverage-aware gate for pinned MCP conformance reports.
 
 The upstream conformance runner intentionally answers a different question from
-this gate: it executes scenarios and reports their checks.  WebCodex keeps the
+this gate: it executes scenarios and reports their checks.  CodeGPT keeps the
 raw upstream output, then this script verifies that the expected scenario set was
 actually exercised and that every non-success result has a narrow, reviewed
 classification.  A zero upstream process exit is never treated as proof of
@@ -45,7 +45,7 @@ DYNAMIC_JSONRPC_ID_CHECKS = {
 }
 DYNAMIC_JSONRPC_ID_PATH = ("details", "response", "id")
 DYNAMIC_JSONRPC_ID_SENTINEL = {
-    "$webcodexEvidence": "dynamic-millisecond-jsonrpc-id",
+    "$codegptEvidence": "dynamic-millisecond-jsonrpc-id",
     "sourceType": "integer",
 }
 WIRE_SCHEMA_CHECK_ID = "wire-schema-valid"

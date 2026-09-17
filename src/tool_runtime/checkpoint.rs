@@ -63,7 +63,7 @@ impl CheckpointStore {
         self.create_with(resolved_project, checkpoint, || {
             format!(
                 "{CHECKPOINT_ID_PREFIX}{}",
-                webcodex_core::compact::random_suffix::<12>()
+                codegpt_core::compact::random_suffix::<12>()
             )
         })
     }
@@ -900,7 +900,7 @@ fn validate_checkpoint_id(checkpoint_id: &str) -> Result<(), String> {
     let Some(rest) = checkpoint_id.strip_prefix(CHECKPOINT_ID_PREFIX) else {
         return Err("checkpoint_id must start with wc_ckpt_".to_string());
     };
-    if webcodex_core::compact::decode::<12>(rest).is_none() {
+    if codegpt_core::compact::decode::<12>(rest).is_none() {
         return Err("checkpoint_id must have a canonical compact suffix".to_string());
     }
     Ok(())

@@ -264,7 +264,7 @@ async fn oauth_authorize_with_valid_session_shows_consent_page() {
         .await;
     assert_eq!(resp.status_code, Some(StatusCode::OK));
     let text = resp.take_string().await.unwrap_or_default();
-    assert!(text.contains("Authorize WebCodex client"), "consent title");
+    assert!(text.contains("Authorize CodeGPT client"), "consent title");
     assert!(text.contains("Allow"), "Allow button");
     assert!(text.contains("Deny"), "Deny button");
     assert!(text.contains(&client.name), "client name shown");

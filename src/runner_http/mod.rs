@@ -29,7 +29,7 @@ pub use handlers::{
     runner_register, runner_result,
 };
 pub(crate) use telemetry::tool_request_trace_telemetry;
-pub(crate) use webcodex_runner_registry::{
+pub(crate) use codegpt_runner_registry::{
     command_preview, process_preview, recovery_timeout_sweep, script_preview, EnqueueLspError,
     EnqueueRunnerSkillError, RunnerFeature, RunnerFeatureSet, RunnerRegistry, RunnerSemanticView,
     RunnerTransport, ShellJobStartMetadata, ShellJobVisibility, StructuredJobExecution,
@@ -37,7 +37,7 @@ pub(crate) use webcodex_runner_registry::{
     RECOVERY_SWEEP_INTERVAL_SECS, RUNNER_ONLINE_WINDOW_SECS,
 };
 #[cfg(test)]
-pub(crate) use webcodex_runner_registry::{TRANSPORT_POLLING, TRANSPORT_WEBSOCKET};
+pub(crate) use codegpt_runner_registry::{TRANSPORT_POLLING, TRANSPORT_WEBSOCKET};
 
 fn sha256_hex(value: &str) -> String {
     use sha2::{Digest, Sha256};

@@ -38,7 +38,7 @@ const OAUTH_SCOPES_SUPPORTED: &[&str] = &[
 ];
 
 /// Protocol-level scope used by OAuth clients to request refresh-token access.
-/// It does not grant any WebCodex API permission by itself and therefore is not
+/// It does not grant any CodeGPT API permission by itself and therefore is not
 /// stored in a client's `allowed_scopes` permission allow-list.
 pub(crate) const OAUTH_OFFLINE_ACCESS_SCOPE: &str = "offline_access";
 
@@ -50,7 +50,7 @@ pub(crate) fn oauth_scopes_supported() -> &'static [&'static str] {
 }
 
 /// Return scopes advertised through OAuth authorization-server discovery. This
-/// includes WebCodex permission scopes plus protocol capabilities such as
+/// includes CodeGPT permission scopes plus protocol capabilities such as
 /// `offline_access`.
 pub(crate) fn oauth_discovery_scopes_supported() -> Vec<&'static str> {
     let mut scopes = oauth_scopes_supported().to_vec();
@@ -62,10 +62,10 @@ pub(crate) fn oauth_discovery_scopes_supported() -> Vec<&'static str> {
 /// scopes and the global OAuth scope registry.
 ///
 /// If `requested` is absent or ASCII-whitespace-only, default to the
-/// intersection of `client_allowed` and the WebCodex permission-scope registry.
+/// intersection of `client_allowed` and the CodeGPT permission-scope registry.
 /// When `requested` is present, permission scopes must also be allowed by the
 /// registered client. Protocol scopes such as `offline_access` are accepted
-/// independently because they confer no WebCodex API permission and refresh
+/// independently because they confer no CodeGPT API permission and refresh
 /// tokens were already issued by the pre-existing flow. Output is deduplicated
 /// and ordered by permission scope first, then protocol scope.
 pub(crate) fn normalize_oauth_scopes(

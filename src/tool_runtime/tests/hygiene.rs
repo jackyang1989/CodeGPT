@@ -149,10 +149,10 @@ fn workspace_hygiene_check_is_known_and_in_specs() {
 #[test]
 fn workspace_hygiene_check_is_direct_on_the_derived_action_surface() {
     assert!(
-        webcodex_tool_contracts::runtime_tool_adaptive_direct_rank("workspace_hygiene_check")
+        codegpt_tool_contracts::runtime_tool_adaptive_direct_rank("workspace_hygiene_check")
             .is_some()
     );
-    assert!(webcodex_tool_contracts::gpt_action_tool_supported(
+    assert!(codegpt_tool_contracts::gpt_action_tool_supported(
         "workspace_hygiene_check"
     ));
 }
@@ -211,7 +211,7 @@ async fn workspace_hygiene_check_detects_untracked_smoke_temp_file() {
     let runtime = test_runtime();
     let (tmp, project) = setup_clean_git_repo(&runtime, "hyc-smoke", "demo").await;
 
-    fs::write(tmp.path().join(".webcodex-smoke-acceptance.txt"), "ok\n").unwrap();
+    fs::write(tmp.path().join(".codegpt-smoke-acceptance.txt"), "ok\n").unwrap();
 
     let result =
         dispatch_hygiene_with_agent(&runtime, "hyc-smoke", project, None, None, None).await;
@@ -223,7 +223,7 @@ async fn workspace_hygiene_check_detects_untracked_smoke_temp_file() {
         .find(|f| f["kind"] == "temporary_file")
         .unwrap_or_else(|| panic!("expected temporary_file finding: {findings:?}"));
     assert_eq!(smoke_finding["tracked_status"], "untracked");
-    assert_eq!(smoke_finding["path"], ".webcodex-smoke-acceptance.txt");
+    assert_eq!(smoke_finding["path"], ".codegpt-smoke-acceptance.txt");
     assert_review_verdict_shape(&result.output["verdict"]);
     assert_eq!(result.output["verdict"]["status"], "warn");
     assert_eq!(result.output["verdict"]["blocking"], false);
@@ -693,7 +693,7 @@ fn workspace_hygiene_check_tool_is_known_and_parses() {
     let call = ToolCall::from_tool_name(
         "workspace_hygiene_check",
         json!({
-            "project": "agent:oe:webcodex",
+            "project": "agent:oe:codegpt",
             "max_findings": 25,
             "include_tracked": true,
             "session_id": "wc_sess_1234"
@@ -707,14 +707,14 @@ fn workspace_hygiene_check_tool_is_known_and_parses() {
             max_findings: Some(25),
             include_tracked: Some(true),
             session_id: Some(ref session_id),
-        } if project == "agent:oe:webcodex" && session_id == "wc_sess_1234"
+        } if project == "agent:oe:codegpt" && session_id == "wc_sess_1234"
     ));
     assert_eq!(call.tool_name(), "workspace_hygiene_check");
-    assert_eq!(call.project(), Some("agent:oe:webcodex"));
+    assert_eq!(call.project(), Some("agent:oe:codegpt"));
     assert_eq!(call.session_id(), Some("wc_sess_1234"));
 
     let log_args = call.session_log_arguments();
-    assert_eq!(log_args["project"], "agent:oe:webcodex");
+    assert_eq!(log_args["project"], "agent:oe:codegpt");
     assert_eq!(log_args["max_findings"], 25);
     assert_eq!(log_args["include_tracked"], true);
     assert!(

@@ -500,7 +500,7 @@ async fn list_projects_returns_agent_registered_projects_without_server_config()
         "workstation-1",
         None,
         RunnerCapabilities::default(),
-        vec![registered_project("webcodex", "/root/git/webcodex")],
+        vec![registered_project("codegpt", "/root/git/codegpt")],
     )
     .await;
 
@@ -509,8 +509,8 @@ async fn list_projects_returns_agent_registered_projects_without_server_config()
     assert_eq!(result.output["count"], 1);
     let projects = result.output["projects"].as_array().unwrap();
     assert_eq!(projects.len(), 1);
-    assert_eq!(projects[0]["id"], "agent:workstation-1:webcodex");
-    assert_eq!(projects[0]["agent_project_id"], "webcodex");
+    assert_eq!(projects[0]["id"], "agent:workstation-1:codegpt");
+    assert_eq!(projects[0]["agent_project_id"], "codegpt");
     assert_eq!(projects[0]["executor"], "agent");
     assert_eq!(projects[0]["source"], "agent_registered");
     assert!(projects[0]["capabilities"].is_object());
@@ -555,8 +555,8 @@ async fn list_projects_reports_smoke_selection_capabilities() {
     let runtime = test_runtime();
     let mut test_mcp = registered_project("test-mcp", "/tmp/test-mcp");
     test_mcp.name = Some("Test MCP".to_string());
-    let mut smoke = registered_project("webcodex-smoke", "/tmp/webcodex-smoke");
-    smoke.name = Some("WebCodex Smoke Workspace".to_string());
+    let mut smoke = registered_project("codegpt-smoke", "/tmp/codegpt-smoke");
+    smoke.name = Some("CodeGPT Smoke Workspace".to_string());
     smoke.git_branch = Some("main".to_string());
     smoke.git_head = Some("abc1234".to_string());
     smoke.git_dirty = Some(false);
@@ -584,8 +584,8 @@ async fn list_projects_reports_smoke_selection_capabilities() {
         .expect("test-mcp project");
     let smoke = projects
         .iter()
-        .find(|project| project["id"] == "agent:special:webcodex-smoke")
-        .expect("webcodex-smoke project");
+        .find(|project| project["id"] == "agent:special:codegpt-smoke")
+        .expect("codegpt-smoke project");
 
     assert_eq!(test_mcp["capabilities"]["safe_smoke_project"], true);
     assert_eq!(test_mcp["capabilities"]["git_available"], false);
@@ -600,7 +600,7 @@ async fn list_projects_reports_smoke_selection_capabilities() {
     assert_eq!(smoke["capabilities"]["recommended_for_smoke"], true);
     assert_eq!(
         result.output["recommended_for_smoke"],
-        json!(["agent:special:webcodex-smoke"])
+        json!(["agent:special:codegpt-smoke"])
     );
 }
 
@@ -655,14 +655,14 @@ async fn runner_config_tools_use_normal_kernel_scope_gate_before_runner_dispatch
     assert!(matches!(
         denied_reload.error_status,
         Some(ToolCallErrorStatus::InsufficientScope {
-            required_scope: Some(webcodex_core::authority::SCOPE_RUNNER_MANAGE),
+            required_scope: Some(codegpt_core::authority::SCOPE_RUNNER_MANAGE),
             ..
         })
     ));
 
     let manager = oauth_bridge_auth_context(
         "runner-config-manager",
-        &[webcodex_core::authority::SCOPE_RUNNER_MANAGE],
+        &[codegpt_core::authority::SCOPE_RUNNER_MANAGE],
     );
     let allowed_reload = runtime
         .call_tool_with_protocol_capabilities(
@@ -2264,7 +2264,7 @@ async fn runtime_status_with_no_projects_returns_configured_false() {
     let result = runtime.dispatch(runtime_status_call()).await;
     assert!(result.success, "{:?}", result.error);
     let out = &result.output;
-    assert_eq!(out["service"], "webcodex");
+    assert_eq!(out["service"], "codegpt");
     assert_eq!(out["version"], env!("CARGO_PKG_VERSION"));
     assert!(out["server_time"].is_i64());
     assert!(out["pid"].is_i64());
@@ -2285,7 +2285,7 @@ async fn runtime_status_with_no_projects_returns_configured_false() {
 #[tokio::test]
 async fn runtime_status_uses_agent_projects_as_effective() {
     let runtime = test_runtime();
-    let mut smoke = registered_project("webcodex-smoke", "/tmp/webcodex-smoke");
+    let mut smoke = registered_project("codegpt-smoke", "/tmp/codegpt-smoke");
     smoke.git_branch = Some("main".to_string());
     smoke.git_head = Some("abc1234".to_string());
     smoke.git_dirty = Some(false);
@@ -2340,9 +2340,9 @@ async fn runtime_status_includes_build_metadata() {
 #[tokio::test]
 async fn runtime_status_preserves_allowlisted_effective_config_across_projections() {
     let mut env = crate::test_support::TestEnvGuard::new();
-    env.set("WEBCODEX_SHARED_KEY_ENABLED", "true");
-    env.set("WEBCODEX_ALLOW_ANONYMOUS", "true");
-    env.set("WEBCODEX_TOOL_REQUEST_TRACE", "full");
+    env.set("CODEGPT_SHARED_KEY_ENABLED", "true");
+    env.set("CODEGPT_ALLOW_ANONYMOUS", "true");
+    env.set("CODEGPT_TOOL_REQUEST_TRACE", "full");
 
     let runtime = runtime_with_info(RuntimeInfo {
         auth_enabled: true,
@@ -2415,7 +2415,7 @@ async fn runtime_status_preserves_allowlisted_effective_config_across_projection
 #[tokio::test]
 async fn runtime_status_reports_effective_mcp_compact_schema_policy() {
     let mut env = crate::test_support::TestEnvGuard::new();
-    env.remove("WEBCODEX_MCP_COMPACT_SCHEMAS");
+    env.remove("CODEGPT_MCP_COMPACT_SCHEMAS");
     let runtime = test_runtime();
 
     let default = runtime.dispatch(runtime_status_call()).await;
@@ -2423,11 +2423,11 @@ async fn runtime_status_reports_effective_mcp_compact_schema_policy() {
     assert_eq!(default.output["mcp_compact_schemas"], true);
     assert!(default.output.get("runtime_exposure").is_none());
 
-    env.set("WEBCODEX_MCP_COMPACT_SCHEMAS", "false");
+    env.set("CODEGPT_MCP_COMPACT_SCHEMAS", "false");
     let full = runtime.dispatch(runtime_status_call()).await;
     assert_eq!(full.output["mcp_compact_schemas"], false);
 
-    env.set("WEBCODEX_MCP_COMPACT_SCHEMAS", "true");
+    env.set("CODEGPT_MCP_COMPACT_SCHEMAS", "true");
     let compact = runtime.dispatch(runtime_status_call()).await;
     assert_eq!(compact.output["mcp_compact_schemas"], true);
 }
@@ -2503,7 +2503,7 @@ async fn runtime_status_compact_and_summary_only_return_sanitized_summary() {
                 "compact runtime_status should include {pointer}: {summary:?}"
             );
         }
-        assert_eq!(summary["service"], "webcodex");
+        assert_eq!(summary["service"], "codegpt");
         assert_eq!(summary["version"], env!("CARGO_PKG_VERSION"));
         assert_eq!(summary["agents"]["summary"]["count"], 1);
         assert_eq!(summary["agents"]["summary"]["online"], 1);
@@ -2569,7 +2569,7 @@ async fn runtime_status_does_not_expose_tokens_or_secrets() {
     // The summary must never contain secret-like field names.
     for forbidden in [
         "token",
-        "WEBCODEX_TOKEN",
+        "CODEGPT_TOKEN",
         "api_key",
         "apikey",
         "secret",
@@ -2597,12 +2597,12 @@ async fn runtime_status_quic_disabled_is_non_sensitive() {
     assert!(result.success);
     assert_eq!(result.output["quic"]["enabled"], false);
     assert_eq!(result.output["quic"]["listen"], "0.0.0.0:8443");
-    assert_eq!(result.output["quic"]["alpn"], "webcodex-runner/1");
+    assert_eq!(result.output["quic"]["alpn"], "codegpt-runner/1");
     assert_eq!(result.output["quic"]["listener_started"], false);
     assert!(result.output["quic"]["last_error"].is_null());
     let serialized = serde_json::to_string(&result.output).unwrap();
-    assert!(!serialized.contains("WEBCODEX_QUIC_CERT"));
-    assert!(!serialized.contains("WEBCODEX_QUIC_KEY"));
+    assert!(!serialized.contains("CODEGPT_QUIC_CERT"));
+    assert!(!serialized.contains("CODEGPT_QUIC_KEY"));
     assert!(!serialized.to_ascii_lowercase().contains("token"));
 }
 
@@ -2613,13 +2613,13 @@ async fn runtime_status_quic_enabled_error_is_sanitized() {
         listen: "0.0.0.0:8443".to_string(),
         cert: PathBuf::from("/secret/certs/fullchain.pem"),
         key: PathBuf::from("/secret/certs/privkey.pem"),
-        alpn: "webcodex-runner/1".to_string(),
+        alpn: "codegpt-runner/1".to_string(),
     };
     let status = Arc::new(std::sync::Mutex::new(quic_cfg.runtime_status()));
     status
         .lock()
         .unwrap()
-        .mark_error("WEBCODEX_QUIC_KEY path does not exist: /secret/certs/privkey.pem");
+        .mark_error("CODEGPT_QUIC_KEY path does not exist: /secret/certs/privkey.pem");
     let runtime = runtime_with_info(RuntimeInfo {
         auth_enabled: false,
         configured_public_url: None,
@@ -2633,7 +2633,7 @@ async fn runtime_status_quic_enabled_error_is_sanitized() {
     assert_eq!(result.output["quic"]["listener_started"], false);
     assert_eq!(
         result.output["quic"]["last_error"],
-        "WEBCODEX_QUIC_KEY path does not exist"
+        "CODEGPT_QUIC_KEY path does not exist"
     );
     let serialized = serde_json::to_string(&result.output).unwrap();
     assert!(!serialized.contains("/secret/certs"));
@@ -2647,7 +2647,7 @@ async fn runtime_status_quic_started_reports_listen_and_alpn() {
         listen: "127.0.0.1:9443".to_string(),
         cert: PathBuf::from("/hidden/cert.pem"),
         key: PathBuf::from("/hidden/key.pem"),
-        alpn: "webcodex-runner/1".to_string(),
+        alpn: "codegpt-runner/1".to_string(),
     };
     let status = Arc::new(std::sync::Mutex::new(quic_cfg.runtime_status()));
     status.lock().unwrap().mark_started();
@@ -2662,7 +2662,7 @@ async fn runtime_status_quic_started_reports_listen_and_alpn() {
     assert!(result.success);
     assert_eq!(result.output["quic"]["enabled"], true);
     assert_eq!(result.output["quic"]["listen"], "127.0.0.1:9443");
-    assert_eq!(result.output["quic"]["alpn"], "webcodex-runner/1");
+    assert_eq!(result.output["quic"]["alpn"], "codegpt-runner/1");
     assert_eq!(result.output["quic"]["listener_started"], true);
     assert!(result.output["quic"]["last_error"].is_null());
     let serialized = serde_json::to_string(&result.output).unwrap();
@@ -2687,7 +2687,7 @@ async fn runtime_status_auth_enabled_reflects_runtime_info() {
 
     let runtime = runtime_with_info(RuntimeInfo {
         auth_enabled: true,
-        configured_public_url: Some("https://webcodex.example.com".to_string()),
+        configured_public_url: Some("https://codegpt.example.com".to_string()),
         oauth2_enabled: true,
         oauth2_shared_key_bridge_enabled: true,
         quic: Some(Arc::new(std::sync::Mutex::new(
@@ -2699,17 +2699,17 @@ async fn runtime_status_auth_enabled_reflects_runtime_info() {
     assert_eq!(result.output["auth_enabled"], true);
     assert_eq!(
         result.output["configured_public_url"],
-        "https://webcodex.example.com"
+        "https://codegpt.example.com"
     );
 }
 
 #[test]
 fn runtime_info_from_env_reads_effective_server_config() {
     let mut env = crate::test_support::TestEnvGuard::new();
-    env.set("WEBCODEX_TOKEN", "token");
-    env.set("WEBCODEX_PUBLIC_URL", "https://new.example.com");
-    env.set("WEBCODEX_OAUTH2_ENABLED", "true");
-    env.set("WEBCODEX_OAUTH2_SHARED_KEY_BRIDGE", "true");
+    env.set("CODEGPT_TOKEN", "token");
+    env.set("CODEGPT_PUBLIC_URL", "https://new.example.com");
+    env.set("CODEGPT_OAUTH2_ENABLED", "true");
+    env.set("CODEGPT_OAUTH2_SHARED_KEY_BRIDGE", "true");
 
     let info = RuntimeInfo::from_env();
     assert!(info.auth_enabled);
@@ -2720,7 +2720,7 @@ fn runtime_info_from_env_reads_effective_server_config() {
     assert!(info.oauth2_enabled);
     assert!(info.oauth2_shared_key_bridge_enabled);
 
-    env.set("WEBCODEX_OAUTH2_ENABLED", "false");
+    env.set("CODEGPT_OAUTH2_ENABLED", "false");
     let info = RuntimeInfo::from_env();
     assert!(!info.oauth2_enabled);
     assert!(!info.oauth2_shared_key_bridge_enabled);

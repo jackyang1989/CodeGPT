@@ -1,6 +1,6 @@
 //! Canonical model-facing routing for Adaptive Runtime.
 //!
-//! WebCodex has one model-facing runtime contract. Canonical ToolDefinitions
+//! CodeGPT has one model-facing runtime contract. Canonical ToolDefinitions
 //! decide which model-visible tools are directly exposed; every other
 //! model-visible runtime tool is reached through `call_runtime_tool`. Hidden
 //! protocol extensions are reachable only after the adapter independently
@@ -119,7 +119,7 @@ where
     F: Fn(&str) -> SuggestedToolCallRoute,
 {
     if let Some(target) =
-        webcodex_tool_contracts::suggested_tool_call_schema_target(schema).map(str::to_string)
+        codegpt_tool_contracts::suggested_tool_call_schema_target(schema).map(str::to_string)
     {
         return match route_for(&target) {
             SuggestedToolCallRoute::Direct => false,
@@ -257,7 +257,7 @@ fn project_suggested_tool_calls_in_value_node<F>(
 where
     F: Fn(&str) -> SuggestedToolCallRoute,
 {
-    if let Some(target) = webcodex_tool_contracts::suggested_tool_call_schema_target(schema) {
+    if let Some(target) = codegpt_tool_contracts::suggested_tool_call_schema_target(schema) {
         if value.get("tool").and_then(Value::as_str) != Some(target)
             || value.get("arguments").is_none()
         {
@@ -371,7 +371,7 @@ pub(crate) fn project_tool_result_suggested_calls<F>(
     if let Some(error) = result.error.as_ref() {
         envelope["error"] = Value::String(error.clone());
     }
-    let schema = webcodex_tool_contracts::output_schema_for_tool(tool_name);
+    let schema = codegpt_tool_contracts::output_schema_for_tool(tool_name);
     project_suggested_tool_calls_in_value(&mut envelope, &schema, route_for);
     result.output = envelope
         .as_object_mut()
@@ -412,7 +412,7 @@ mod tests {
         schema: &Value,
         targets: &mut std::collections::BTreeSet<String>,
     ) {
-        if let Some(target) = webcodex_tool_contracts::suggested_tool_call_schema_target(schema) {
+        if let Some(target) = codegpt_tool_contracts::suggested_tool_call_schema_target(schema) {
             targets.insert(target.to_string());
             return;
         }
@@ -606,7 +606,7 @@ mod tests {
                 ),
                 "representative edge {source_tool}->{target_tool} should remain Adaptive gateway-routed"
             );
-            let canonical_schema = webcodex_tool_contracts::output_schema_for_tool(source_tool);
+            let canonical_schema = codegpt_tool_contracts::output_schema_for_tool(source_tool);
             let canonical_call = json!({"tool": target_tool, "arguments": arguments});
             let mut projected_value = json!({
                 "success": false,
@@ -661,7 +661,7 @@ mod tests {
             "additionalProperties": false,
             "properties": {
                 "type": {"type": "string"},
-                "next": webcodex_tool_contracts::suggested_tool_call_schema(
+                "next": codegpt_tool_contracts::suggested_tool_call_schema(
                     "not_available_here",
                     json!({
                         "type": "object",
@@ -691,7 +691,7 @@ mod tests {
     #[test]
     fn finish_coding_task_nested_show_changes_recovery_projects_with_route() {
         let canonical_schema =
-            webcodex_tool_contracts::output_schema_for_tool("finish_coding_task");
+            codegpt_tool_contracts::output_schema_for_tool("finish_coding_task");
         let canonical_call = json!({
             "tool": "git_diff_hunks",
             "arguments": {
@@ -700,7 +700,7 @@ mod tests {
                 "paths": [],
                 "max_hunks": 30,
                 "max_hunk_lines": 400,
-                "max_page_bytes": webcodex_core::runtime_contract::DEFAULT_GIT_DIFF_HUNKS_PAGE_BYTES
+                "max_page_bytes": codegpt_core::runtime_contract::DEFAULT_GIT_DIFF_HUNKS_PAGE_BYTES
             }
         });
         let canonical_value = json!({

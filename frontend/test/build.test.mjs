@@ -68,7 +68,7 @@ async function assertRequiredAssets(outputDirectory) {
     assert.equal((await stat(resolve(outputDirectory, asset))).isFile(), true);
   }
   const runtimeHtml = await readFile(resolve(outputDirectory, "runtime.html"), "utf8");
-  assert.match(runtimeHtml, /WebCodex Runtime Console/);
+  assert.match(runtimeHtml, /CodeGPT Runtime Console/);
   assert.match(runtimeHtml, /runtime-device-select/);
   assert.match(runtimeHtml, /runtime-project-list/);
   assert.equal(runtimeHtml.includes("runtime-project-" + "select"), false);
@@ -89,7 +89,7 @@ async function assertRequiredAssets(outputDirectory) {
   assert.match(runtimeHtml, /data-theme-option="dark"/);
   assert.match(runtimeHtml, /data-language-toggle/);
   assert.match(runtimeHtml, /data-language-toggle-label/);
-  assert.match(runtimeHtml, /webcodex\.runtime\.language\.v1/);
+  assert.match(runtimeHtml, /codegpt\.runtime\.language\.v1/);
   assert.match(runtimeHtml, /document\.documentElement\.lang = language/);
   assert.match(runtimeHtml, /runtime-mobile-nav-toggle/);
   assert.match(runtimeHtml, /runtime-mobile-nav-close/);
@@ -156,7 +156,7 @@ async function assertRequiredAssets(outputDirectory) {
   assert.match(runtime, /APPEARANCE_STORAGE_KEY/);
   assert.match(runtime, /LANGUAGE_STORAGE_KEY/);
   assert.match(runtime, /applyLanguage/);
-  assert.match(runtime, /WebCodex 运行控制台/);
+  assert.match(runtime, /CodeGPT 运行控制台/);
   assert.match(runtime, /document\.documentElement\.lang = runtimeLanguage/);
   assert.doesNotMatch(runtime, /localStorage\.(?:getItem|setItem)\(RUNTIME_CREDENTIAL_SESSION_KEY/);
   assert.match(runtime, /sessionStorage/);
@@ -277,7 +277,7 @@ async function waitFor(predicate, diagnostic, timeoutMs = 10_000) {
 }
 
 test("custom development build creates parseable runtime and admin assets", async () => {
-  const outputDirectory = await mkdtemp(resolve(tmpdir(), "webcodex-assets-"));
+  const outputDirectory = await mkdtemp(resolve(tmpdir(), "codegpt-assets-"));
   try {
     const result = await exec(process.execPath, [
       buildScript,
@@ -295,7 +295,7 @@ test(
   "watch mode rebuilds changed sources and preserves the last good bundle",
   { timeout: 20_000 },
   async () => {
-    const workspace = await mkdtemp(resolve(tmpdir(), "webcodex-watch-"));
+    const workspace = await mkdtemp(resolve(tmpdir(), "codegpt-watch-"));
     const sourceDirectory = resolve(workspace, "src");
     const outputDirectory = resolve(workspace, "out");
     await copySources(sourceDirectory);

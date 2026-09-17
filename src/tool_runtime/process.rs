@@ -24,7 +24,7 @@ use crate::runner_protocol::{
     ShellProcessArgv, PROCESS_CWD_MAX_BYTES, PROCESS_STDIN_MAX_BYTES,
     STRUCTURED_EXECUTION_DIRECT_SYNC_TIMEOUT_MAX_SECS,
 };
-use webcodex_core::runner_skill::RunnerSkillExecutionRequest;
+use codegpt_core::runner_skill::RunnerSkillExecutionRequest;
 
 fn command_started(state: ShellCommandExecutionState) -> bool {
     !matches!(state, ShellCommandExecutionState::NotStarted)
@@ -36,8 +36,8 @@ fn command_completed(state: ShellCommandExecutionState) -> bool {
 
 fn skill_resource_validation_identity_args(request: &RunnerSkillExecutionRequest) -> Vec<String> {
     let source = match request.expected_source {
-        webcodex_core::runner_skill::RunnerSkillSource::Configured => "configured",
-        webcodex_core::runner_skill::RunnerSkillSource::Managed => "managed",
+        codegpt_core::runner_skill::RunnerSkillSource::Configured => "configured",
+        codegpt_core::runner_skill::RunnerSkillSource::Managed => "managed",
     };
     let mut identity_args = Vec::with_capacity(request.args.len() + 6);
     identity_args.push(request.skill_id.clone());
@@ -1239,7 +1239,7 @@ impl ToolRuntime {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use webcodex_core::runner_skill::RunnerSkillSource;
+    use codegpt_core::runner_skill::RunnerSkillSource;
 
     fn validation_identity(request: &RunnerSkillExecutionRequest) -> String {
         run_process_validation_identity(

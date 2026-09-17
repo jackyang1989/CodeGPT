@@ -1888,7 +1888,7 @@ async fn legacy_projectless_owner_hash_is_not_accepted_after_restart() {
 
     let authority_id = alice.shared_key_hash.as_deref().unwrap();
     let mut hasher = Sha256::new();
-    hasher.update(b"webcodex.workflow-session-owner.v1\0");
+    hasher.update(b"codegpt.workflow-session-owner.v1\0");
     hasher.update(alice.principal_kind().as_bytes());
     hasher.update(b"\0");
     hasher.update(authority_id.as_bytes());

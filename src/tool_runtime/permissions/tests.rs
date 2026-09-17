@@ -26,7 +26,7 @@ fn trusted_agent_auto_authorizes_permission_bearing_tools() {
         .request_id
         .strip_prefix("wc_perm_")
         .expect("permission request namespace");
-    assert!(webcodex_core::compact::decode::<12>(request_suffix).is_some());
+    assert!(codegpt_core::compact::decode::<12>(request_suffix).is_some());
     assert_eq!(decision.outcome(), Some(PermissionOutcome::AutoApproved));
 }
 
@@ -191,7 +191,7 @@ fn authority_profile_payload_projects_canonical_fields() {
         Some("restricted"),
     ));
     assert_eq!(restricted["mode"], "restricted");
-    assert_eq!(restricted["source"], "env:WEBCODEX_AUTHORITY_MODE");
+    assert_eq!(restricted["source"], "env:CODEGPT_AUTHORITY_MODE");
     assert_eq!(restricted["project_write"], false);
     assert_eq!(restricted["shell"], false);
     assert_eq!(restricted["release"], "human_approval");

@@ -255,7 +255,7 @@ pub fn secret_like_key(key: &str) -> bool {
     .any(|needle| lower.contains(needle))
 }
 
-pub use webcodex_core::sensitive_text::secret_like_value;
+pub use codegpt_core::sensitive_text::secret_like_value;
 
 pub fn summarize_command_text(kind: &str, text: &str) -> Value {
     let mut hasher = Sha256::new();
@@ -277,7 +277,7 @@ pub fn request_action_session_id(req: &Request) -> Option<String> {
         .and_then(|v| v.to_str().ok())
         .or_else(|| {
             req.headers()
-                .get("x-webcodex-session-id")
+                .get("x-codegpt-session-id")
                 .and_then(|v| v.to_str().ok())
         })
         .map(str::trim)
@@ -634,18 +634,18 @@ pub fn compute_stats(events: &[ActionEventView]) -> ActionSessionStats {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use webcodex_core::sensitive_text::WEBCODEX_SECRET_PREFIXES;
+    use codegpt_core::sensitive_text::CODEGPT_SECRET_PREFIXES;
 
     #[test]
-    fn audit_sanitize_value_redacts_webcodex_token_prefixes_in_strings() {
-        for prefix in WEBCODEX_SECRET_PREFIXES {
+    fn audit_sanitize_value_redacts_codegpt_token_prefixes_in_strings() {
+        for prefix in CODEGPT_SECRET_PREFIXES {
             let value = format!("failed with token {}EXAMPLE", prefix.to_ascii_uppercase());
             assert_eq!(sanitize_value(&json!(value)), json!("[redacted]"));
         }
     }
 
     #[test]
-    fn audit_sanitize_value_redacts_webcodex_token_prefixes_nested() {
+    fn audit_sanitize_value_redacts_codegpt_token_prefixes_nested() {
         let value = json!({
             "outer": [
                 "ok",

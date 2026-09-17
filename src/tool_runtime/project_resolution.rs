@@ -495,7 +495,7 @@ impl ToolRuntime {
             }),
             ProjectKnowledgeSourceResolution::Unavailable(reason) => {
                 tracing::debug!(
-                    target: "webcodex::project_knowledge",
+                    target: "codegpt::project_knowledge",
                     reason = reason.as_str(),
                     "repository knowledge association unavailable"
                 );

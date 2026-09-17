@@ -14,7 +14,7 @@ import {
   safeDelete,
 } from "./dist/domain.js";
 
-const PROTOCOL_VERSION = "webcodex-plugin-v1";
+const PROTOCOL_VERSION = "codegpt-plugin-v1";
 const here = path.dirname(fileURLToPath(import.meta.url));
 const pluginPath = path.join(here, "dist", "plugin.js");
 
@@ -63,7 +63,7 @@ const EXPECTED_SAFE_DELETE_TOOL = {
 };
 
 function tempRoot() {
-  return fs.mkdtempSync(path.join(os.tmpdir(), "webcodex-safe-delete-"));
+  return fs.mkdtempSync(path.join(os.tmpdir(), "codegpt-safe-delete-"));
 }
 
 test("absolute paths, root deletion, and parent traversal are rejected", () => {
@@ -274,7 +274,7 @@ test("Windows passes the target through environment and only falls back when pow
   assert.equal(value.state, "success");
   assert.deepEqual(calls.map((call) => call.command), ["powershell.exe", "pwsh.exe"]);
   for (const call of calls) {
-    assert.equal(call.options.env.WEBCODEX_SAFE_DELETE_TARGET, target);
+    assert.equal(call.options.env.CODEGPT_SAFE_DELETE_TARGET, target);
     assert.equal(call.args.join(" ").includes(target), false);
     assert.equal(call.args.join(" ").includes("Remove-Item"), false);
   }

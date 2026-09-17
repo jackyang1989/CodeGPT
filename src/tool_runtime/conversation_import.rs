@@ -1,6 +1,6 @@
 //! Bounded Control-side import of ChatGPT conversation attachments.
 //!
-//! ChatGPT supplies temporary OpenAI-hosted file references. WebCodex validates
+//! ChatGPT supplies temporary OpenAI-hosted file references. CodeGPT validates
 //! and consumes those references immediately on the Control side, then streams
 //! the download through the existing bounded artifact upload mutation path.
 
@@ -64,7 +64,7 @@ impl From<OpenAiHostFileRef> for OpenAiFileIdRef {
         Self {
             name: value.file_name,
             // The MCP host file_id is part of the host transport shape only.
-            // WebCodex never dereferences or returns it.
+            // CodeGPT never dereferences or returns it.
             id: None,
             mime_type: value.mime_type,
             download_link: value.download_url,

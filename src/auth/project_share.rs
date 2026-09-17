@@ -1,4 +1,4 @@
-//! Project-first OAuth subject helpers used by `webcodex share`.
+//! Project-first OAuth subject helpers used by `codegpt share`.
 //!
 //! The OAuth transport credential is session-fenced, while Connector durable
 //! identity remains the stable project grant. A share restart therefore makes
@@ -9,10 +9,10 @@ use super::{
     SCOPE_JOB_RUN, SCOPE_PROJECT_READ, SCOPE_PROJECT_WRITE, SCOPE_RUNTIME_READ,
     SCOPE_SESSION_COLLABORATE,
 };
-pub(crate) use webcodex_core::authority::{
+pub(crate) use codegpt_core::authority::{
     parse_project_share_subject_id, PROJECT_SHARE_OAUTH_SUBJECT_KIND,
 };
-use webcodex_core::authority::{project_share_subject_id, PROJECT_SHARE_SESSION_PREFIX};
+use codegpt_core::authority::{project_share_subject_id, PROJECT_SHARE_SESSION_PREFIX};
 
 pub(crate) const PROJECT_SHARE_OAUTH_TOKEN_KIND: &str = "oauth2_project";
 pub(crate) const PROJECT_SHARE_OAUTH_SCOPES: &[&str] = &[

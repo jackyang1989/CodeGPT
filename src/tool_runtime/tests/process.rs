@@ -532,7 +532,7 @@ async fn run_process_preserves_remote_windows_cwd_syntax_before_dispatch() {
             structured_process_argv: true,
             ..Default::default()
         },
-        vec![registered_project("demo", r"\\?\E:\git\webcodex")],
+        vec![registered_project("demo", r"\\?\E:\git\codegpt")],
     )
     .await;
     let project = crate::tool_runtime::runner_project_runtime_id(client_id, "demo");
@@ -554,7 +554,7 @@ async fn run_process_preserves_remote_windows_cwd_syntax_before_dispatch() {
     assert_eq!(request.kind, "run_process");
     assert_eq!(
         request.cwd.as_deref(),
-        Some(r"\\?\E:\git\webcodex\apps\桌面 project")
+        Some(r"\\?\E:\git\codegpt\apps\桌面 project")
     );
     assert_eq!(request.command, "");
     assert!(request.process.is_some());

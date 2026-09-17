@@ -747,7 +747,7 @@ pub(crate) fn workflow_session_authority_fingerprint(
         }
     };
     Ok(hash_workflow_session_authority(
-        b"webcodex.workflow-session-authority.v1\0",
+        b"codegpt.workflow-session-authority.v1\0",
         authority_kind,
         &authority_id,
     ))
@@ -772,7 +772,7 @@ fn hash_workflow_session_authority(domain: &[u8], kind: &str, id: &str) -> Strin
 
 pub(crate) fn canonical_repository_key(repository_root: &str) -> String {
     let mut hasher = Sha256::new();
-    hasher.update(b"webcodex.workflow-repository-root.v1\0");
+    hasher.update(b"codegpt.workflow-repository-root.v1\0");
     hasher.update(repository_root.as_bytes());
     format!("{:x}", hasher.finalize())
 }

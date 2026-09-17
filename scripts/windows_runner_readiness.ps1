@@ -1,5 +1,5 @@
 # Focused control-plane readiness helpers for Windows Runner replacement.
-# Authentication remains inside the existing `webcodex ops runner` CLI path;
+# Authentication remains inside the existing `codegpt ops runner` CLI path;
 # this script only passes an existing user-token file path and consumes safe JSON.
 
 function Get-RunnerBuildIdentity {
@@ -13,7 +13,7 @@ function Get-RunnerBuildIdentity {
         throw "Runner build identity unavailable for $Path"
     }
     $text = [string]$output[0]
-    $pattern = '^webcodex-runner\s+(?<version>\S+)\s+\(commit\s+(?<commit>[0-9A-Fa-f]+),\s+dirty=(?<dirty>true|false)(?:,\s+built_at=(?<built_at>[^)]+))?\)$'
+    $pattern = '^codegpt-runner\s+(?<version>\S+)\s+\(commit\s+(?<commit>[0-9A-Fa-f]+),\s+dirty=(?<dirty>true|false)(?:,\s+built_at=(?<built_at>[^)]+))?\)$'
     if ($text -notmatch $pattern) {
         throw "Runner build identity unavailable for $Path"
     }
@@ -57,7 +57,7 @@ function Get-RunnerOperatorProfile {
     if (-not $clientId -or -not $serverUrl) {
         throw "Primary Runner config does not provide exact client_id and server_url"
     }
-    $tokenFile = Join-Path (Split-Path -Parent $configPath) 'webcodex-user-token'
+    $tokenFile = Join-Path (Split-Path -Parent $configPath) 'codegpt-user-token'
     if (-not (Test-Path -LiteralPath $tokenFile -PathType Leaf)) {
         throw "Operator user-token file is unavailable: $tokenFile"
     }
@@ -71,22 +71,22 @@ function Get-RunnerOperatorProfile {
 
 function Get-RunnerControlPlaneObservation {
     param(
-        [Parameter(Mandatory = $true)][string]$WebCodexCliPath,
+        [Parameter(Mandatory = $true)][string]$CodeGPTCliPath,
         [Parameter(Mandatory = $true)][string]$ServerUrl,
         [Parameter(Mandatory = $true)][string]$TokenFile,
         [Parameter(Mandatory = $true)][string]$ClientId,
         [ValidateRange(1, 30000)][int]$RequestTimeoutMilliseconds = 5000
     )
 
-    if (-not (Test-Path -LiteralPath $WebCodexCliPath -PathType Leaf)) {
-        throw "WebCodex operator CLI does not exist: $WebCodexCliPath"
+    if (-not (Test-Path -LiteralPath $CodeGPTCliPath -PathType Leaf)) {
+        throw "CodeGPT operator CLI does not exist: $CodeGPTCliPath"
     }
-    $raw = @(& $WebCodexCliPath ops runner --client-id $ClientId --server-url $ServerUrl --token-file $TokenFile --request-timeout-ms $RequestTimeoutMilliseconds --json --strict 2>&1)
+    $raw = @(& $CodeGPTCliPath ops runner --client-id $ClientId --server-url $ServerUrl --token-file $TokenFile --request-timeout-ms $RequestTimeoutMilliseconds --json --strict 2>&1)
     $exitCode = $LASTEXITCODE
     try {
         $response = ($raw -join "`n") | ConvertFrom-Json -ErrorAction Stop
     } catch {
-        throw "Control-plane Runner observation returned invalid JSON; WebCodexCliPath must point to a CLI that supports 'ops runner'"
+        throw "Control-plane Runner observation returned invalid JSON; CodeGPTCliPath must point to a CLI that supports 'ops runner'"
     }
     if ($exitCode -ne 0) {
         $reason = @($response.blocking_reasons | Select-Object -First 1)

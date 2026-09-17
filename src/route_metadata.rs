@@ -12,7 +12,7 @@ mod operations;
 mod runner_transport;
 mod runtime;
 
-use webcodex_core::authority::OAuthRouteScopePolicy;
+use codegpt_core::authority::OAuthRouteScopePolicy;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub(crate) enum RouteMethod {
@@ -338,13 +338,13 @@ pub(crate) fn audit_class_for_path(path: &str) -> Option<AuditClass> {
 /// stats vocabulary. This is observability-only: it grants no authority and
 /// deliberately derives from the runtime tool SSOT instead of transport names.
 pub(crate) fn audit_class_for_runtime_tool(tool_name: &str) -> Option<AuditClass> {
-    use webcodex_tool_contracts::{
+    use codegpt_tool_contracts::{
         ToolActivityKind, ToolEffect, ToolExecutionForm, ToolExecutionStart,
         TOOL_CATEGORY_ARTIFACT, TOOL_CATEGORY_EDIT, TOOL_CATEGORY_GIT, TOOL_CATEGORY_JOB,
         TOOL_CATEGORY_PATCH, TOOL_CATEGORY_RUNTIME, TOOL_CATEGORY_VALIDATION,
     };
 
-    let definition = webcodex_tool_contracts::lookup_tool_definition(tool_name)?;
+    let definition = codegpt_tool_contracts::lookup_tool_definition(tool_name)?;
     let activity = definition.activity_semantics();
 
     if definition.is_git_like() || definition.category == TOOL_CATEGORY_GIT {
@@ -496,8 +496,8 @@ mod tests {
         let check = spec(RouteId::RunnerConfigCheck);
         assert_eq!(
             check.scope_policy,
-            webcodex_core::authority::OAuthRouteScopePolicy::Require(
-                webcodex_core::authority::SCOPE_RUNTIME_READ,
+            codegpt_core::authority::OAuthRouteScopePolicy::Require(
+                codegpt_core::authority::SCOPE_RUNTIME_READ,
             )
         );
         assert_eq!(check.openapi_projection, RouteOpenApiProjection::Hidden);
@@ -505,8 +505,8 @@ mod tests {
         let reload = spec(RouteId::RunnerConfigReload);
         assert_eq!(
             reload.scope_policy,
-            webcodex_core::authority::OAuthRouteScopePolicy::Require(
-                webcodex_core::authority::SCOPE_RUNNER_MANAGE,
+            codegpt_core::authority::OAuthRouteScopePolicy::Require(
+                codegpt_core::authority::SCOPE_RUNNER_MANAGE,
             )
         );
         assert_eq!(reload.openapi_projection, RouteOpenApiProjection::Hidden);
@@ -514,8 +514,8 @@ mod tests {
         let activate = spec(RouteId::ProjectsResolveOrRegister);
         assert_eq!(
             activate.scope_policy,
-            webcodex_core::authority::OAuthRouteScopePolicy::Require(
-                webcodex_core::authority::SCOPE_PROJECT_WRITE,
+            codegpt_core::authority::OAuthRouteScopePolicy::Require(
+                codegpt_core::authority::SCOPE_PROJECT_WRITE,
             )
         );
         assert_eq!(activate.openapi_projection, RouteOpenApiProjection::Hidden);

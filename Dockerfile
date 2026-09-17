@@ -14,17 +14,17 @@ RUN apt-get update \
 
 COPY . .
 
-# The server image also contains the webcodex CLI so server-side pairing and
-# administration can be run with `docker compose exec webcodex webcodex ...`.
-# webcodex-runner is intentionally not built into this image. Git metadata is
+# The server image also contains the codegpt CLI so server-side pairing and
+# administration can be run with `docker compose exec codegpt codegpt ...`.
+# codegpt-runner is intentionally not built into this image. Git metadata is
 # supplied as build args because .git is intentionally outside the build context.
-ARG WEBCODEX_GIT_COMMIT
-ARG WEBCODEX_GIT_DIRTY
-ARG WEBCODEX_BUILT_AT
-RUN WEBCODEX_GIT_COMMIT="$WEBCODEX_GIT_COMMIT" \
-    WEBCODEX_GIT_DIRTY="$WEBCODEX_GIT_DIRTY" \
-    WEBCODEX_BUILT_AT="$WEBCODEX_BUILT_AT" \
-    cargo build --locked --release --bins -p webcodex -p webcodex-cli
+ARG CODEGPT_GIT_COMMIT
+ARG CODEGPT_GIT_DIRTY
+ARG CODEGPT_BUILT_AT
+RUN CODEGPT_GIT_COMMIT="$CODEGPT_GIT_COMMIT" \
+    CODEGPT_GIT_DIRTY="$CODEGPT_GIT_DIRTY" \
+    CODEGPT_BUILT_AT="$CODEGPT_BUILT_AT" \
+    cargo build --locked --release --bins -p codegpt -p codegpt-cli
 
 FROM debian:bookworm-slim AS runtime
 
@@ -35,25 +35,25 @@ RUN apt-get update \
         libgcc-s1 \
         libstdc++6 \
     && rm -rf /var/lib/apt/lists/* \
-    && groupadd --system --gid 10001 webcodex \
-    && useradd --system --uid 10001 --gid webcodex \
-        --home-dir /var/lib/webcodex webcodex \
-    && install -d -o webcodex -g webcodex -m 0700 /var/lib/webcodex
+    && groupadd --system --gid 10001 codegpt \
+    && useradd --system --uid 10001 --gid codegpt \
+        --home-dir /var/lib/codegpt codegpt \
+    && install -d -o codegpt -g codegpt -m 0700 /var/lib/codegpt
 
-COPY --from=builder /src/target/release/webcodex-server /usr/local/bin/webcodex-server
-COPY --from=builder /src/target/release/webcodex /usr/local/bin/webcodex
+COPY --from=builder /src/target/release/codegpt-server /usr/local/bin/codegpt-server
+COPY --from=builder /src/target/release/codegpt /usr/local/bin/codegpt
 
-ENV WEBCODEX_ADDR=0.0.0.0:8080 \
-    WEBCODEX_DATA=/var/lib/webcodex \
+ENV CODEGPT_ADDR=0.0.0.0:8080 \
+    CODEGPT_DATA=/var/lib/codegpt \
     RUST_LOG=info
 
-USER webcodex:webcodex
-WORKDIR /var/lib/webcodex
+USER codegpt:codegpt
+WORKDIR /var/lib/codegpt
 
 EXPOSE 8080
-VOLUME ["/var/lib/webcodex"]
+VOLUME ["/var/lib/codegpt"]
 
 HEALTHCHECK --interval=15s --timeout=5s --start-period=10s --retries=5 \
     CMD curl -fsS http://127.0.0.1:8080/openapi.json >/dev/null || exit 1
 
-ENTRYPOINT ["/usr/local/bin/webcodex-server"]
+ENTRYPOINT ["/usr/local/bin/codegpt-server"]

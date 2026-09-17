@@ -1,23 +1,23 @@
 [workspace]
 members = [
-    "crates/webcodex-admin",
-    "crates/webcodex-browser",
-    "crates/webcodex-computer",
-    "crates/webcodex-code-mode",
-    "crates/webcodex-runner-config",
-    "crates/webcodex-cli",
-    "crates/webcodex-core",
-    "crates/webcodex-lsp",
-    "crates/webcodex-persistent-shell",
-    "crates/webcodex-process",
-    "crates/webcodex-runner",
-    "crates/webcodex-runner-registry",
-    "crates/webcodex-store",
-    "crates/webcodex-workspace",
-    "crates/webcodex-workflow-session",
-    "crates/webcodex-tool-contracts",
-    "crates/webcodex-tool-runtime-contracts",
-    "crates/webcodex-validation",
+    "crates/codegpt-admin",
+    "crates/codegpt-browser",
+    "crates/codegpt-computer",
+    "crates/codegpt-code-mode",
+    "crates/codegpt-runner-config",
+    "crates/codegpt-cli",
+    "crates/codegpt-core",
+    "crates/codegpt-lsp",
+    "crates/codegpt-persistent-shell",
+    "crates/codegpt-process",
+    "crates/codegpt-runner",
+    "crates/codegpt-runner-registry",
+    "crates/codegpt-store",
+    "crates/codegpt-workspace",
+    "crates/codegpt-workflow-session",
+    "crates/codegpt-tool-contracts",
+    "crates/codegpt-tool-runtime-contracts",
+    "crates/codegpt-validation",
 ]
 resolver = "2"
 
@@ -27,7 +27,7 @@ license = "Apache-2.0"
 edition = "2021"
 
 [package]
-name = "webcodex"
+name = "codegpt"
 version.workspace = true
 license.workspace = true
 edition.workspace = true
@@ -35,34 +35,34 @@ edition.workspace = true
 [features]
 default = []
 experimental-code-mode = [
-    "dep:webcodex-code-mode",
-    "webcodex-code-mode/v8-runtime",
-    "webcodex-tool-contracts/experimental-code-mode",
-    "webcodex-tool-runtime-contracts/experimental-code-mode",
+    "dep:codegpt-code-mode",
+    "codegpt-code-mode/v8-runtime",
+    "codegpt-tool-contracts/experimental-code-mode",
+    "codegpt-tool-runtime-contracts/experimental-code-mode",
 ]
 workspace-checkpoints = [
-    "webcodex-tool-contracts/workspace-checkpoints",
-    "webcodex-tool-runtime-contracts/workspace-checkpoints",
-    "webcodex-workspace/workspace-checkpoints",
+    "codegpt-tool-contracts/workspace-checkpoints",
+    "codegpt-tool-runtime-contracts/workspace-checkpoints",
+    "codegpt-workspace/workspace-checkpoints",
 ]
 
 [[bin]]
-name = "webcodex-server"
-path = "src/bin/webcodex-server.rs"
+name = "codegpt-server"
+path = "src/bin/codegpt-server.rs"
 
 [dependencies]
-webcodex-admin = { path = "crates/webcodex-admin" }
-webcodex-code-mode = { path = "crates/webcodex-code-mode", optional = true }
-webcodex-runner-config = { path = "crates/webcodex-runner-config" }
-webcodex-runner-registry = { path = "crates/webcodex-runner-registry" }
-webcodex-core = { path = "crates/webcodex-core" }
-webcodex-tool-contracts = { path = "crates/webcodex-tool-contracts" }
-webcodex-tool-runtime-contracts = { path = "crates/webcodex-tool-runtime-contracts" }
-webcodex-validation = { path = "crates/webcodex-validation" }
-webcodex-workflow-session = { path = "crates/webcodex-workflow-session" }
-webcodex-persistent-shell = { path = "crates/webcodex-persistent-shell" }
-webcodex-store = { path = "crates/webcodex-store" }
-webcodex-workspace = { path = "crates/webcodex-workspace" }
+codegpt-admin = { path = "crates/codegpt-admin" }
+codegpt-code-mode = { path = "crates/codegpt-code-mode", optional = true }
+codegpt-runner-config = { path = "crates/codegpt-runner-config" }
+codegpt-runner-registry = { path = "crates/codegpt-runner-registry" }
+codegpt-core = { path = "crates/codegpt-core" }
+codegpt-tool-contracts = { path = "crates/codegpt-tool-contracts" }
+codegpt-tool-runtime-contracts = { path = "crates/codegpt-tool-runtime-contracts" }
+codegpt-validation = { path = "crates/codegpt-validation" }
+codegpt-workflow-session = { path = "crates/codegpt-workflow-session" }
+codegpt-persistent-shell = { path = "crates/codegpt-persistent-shell" }
+codegpt-store = { path = "crates/codegpt-store" }
+codegpt-workspace = { path = "crates/codegpt-workspace" }
 salvo = { version = "0.93", features = ["oapi", "cors", "affix-state", "websocket", "timeout"] }
 tokio = { version = "1", features = ["full"] }
 tokio-tungstenite = { version = "0.29", features = ["connect", "rustls-tls-webpki-roots"] }
@@ -111,7 +111,7 @@ windows-sys = { version = "0.61", features = [
     "Win32_System_Threading",
 ] }
 
-# Developer builds favor iteration speed and compact artifacts. WebCodex does
+# Developer builds favor iteration speed and compact artifacts. CodeGPT does
 # not rely on source-line debug information in ordinary local/CI diagnostics;
 # debug assertions remain enabled independently of debuginfo.
 [profile.dev]
@@ -136,11 +136,11 @@ codegen-units = 16
 incremental = true
 
 [dev-dependencies]
-webcodex-runner-registry = { path = "crates/webcodex-runner-registry", features = ["root-test-support"] }
+codegpt-runner-registry = { path = "crates/codegpt-runner-registry", features = ["root-test-support"] }
 rusqlite = { version = "0.32", features = ["bundled"] }
-webcodex-store = { path = "crates/webcodex-store", features = ["root-test-support"] }
-webcodex-tool-contracts = { path = "crates/webcodex-tool-contracts", features = ["root-test-support"] }
-webcodex-workflow-session = { path = "crates/webcodex-workflow-session", features = ["root-test-support"] }
+codegpt-store = { path = "crates/codegpt-store", features = ["root-test-support"] }
+codegpt-tool-contracts = { path = "crates/codegpt-tool-contracts", features = ["root-test-support"] }
+codegpt-workflow-session = { path = "crates/codegpt-workflow-session", features = ["root-test-support"] }
 urlencoding = "2"
 salvo = { version = "0.93", features = ["test"] }
 # Self-signed cert generation for QUIC integration tests. Uses the `ring`

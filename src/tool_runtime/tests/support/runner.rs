@@ -16,7 +16,7 @@ use serde_json::{json, Value};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
-use webcodex_core::runner_skill::{
+use codegpt_core::runner_skill::{
     RunnerSkillExecutionRequest, RUNNER_SKILL_EXECUTION_REQUEST_KIND,
 };
 
@@ -372,7 +372,7 @@ fn run_runner_file_list_request_locally(req: &RunnerRequest) -> (i32, String, St
 }
 
 fn run_runner_file_read_request_locally(req: &RunnerRequest) -> (i32, String, String) {
-    use webcodex_workspace::file_read_range::{self, EffectiveRange};
+    use codegpt_workspace::file_read_range::{self, EffectiveRange};
 
     let Some(cwd) = req.cwd.as_deref() else {
         return (-1, String::new(), "file_read missing cwd".to_string());
@@ -389,7 +389,7 @@ fn run_runner_file_read_request_locally(req: &RunnerRequest) -> (i32, String, St
     match file_read_range::read_range(&target, range) {
         Ok(result) => {
             let output = json!({
-                "format": "webcodex.file_read_range.v1",
+                "format": "codegpt.file_read_range.v1",
                 "content": result.content,
                 "sha256": result.sha256,
                 "total_lines": result.total_lines,
@@ -416,7 +416,7 @@ fn run_runner_skill_list_packages_locally(req: &RunnerRequest) -> (i32, String, 
             Ok(entries) => entries,
             Err(error) if error.kind() == std::io::ErrorKind::NotFound => return (
                 0,
-                json!({"format":"webcodex.skill_package_list.v1","entries":[],"truncated":false})
+                json!({"format":"codegpt.skill_package_list.v1","entries":[],"truncated":false})
                     .to_string(),
                 String::new(),
             ),
@@ -442,7 +442,7 @@ fn run_runner_skill_list_packages_locally(req: &RunnerRequest) -> (i32, String, 
     (
         0,
         json!({
-            "format":"webcodex.skill_package_list.v1",
+            "format":"codegpt.skill_package_list.v1",
             "entries":items,
             "truncated":truncated
         })
@@ -452,7 +452,7 @@ fn run_runner_skill_list_packages_locally(req: &RunnerRequest) -> (i32, String, 
 }
 
 fn run_runner_skill_read_file_locally(req: &RunnerRequest) -> (i32, String, String) {
-    use webcodex_workspace::file_read_range::{self, EffectiveRange};
+    use codegpt_workspace::file_read_range::{self, EffectiveRange};
     let Some(cwd) = req.cwd.as_deref() else {
         return (-1, String::new(), "skill_path_invalid".to_string());
     };
@@ -512,7 +512,7 @@ fn run_runner_skill_read_file_locally(req: &RunnerRequest) -> (i32, String, Stri
         Err(error) => {
             let reason = if matches!(
                 error.reason,
-                webcodex_workspace::file_read_range::ReadFileReason::InvalidUtf8
+                codegpt_workspace::file_read_range::ReadFileReason::InvalidUtf8
             ) {
                 "skill_invalid_utf8"
             } else {
@@ -524,7 +524,7 @@ fn run_runner_skill_read_file_locally(req: &RunnerRequest) -> (i32, String, Stri
     (
         0,
         json!({
-            "format":"webcodex.skill_file_read.v1",
+            "format":"codegpt.skill_file_read.v1",
             "content":result.content,
             "sha256":result.sha256,
             "file_bytes":file_bytes,
@@ -1400,7 +1400,7 @@ pub(in crate::tool_runtime::tests) async fn register_agent_with_shell_profiles(
     .await;
 }
 
-/// Build a canonical `webcodex.file_read_range.v1` envelope for the full file
+/// Build a canonical `codegpt.file_read_range.v1` envelope for the full file
 /// `content` under the ToolRuntime default effective range (start_line=1,
 /// limit=2000). The selected window, SHA-256, total line count, and range
 /// fields are all derived through the shared range reader so the envelope is
@@ -1414,7 +1414,7 @@ pub(in crate::tool_runtime::tests) fn canonical_agent_file_read_output(
     canonical_agent_file_read_range(content, 1, 2000)
 }
 
-/// Build a canonical `webcodex.file_read_range.v1` envelope for the full file
+/// Build a canonical `codegpt.file_read_range.v1` envelope for the full file
 /// `content` under an explicit effective request range. The selected window is
 /// computed by the shared range reader so content, total_lines, start_line,
 /// and limit are internally consistent and match the ToolRuntime validation.
@@ -1423,12 +1423,12 @@ pub(in crate::tool_runtime::tests) fn canonical_agent_file_read_range(
     start_line: usize,
     limit: usize,
 ) -> String {
-    use webcodex_workspace::file_read_range::{self, EffectiveRange};
+    use codegpt_workspace::file_read_range::{self, EffectiveRange};
     let range = EffectiveRange::new(Some(start_line), Some(limit));
     let result = file_read_range::read_range_from(content.as_bytes(), range)
         .expect("canonical agent file read fixture range fits budget");
     serde_json::json!({
-        "format": "webcodex.file_read_range.v1",
+        "format": "codegpt.file_read_range.v1",
         "content": result.content,
         "sha256": result.sha256,
         "total_lines": result.total_lines,

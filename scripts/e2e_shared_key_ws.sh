@@ -40,7 +40,7 @@ cleanup() {
     done
     if [ -n "$TMP_ROOT" ]; then
         case "$TMP_ROOT" in
-            /tmp/webcodex-shared-key-e2e.*)
+            /tmp/codegpt-shared-key-e2e.*)
                 rm -rf -- "$TMP_ROOT"
                 ;;
             *)
@@ -135,14 +135,14 @@ fi
 
 log "building Server and Runner binaries"
 "$CARGO_BIN" build --quiet \
-    -p webcodex --bin webcodex-server \
-    -p webcodex-runner --bin webcodex-runner
+    -p codegpt --bin codegpt-server \
+    -p codegpt-runner --bin codegpt-runner
 
 PORT="$(free_port)"
 BOOTSTRAP_KEY="$(random_secret)"
 SHARED_KEY_A="shared-a-$(random_secret)"
 SHARED_KEY_B="shared-b-$(random_secret)"
-TMP_ROOT="$(mktemp -d /tmp/webcodex-shared-key-e2e.XXXXXX)"
+TMP_ROOT="$(mktemp -d /tmp/codegpt-shared-key-e2e.XXXXXX)"
 DATA_DIR="$TMP_ROOT/data"
 SHARED_PROJECT="$TMP_ROOT/shared-project"
 MANAGED_PROJECT="$TMP_ROOT/managed-project"
@@ -156,7 +156,7 @@ for project in "$SHARED_PROJECT" "$MANAGED_PROJECT"; do
         cd "$project"
         git init -q -b main
         git config user.email e2e@example.invalid
-        git config user.name "WebCodex E2E"
+        git config user.name "CodeGPT E2E"
         printf '# shared-key transport smoke\n' > README.md
         git add README.md
         git commit -q -m init
@@ -177,12 +177,12 @@ allow_patch = true
 EOF
 
 log "starting temporary shared-key-enabled Server"
-WEBCODEX_ADDR="127.0.0.1:${PORT}" \
-WEBCODEX_DATA="$DATA_DIR" \
-WEBCODEX_TOKEN="$BOOTSTRAP_KEY" \
-WEBCODEX_SHARED_KEY_ENABLED=true \
+CODEGPT_ADDR="127.0.0.1:${PORT}" \
+CODEGPT_DATA="$DATA_DIR" \
+CODEGPT_TOKEN="$BOOTSTRAP_KEY" \
+CODEGPT_SHARED_KEY_ENABLED=true \
 RUST_LOG=warn \
-"$REPO_DIR/target/debug/webcodex-server" >"$TMP_ROOT/server.log" 2>&1 &
+"$REPO_DIR/target/debug/codegpt-server" >"$TMP_ROOT/server.log" 2>&1 &
 SERVER_PID=$!
 wait_for_server || die "Server did not become ready"
 
@@ -228,10 +228,10 @@ allow_raw_shell = true
 EOF
 chmod 600 "$TMP_ROOT/shared-runner.toml" "$TMP_ROOT/managed-runner.toml"
 
-"$REPO_DIR/target/debug/webcodex-runner" --config "$TMP_ROOT/shared-runner.toml" \
+"$REPO_DIR/target/debug/codegpt-runner" --config "$TMP_ROOT/shared-runner.toml" \
     >"$TMP_ROOT/shared-runner.log" 2>&1 &
 SHARED_PID=$!
-"$REPO_DIR/target/debug/webcodex-runner" --config "$TMP_ROOT/managed-runner.toml" \
+"$REPO_DIR/target/debug/codegpt-runner" --config "$TMP_ROOT/managed-runner.toml" \
     >"$TMP_ROOT/managed-runner.log" 2>&1 &
 MANAGED_PID=$!
 

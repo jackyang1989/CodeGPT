@@ -21,21 +21,21 @@ if [ "$#" -ne 0 ]; then
 fi
 
 # ============================================================================
-# WebCodex — Release Readiness Check
+# CodeGPT — Release Readiness Check
 #
 # Lightweight release-readiness gate. Runs focused local checks that must pass
 # before final acceptance. It does NOT run the full suite, E2E smoke, eval
 # harness, boot a public server, touch the network, or read/print real tokens,
-# secrets, Runner configs (including legacy agent.toml), webcodex.env, or .env files.
+# secrets, Runner configs (including legacy agent.toml), codegpt.env, or .env files.
 #
 # Stages:
 #   1. workspace boundary check
 #   2. cargo fmt --all -- --check
 #   3. cargo check --workspace --all-targets
-#   4. cargo test -p webcodex --lib metadata -- --nocapture
-#   5. cargo test -p webcodex --lib schema -- --nocapture
-#   6. cargo test -p webcodex --lib openapi -- --nocapture
-#   7. cargo test -p webcodex --lib mcp -- --nocapture
+#   4. cargo test -p codegpt --lib metadata -- --nocapture
+#   5. cargo test -p codegpt --lib schema -- --nocapture
+#   6. cargo test -p codegpt --lib openapi -- --nocapture
+#   7. cargo test -p codegpt --lib mcp -- --nocapture
 #   8. bash syntax checks for scripts/*.sh
 #   9. release verification tooling self-tests
 #  10. static: test harnesses use current runtime contracts
@@ -133,8 +133,8 @@ fi
 # ----------------------------------------------------------------------------
 # Stage 4: focused metadata tests
 # ----------------------------------------------------------------------------
-stage_start "cargo test -p webcodex --lib metadata -- --nocapture"
-if cargo test -p webcodex --lib metadata -- --nocapture; then
+stage_start "cargo test -p codegpt --lib metadata -- --nocapture"
+if cargo test -p codegpt --lib metadata -- --nocapture; then
     ok "metadata tests"
 else
     die "metadata tests"
@@ -143,8 +143,8 @@ fi
 # ----------------------------------------------------------------------------
 # Stage 5: focused schema tests
 # ----------------------------------------------------------------------------
-stage_start "cargo test -p webcodex --lib schema -- --nocapture"
-if cargo test -p webcodex --lib schema -- --nocapture; then
+stage_start "cargo test -p codegpt --lib schema -- --nocapture"
+if cargo test -p codegpt --lib schema -- --nocapture; then
     ok "schema tests"
 else
     die "schema tests"
@@ -153,8 +153,8 @@ fi
 # ----------------------------------------------------------------------------
 # Stage 6: focused OpenAPI tests
 # ----------------------------------------------------------------------------
-stage_start "cargo test -p webcodex --lib openapi -- --nocapture"
-if cargo test -p webcodex --lib openapi -- --nocapture; then
+stage_start "cargo test -p codegpt --lib openapi -- --nocapture"
+if cargo test -p codegpt --lib openapi -- --nocapture; then
     ok "openapi tests"
 else
     die "openapi tests"
@@ -163,8 +163,8 @@ fi
 # ----------------------------------------------------------------------------
 # Stage 7: focused MCP tests
 # ----------------------------------------------------------------------------
-stage_start "cargo test -p webcodex --lib mcp -- --nocapture"
-if cargo test -p webcodex --lib mcp -- --nocapture; then
+stage_start "cargo test -p codegpt --lib mcp -- --nocapture"
+if cargo test -p codegpt --lib mcp -- --nocapture; then
     ok "mcp tests"
 else
     die "mcp tests"
@@ -228,7 +228,7 @@ fi
 # Stage 10: static — test harnesses use current runtime contracts
 # ----------------------------------------------------------------------------
 stage_start "static: current test harness contracts"
-if grep -En -- '--bin webcodex([[:space:]]|`|$)|target/debug/webcodex([^/-]|$)|include_runtime_status|include_git|include_recent_commits|include_rules|process_local_in_memory|output\.content|numbered_text' \
+if grep -En -- '--bin codegpt([[:space:]]|`|$)|target/debug/codegpt([^/-]|$)|include_runtime_status|include_git|include_recent_commits|include_rules|process_local_in_memory|output\.content|numbered_text' \
     scripts/e2e_zero_config_ws.sh \
     scripts/e2e_reconnect_ws.sh \
     scripts/eval_coding_loop.sh \
@@ -255,12 +255,12 @@ fi
 # Stage 11: static — no python runtime helper regressions
 # ----------------------------------------------------------------------------
 stage_start "static: no python runtime helper regressions"
-if grep -R "python3 -c" -n src/tool_runtime src/runner_http crates/webcodex-runner/src; then
+if grep -R "python3 -c" -n src/tool_runtime src/runner_http crates/codegpt-runner/src; then
     die "python3 -c in runtime paths"
 else
     ok "no python3 -c in runtime paths"
 fi
-if grep -R "run_runner_helper" -n src/tool_runtime src/runner_http crates/webcodex-runner/src; then
+if grep -R "run_runner_helper" -n src/tool_runtime src/runner_http crates/codegpt-runner/src; then
     die "run_runner_helper in runtime paths"
 else
     ok "no run_runner_helper in runtime paths"
@@ -276,7 +276,7 @@ stage_start "static: no sensitive files tracked/staged"
 SENSITIVE_PATTERNS=(
     'runner.toml'
     'agent.toml'
-    'webcodex.env'
+    'codegpt.env'
     '.env'
     'project-registry'
     'projects.d'
@@ -306,7 +306,7 @@ if [ -z "$violations" ]; then
 else
     printf '[release][FAIL] sensitive files must not be tracked or staged:\n' >&2
     printf '%s\n' "$violations" >&2
-    printf '[release][FAIL] remove them from git (git rm --cached) and rotate WEBCODEX_TOKEN if exposed.\n' >&2
+    printf '[release][FAIL] remove them from git (git rm --cached) and rotate CODEGPT_TOKEN if exposed.\n' >&2
     die "sensitive files in git"
 fi
 

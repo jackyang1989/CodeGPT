@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-SOURCE_PACKAGE="$ROOT/npm/webcodex"
+SOURCE_PACKAGE="$ROOT/npm/codegpt"
 MANIFEST=""
 OUTPUT_DIR=""
 ALLOW_DEVELOPMENT=0
@@ -11,7 +11,7 @@ usage() {
     cat <<'EOF'
 Usage: scripts/stage_npm_release.sh --manifest <manifest.json> --output-dir <empty-dir> [--allow-development]
 
-Create an npm publication staging tree from WebCodex source plus a
+Create an npm publication staging tree from CodeGPT source plus a
 publish-ready manifest generated on the release control host. By default the
 source worktree must be clean and HEAD must be the exact immutable v<VERSION>
 tag. --allow-development is only for local/CI smoke and must never be used for
@@ -85,7 +85,7 @@ mkdir "$STAGE_DIR"
 # Release mode copies only tracked files from the immutable tag. Development
 # mode may exercise worktree edits, but never copies local credentials/builds.
 if [[ "$ALLOW_DEVELOPMENT" -eq 0 ]]; then
-    git -C "$ROOT" archive --format=tar HEAD:npm/webcodex | tar -C "$STAGE_DIR" -xf -
+    git -C "$ROOT" archive --format=tar HEAD:npm/codegpt | tar -C "$STAGE_DIR" -xf -
 else
     tar -C "$SOURCE_PACKAGE" \
         --exclude='./manifest.json' \

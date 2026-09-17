@@ -1,9 +1,9 @@
 use serde_json::{json, Value};
 use std::sync::Arc;
-use webcodex_core::runner_operation::RunnerOperation;
-use webcodex_core::runner_protocol::{RunnerJobUpdateRequest, RunnerRequest, RunnerResultPayload};
-use webcodex_core::ssh_resource::SshResourceRequest;
-use webcodex_runner_registry::RunnerRegistryTelemetry;
+use codegpt_core::runner_operation::RunnerOperation;
+use codegpt_core::runner_protocol::{RunnerJobUpdateRequest, RunnerRequest, RunnerResultPayload};
+use codegpt_core::ssh_resource::SshResourceRequest;
+use codegpt_runner_registry::RunnerRegistryTelemetry;
 
 #[derive(Debug, Default)]
 struct ToolRequestTraceRunnerRegistryTelemetry;
@@ -124,6 +124,6 @@ mod tests {
 }
 
 pub(crate) fn tool_request_trace_telemetry(
-) -> Arc<dyn webcodex_runner_registry::RunnerRegistryTelemetry> {
+) -> Arc<dyn codegpt_runner_registry::RunnerRegistryTelemetry> {
     Arc::new(ToolRequestTraceRunnerRegistryTelemetry)
 }

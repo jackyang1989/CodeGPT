@@ -10,10 +10,10 @@ use serde_json::{json, Value};
 use std::collections::HashSet;
 use std::time::Duration;
 use tokio::time::Instant;
-use webcodex_core::runtime_contract::{
+use codegpt_core::runtime_contract::{
     MAX_JOB_OBSERVATION_WAIT_SECS, MODEL_INSPECTION_MAX_RESULT_BYTES,
 };
-use webcodex_workspace::file_read_normalize::MODEL_RESULT_ENVELOPE_RESERVE_BYTES;
+use codegpt_workspace::file_read_normalize::MODEL_RESULT_ENVELOPE_RESERVE_BYTES;
 
 pub(crate) const MAX_OBSERVE_JOBS_ITEMS: usize = 8;
 pub(crate) const MAX_OBSERVE_JOBS_TAIL_LINES: usize = 200;
@@ -1073,11 +1073,11 @@ mod tests {
         assert_eq!(MAX_OBSERVE_JOBS_AGGREGATE_RESULT_BYTES, 512 * 1024);
         assert_eq!(MAX_OBSERVE_JOBS_TAIL_LINES, 200);
         assert_eq!(
-            webcodex_core::runtime_contract::DEFAULT_OBSERVE_JOBS_TAIL_LINES,
+            codegpt_core::runtime_contract::DEFAULT_OBSERVE_JOBS_TAIL_LINES,
             40
         );
         assert_eq!(
-            webcodex_core::runner_protocol::JOB_SNAPSHOT_STREAM_MAX_BYTES,
+            codegpt_core::runner_protocol::JOB_SNAPSHOT_STREAM_MAX_BYTES,
             64 * 1024
         );
     }

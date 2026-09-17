@@ -3,7 +3,7 @@ use super::{
     route, AuditClass::*, RouteAuth, RouteId::*, RouteMethod::*, RouteOpenApiProjection::*,
     RouteSpec, RouteSurface::*,
 };
-use webcodex_core::authority::{
+use codegpt_core::authority::{
     OAuthRouteScopePolicy::*, SCOPE_COMMUNICATION_MANAGE, SCOPE_COMMUNICATION_READ,
     SCOPE_PROJECT_READ, SCOPE_RUNTIME_READ, SCOPE_SESSION_COLLABORATE,
 };

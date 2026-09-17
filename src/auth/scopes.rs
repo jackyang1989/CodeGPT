@@ -1,4 +1,4 @@
-//! Scope definitions and validation for the WebCodex auth system.
+//! Scope definitions and validation for the CodeGPT auth system.
 //!
 //! Scopes are string-based permissions carried by authenticated principals.
 //! Bootstrap auth is treated as holding every scope; managed tokens, delegated
@@ -8,14 +8,14 @@ use std::collections::HashSet;
 
 use super::context::AuthContext;
 use crate::tool_runtime::metadata::lookup_tool_metadata;
-pub(crate) use webcodex_core::authority::ToolAuthorityPolicy as OAuthToolScopePolicy;
+pub(crate) use codegpt_core::authority::ToolAuthorityPolicy as OAuthToolScopePolicy;
 
 // ---------------------------------------------------------------------------
 // Scope constants
 // ---------------------------------------------------------------------------
 
 #[allow(unused_imports)]
-pub use webcodex_core::authority::{
+pub use codegpt_core::authority::{
     AGENT_SCOPES, COMMUNICATION_MANAGE_SCOPES, COMMUNICATION_READ_SCOPES, KNOWN_SCOPES,
     MEMORY_MANAGE_SCOPES, MEMORY_READ_SCOPES, SCOPE_ACCOUNT_MANAGE, SCOPE_ADMIN,
     SCOPE_AGENT_JOB_UPDATE, SCOPE_AGENT_POLL, SCOPE_AGENT_REGISTER, SCOPE_AGENT_RESULT,
@@ -118,7 +118,7 @@ pub(crate) fn scopes_to_string(scopes: &[String]) -> String {
 // remains special only for delegated-scope issuance and wire error framing.
 
 #[allow(unused_imports)]
-pub(crate) use webcodex_core::authority::{OAuthBodyAwarePolicy, OAuthRouteScopePolicy};
+pub(crate) use codegpt_core::authority::{OAuthBodyAwarePolicy, OAuthRouteScopePolicy};
 
 pub(crate) fn oauth_route_scope_policy_for_path_method(
     method: &str,

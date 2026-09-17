@@ -286,7 +286,7 @@ fn bind_mcp_app(
 ) -> String {
     let binding_id = format!(
         "wc_host_binding_{}",
-        webcodex_core::compact::random_suffix::<16>()
+        codegpt_core::compact::random_suffix::<16>()
     );
     let result = runtime.agent_continuation_bind(
         None,
@@ -2914,7 +2914,7 @@ fn mcp_app_binding_input_requires_canonical_view_fence() {
     let fixture = mcp_continuation_fixture("mcp-binding-input");
     let valid = format!(
         "wc_host_binding_{}",
-        webcodex_core::compact::encode([0xa0; 16])
+        codegpt_core::compact::encode([0xa0; 16])
     );
     for invalid in [
         String::new(),

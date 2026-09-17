@@ -196,7 +196,7 @@ fn parent_eof_signal() -> io::Result<tokio::sync::oneshot::Receiver<()>> {
 
     let (tx, rx) = tokio::sync::oneshot::channel();
     std::thread::Builder::new()
-        .name("webcodex-server-parent-lease".to_string())
+        .name("codegpt-server-parent-lease".to_string())
         .spawn(move || {
             let mut stdin = std::io::stdin();
             let mut buffer = [0_u8; 64];

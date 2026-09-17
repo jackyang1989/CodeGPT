@@ -19,19 +19,19 @@ data*
 
 # Local sensitive deployment config — NEVER commit these.
 # They contain real server URLs, tokens, and host paths. If a token was ever
-# committed or exposed, rotate WEBCODEX_TOKEN immediately.
+# committed or exposed, rotate CODEGPT_TOKEN immediately.
 /.env
-/.webcodex-bootstrap.receipt
+/.codegpt-bootstrap.receipt
 /runner.toml
 /agent.toml
 /project-registry/
 /projects.d/
 /*.local.toml
-/webcodex.env
+/codegpt.env
 
 # Generated publish-ready npm manifest. Release checksums are created on OE
 # after all native artifacts exist; only manifest.example.json is source-controlled.
-/npm/webcodex/manifest.json
+/npm/codegpt/manifest.json
 
 # Generated documentation output (explicit rules, so docs/ stays tracked).
 /docs-generated/

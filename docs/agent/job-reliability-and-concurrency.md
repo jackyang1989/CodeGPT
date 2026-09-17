@@ -342,7 +342,7 @@ The current contract is implemented and tested primarily in:
 - `src/shell_client/reconciliation.rs` — inventory validation and reconstruction;
 - `src/tool_runtime/observe_jobs.rs` and `src/job_observation.rs` — bounded
   observation/token behavior;
-- `crates/webcodex-runner/src/main.rs` — Runner `JobManager`, inventory, queue,
+- `crates/codegpt-runner/src/main.rs` — Runner `JobManager`, inventory, queue,
   and slot reservation;
 - `docs/RUNNER.md` — public Job/concurrency behavior;
 - `docs/TESTING.md` — real-process restart/reconciliation acceptance coverage.

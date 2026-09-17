@@ -117,7 +117,7 @@ impl ToolRuntime {
             );
         };
         let sender_peer_id = sender_window.peer_id();
-        let input = webcodex_store::NewPeerMessage {
+        let input = codegpt_store::NewPeerMessage {
             principal_kind,
             principal_id,
             sender_window_key: sender_window.key().to_string(),
@@ -256,7 +256,7 @@ impl ToolRuntime {
         }
 
         let oversized = crate::json_measurement::serialized_json_len(result).is_ok_and(|bytes| {
-            bytes > webcodex_workspace::file_read_range::MAX_SERIALIZED_OUTPUT_BYTES
+            bytes > codegpt_workspace::file_read_range::MAX_SERIALIZED_OUTPUT_BYTES
         });
         if !oversized {
             return;
@@ -296,7 +296,7 @@ impl ToolRuntime {
     }
 
     /// Decorate an MCP CallToolResult produced by a specialized fast path that bypasses the
-    /// canonical ToolRuntime kernel. Standard WebCodex structuredContent keeps Peer overlays
+    /// canonical ToolRuntime kernel. Standard CodeGPT structuredContent keeps Peer overlays
     /// inside `output`; native Plugin/MCP/SSH structuredContent receives the same fields at its
     /// root. `structuredContent` is the canonical model-readable channel for both shapes.
     pub(crate) fn add_peer_collaboration_to_mcp_call_result(

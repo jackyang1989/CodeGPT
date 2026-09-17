@@ -30,16 +30,16 @@ async function exchange(lines, plugin = definePlugin({ tools: [] })) {
   };
 }
 
-test("initialize requires the exact webcodex-plugin-v1 version", async () => {
+test("initialize requires the exact codegpt-plugin-v1 version", async () => {
   const ok = await exchange([
-    JSON.stringify({ jsonrpc: "2.0", id: 1, method: "initialize", params: { protocolVersion: "webcodex-plugin-v1" } }),
+    JSON.stringify({ jsonrpc: "2.0", id: 1, method: "initialize", params: { protocolVersion: "codegpt-plugin-v1" } }),
   ]);
   assert.deepEqual(ok.lines, [
-    { jsonrpc: "2.0", id: 1, result: { protocolVersion: "webcodex-plugin-v1" } },
+    { jsonrpc: "2.0", id: 1, result: { protocolVersion: "codegpt-plugin-v1" } },
   ]);
 
   const wrong = await exchange([
-    JSON.stringify({ jsonrpc: "2.0", id: 2, method: "initialize", params: { protocolVersion: "webcodex-plugin-v2" } }),
+    JSON.stringify({ jsonrpc: "2.0", id: 2, method: "initialize", params: { protocolVersion: "codegpt-plugin-v2" } }),
   ]);
   assert.deepEqual(wrong.lines, [
     { jsonrpc: "2.0", id: 2, error: { code: -32602, message: "unsupported protocol version" } },

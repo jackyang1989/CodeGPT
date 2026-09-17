@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Crash-safe high-level orchestration for reversible WebCodex release steps.
+"""Crash-safe high-level orchestration for reversible CodeGPT release steps.
 
 The plan deliberately stops at irreversible human-authorization boundaries. It
 never creates/pushes a tag, creates/publishes a GitHub Release, publishes npm, or

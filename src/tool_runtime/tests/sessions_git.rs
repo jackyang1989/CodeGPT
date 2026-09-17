@@ -113,8 +113,8 @@ async fn git_log_parses_commits() {
     assert!(commits[0]["author_date"]
         .as_str()
         .is_some_and(|s| !s.is_empty()));
-    assert_eq!(commits[0]["author_name"], "WebCodex Test");
-    assert_eq!(commits[0]["author_email"], "webcodex-test@example.com");
+    assert_eq!(commits[0]["author_name"], "CodeGPT Test");
+    assert_eq!(commits[0]["author_email"], "codegpt-test@example.com");
     assert!(commits[0]["refs"].as_array().is_some());
 }
 
@@ -273,7 +273,7 @@ async fn git_log_retained_tail_never_advertises_a_complete_or_continuable_page()
     // record's prefix but leaves a perfectly parseable older commit behind.
     let stdout = record(&"x".repeat(300 * 1024))
         + &record("older")
-        + &format!("__WEBCODEX_GIT_LOG_HEAD__={}\u{1e}", "a".repeat(40));
+        + &format!("__CODEGPT_GIT_LOG_HEAD__={}\u{1e}", "a".repeat(40));
     let result = run_git_log_page_with_stdout("git-log-retained-tail", stdout, 2, 0).await;
     assert!(!result.success);
     assert_eq!(result.output["error_kind"], "source_incomplete");
@@ -489,7 +489,7 @@ async fn git_log_unborn_repository_is_an_empty_final_page() {
         "git-log-unborn",
         &request.request_id,
         0,
-        "__WEBCODEX_GIT_LOG_HEAD__=unborn\u{1e}",
+        "__CODEGPT_GIT_LOG_HEAD__=unborn\u{1e}",
         "",
     )
     .await;

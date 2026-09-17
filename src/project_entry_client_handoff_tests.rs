@@ -79,7 +79,7 @@ fn browser_backends_open_only_the_fixed_chatgpt_settings_target() {
 
 #[test]
 fn helper_children_remove_npm_wrapper_network_environment() {
-    let command = helper_command("webcodex-helper");
+    let command = helper_command("codegpt-helper");
     let envs: Vec<_> = command.as_std().get_envs().collect();
     for key in [
         "npm_config_https_proxy",
@@ -89,7 +89,7 @@ fn helper_children_remove_npm_wrapper_network_environment() {
         "npm_config_cafile",
         "npm_config_ca",
         "npm_config_strict_ssl",
-        "WEBCODEX_NPM_WRAPPER",
+        "CODEGPT_NPM_WRAPPER",
     ] {
         assert!(
             envs.iter()
@@ -140,7 +140,7 @@ async fn clipboard_helper_receives_exact_mcp_url_and_nothing_else() {
     assert!(
         !run_clipboard_command(
             &command,
-            "https://demo.trycloudflare.com/mcp\nwebcodex_temporary-secret"
+            "https://demo.trycloudflare.com/mcp\ncodegpt_temporary-secret"
         )
         .await,
         "adding any credential-like payload must no longer satisfy the exact helper contract"

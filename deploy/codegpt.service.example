@@ -1,0 +1,49 @@
+# systemd unit for the CodeGPT server.
+#
+# Copy to /etc/systemd/system/codegpt.service, then:
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now codegpt
+#
+# The server is a zero-project-config relay: it does NOT read a projects.toml
+# for runtime project discovery. Projects are registered by agents as
+# agent:<client_id>:<project_id>. Do not restore PROJECTS_CONFIG as the runtime
+# project source.
+#
+# Keep the server bound to 127.0.0.1 behind a reverse proxy that terminates
+# TLS. CODEGPT_TOKEN is the application-layer gate; TLS is the transport gate.
+
+[Unit]
+Description=CodeGPT runtime server (zero-config relay)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=codegpt
+Group=codegpt
+
+# Runtime data lives here (SQLite DB and durable runtime state). Persistent.
+StateDirectory=codegpt
+WorkingDirectory=/opt/codegpt
+
+ExecStart=/opt/codegpt/codegpt-server
+
+# Load secrets + public URL from the env file (chmod 0600, owner root).
+# See codegpt.env.example for the full set.
+EnvironmentFile=/etc/codegpt/codegpt.env
+
+# Sensible defaults; override in the env file if needed.
+Environment=RUST_LOG=info
+
+Restart=always
+RestartSec=5
+
+# Hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/var/lib/codegpt
+
+[Install]
+WantedBy=multi-user.target

@@ -55,13 +55,13 @@ class PathRiskFixtureTests(unittest.TestCase):
         self.assertEqual(result["needs_desktop_frontend"], "false")
 
     def test_process_requires_windows_core_and_macos_without_desktop_package(self) -> None:
-        result = classify("crates/webcodex-process/src/lib.rs")
+        result = classify("crates/codegpt-process/src/lib.rs")
         self.assertEqual(result["needs_windows_core"], "true")
         self.assertEqual(result["needs_macos"], "true")
         self.assertEqual(result["needs_desktop_package"], "false")
 
     def test_runner_plugin_requires_windows_runner_and_macos(self) -> None:
-        result = classify("crates/webcodex-runner/src/webcodex_runner/plugin.rs")
+        result = classify("crates/codegpt-runner/src/codegpt_runner/plugin.rs")
         self.assertEqual(result["needs_windows_runner"], "true")
         self.assertEqual(result["needs_macos"], "true")
 
@@ -113,31 +113,31 @@ class PathRiskFixtureTests(unittest.TestCase):
                 self.assertIn("plugin-sdk-dogfood", result["categories"])
 
     def test_npm_installer_change_requires_native_windows_package_lane(self) -> None:
-        result = classify("npm/webcodex/install.js")
+        result = classify("npm/codegpt/install.js")
         self.assertEqual(result["needs_windows_package"], "true")
         self.assertEqual(result["needs_windows_desktop"], "false")
         self.assertEqual(result["needs_macos"], "false")
 
     def test_runner_shell_and_persistent_shell_require_windows_and_macos(self) -> None:
-        runner = classify("crates/webcodex-runner/src/webcodex_runner/shell.rs")
+        runner = classify("crates/codegpt-runner/src/codegpt_runner/shell.rs")
         self.assertEqual(runner["needs_windows"], "true")
         self.assertEqual(runner["needs_macos"], "true")
 
-        persistent = classify("crates/webcodex-persistent-shell/src/lib.rs")
+        persistent = classify("crates/codegpt-persistent-shell/src/lib.rs")
         self.assertEqual(persistent["needs_windows"], "true")
         self.assertEqual(persistent["needs_macos"], "true")
 
     def test_runner_process_owners_require_native_runner_lanes(self) -> None:
         for path in (
-            "crates/webcodex-runner/src/webcodex_runner/coding_agent.rs",
-            "crates/webcodex-runner/src/webcodex_runner/detached_job/tests.rs",
-            "crates/webcodex-runner/src/webcodex_runner/external_tools.rs",
-            "crates/webcodex-runner/src/webcodex_runner/job_manager.rs",
-            "crates/webcodex-runner/src/webcodex_runner/lsp/tests.rs",
-            "crates/webcodex-runner/src/webcodex_runner/mcp_gateway.rs",
-            "crates/webcodex-runner/src/webcodex_runner/projects.rs",
-            "crates/webcodex-runner/src/webcodex_runner/ssh.rs",
-            "crates/webcodex-runner/src/webcodex_runner/validation/execute.rs",
+            "crates/codegpt-runner/src/codegpt_runner/coding_agent.rs",
+            "crates/codegpt-runner/src/codegpt_runner/detached_job/tests.rs",
+            "crates/codegpt-runner/src/codegpt_runner/external_tools.rs",
+            "crates/codegpt-runner/src/codegpt_runner/job_manager.rs",
+            "crates/codegpt-runner/src/codegpt_runner/lsp/tests.rs",
+            "crates/codegpt-runner/src/codegpt_runner/mcp_gateway.rs",
+            "crates/codegpt-runner/src/codegpt_runner/projects.rs",
+            "crates/codegpt-runner/src/codegpt_runner/ssh.rs",
+            "crates/codegpt-runner/src/codegpt_runner/validation/execute.rs",
         ):
             with self.subTest(path=path):
                 result = classify(path)
@@ -155,7 +155,7 @@ class PathRiskFixtureTests(unittest.TestCase):
         self.assertEqual(npm["needs_windows_package"], "true")
         self.assertEqual(npm["needs_windows_desktop"], "false")
 
-        msi = classify("packaging/windows/webcodex-desktop.msi")
+        msi = classify("packaging/windows/codegpt-desktop.msi")
         self.assertEqual(msi["needs_windows_package"], "true")
         self.assertEqual(msi["needs_windows_desktop"], "true")
         self.assertEqual(msi["needs_macos"], "false")
@@ -166,7 +166,7 @@ class PathRiskFixtureTests(unittest.TestCase):
         self.assertEqual(result["needs_macos_desktop"], "true")
         self.assertEqual(result["needs_windows"], "false")
 
-        dmg = classify("packaging/macos/WebCodex.dmg")
+        dmg = classify("packaging/macos/CodeGPT.dmg")
         self.assertEqual(dmg["needs_macos"], "true")
         self.assertEqual(dmg["needs_macos_desktop"], "true")
         self.assertEqual(dmg["needs_windows"], "false")
@@ -197,21 +197,21 @@ class PathRiskFixtureTests(unittest.TestCase):
         self.assertIn("ci-policy", result["categories"])
 
     def test_mixed_docs_and_process_uses_highest_risk(self) -> None:
-        result = classify("docs/README.md", "crates/webcodex-process/src/windows.rs")
+        result = classify("docs/README.md", "crates/codegpt-process/src/windows.rs")
         self.assertEqual(result["needs_windows_core"], "true")
         self.assertEqual(result["needs_macos"], "true")
 
     def test_rename_into_risky_path_classifies_destination(self) -> None:
         result = classify(
             "docs/old.rs",
-            "crates/webcodex-process/src/renamed.rs",
+            "crates/codegpt-process/src/renamed.rs",
             statuses=("D", "A"),
         )
         self.assertEqual(result["needs_windows_core"], "true")
         self.assertEqual(result["needs_macos"], "true")
 
     def test_deleted_risky_file_still_requires_native(self) -> None:
-        result = classify("crates/webcodex-process/src/windows.rs", statuses=("D",))
+        result = classify("crates/codegpt-process/src/windows.rs", statuses=("D",))
         self.assertEqual(result["needs_windows_core"], "true")
         self.assertEqual(result["needs_macos"], "true")
 
@@ -339,7 +339,7 @@ class GitRangeIntegrationTests(unittest.TestCase):
                     encoding="utf-8",
                 )
                 sources.append(source)
-            runner = root / "crates" / "webcodex-runner" / "src" / "webcodex_runner" / "projects.rs"
+            runner = root / "crates" / "codegpt-runner" / "src" / "codegpt_runner" / "projects.rs"
             runner.parent.mkdir(parents=True, exist_ok=True)
             runner.write_text("pub fn managed() -> usize { 1 }\n" + "// runner filler\n" * 12000, encoding="utf-8")
             sources.append(runner)
@@ -373,7 +373,7 @@ class GitRangeIntegrationTests(unittest.TestCase):
             old.write_text("fn fixture() {}\n", encoding="utf-8")
             base = self.commit(root, "base")
 
-            new = root / "crates" / "webcodex-process" / "src" / "renamed.rs"
+            new = root / "crates" / "codegpt-process" / "src" / "renamed.rs"
             new.parent.mkdir(parents=True)
             subprocess.run(["git", "mv", str(old.relative_to(root)), str(new.relative_to(root))], cwd=root, check=True)
             head = self.commit(root, "rename")
@@ -391,7 +391,7 @@ class GitRangeIntegrationTests(unittest.TestCase):
                 sorted(
                     [
                         ("D", "docs/old.rs"),
-                        ("A", "crates/webcodex-process/src/renamed.rs"),
+                        ("A", "crates/codegpt-process/src/renamed.rs"),
                     ]
                 ),
             )

@@ -7,7 +7,7 @@
 //! embedded runtimes and tests pay nothing.
 
 use serde_json::Value;
-pub use webcodex_core::activity_contract::{ActivityRecord, ActivityScope, ActivityVisibility};
+pub use codegpt_core::activity_contract::{ActivityRecord, ActivityScope, ActivityVisibility};
 
 /// Project the already-authenticated root context into the protocol-neutral
 /// persistence scope. Credential hashes and live client ownership are never
@@ -97,10 +97,10 @@ mod tests {
     #[test]
     fn client_extraction_handles_runner_and_local_projects() {
         assert_eq!(
-            runner_client_from_project("agent:laptop:webcodex"),
+            runner_client_from_project("agent:laptop:codegpt"),
             Some("laptop")
         );
-        assert_eq!(runner_client_from_project("agent::webcodex"), None);
+        assert_eq!(runner_client_from_project("agent::codegpt"), None);
         assert_eq!(runner_client_from_project("demo"), None);
         assert_eq!(runner_client_from_project("agent:solo"), None);
     }

@@ -9,7 +9,7 @@ This page defines durable repository-maintenance policy for maintainers and cont
 - [`TESTING.md`](TESTING.md) defines test lanes and validation principles.
 - [`SECURITY.md`](../SECURITY.md) defines security boundaries and how to report sensitive vulnerabilities without exposing private details.
 - [`RELEASE_CHECKLIST.md`](RELEASE_CHECKLIST.md) and [`agent/release-process.md`](agent/release-process.md) define release readiness and publication.
-- [GitHub Issues](https://github.com/yyjeqhc/webcodex/issues) is the canonical queue for non-sensitive, safe-to-disclose actionable cross-branch maintenance work, technical debt, and follow-ups. Use the existing `priority:*` and `area:*` labels when they improve triage, but keep the issue body as the work contract.
+- [GitHub Issues](https://github.com/yyjeqhc/codegpt/issues) is the canonical queue for non-sensitive, safe-to-disclose actionable cross-branch maintenance work, technical debt, and follow-ups. Use the existing `priority:*` and `area:*` labels when they improve triage, but keep the issue body as the work contract.
 
 If a non-sensitive actionable item will not be completed in the current change, open or update a GitHub Issue instead of adding a competing debt/backlog Markdown file on a feature branch. Sensitive security findings must follow [`SECURITY.md`](../SECURITY.md) and must not be copied into a public Issue until the details are safe to disclose. Repository docs may explain durable rationale and future direction, but should not mirror Issue state.
 

@@ -1,30 +1,30 @@
-# Windows-native release artifact packaging for WebCodex.
+# Windows-native release artifact packaging for CodeGPT.
 #
-# Produces `webcodex-v<VERSION>-win32-<ARCH>.tar.gz` from three Windows release
+# Produces `codegpt-v<VERSION>-win32-<ARCH>.tar.gz` from three Windows release
 # binaries. This is the Windows release path: it must run on the matching native
 # Windows host with nothing but PowerShell and the built-in Windows tooling. It never
 # requires Git Bash, WSL, or Unix chmod/install/sha256sum.
 #
 # The archive keeps the current three-binary npm contract:
 #
-#   webcodex.exe webcodex-server.exe webcodex-runner.exe
+#   codegpt.exe codegpt-server.exe codegpt-runner.exe
 #
-# webcodex-server.exe is a supported local foreground/share runtime on Windows.
-# The three-binary package supports explicit `webcodex share` with Cloudflare,
+# codegpt-server.exe is a supported local foreground/share runtime on Windows.
+# The three-binary package supports explicit `codegpt share` with Cloudflare,
 # OpenAI Secure MCP Tunnel, or no tunnel. Managed Windows Server service lifecycle
 # remains unsupported and is not implied by packaging these binaries.
 #
 # Usage:
 #   powershell -ExecutionPolicy Bypass -File scripts\package_release_artifact.ps1
 #   powershell -ExecutionPolicy Bypass -File scripts\package_release_artifact.ps1 `
-#       -BinDir E:\webcodex\target\release -OutDir E:\webcodex\dist
+#       -BinDir E:\codegpt\target\release -OutDir E:\codegpt\dist
 #
 # Parameter defaults honor the same environment variables as the Unix
-# packaging script: WEBCODEX_RELEASE_BIN_DIR and WEBCODEX_RELEASE_OUT_DIR.
+# packaging script: CODEGPT_RELEASE_BIN_DIR and CODEGPT_RELEASE_OUT_DIR.
 #
 # Release builds must produce one shared build identity across the three
-# binaries. webcodex-core's build.rs honors WEBCODEX_BUILT_AT when set, so a
-# release build should pin it once (e.g. `$env:WEBCODEX_BUILT_AT = ...` before
+# binaries. codegpt-core's build.rs honors CODEGPT_BUILT_AT when set, so a
+# release build should pin it once (e.g. `$env:CODEGPT_BUILT_AT = ...` before
 # `cargo build --release`) to keep `built_at` identical across the packages;
 # see scripts/npm_install_windows_smoke.ps1 for the pattern.
 #
@@ -43,22 +43,22 @@ $ErrorActionPreference = "Stop"
 
 $Root = Split-Path -Parent $PSScriptRoot
 if (-not $BinDir) {
-    $BinDir = if ($env:WEBCODEX_RELEASE_BIN_DIR) {
-        $env:WEBCODEX_RELEASE_BIN_DIR
+    $BinDir = if ($env:CODEGPT_RELEASE_BIN_DIR) {
+        $env:CODEGPT_RELEASE_BIN_DIR
     } else {
         Join-Path $Root "target\release"
     }
 }
 if (-not $OutDir) {
-    $OutDir = if ($env:WEBCODEX_RELEASE_OUT_DIR) {
-        $env:WEBCODEX_RELEASE_OUT_DIR
+    $OutDir = if ($env:CODEGPT_RELEASE_OUT_DIR) {
+        $env:CODEGPT_RELEASE_OUT_DIR
     } else {
         Join-Path $Root "dist"
     }
 }
 
 if (-not $Version) {
-    $packageJson = Join-Path $Root "npm\webcodex\package.json"
+    $packageJson = Join-Path $Root "npm\codegpt\package.json"
     $Version = (Get-Content -LiteralPath $packageJson -Raw | ConvertFrom-Json).version
     if (-not $Version) {
         throw "cannot read package version from $packageJson"
@@ -69,8 +69,8 @@ if ($Version -notmatch '^[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za
 }
 
 if (-not $Platform) {
-    $Platform = if ($env:WEBCODEX_RELEASE_PLATFORM) {
-        $env:WEBCODEX_RELEASE_PLATFORM
+    $Platform = if ($env:CODEGPT_RELEASE_PLATFORM) {
+        $env:CODEGPT_RELEASE_PLATFORM
     } else {
         "win32-x64"
     }
@@ -82,8 +82,8 @@ if ($Platform -notin @("win32-x64", "win32-arm64")) {
 $BinDir = [System.IO.Path]::GetFullPath($BinDir)
 $OutDir = [System.IO.Path]::GetFullPath($OutDir)
 
-$BinaryNames = @("webcodex", "webcodex-server", "webcodex-runner")
-$ArchiveName = "webcodex-v$Version-$Platform.tar.gz"
+$BinaryNames = @("codegpt", "codegpt-server", "codegpt-runner")
+$ArchiveName = "codegpt-v$Version-$Platform.tar.gz"
 $Archive = Join-Path $OutDir $ArchiveName
 $ArchiveTmp = "$Archive.tmp"
 if ((Test-Path -LiteralPath $Archive) -and -not $AllowDevelopmentBuild) {

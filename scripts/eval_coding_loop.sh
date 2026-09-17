@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 set -uo pipefail
 
-# Minimal WebCodex coding-loop eval harness.
+# Minimal CodeGPT coding-loop eval harness.
 #
 # This harness measures deterministic runtime/tool-loop mechanics only. It
-# starts a local WebCodex server and agent, exposes a disposable local project,
+# starts a local CodeGPT server and agent, exposes a disposable local project,
 # runs three scripted cases through /api/tools/call, and emits a final JSON
 # summary as the last stdout line.
 
@@ -1011,7 +1011,7 @@ complete_case_session() {
 
 start_eval_services() {
     PORT="${EVAL_PORT:-$(find_free_port)}"
-    TMP_ROOT="$(mktemp -d -t webcodex-eval-coding-loop-XXXXXX)"
+    TMP_ROOT="$(mktemp -d -t codegpt-eval-coding-loop-XXXXXX)"
     DATA_DIR="$TMP_ROOT/data"
     PROJECTS_DIR="$TMP_ROOT/project-registry"
     AGENT_TOML="$TMP_ROOT/runner.toml"
@@ -1031,10 +1031,10 @@ start_eval_services() {
         cd "$TEST_REPO" || exit 1
         git init -b main >/dev/null 2>&1
         git config user.email "eval@test.local"
-        git config user.name "WebCodex Eval"
+        git config user.name "CodeGPT Eval"
         cat >Cargo.toml <<'EOF'
 [package]
-name = "webcodex-eval-temp"
+name = "codegpt-eval-temp"
 version = "0.1.0"
 edition = "2021"
 
@@ -1053,7 +1053,7 @@ EOF
         cat >README.md <<'EOF'
 # Coding Loop Eval
 
-This disposable project is used by the WebCodex coding-loop eval harness.
+This disposable project is used by the CodeGPT coding-loop eval harness.
 It contains the phrase coding-loop eval so search_project_texts has a stable match.
 EOF
         cat >.gitignore <<'EOF'
@@ -1097,11 +1097,11 @@ EOF
     if [ -n "$SERVER_BIN" ]; then
         server_command=("$SERVER_BIN")
     else
-        server_command=("$CARGO_BIN" run --quiet -p webcodex --bin webcodex-server)
+        server_command=("$CARGO_BIN" run --quiet -p codegpt --bin codegpt-server)
     fi
-    WEBCODEX_ADDR="127.0.0.1:${PORT}" \
-    WEBCODEX_DATA="$DATA_DIR" \
-    WEBCODEX_TOKEN="$TOKEN" \
+    CODEGPT_ADDR="127.0.0.1:${PORT}" \
+    CODEGPT_DATA="$DATA_DIR" \
+    CODEGPT_TOKEN="$TOKEN" \
     RUST_LOG="info" \
     "${server_command[@]}" >"$SERVER_LOG" 2>&1 &
     SERVER_PID=$!
@@ -1117,7 +1117,7 @@ EOF
     if [ -n "$RUNNER_BIN" ]; then
         runner_command=("$RUNNER_BIN" --config "$AGENT_TOML")
     else
-        runner_command=("$CARGO_BIN" run --quiet -p webcodex-runner --bin webcodex-runner -- --config "$AGENT_TOML")
+        runner_command=("$CARGO_BIN" run --quiet -p codegpt-runner --bin codegpt-runner -- --config "$AGENT_TOML")
     fi
     "${runner_command[@]}" >"$RUNNER_LOG" 2>&1 &
     RUNNER_PID=$!

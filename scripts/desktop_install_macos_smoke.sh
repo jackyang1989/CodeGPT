@@ -42,7 +42,7 @@ case "$signing_mode" in adhoc|developer-id) ;; *) echo "invalid signing mode" >&
 [ -f "$dmg" ] && [ ! -L "$dmg" ] || { echo "DMG is missing or not a regular file: $dmg" >&2; exit 1; }
 [ -f "$stage_metadata" ] && [ ! -L "$stage_metadata" ] || { echo "stage metadata is missing: $stage_metadata" >&2; exit 1; }
 
-temp_root="$(mktemp -d "${TMPDIR:-/tmp}/webcodex-desktop-macos-smoke.XXXXXX")"
+temp_root="$(mktemp -d "${TMPDIR:-/tmp}/codegpt-desktop-macos-smoke.XXXXXX")"
 mount_point="$temp_root/mount"
 mkdir "$mount_point"
 attached=0
@@ -56,10 +56,10 @@ trap cleanup EXIT INT TERM
 
 hdiutil attach -readonly -nobrowse -mountpoint "$mount_point" "$dmg" >/dev/null
 attached=1
-app="$mount_point/WebCodex Desktop.app"
-[ -d "$app/Contents" ] || { echo "WebCodex Desktop.app is missing from DMG" >&2; exit 1; }
-runtime_dir="$app/Contents/Resources/webcodex-runtime"
-[ -d "$runtime_dir" ] || { echo "bundled WebCodex runtime directory is missing" >&2; exit 1; }
+app="$mount_point/CodeGPT Desktop.app"
+[ -d "$app/Contents" ] || { echo "CodeGPT Desktop.app is missing from DMG" >&2; exit 1; }
+runtime_dir="$app/Contents/Resources/codegpt-runtime"
+[ -d "$runtime_dir" ] || { echo "bundled CodeGPT runtime directory is missing" >&2; exit 1; }
 
 python3 - "$stage_metadata" "$version" "$source_sha" "$built_at" "$platform" "$signing_mode" <<'PY'
 import json
@@ -79,7 +79,7 @@ if value.get("built_at") != int(built_at) or value.get("platform") != platform o
 if value.get("provenance") != "same_unsigned_runtime_input_before_platform_signing":
     raise SystemExit("Desktop staging metadata provenance mismatch")
 files = value.get("files")
-if not isinstance(files, dict) or set(files) != {"webcodex", "webcodex-server", "webcodex-runner"}:
+if not isinstance(files, dict) or set(files) != {"codegpt", "codegpt-server", "codegpt-runner"}:
     raise SystemExit("Desktop staging metadata runtime set mismatch")
 for name, item in files.items():
     if not isinstance(item, dict) or set(item) != {"filename", "size", "source_sha256", "staged_unsigned_sha256"}:
@@ -94,7 +94,7 @@ for name, item in files.items():
 PY
 
 short_source="$(printf '%s' "${source_sha:0:12}" | tr '[:upper:]' '[:lower:]')"
-for name in webcodex webcodex-server webcodex-runner; do
+for name in codegpt codegpt-server codegpt-runner; do
   binary="$runtime_dir/$name"
   [ -f "$binary" ] && [ ! -L "$binary" ] && [ -x "$binary" ] || { echo "bundled runtime missing: $name" >&2; exit 1; }
   actual="$("$binary" --version | head -n 1)"

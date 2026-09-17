@@ -95,9 +95,9 @@ fn legacy_runtime_parent_acls_are_hardened_before_future_children() {
     }
 
     let runtime_children = [
-        paths.data.join("webcodex.db"),
-        paths.data.join("webcodex.db-wal"),
-        paths.data.join("webcodex.db-shm"),
+        paths.data.join("codegpt.db"),
+        paths.data.join("codegpt.db-wal"),
+        paths.data.join("codegpt.db-shm"),
         paths.logs.join("server.log"),
         paths.logs.join("agent.log"),
     ];
@@ -152,13 +152,13 @@ fn runtime_private_state_preflight_rejects_direct_reparse_parent() {
 fn legacy_runtime_file_acls_are_migrated_without_changing_contents() {
     let (_temp, paths) = legacy_paths("legacy-runtime-acls");
     let files = [
-        (paths.data.join("webcodex.db"), b"legacy-main-db".as_slice()),
+        (paths.data.join("codegpt.db"), b"legacy-main-db".as_slice()),
         (
-            paths.data.join("webcodex.db-wal"),
+            paths.data.join("codegpt.db-wal"),
             b"legacy-existing-wal".as_slice(),
         ),
         (
-            paths.data.join("webcodex.db-shm"),
+            paths.data.join("codegpt.db-shm"),
             b"legacy-existing-shm".as_slice(),
         ),
         (
@@ -201,14 +201,14 @@ fn legacy_runtime_file_acls_are_migrated_without_changing_contents() {
 #[test]
 fn legacy_runtime_acl_migration_does_not_create_absent_sqlite_sidecars() {
     let (_temp, paths) = legacy_paths("legacy-absent-sidecars");
-    let db = paths.data.join("webcodex.db");
+    let db = paths.data.join("codegpt.db");
     let server_log = paths.logs.join("server.log");
     fs::write(&db, b"legacy-db").unwrap();
     fs::write(&server_log, b"legacy-log\n").unwrap();
     set_broad_test_file_dacl(&db).unwrap();
     set_broad_test_file_dacl(&server_log).unwrap();
-    let wal = paths.data.join("webcodex.db-wal");
-    let shm = paths.data.join("webcodex.db-shm");
+    let wal = paths.data.join("codegpt.db-wal");
+    let shm = paths.data.join("codegpt.db-shm");
     assert!(!wal.exists());
     assert!(!shm.exists());
 
@@ -228,7 +228,7 @@ fn legacy_runtime_acl_migration_rejects_direct_reparse_file() {
     let (temp, paths) = legacy_paths("legacy-reparse");
     let target = temp.path().join("outside-runtime-state.db");
     fs::write(&target, b"must-stay-untouched").unwrap();
-    let link = paths.data.join("webcodex.db");
+    let link = paths.data.join("codegpt.db");
     symlink_file(&target, &link).expect("Windows test host must support file symlinks");
     assert!(fs::symlink_metadata(&link)
         .unwrap()

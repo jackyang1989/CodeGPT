@@ -10,7 +10,7 @@ use std::process::{Command, Stdio};
 use std::sync::{Arc, Mutex};
 use tokio::sync::Notify;
 use tokio::task::JoinHandle;
-use webcodex_process::{GracefulTermination, ManagedChild};
+use codegpt_process::{GracefulTermination, ManagedChild};
 
 const LOG_LINES: usize = 80;
 const LOG_LINE_BYTES: usize = 2048;
@@ -263,7 +263,7 @@ impl ProcessSupervisor {
             DesktopError::new(
                 "process_start_failed",
                 format!("Could not start the {kind:?} process"),
-                "Check the configured WebCodex binaries and retry.",
+                "Check the configured CodeGPT binaries and retry.",
             )
             .with_details(serde_json::json!({ "io_kind": format!("{:?}", error.kind()) }))
         })?;
@@ -625,7 +625,7 @@ mod tests {
     #[tokio::test]
     async fn local_parent_liveness_lease_closes_on_desktop_stop() {
         let marker = std::env::temp_dir().join(format!(
-            "webcodex-desktop-local-parent-eof-{}-{}",
+            "codegpt-desktop-local-parent-eof-{}-{}",
             std::process::id(),
             std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
@@ -637,7 +637,7 @@ mod tests {
         command.args([
             "-c",
             "cat >/dev/null; printf eof > \"$1\"",
-            "webcodex-parent-eof",
+            "codegpt-parent-eof",
             marker_arg.as_str(),
         ]);
 
@@ -660,7 +660,7 @@ mod tests {
     #[tokio::test]
     async fn quick_share_eof_stop_remains_green() {
         let marker = std::env::temp_dir().join(format!(
-            "webcodex-desktop-quick-share-eof-{}-{}",
+            "codegpt-desktop-quick-share-eof-{}-{}",
             std::process::id(),
             std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
@@ -672,7 +672,7 @@ mod tests {
         command.args([
             "-c",
             "cat >/dev/null; printf eof > \"$1\"",
-            "webcodex-quick-share-eof",
+            "codegpt-quick-share-eof",
             marker_arg.as_str(),
         ]);
 
@@ -694,7 +694,7 @@ mod tests {
     async fn desktop_real_process_windows_regular_tunnel_stop_closes_stdin_for_canonical_graceful_shutdown(
     ) {
         let marker = std::env::temp_dir().join(format!(
-            "webcodex-desktop-regular-tunnel-eof-{}-{}",
+            "codegpt-desktop-regular-tunnel-eof-{}-{}",
             std::process::id(),
             std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)

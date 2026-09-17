@@ -2,15 +2,15 @@
 set -euo pipefail
 
 # ============================================================================
-# WebCodex — Zero-Config Agent Transport E2E Smoke
+# CodeGPT — Zero-Config Agent Transport E2E Smoke
 #
-# Starts a real `webcodex` server and a `webcodex-runner` connected over
+# Starts a real `codegpt` server and a `codegpt-runner` connected over
 # the selected agent transport, defaulting to WebSocket, then exercises the
 # full GPT Actions + MCP surface via curl to prove the runtime is wired
 # end-to-end on a single host.
 #
 # What this proves:
-#   - Server boots with WEBCODEX_TOKEN auth and no server-side projects.toml.
+#   - Server boots with CODEGPT_TOKEN auth and no server-side projects.toml.
 #   - Agent registers over the selected transport and announces a project.
 #   - listProjects / getRuntimeStatus see the agent-registered project.
 #   - read_files / getProjectGitStatus route to the agent.
@@ -36,8 +36,8 @@ set -euo pipefail
 #                       seconds to idle before the keepalive-online recheck
 #                       (default: 2; raise to ~35 to span a real ping/pong)
 #   E2E_SKIP_RUN        if set to "1", skip execution and only syntax-check
-#   E2E_SERVER_BIN      existing webcodex-server executable; skips server `cargo run`
-#   E2E_RUNNER_BIN      existing webcodex-runner executable; skips runner `cargo run`
+#   E2E_SERVER_BIN      existing codegpt-server executable; skips server `cargo run`
+#   E2E_RUNNER_BIN      existing codegpt-runner executable; skips runner `cargo run`
 #   CARGO_BIN           cargo binary (default: cargo; used when an override is absent)
 #
 # Exit codes:
@@ -323,7 +323,7 @@ fi
 PORT="${E2E_PORT:-$(find_free_port)}"
 BASE="http://127.0.0.1:${PORT}"
 
-TMP_ROOT="$(mktemp -d -t webcodex-e2e-XXXXXX)"
+TMP_ROOT="$(mktemp -d -t codegpt-e2e-XXXXXX)"
 DATA_DIR="$TMP_ROOT/data"
 PROJECTS_DIR="$TMP_ROOT/project-registry"
 AGENT_TOML="$TMP_ROOT/runner.toml"
@@ -340,7 +340,7 @@ log "temp root: $TMP_ROOT"
     git init -b main >/dev/null 2>&1
     git config user.email "e2e@test.local"
     git config user.name "E2E Smoke"
-    printf '# Smoke Project\n\nUsed by the webcodex E2E harness.\n' > README.md
+    printf '# Smoke Project\n\nUsed by the codegpt E2E harness.\n' > README.md
     printf 'fn main() { println!("smoke"); }\n' > src.rs 2>/dev/null || {
         mkdir -p src
         printf 'fn main() { println!("smoke"); }\n' > src/main.rs
@@ -360,7 +360,7 @@ description = "E2E smoke project"
 EOF
 
 # Agent config: WebSocket preferred transport. owner is arbitrary because
-# WEBCODEX_TOKEN auth marks the principal as bootstrap (any owner allowed).
+# CODEGPT_TOKEN auth marks the principal as bootstrap (any owner allowed).
 cat > "$AGENT_TOML" <<EOF
 server_url = "http://127.0.0.1:${PORT}"
 token = "${TOKEN}"
@@ -388,18 +388,18 @@ log "runtime project id: $RUNTIME_PROJECT_ID"
 
 if [ -n "$SERVER_BIN" ]; then
     log "starting server (existing binary: $SERVER_BIN)"
-    WEBCODEX_ADDR="127.0.0.1:${PORT}" \
-    WEBCODEX_DATA="$DATA_DIR" \
-    WEBCODEX_TOKEN="$TOKEN" \
+    CODEGPT_ADDR="127.0.0.1:${PORT}" \
+    CODEGPT_DATA="$DATA_DIR" \
+    CODEGPT_TOKEN="$TOKEN" \
     RUST_LOG="info" \
     "$SERVER_BIN" >"$SERVER_LOG" 2>&1 &
 else
-    log "starting server (cargo run -p webcodex --bin webcodex-server)"
-    WEBCODEX_ADDR="127.0.0.1:${PORT}" \
-    WEBCODEX_DATA="$DATA_DIR" \
-    WEBCODEX_TOKEN="$TOKEN" \
+    log "starting server (cargo run -p codegpt --bin codegpt-server)"
+    CODEGPT_ADDR="127.0.0.1:${PORT}" \
+    CODEGPT_DATA="$DATA_DIR" \
+    CODEGPT_TOKEN="$TOKEN" \
     RUST_LOG="info" \
-    "$CARGO_BIN" run --quiet -p webcodex --bin webcodex-server >"$SERVER_LOG" 2>&1 &
+    "$CARGO_BIN" run --quiet -p codegpt --bin codegpt-server >"$SERVER_LOG" 2>&1 &
 fi
 SERVER_PID=$!
 
@@ -418,8 +418,8 @@ if [ -n "$RUNNER_BIN" ]; then
     log "starting agent (existing binary: $RUNNER_BIN, transport=$TRANSPORT)"
     "$RUNNER_BIN" --config "$AGENT_TOML" >"$RUNNER_LOG" 2>&1 &
 else
-    log "starting agent (cargo run -p webcodex-runner --bin webcodex-runner, transport=$TRANSPORT)"
-    "$CARGO_BIN" run --quiet -p webcodex-runner --bin webcodex-runner -- --config "$AGENT_TOML" >"$RUNNER_LOG" 2>&1 &
+    log "starting agent (cargo run -p codegpt-runner --bin codegpt-runner, transport=$TRANSPORT)"
+    "$CARGO_BIN" run --quiet -p codegpt-runner --bin codegpt-runner -- --config "$AGENT_TOML" >"$RUNNER_LOG" 2>&1 &
 fi
 RUNNER_PID=$!
 
@@ -576,7 +576,7 @@ fi
 # 6. MCP surface smoke
 # ----------------------------------------------------------------------------
 
-# WebCodex has one model-facing runtime contract: Adaptive Runtime. Legacy
+# CodeGPT has one model-facing runtime contract: Adaptive Runtime. Legacy
 # initialize no longer reports a selectable runtime taxonomy. Ordinary
 # model-visible long-tail tools stay behind call_runtime_tool.
 log "expected runtime: Adaptive Runtime"
@@ -1056,7 +1056,7 @@ log "---- MCP App console (/console) ----"
 # The console HTML shell is public (no Bearer auth) and must reference the
 # bundled assets. It never embeds the token.
 console_html="$(curl -sS --max-time 10 "http://127.0.0.1:${PORT}/console" 2>/dev/null)"
-if echo "$console_html" | grep -q "WebCodex" && \
+if echo "$console_html" | grep -q "CodeGPT" && \
    echo "$console_html" | grep -q "/console/app.js"; then
     pass "GET /console serves public HTML shell"
 else
@@ -1083,7 +1083,7 @@ case "$js_type" in
         fail "GET /console/app.js content-type '$js_type' is not a JS type"
         ;;
 esac
-if echo "$console_js" | grep -qi "WEBCODEX_TOKEN\|wc_agent_secret"; then
+if echo "$console_js" | grep -qi "CODEGPT_TOKEN\|wc_agent_secret"; then
     console_js_ok=0
     fail "GET /console/app.js contains token or credential material"
 fi
@@ -1092,10 +1092,10 @@ if [ "$console_js_ok" = "1" ]; then
 fi
 
 # The bundle must never embed the token key in the DOM.
-if echo "$console_html" | grep -qi "webcodex_token"; then
-    fail "console HTML leaked WEBCODEX_TOKEN literal"
+if echo "$console_html" | grep -qi "codegpt_token"; then
+    fail "console HTML leaked CODEGPT_TOKEN literal"
 else
-    pass "console HTML does not leak WEBCODEX_TOKEN literal"
+    pass "console HTML does not leak CODEGPT_TOKEN literal"
 fi
 
 # The protected data API must still reject unauthenticated requests even though

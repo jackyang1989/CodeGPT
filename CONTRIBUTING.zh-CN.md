@@ -1,10 +1,10 @@
-# 参与 WebCodex 开发
+# 参与 CodeGPT 开发
 
 [English](CONTRIBUTING.md)
 
-欢迎通过 bug 报告、文档改进、focused fix，以及符合 WebCodex 当前产品方向的新能力参与贡献。
+欢迎通过 bug 报告、文档改进、focused fix，以及符合 CodeGPT 当前产品方向的新能力参与贡献。
 
-也欢迎直接使用 WebCodex 本身或其他 coding agent 来完成贡献。无论使用什么工具，提交者仍需要负责检查最终 diff、验证改动，并确认其中不包含 credential 或机器私有数据。
+也欢迎直接使用 CodeGPT 本身或其他 coding agent 来完成贡献。无论使用什么工具，提交者仍需要负责检查最终 diff、验证改动，并确认其中不包含 credential 或机器私有数据。
 
 ## 开始之前
 
@@ -17,7 +17,7 @@
 
 一个有帮助的 bug 报告可以根据实际情况包含：
 
-- WebCodex version 或 commit；
+- CodeGPT version 或 commit；
 - Server 和 Runner 的操作系统；
 - 使用的客户端，例如 ChatGPT、Claude、Gemini、Grok 或其他 MCP client；
 - Bearer、OAuth 等认证方式；

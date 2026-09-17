@@ -122,11 +122,11 @@ const projectErrors = new Set([
   "project_not_loaded",
 ]);
 const enrollmentErrors = new Set([
-  "webcodex_command_failed",
-  "webcodex_command_start_failed",
-  "webcodex_command_input_failed",
-  "webcodex_command_wait_failed",
-  "webcodex_command_timeout",
+  "codegpt_command_failed",
+  "codegpt_command_start_failed",
+  "codegpt_command_input_failed",
+  "codegpt_command_wait_failed",
+  "codegpt_command_timeout",
 ]);
 const tunnelErrors = new Set([
   "tunnel_unavailable",
@@ -153,7 +153,7 @@ export function desktopErrorPresentation(error: DesktopError, t: Translate): Err
   if (enrollmentErrors.has(error.code)) return { title: t("error.enrollmentTitle"), action: t("error.enrollmentAction") };
   if (tunnelErrors.has(error.code)) return { title: t("error.tunnelTitle"), action: t("error.tunnelAction") };
   if (processErrors.has(error.code)) return { title: t("error.processTitle"), action: t("error.processAction") };
-  if (error.code === "webcodex_contract_invalid") return { title: t("error.contractTitle"), action: t("error.contractAction") };
+  if (error.code === "codegpt_contract_invalid") return { title: t("error.contractTitle"), action: t("error.contractAction") };
   if (error.code === "unsupported_topology" || error.code === "quick_share_provider_invalid") return { title: t("error.topologyTitle"), action: t("error.topologyAction") };
   if (error.code === "desktop_operation_busy" || error.code === "desktop_operation_not_cancellable") return { title: t("error.operationBusyTitle"), action: t("error.operationBusyAction") };
   if (error.code === "desktop_operation_not_current") return { title: t("error.operationStaleTitle"), action: t("error.operationStaleAction") };

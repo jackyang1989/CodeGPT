@@ -1,6 +1,6 @@
 # Agent Architecture Decisions
 
-Standing design context for agents working on WebCodex. **Executable constraints
+Standing design context for agents working on CodeGPT. **Executable constraints
 live in [`AGENTS.md`](../../AGENTS.md).** This file explains durable product
 structure so agents do not re-litigate settled shape during ordinary tasks.
 
@@ -12,7 +12,7 @@ Related product docs: [`ARCHITECTURE.md`](../ARCHITECTURE.md),
 
 ## 1. Session dual model (architecture, not an operation checklist)
 
-WebCodex has **two different "session" concepts**. They share a name in casual
+CodeGPT has **two different "session" concepts**. They share a name in casual
 speech but are **not interchangeable** and must not be merged by accident.
 Full naming, lifecycle, compatibility, and non-goals:
 [`session-model.md`](session-model.md).
@@ -60,7 +60,7 @@ this concrete Agent/Conversation model. Standing rules are:
 - **Goal** is an independent `wc_goal_*` high-level durable intent/control domain. It is not an Agent Task, Workflow Session, Job, Project selector, execution primitive, or scheduler; Goal identity/status/revision/correlation is never a bearer credential;
 - Goal selection is exact durable identity or explicit creation only. Never infer the current Goal from Project, ClientWindow, credential, MCP/OpenAI session data, Conversation membership, Workflow Session, or shared timing;
 - Goal lifecycle is currently closed to `active | completed | cancelled`. `finish_coding_task`, AgentTask/TaskAttempt completion, Job terminal state, or validation evidence do not automatically transition a Goal;
-- ClientWindow liveness may be projected only as soft observational evidence from an exact authorized Goal through explicit Workflow Session correlations and re-authorized Project visibility. `last_seen` and `last_meaningful_activity` are distinct; five minutes without visible meaningful WebCodex activity may request human attention but is not proof of model failure and never mutates Goal/Task/Attempt state or authority;
+- ClientWindow liveness may be projected only as soft observational evidence from an exact authorized Goal through explicit Workflow Session correlations and re-authorized Project visibility. `last_seen` and `last_meaningful_activity` are distinct; five minutes without visible meaningful CodeGPT activity may request human attention but is not proof of model failure and never mutates Goal/Task/Attempt state or authority;
 - the first durable **Attention Event** kind is narrowly `agent_task_terminal`. Event is a semantic terminal fact, not a generic bus, scheduler, authority snapshot, or copied business payload. Exact TaskAttempt terminalization commits the required per-active-Goal Event/Wake facts atomically with Task/Attempt completion and keyed replay;
 - `attention_event` Wake is distinct from A4b `agent_task_attempt` Wake: the former targets the completed Task's explicit assignee for Goal re-evaluation and never requires the terminal Attempt to heartbeat/hold a live lease; the latter still means execute one exact active fenced Attempt;
 - the resumed attention turn must independently re-read exact Goal and AgentTask truth through ordinary authorization and explicitly decide Goal progression. Neither terminal Task outcome nor Event/Wake consumption auto-completes/reopens a Goal or auto-creates a successor Task;
@@ -93,7 +93,7 @@ drive-by fix.
 
 ### One coding runtime (standing)
 
-WebCodex has one coding runtime: ordinary ToolRuntime over Runner-registered Projects, Workflow Sessions, canonical Jobs, and normal read/search/edit/Git/validation/process/shell tools. `webcodex share` and `webcodex run` are lifecycle/auth/reachability conveniences around that runtime; they do not define Task/Run/Execution/Result/Approval business objects or a second model-facing tool registry.
+CodeGPT has one coding runtime: ordinary ToolRuntime over Runner-registered Projects, Workflow Sessions, canonical Jobs, and normal read/search/edit/Git/validation/process/shell tools. `codegpt share` and `codegpt run` are lifecycle/auth/reachability conveniences around that runtime; they do not define Task/Run/Execution/Result/Approval business objects or a second model-facing tool registry.
 
 Project-scoped credentials and project-share OAuth authenticate to a `ProjectGrant`. Runner visibility, canonical Project resolution, OAuth scopes, and normal permission policy enforce that boundary. Direct Adaptive tools and `call_runtime_tool` gateway dispatch share the same authority path. A guessed Runner/Project id grants no visibility and must not become an existence oracle. Project Agent Tokens remain Runner-transport credentials only.
 
@@ -141,14 +141,14 @@ authority mode.
 authoritative single evaluation at ToolRuntime **dispatch** before mutation;
 kernel reuses the attached decision and does not re-evaluate. Modes:
 `trusted_agent` auto-authorizes after hard safety; `restricted` denies runtime
-tools; unknown values and any set legacy `WEBCODEX_PERMISSION_MODE` fail
+tools; unknown values and any set legacy `CODEGPT_PERMISSION_MODE` fail
 closed (see §6). Full contract: [`permission-model.md`](permission-model.md).
 
 ---
 
 ## 2. Runtime/tool contract evolution (background)
 
-WebCodex is an **internal / self-use** project. There are no supported external
+CodeGPT is an **internal / self-use** project. There are no supported external
 API consumers, public SDKs, or third-party stable clients of the model-facing
 runtime tool surface today.
 
@@ -271,17 +271,17 @@ sensitive-path risks, and consistency errors are deterministic blockers.
 
 ## 6. Canonical two-mode authority with fail-closed legacy env rejection
 
-The permission-mode system (`WEBCODEX_PERMISSION_MODE` with
+The permission-mode system (`CODEGPT_PERMISSION_MODE` with
 `dev_auto_approve` / `audit_only` / `require_approval`) is replaced by one
 canonical authority mode.
 
 | Decision | Choice |
 |---|---|
-| Env var | `WEBCODEX_AUTHORITY_MODE` = `trusted_agent` \| `restricted` |
+| Env var | `CODEGPT_AUTHORITY_MODE` = `trusted_agent` \| `restricted` |
 | Default (unset/empty) | `trusted_agent`; source reported as `default` |
 | `trusted_agent` | Consequential runtime tools auto-execute after hard safety with no approval interruptions; external release actions remain user-task-scoped; every permission-bearing call records an auditable ledger decision (`policy=trusted_agent`, `status=auto_approved`, `reason=trusted_agent_authority`) |
 | `restricted` | Consequential runtime tools deny (`restricted_requires_human_authorization`); there is no separate Connector approval loop |
-| Legacy env set | Unambiguous legacy values migrate: `dev_auto_approve` → `trusted_agent`, `require_approval` → `restricted`; legacy-only configuration reports `migrated_env:WEBCODEX_PERMISSION_MODE`. Unknown or conflicting legacy/current values remain invalid and fail closed with source `rejected_legacy_env:WEBCODEX_PERMISSION_MODE` |
+| Legacy env set | Unambiguous legacy values migrate: `dev_auto_approve` → `trusted_agent`, `require_approval` → `restricted`; legacy-only configuration reports `migrated_env:CODEGPT_PERMISSION_MODE`. Unknown or conflicting legacy/current values remain invalid and fail closed with source `rejected_legacy_env:CODEGPT_PERMISSION_MODE` |
 | Shared surfaces | Both modes share the same tool implementations, schemas, session model, evidence, and audit records |
 | Projection | `runtime_status` and internal full startup diagnostics report one canonical `authority` object; the sparse external `work_on_project` projection omits it. The old `permissions` profile object is deleted |
 
@@ -305,7 +305,7 @@ it never infers readiness from configuration.
 | Explicit Workflow targeting | Workflow Sessions have no implicit credential/window selection. Ordinary project tools without an explicit business Session or authorized wrapper recorder execute unlinked to Workflow Session state |
 | Full-runtime start/continue | `work_on_project(session_id=<id>)` continues exactly that authorized Active same-project Session; omission creates a fresh Workflow Session. Stable window or credential identity never selects a Workflow Session. `work_on_project` calls the shared coding workflow engine directly; there is no second internal ToolCall identity |
 | Canonical model coding bootstrap | `work_on_project` is the external runtime coding bootstrap. `registered_tool_specs` defines the canonical model-visible runtime universe used by discovery and generic ToolCall admission. There is one model-facing runtime contract: Adaptive Runtime. Canonical `ToolDefinition` rank defines direct admission/order; ordinary model-visible long-tail tools use `call_runtime_tool`; an admitted direct target may also use the gateway as an invocation fallback. Retired wire names such as `start_coding_task` fail closed before dispatch. |
-| Adaptive Runtime presentation | MCP and GPT Actions project the same canonical Adaptive routing policy. Protocol/App-only extensions are admitted independently by server-owned protocol capability and App metadata; they do not create another runtime surface. Direct/gateway dispatch preserves the target tool's scopes, Project authority, permission, argument, Runner capability, effect, and Session/ACK semantics. `WEBCODEX_MCP_COMPACT_SCHEMAS` changes MCP discovery schema projection only; unset defaults to compact discovery and explicit true/false overrides that projection. Runtime status, MCP initialize/discover/info, and tools/list audit summaries do not emit a redundant runtime-surface taxonomy. |
+| Adaptive Runtime presentation | MCP and GPT Actions project the same canonical Adaptive routing policy. Protocol/App-only extensions are admitted independently by server-owned protocol capability and App metadata; they do not create another runtime surface. Direct/gateway dispatch preserves the target tool's scopes, Project authority, permission, argument, Runner capability, effect, and Session/ACK semantics. `CODEGPT_MCP_COMPACT_SCHEMAS` changes MCP discovery schema projection only; unset defaults to compact discovery and explicit true/false overrides that projection. Runtime status, MCP initialize/discover/info, and tools/list audit summaries do not emit a redundant runtime-surface taxonomy. |
 | Meaningful-activity rule | `last_successful_tool_call` records only successful meaningful calls, scoped by principal/project/surface/session/tool. `runtime_status`, `list_tools`, `list_runners`, `list_projects`, and `tool_manifest` never refresh it. Bounded in-memory store; no arguments, outputs, or secrets |
 | Independence | Layers degrade independently; `not_observed` on one layer must not be collapsed into a global offline verdict |
 
@@ -373,7 +373,7 @@ The standing direction for model-facing execution is defined in
 5. **Optional host UI is an adapter, not an owner.** MCP Apps or another host may
    observe Jobs and later resume a model, but core execution cannot depend on
    Apps, MCP Tasks, MRTR, elicitation, progress extensions, or iframe state. MCP
-   App presentation is a Server-level optional adapter: `WEBCODEX_MCP_APPS_ENABLED`
+   App presentation is a Server-level optional adapter: `CODEGPT_MCP_APPS_ENABLED`
    defaults on and may disable App capability advertisement, descriptor linkage,
    presentation metadata, and static App resources without disabling canonical
    MCP tools/results or non-App resource delivery. If automatic model resume is
@@ -383,7 +383,7 @@ The standing direction for model-facing execution is defined in
    Goal/AgentTask orchestration, but the card is never the trigger or continuation
    owner. For Agent-bound continuation, the Agent Wake / Wake Delivery Attempt
    domain owns that logical continuation; Host/controller state is adapter-local
-   delivery state rather than a second WebCodex continuation truth.
+   delivery state rather than a second CodeGPT continuation truth.
 6. **Transport fallback must preserve execution semantics.** Polling, WebSocket,
    and QUIC may differ in delivery behavior, but none may silently duplicate a
    command or turn a transport stall into a false pre-start rejection.
@@ -426,7 +426,7 @@ Session, and registry state is migrated or quarantined deterministically rather
 than silently reinterpreted. MCP `structuredContent` remains the canonical
 machine-readable `tools/call` result; `content.text` is the concise human
 fallback by default. A named host that cannot expose `structuredContent` may use
-the explicit `WEBCODEX_MCP_TEXT_JSON_COMPAT=true` compatibility projection to
+the explicit `CODEGPT_MCP_TEXT_JSON_COMPAT=true` compatibility projection to
 mirror that same canonical JSON into standard text content without changing the
 source of truth.
 
@@ -440,15 +440,15 @@ choosing a winner; a directory containing neither creates/targets
 `runner.toml`. Explicit `--config PATH` remains exact and does not inspect a
 sibling filename. Explicit `--profile` similarly selects its authoritative
 profile directory before environment defaults are considered.
-`WEBCODEX_RUNNER_CONFIG` is the canonical default-path env override, while
-`WEBCODEX_AGENT_CONFIG` remains a legacy alias; setting both is an error only
+`CODEGPT_RUNNER_CONFIG` is the canonical default-path env override, while
+`CODEGPT_AGENT_CONFIG` remains a legacy alias; setting both is an error only
 when environment defaults are actually consulted.
 
 The same pre-`v0.4.0` normalization applies to the Runner-owned project
 registry: `project_registry_dir` and `project-registry/` are canonical for new
 state, while a sole legacy `projects_dir` field or `projects.d/` directory may
 continue to identify existing state in place. New and legacy fields together,
-or both default directory names together, fail closed; WebCodex does not merge,
+or both default directory names together, fail closed; CodeGPT does not merge,
 copy, rename, or choose between two registries implicitly. The registry remains
 a directory of Runner-owned project registration records, not a second workspace
 or project-root abstraction.
@@ -462,7 +462,7 @@ persists `registration_source = "auto_registered"` and does not persist a fake
 historical `kind = "auto_registered"` sentinel remains a compatibility fallback;
 a present new field is authoritative. This interpretation is kept separate from
 the raw record representation used for project revision/CAS hashing, so merely
-upgrading WebCodex does not change an unchanged legacy record's revision. During
+upgrading CodeGPT does not change an unchanged legacy record's revision. During
 rolling upgrades a new Runner may still project the historical sentinel on its
 inventory and path-operation wire results for a newly auto-registered project
 with no genuine kind so an old Server can classify it, while new Servers use the
@@ -486,7 +486,7 @@ baseline capabilities, `client_id`, `agent_project_id`, or runtime project ids.
 
 Other older `agent_*` names below have concrete token, persisted-state, or wire
 consumers and are therefore retained rather than cosmetically duplicated. In
-particular, `WEBCODEX_AGENT_TOKEN`, `wc_agent_*`, `agent_instance_id`, runtime
+particular, `CODEGPT_AGENT_TOKEN`, `wc_agent_*`, `agent_instance_id`, runtime
 project ids of the form `agent:<client_id>:<project_id>`, and established
 DB/wire `agent_*` fields keep their existing names. This local filename migration does not imply
 a Server/Runner protocol-generation or wire-identity rename.

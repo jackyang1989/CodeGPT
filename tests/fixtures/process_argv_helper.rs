@@ -1,5 +1,5 @@
 //! Standalone test fixture compiled with `rustc` by structured-process tests.
-//! It has no WebCodex dependencies and never invokes a shell.
+//! It has no CodeGPT dependencies and never invokes a shell.
 
 use std::io::Read;
 use std::time::Duration;

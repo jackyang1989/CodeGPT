@@ -1,4 +1,4 @@
-# Using WebCodex Desktop
+# Using CodeGPT Desktop
 
 [English](desktop-guide.md) | [简体中文](desktop-guide.zh-CN.md)
 
@@ -6,7 +6,7 @@ Desktop prepares local projects and manages connections. You ask for work in Cha
 
 ## First use
 
-1. Choose **Use WebCodex on this computer** on the welcome page, the recommended personal setup.
+1. Choose **Use CodeGPT on this computer** on the welcome page, the recommended personal setup.
 2. Click **Choose folder** and select the actual project you want AI to use. Review the project path at the top, then apply the setup.
 3. Tunnel presence checks live under **Optional: check ChatGPT tunnel configuration**. Enter the Tunnel ID and API key and click Save configuration to prefer the local file without restarting. You can also prepare the local project before configuring a Tunnel. If configuration is present, you can opt into connecting ChatGPT after setup.
 4. On Home, confirm the current project path. The three steps are **Prepare your project → Connect your AI client → Start working**.
@@ -51,7 +51,7 @@ Connection shows current status and available controls first, followed by ChatGP
 
 **Settings** contains language, launch at login, Tunnel networking, and diagnostics. You can also switch language at the bottom of the sidebar. Supported languages are 简体中文, English, 日本語, 한국어, Deutsch, and Français. The selection is remembered across restarts, and activity times follow the selected locale. System tray menus and raw backend diagnostics remain in English; the operating system controls native file-picker language.
 
-Closing the window hides it in the menu bar or system tray; the runtime continues in the background. **Quit WebCodex** in the tray ends Desktop and its owned processes. Stopping the Desktop-managed runtime on Home also updates the saved runtime startup preference. These controls do not terminate independently started WebCodex processes.
+Closing the window hides it in the menu bar or system tray; the runtime continues in the background. **Quit CodeGPT** in the tray ends Desktop and its owned processes. Stopping the Desktop-managed runtime on Home also updates the saved runtime startup preference. These controls do not terminate independently started CodeGPT processes.
 
 Use **⌘ + 1–5** on macOS or **Ctrl + 1–5** on Windows to switch between the five pages. Navigation shortcuts also work inside inputs and language selectors; ordinary typing and text-editing shortcuts remain available. Use Tab to focus controls and Enter to activate them; diagnostic disclosure controls also support the keyboard.
 

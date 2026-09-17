@@ -60,7 +60,7 @@ export function SettingsPanel({
     }
   };
   return (
-    <section className="page-section" aria-labelledby="settings-title" data-webcodex-page="settings">
+    <section className="page-section" aria-labelledby="settings-title" data-codegpt-page="settings">
       <div className="eyebrow">{t("settings.eyebrow")}</div>
       <h1 id="settings-title">{t("settings.title")}</h1>
       <p className="lede">{t("settings.description")}</p>
@@ -73,7 +73,7 @@ export function SettingsPanel({
             id="desktop-settings-locale"
             value={locale}
             onChange={(event) => setLocale(event.target.value as typeof locale)}
-            data-webcodex-control="locale"
+            data-codegpt-control="locale"
           >
             {LANGUAGES.map((language) => <option key={language.value} value={language.value}>{language.label}</option>)}
           </select>
@@ -93,7 +93,7 @@ export function SettingsPanel({
             checked={launchAtLogin ?? false}
             onChange={(event) => void updateLaunchAtLogin(event.target.checked)}
             disabled={launchAtLogin === null || savingLaunchAtLogin}
-            data-webcodex-control="launch-at-login"
+            data-codegpt-control="launch-at-login"
           />
         </article>
         {launchAtLoginError && <SettingsError error={launchAtLoginError} />}
@@ -109,7 +109,7 @@ export function SettingsPanel({
               value={proxyMode}
               onChange={(event) => setProxyMode(event.target.value as TunnelProxyMode)}
               disabled={savingProxy || operationBusy}
-              data-webcodex-control="tunnel-proxy-mode"
+              data-codegpt-control="tunnel-proxy-mode"
             >
               <option value="auto">{t("settings.tunnelProxyAuto")}</option>
               <option value="direct">{t("settings.tunnelProxyDirect")}</option>
@@ -127,7 +127,7 @@ export function SettingsPanel({
                 placeholder="http://127.0.0.1:7890"
                 disabled={savingProxy || operationBusy}
                 spellCheck={false}
-                data-webcodex-control="tunnel-proxy-url"
+                data-codegpt-control="tunnel-proxy-url"
               />
               <span className="field-help">{t("settings.tunnelProxyCustomHelp")}</span>
             </div>
@@ -149,7 +149,7 @@ export function SettingsPanel({
             className="secondary-button tunnel-proxy-save"
             onClick={() => void saveProxy()}
             disabled={savingProxy || operationBusy || (proxyMode === "custom" && !customProxy.trim())}
-            data-webcodex-action="save-tunnel-proxy"
+            data-codegpt-action="save-tunnel-proxy"
           >
             {savingProxy ? t("common.checking") : t("settings.saveTunnelProxy")}
           </button>

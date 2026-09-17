@@ -1,15 +1,15 @@
 [package]
-name = "webcodex-desktop"
+name = "codegpt-desktop"
 version = "0.4.1"
-description = "WebCodex Desktop runtime and setup control surface"
+description = "CodeGPT Desktop runtime and setup control surface"
 edition = "2021"
 publish = false
 
-# Keep Tauri/WebView dependencies out of the root WebCodex Cargo workspace.
+# Keep Tauri/WebView dependencies out of the root CodeGPT Cargo workspace.
 [workspace]
 
 [lib]
-name = "webcodex_desktop_lib"
+name = "codegpt_desktop_lib"
 crate-type = ["lib", "cdylib", "staticlib"]
 
 [build-dependencies]
@@ -25,8 +25,8 @@ tauri-plugin-dialog = "2"
 tauri-plugin-single-instance = "2"
 tokio = { version = "1", features = ["fs", "io-util", "macros", "process", "rt-multi-thread", "sync", "time"] }
 url = "2"
-webcodex-process = { path = "../../../crates/webcodex-process" }
-webcodex-runner-config = { path = "../../../crates/webcodex-runner-config" }
+codegpt-process = { path = "../../../crates/codegpt-process" }
+codegpt-runner-config = { path = "../../../crates/codegpt-runner-config" }
 
 [target.'cfg(unix)'.dependencies]
 libc = "0.2"

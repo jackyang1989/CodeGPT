@@ -238,7 +238,7 @@ async fn drain_admission_fence_closes_salvo_command_channel_accept_race() {
     assert_eq!(first.text().await.unwrap(), "ok");
     assert_eq!(counter.load(Ordering::SeqCst), 1);
 
-    // Model the exact production race: the WebCodex drain transition is
+    // Model the exact production race: the CodeGPT drain transition is
     // authoritative, but Salvo has not consumed a stop command yet. Without
     // the root admission fence another accepted request could still dispatch.
     assert!(coordinator.begin_draining());

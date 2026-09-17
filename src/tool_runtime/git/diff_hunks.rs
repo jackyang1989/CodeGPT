@@ -1,12 +1,12 @@
 use base64::{engine::general_purpose, Engine as _};
 use serde_json::{json, Value};
 use sha2::{Digest, Sha256};
-pub(crate) use webcodex_core::runtime_contract::GIT_DIFF_HUNKS_CONTINUATION_MAX_BYTES;
-use webcodex_core::runtime_contract::{
+pub(crate) use codegpt_core::runtime_contract::GIT_DIFF_HUNKS_CONTINUATION_MAX_BYTES;
+use codegpt_core::runtime_contract::{
     DEFAULT_GIT_DIFF_HUNKS_PAGE_BYTES, MAX_GIT_DIFF_HUNKS_PAGE_BYTES,
     MIN_GIT_DIFF_HUNKS_PAGE_BYTES, MODEL_INSPECTION_MAX_RESULT_BYTES,
 };
-use webcodex_workspace::file_read_normalize::MODEL_RESULT_ENVELOPE_RESERVE_BYTES;
+use codegpt_workspace::file_read_normalize::MODEL_RESULT_ENVELOPE_RESERVE_BYTES;
 
 use super::super::git_committed::{
     committed_git_discovery_prefix, committed_git_isolated_view_setup, normalize_exact_commit_id,
@@ -177,7 +177,7 @@ fn git_diff_hunks_scope_digest(
     let mut normalized_paths = paths.to_vec();
     normalized_paths.sort();
     let mut hasher = Sha256::new();
-    hasher.update(b"webcodex.git-diff-hunks.scope.v2\0");
+    hasher.update(b"codegpt.git-diff-hunks.scope.v2\0");
     hasher.update(resolved_project.as_bytes());
     hasher.update([0]);
     if cached {
@@ -207,7 +207,7 @@ fn git_diff_hunks_committed_scope_digest(
     let mut normalized_paths = paths.to_vec();
     normalized_paths.sort();
     let mut hasher = Sha256::new();
-    hasher.update(b"webcodex.git-diff-hunks.scope.committed.v2\0");
+    hasher.update(b"codegpt.git-diff-hunks.scope.committed.v2\0");
     for value in [
         resolved_project,
         scope.requested_base.as_str(),
@@ -244,7 +244,7 @@ fn git_diff_hunks_committed_token_mac(
     }
     let mut inner = Sha256::new();
     inner.update(ipad);
-    inner.update(b"webcodex.git-diff-hunks.continuation.committed.v2\0");
+    inner.update(b"codegpt.git-diff-hunks.continuation.committed.v2\0");
     inner.update((scope.len() as u64).to_be_bytes());
     inner.update(scope.as_bytes());
     inner.update((fence.len() as u64).to_be_bytes());
@@ -273,7 +273,7 @@ fn git_diff_hunks_committed_hunk_fragment_token_mac(
     }
     let mut inner = Sha256::new();
     inner.update(ipad);
-    inner.update(b"webcodex.git-diff-hunks.continuation.hunk-fragment.committed.v1\0");
+    inner.update(b"codegpt.git-diff-hunks.continuation.hunk-fragment.committed.v1\0");
     inner.update((scope.len() as u64).to_be_bytes());
     inner.update(scope.as_bytes());
     inner.update((fence.len() as u64).to_be_bytes());

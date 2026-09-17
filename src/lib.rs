@@ -23,7 +23,7 @@ mod client_window;
 mod config;
 mod console_web;
 mod db;
-pub(crate) use webcodex_core::job_observation;
+pub(crate) use codegpt_core::job_observation;
 mod job_receipts;
 mod job_terminal_attention;
 mod json_digest;
@@ -31,7 +31,7 @@ mod json_measurement;
 mod mcp;
 mod mcp_gateway;
 mod model_surface;
-pub(crate) use webcodex_store::models;
+pub(crate) use codegpt_store::models;
 mod oauth_http;
 mod openapi;
 mod pairing_http;
@@ -46,7 +46,7 @@ mod runner_tokens_http;
 mod runner_ws;
 mod runtime_console_http;
 mod runtime_http;
-pub(crate) use webcodex_store::ServerInstanceGuard;
+pub(crate) use codegpt_store::ServerInstanceGuard;
 mod server_listener;
 mod server_shutdown;
 mod ssh_resource_gateway;
@@ -59,15 +59,15 @@ mod users_http;
 mod workspace_activity_store;
 
 #[cfg(test)]
-pub(crate) use webcodex_admin as admin_cli;
-pub(crate) use webcodex_core::{
+pub(crate) use codegpt_admin as admin_cli;
+pub(crate) use codegpt_core::{
     apply_edits_shared, apply_patch_shared, artifact_policy, build_info, lsp_bridge,
     runner_protocol, sensitive_paths,
 };
-pub(crate) use webcodex_runner_config as runner_config;
-pub(crate) use webcodex_workspace::project_overview;
+pub(crate) use codegpt_runner_config as runner_config;
+pub(crate) use codegpt_workspace::project_overview;
 #[cfg(all(test, feature = "workspace-checkpoints"))]
-pub(crate) use webcodex_workspace::workspace_checkpoint;
+pub(crate) use codegpt_workspace::workspace_checkpoint;
 
 pub(crate) use auth::{get_db, json_error, AuthMiddleware};
 pub(crate) use config::load_startup_env_files;
@@ -86,7 +86,7 @@ pub use startup::{
     is_project_command, run_project_command, run_regular_server_tunnel, CliCommandOutput,
     RegularServerTunnelOptions,
 };
-pub use webcodex_store::models::{ActionEventRecord, ActionSessionRecord};
+pub use codegpt_store::models::{ActionEventRecord, ActionSessionRecord};
 
 // ============================================================================
 // Main
@@ -122,19 +122,19 @@ where
         },
         [arg] if matches!(arg.as_str(), "--help" | "-h") => ServerBinaryAction::Exit {
             code: 0,
-            stdout: "Usage: webcodex-server [OPTIONS]\n\nRun the WebCodex server runtime.\n\nOptions:\n      --stop-on-stdin-eof  Stop when the invoking parent closes stdin\n  -h, --help               Print help and exit\n  -V, --version            Print version and exit\n".to_string(),
+            stdout: "Usage: codegpt-server [OPTIONS]\n\nRun the CodeGPT server runtime.\n\nOptions:\n      --stop-on-stdin-eof  Stop when the invoking parent closes stdin\n  -h, --help               Print help and exit\n  -V, --version            Print version and exit\n".to_string(),
             stderr: String::new(),
         },
         [arg] if matches!(arg.as_str(), "--version" | "-V") => ServerBinaryAction::Exit {
             code: 0,
-            stdout: build_info::version_output("webcodex-server"),
+            stdout: build_info::version_output("codegpt-server"),
             stderr: String::new(),
         },
         _ => ServerBinaryAction::Exit {
             code: 2,
             stdout: String::new(),
             stderr: format!(
-                "unknown argument(s): {}\nRun `webcodex-server --help` for usage.\n",
+                "unknown argument(s): {}\nRun `codegpt-server --help` for usage.\n",
                 args.join(" ")
             ),
         },
@@ -158,7 +158,7 @@ pub const SERVER_GRACEFUL_SHUTDOWN_TIMEOUT_SECS: u64 =
     REQUEST_HARD_TIMEOUT_SECS + SERVER_GRACEFUL_RESPONSE_MARGIN_SECS;
 
 /// systemd must outlive the application's own graceful/forced stop lifecycle
-/// so PID 1 does not SIGKILL the Server before WebCodex's bounded deadline.
+/// so PID 1 does not SIGKILL the Server before CodeGPT's bounded deadline.
 const SERVER_SYSTEMD_STOP_MARGIN_SECS: u64 = 15;
 pub const SERVER_SYSTEMD_TIMEOUT_STOP_SECS: u64 =
     SERVER_GRACEFUL_SHUTDOWN_TIMEOUT_SECS + SERVER_SYSTEMD_STOP_MARGIN_SECS;
@@ -215,15 +215,15 @@ pub async fn run_server_with_parent_liveness(
     );
     if !config.is_auth_enabled() {
         tracing::warn!(
-            "WEBCODEX_TOKEN is not set! Running in development mode without authentication. \
-Use `webcodex server init` to generate a bootstrap/admin key, or set WEBCODEX_ALLOW_ANONYMOUS=true \
+            "CODEGPT_TOKEN is not set! Running in development mode without authentication. \
+Use `codegpt server init` to generate a bootstrap/admin key, or set CODEGPT_ALLOW_ANONYMOUS=true \
 only for local/trusted-network demos."
         );
         tracing::warn!("Anonymous API access is rejected by default in production mode.");
     }
     let build_info = build_info::current();
     tracing::info!(
-        "Starting WebCodex v{} (commit {})",
+        "Starting CodeGPT v{} (commit {})",
         build_info.version,
         build_info.git_commit.unwrap_or("unknown")
     );
@@ -308,7 +308,7 @@ only for local/trusted-network demos."
     );
 
     // Custom QUIC Runner transport. Default disabled;
-    // only starts when WEBCODEX_QUIC_ENABLED=true. Runs a separate quinn UDP
+    // only starts when CODEGPT_QUIC_ENABLED=true. Runs a separate quinn UDP
     // listener in parallel with the HTTP server. HTTP/WebSocket/polling and
     // the GPT Actions / Nginx path are completely unaffected. This is NOT
     // HTTP/3 and Nginx does not terminate QUIC.
@@ -321,7 +321,7 @@ only for local/trusted-network demos."
                     .mark_error(&e);
             }
             tracing::error!(
-                "QUIC listener disabled due to config error: {}; check WEBCODEX_QUIC_LISTEN/CERT/KEY/ALPN",
+                "QUIC listener disabled due to config error: {}; check CODEGPT_QUIC_LISTEN/CERT/KEY/ALPN",
                 e
             );
         } else {
@@ -729,13 +729,13 @@ only for local/trusted-network demos."
                     .post(audit_http::audit_stats),
             ),
     );
-    tracing::info!("WebCodex Server is running.");
+    tracing::info!("CodeGPT Server is running.");
     let port = addr.split(':').next_back().unwrap_or("8080");
     let base = format!("http://localhost:{}", port);
     tracing::info!("Runtime base: {}", base);
     tracing::info!("MCP endpoint: {}/mcp", base);
     tracing::info!(
-        "Next: create a one-time login code in another terminal with `webcodex pairing create`."
+        "Next: create a one-time login code in another terminal with `codegpt pairing create`."
     );
     tracing::info!(
         tool_request_trace = crate::config::tool_request_trace_enabled(),
@@ -809,10 +809,10 @@ mod tests {
 
     #[test]
     fn test_parse_env_file_line_basic() {
-        let parsed = parse_env_file_line("WEBCODEX_ADDR=127.0.0.1:8080")
+        let parsed = parse_env_file_line("CODEGPT_ADDR=127.0.0.1:8080")
             .unwrap()
             .unwrap();
-        assert_eq!(parsed.0, "WEBCODEX_ADDR");
+        assert_eq!(parsed.0, "CODEGPT_ADDR");
         assert_eq!(parsed.1, "127.0.0.1:8080");
     }
 
@@ -833,7 +833,7 @@ mod tests {
 
     #[test]
     fn test_parse_env_file_line_rejects_invalid_key() {
-        assert!(parse_env_file_line("webcodex_token=x").unwrap().is_err());
+        assert!(parse_env_file_line("codegpt_token=x").unwrap().is_err());
         assert!(parse_env_file_line("DROP TOKEN=x").unwrap().is_err());
     }
 
@@ -856,9 +856,9 @@ mod tests {
     fn test_config_from_env_defaults() {
         let mut env = crate::test_support::TestEnvGuard::new();
         // Clear env vars to test defaults; Drop restores the process environment.
-        env.remove("WEBCODEX_ADDR");
-        env.remove("WEBCODEX_DATA");
-        env.remove("WEBCODEX_TOKEN");
+        env.remove("CODEGPT_ADDR");
+        env.remove("CODEGPT_DATA");
+        env.remove("CODEGPT_TOKEN");
 
         let config = Config::from_env();
         assert_eq!(config.addr, "0.0.0.0:8080");

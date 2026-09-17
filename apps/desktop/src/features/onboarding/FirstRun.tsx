@@ -117,7 +117,7 @@ export function FirstRun({ state, onState, chooseModeFirst = false, onComplete }
 
   if (!mode) {
     return (
-      <section className="first-run" aria-labelledby="first-run-title" data-webcodex-page="first-run">
+      <section className="first-run" aria-labelledby="first-run-title" data-codegpt-page="first-run">
         <div className="eyebrow">{t("first.welcome")}</div>
         <h1 id="first-run-title">{t("first.title")}</h1>
         <p className="lede">{t("first.description")}</p>
@@ -127,16 +127,16 @@ export function FirstRun({ state, onState, chooseModeFirst = false, onComplete }
           <li><span>03</span>{t("workspace.verify")}</li>
         </ol>
         <div className="entry-grid">
-          <button className="entry-card recommended" onClick={() => setMode("local")} data-webcodex-action="choose-local-setup">
+          <button className="entry-card recommended" onClick={() => setMode("local")} data-codegpt-action="choose-local-setup">
             <span className="entry-badge">{t("first.recommended")}</span>
             <strong>{t("first.localTitle")}</strong>
             <span>{t("first.localDescription")}</span>
           </button>
-          <button className="entry-card" onClick={() => setMode("remote")} data-webcodex-action="choose-remote-setup">
+          <button className="entry-card" onClick={() => setMode("remote")} data-codegpt-action="choose-remote-setup">
             <strong>{t("first.remoteTitle")}</strong>
             <span>{t("first.remoteDescription")}</span>
           </button>
-          <button className="entry-card" onClick={() => setMode("share")} data-webcodex-action="choose-quick-share-setup">
+          <button className="entry-card" onClick={() => setMode("share")} data-codegpt-action="choose-quick-share-setup">
             <strong>{t("first.shareTitle")}</strong>
             <span>{t("first.shareDescription")}</span>
           </button>
@@ -154,13 +154,13 @@ export function FirstRun({ state, onState, chooseModeFirst = false, onComplete }
       className="setup-shell"
       aria-labelledby="setup-title"
       aria-busy={mutationBusy}
-      data-webcodex-page="setup"
+      data-codegpt-page="setup"
       onSubmit={(event) => {
         event.preventDefault();
         void run();
       }}
     >
-      <button type="button" className="back-button" onClick={() => setMode(null)} data-webcodex-action="show-setup-options">
+      <button type="button" className="back-button" onClick={() => setMode(null)} data-codegpt-action="show-setup-options">
         {t("setup.back")}
       </button>
       <div className="eyebrow">{modeLabel(mode, t)}</div>
@@ -182,7 +182,7 @@ export function FirstRun({ state, onState, chooseModeFirst = false, onComplete }
             </span>
           )}
         </div>
-        <button type="button" className="secondary-button" onClick={chooseProject} disabled={mutationBusy} data-webcodex-action="choose-project">
+        <button type="button" className="secondary-button" onClick={chooseProject} disabled={mutationBusy} data-codegpt-action="choose-project">
           {project ? t("setup.changeFolder") : t("setup.chooseFolder")}
         </button>
       </div>
@@ -205,7 +205,7 @@ export function FirstRun({ state, onState, chooseModeFirst = false, onComplete }
               type="url"
               value={serverUrl}
               onChange={(event) => setServerUrl(event.target.value)}
-              placeholder="https://webcodex.example.com"
+              placeholder="https://codegpt.example.com"
               disabled={mutationBusy}
               aria-describedby="setup-server-url-help"
               aria-invalid={serverInvalid || undefined}
@@ -258,7 +258,7 @@ export function FirstRun({ state, onState, chooseModeFirst = false, onComplete }
                 onChange={() => setProvider(value)}
                 disabled={mutationBusy}
                 aria-describedby={`quick-share-provider-${value}-description`}
-                data-webcodex-control={`quick-share-provider-${value}`}
+                data-codegpt-control={`quick-share-provider-${value}`}
               />
               <label htmlFor={`quick-share-provider-${value}`}>
                 <strong>{providerLabel(value, t)}</strong>
@@ -308,7 +308,7 @@ export function FirstRun({ state, onState, chooseModeFirst = false, onComplete }
                 className="secondary-button"
                 onClick={() => void run()}
                 disabled={mutationBusy}
-                data-webcodex-action="activate-project"
+                data-codegpt-action="activate-project"
               >
                 {t("setup.reloadProject")}
               </button>
@@ -328,7 +328,7 @@ export function FirstRun({ state, onState, chooseModeFirst = false, onComplete }
             (mode === "remote" &&
               (!serverUrl.trim() || (!canReuseRemoteEnrollment && !pairingCode.trim())))
           }
-          data-webcodex-action={mode === "local" ? "configure-local" : mode === "remote" ? "configure-remote" : "start-quick-share"}
+          data-codegpt-action={mode === "local" ? "configure-local" : mode === "remote" ? "configure-remote" : "start-quick-share"}
         >
           {mutationBusy ? t("common.checking") : actionLabel(mode, canReuseRemoteEnrollment, t)}
         </button>

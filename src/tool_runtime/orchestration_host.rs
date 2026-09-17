@@ -14,13 +14,13 @@ use tokio::sync::Semaphore;
 use tokio::sync::{
     Mutex as AsyncMutex, OwnedMutexGuard, RwLock, RwLockReadGuard, RwLockWriteGuard,
 };
-use webcodex_core::workflow_session_contract::{
+use codegpt_core::workflow_session_contract::{
     TOOL_ACCEPTED_EXIT_CODES_FIELD, TOOL_ASSERTION_NAME_FIELD,
     TOOL_CALL_ACK_SESSION_CONTEXT_REVISION_FIELD, TOOL_CALL_ACK_SESSION_MESSAGE_IDS_FIELD,
     TOOL_CALL_RECORDING_SESSION_ID_FIELD, TOOL_CALL_SESSION_MESSAGE_RESOLUTION_FIELD,
     TOOL_EXPECTED_FAILURE_FIELD, TOOL_EXPECTED_FAILURE_KIND_FIELD, TOOL_RESULT_EXPECTATION_FIELD,
 };
-use webcodex_tool_contracts::{
+use codegpt_tool_contracts::{
     runtime_tool_composition_policy, runtime_tool_execution_contract, runtime_tool_metadata,
     ToolCompositionPolicy, ToolEffect, ToolExecutionContinuation,
 };
@@ -152,7 +152,7 @@ const SERVER_OWNED_ARGUMENT_FIELDS: &[&str] = &[
 ];
 
 pub(crate) fn is_server_owned_orchestration_argument(field: &str) -> bool {
-    SERVER_OWNED_ARGUMENT_FIELDS.contains(&field) || field.starts_with("__webcodex_")
+    SERVER_OWNED_ARGUMENT_FIELDS.contains(&field) || field.starts_with("__codegpt_")
 }
 
 /// Payload-free diagnostic summary for one outer orchestration program. It is

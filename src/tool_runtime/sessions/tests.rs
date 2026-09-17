@@ -790,12 +790,12 @@ fn memory_body_summary_query_and_tags_never_enter_durable_session_ledger_or_reco
     let private_body = "PRIVATE_MEMORY_BODY_MUST_NOT_PERSIST";
     let private_tag = "PRIVATE_MEMORY_TAG_MUST_NOT_PERSIST";
     let memory_id = "wc_mem_iavN7wEjRWeJq83v";
-    let revision = format!("wc_memrev_{}", webcodex_core::compact::encode([0xaa; 32]));
-    let catalog_revision = format!("wc_memcat_{}", webcodex_core::compact::encode([0xbb; 32]));
+    let revision = format!("wc_memrev_{}", codegpt_core::compact::encode([0xaa; 32]));
+    let catalog_revision = format!("wc_memcat_{}", codegpt_core::compact::encode([0xbb; 32]));
     let private_principal_digest = format!("wc_memprincipal_{}", "c".repeat(64));
-    let scope_id = format!("wc_memscope_{}", webcodex_core::compact::encode([0xdd; 32]));
+    let scope_id = format!("wc_memscope_{}", codegpt_core::compact::encode([0xdd; 32]));
     let private_root_fingerprint =
-        format!("wc_memroot_{}", webcodex_core::compact::encode([0xee; 32]));
+        format!("wc_memroot_{}", codegpt_core::compact::encode([0xee; 32]));
     let private_native_root = "/PRIVATE/NATIVE/MEMORY/ROOT";
 
     let set_args = super::super::ToolCall::MemorySet {
@@ -3364,7 +3364,7 @@ fn simultaneous_model_facing_results_allocate_unique_ordered_revisions() {
 fn batch_budget_preserves_recorder_overlay_for_no_ack_read_batch() {
     fn canonical_read_batch(text: String) -> Value {
         let default_limit =
-            webcodex_workspace::file_read_range::EffectiveRange::new(None, None).limit;
+            codegpt_workspace::file_read_range::EffectiveRange::new(None, None).limit;
         json!({
             "project": "proj",
             "requested_count": 1,

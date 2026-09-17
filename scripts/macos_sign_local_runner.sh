@@ -2,10 +2,10 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-SOURCE="${1:-$ROOT/target/dogfood/webcodex-runner}"
-DEST="${2:-${WEBCODEX_MACOS_LOCAL_RUNNER_PATH:-$HOME/.local/lib/webcodex-dev/webcodex-runner}}"
-IDENTITY_NAME="${WEBCODEX_MACOS_LOCAL_SIGNING_IDENTITY:-WebCodex Local Development}"
-IDENTIFIER="${WEBCODEX_MACOS_LOCAL_RUNNER_IDENTIFIER:-dev.webcodex.runner.local}"
+SOURCE="${1:-$ROOT/target/dogfood/codegpt-runner}"
+DEST="${2:-${CODEGPT_MACOS_LOCAL_RUNNER_PATH:-$HOME/.local/lib/codegpt-dev/codegpt-runner}}"
+IDENTITY_NAME="${CODEGPT_MACOS_LOCAL_SIGNING_IDENTITY:-CodeGPT Local Development}"
+IDENTIFIER="${CODEGPT_MACOS_LOCAL_RUNNER_IDENTIFIER:-dev.codegpt.runner.local}"
 
 fail() {
     printf 'macOS local Runner signing failed: %s\n' "$*" >&2
@@ -19,7 +19,7 @@ if [ ! -f "$SOURCE" ] || [ ! -x "$SOURCE" ]; then
     fail "missing executable Runner binary: $SOURCE"
 fi
 if [ -z "$IDENTIFIER" ] || [[ "$IDENTIFIER" == *[!A-Za-z0-9._-]* ]]; then
-    fail "WEBCODEX_MACOS_LOCAL_RUNNER_IDENTIFIER must contain only letters, digits, '.', '_' or '-'"
+    fail "CODEGPT_MACOS_LOCAL_RUNNER_IDENTIFIER must contain only letters, digits, '.', '_' or '-'"
 fi
 
 identities="$(security find-identity -v -p codesigning 2>/dev/null || true)"
@@ -45,7 +45,7 @@ if [ "${#identity_hash}" -ne 40 ] || [[ "$identity_hash" == *[!A-Fa-f0-9]* ]]; t
 fi
 
 mkdir -p "$(dirname "$DEST")"
-tmp="$(mktemp "$(dirname "$DEST")/.webcodex-runner.sign.XXXXXX")"
+tmp="$(mktemp "$(dirname "$DEST")/.codegpt-runner.sign.XXXXXX")"
 cleanup() { rm -f "$tmp"; }
 trap cleanup EXIT
 install -m 0755 "$SOURCE" "$tmp"

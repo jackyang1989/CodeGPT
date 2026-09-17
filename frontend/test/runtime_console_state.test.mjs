@@ -38,13 +38,13 @@ import {
   runtimeWindowActivityLabel,
 } from "../dist/runtime_console_state.js";
 
-test("window activity presentation is hashed-id safe and WebCodex-specific", () => {
+test("window activity presentation is hashed-id safe and CodeGPT-specific", () => {
   assert.equal(runtimeWindowShortKey("0123456789abcdef0123456789abcdef"), "01234567…cdef");
   assert.equal(runtimeWindowShortKey("short"), "short");
-  assert.equal(runtimeWindowActivityLabel(null, 10_000), "No WebCodex activity");
+  assert.equal(runtimeWindowActivityLabel(null, 10_000), "No CodeGPT activity");
   assert.equal(runtimeWindowActivityLabel(9_500, 10_000), "just now");
   assert.equal(runtimeWindowActivityLabel(5_000, 10_000), "5s ago");
-  assert.equal(runtimeWindowActivityLabel(0, 10_000), "No WebCodex activity");
+  assert.equal(runtimeWindowActivityLabel(0, 10_000), "No CodeGPT activity");
 });
 
 test("Workflow Session summary revision changes only for detail-relevant list state", () => {
@@ -86,9 +86,9 @@ test("runtime credential and project generations fence stale project responses",
   const listA = selectRuntimeProject(state, "device-a", "agent:a:project");
   assert.equal(state.selectedDevice, "device-a");
   assert.equal(state.selectedProject, "agent:a:project");
-  const projectsDuringA = refreshRuntimeProjects(state, "  webcodex  ");
+  const projectsDuringA = refreshRuntimeProjects(state, "  codegpt  ");
   assert.equal(projectsDuringA.clientId, "device-a");
-  assert.equal(projectsDuringA.query, "webcodex");
+  assert.equal(projectsDuringA.query, "codegpt");
   const fleetProjectsDuringA = refreshRuntimeProjects(state, "", "");
   assert.equal(fleetProjectsDuringA.clientId, "");
   const refreshedA = refreshRuntimeSessionList(state);
@@ -164,7 +164,7 @@ test("runtime refresh preserves an authorized selected device and project", () =
 test("Project list supports All Runners, Runner filter/search, and running attention recent ranking", () => {
   const projects = [
     { id: "agent:r:idle", client_id: "runner", name: "Idle", path: "/root/git/idle", sessions: { running_sessions: 0, attention: {}, latest_updated_at: 100 } },
-    { id: "agent:r:recent", client_id: "runner", name: "Recent", path: "/root/git/webcodex-worktrees/recent", sessions: { running_sessions: 0, attention: {}, latest_updated_at: 400 } },
+    { id: "agent:r:recent", client_id: "runner", name: "Recent", path: "/root/git/codegpt-worktrees/recent", sessions: { running_sessions: 0, attention: {}, latest_updated_at: 400 } },
     { id: "agent:r:attention", client_id: "runner", name: "Needs review", sessions: { running_sessions: 0, attention: { open_guidance: 1 }, latest_updated_at: 50 } },
     { id: "agent:r:working", client_id: "runner", name: "Working", sessions: { running_sessions: 1, attention: {}, latest_updated_at: 10 } },
     { id: "agent:other:x", client_id: "other", name: "External" },
@@ -182,7 +182,7 @@ test("Project list supports All Runners, Runner filter/search, and running atten
     ["agent:r:recent"]
   );
   assert.deepEqual(
-    filterAndSortRuntimeProjects(projects, "runner", "webcodex-worktrees").map((project) => project.id),
+    filterAndSortRuntimeProjects(projects, "runner", "codegpt-worktrees").map((project) => project.id),
     ["agent:r:recent"]
   );
   assert.deepEqual(
@@ -197,16 +197,16 @@ test("Project list supports All Runners, Runner filter/search, and running atten
 
 test("Runtime Project identity preserves Linux macOS and Windows workspace paths exactly", () => {
   assert.equal(
-    runtimeProjectIdentityText({ id: "agent:special:webcodex", client_id: "special", path: "/root/git/webcodex" }),
-    "Runner: special · Project: agent:special:webcodex · Workspace: /root/git/webcodex"
+    runtimeProjectIdentityText({ id: "agent:special:codegpt", client_id: "special", path: "/root/git/codegpt" }),
+    "Runner: special · Project: agent:special:codegpt · Workspace: /root/git/codegpt"
   );
   assert.equal(
-    runtimeProjectIdentityText({ id: "agent:mini:webcodex", client_id: "mini", path: "/Users/demo/git/webcodex" }),
-    "Runner: mini · Project: agent:mini:webcodex · Workspace: /Users/demo/git/webcodex"
+    runtimeProjectIdentityText({ id: "agent:mini:codegpt", client_id: "mini", path: "/Users/demo/git/codegpt" }),
+    "Runner: mini · Project: agent:mini:codegpt · Workspace: /Users/demo/git/codegpt"
   );
   assert.equal(
-    runtimeProjectIdentityText({ id: "agent:msi:webcodex", client_id: "msi", path: "E:\\git\\webcodex" }),
-    "Runner: msi · Project: agent:msi:webcodex · Workspace: E:\\git\\webcodex"
+    runtimeProjectIdentityText({ id: "agent:msi:codegpt", client_id: "msi", path: "E:\\git\\codegpt" }),
+    "Runner: msi · Project: agent:msi:codegpt · Workspace: E:\\git\\codegpt"
   );
 });
 

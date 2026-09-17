@@ -1,7 +1,7 @@
 //! Compatibility facade and root adapters for the Workflow Session domain crate.
 
 #[allow(unused_imports)]
-pub(crate) use webcodex_workflow_session::{
+pub(crate) use codegpt_workflow_session::{
     aggregate_console_list, canonical_tool_call_finished_events, current_attempt_event_view,
     execution_output_summary_for_tool_result, exploration_tool_kind,
     is_tool_call_expectation_metadata_field, is_valid_session_id, normalize_observed_project_path,
@@ -74,18 +74,18 @@ pub(crate) fn console_validation_hooks() -> ConsoleValidationHooks {
 
 #[cfg(test)]
 pub(crate) const TEST_ONLY_PROJECT_SESSION_AUTHORITY_FINGERPRINT: &str =
-    webcodex_workflow_session::TEST_ONLY_PROJECT_SESSION_AUTHORITY_FINGERPRINT;
+    codegpt_workflow_session::TEST_ONLY_PROJECT_SESSION_AUTHORITY_FINGERPRINT;
 
 #[cfg(test)]
-pub(crate) use webcodex_workflow_session::root_test_support::{
+pub(crate) use codegpt_workflow_session::root_test_support::{
     session_input_summary_for_tool, TOOL_CALL_EXPECTATION_METADATA_FIELDS,
 };
 
 #[cfg(test)]
 pub(crate) mod events {
     use serde_json::Value;
-    pub(crate) use webcodex_workflow_session::normalize_observed_project_path;
-    pub(crate) use webcodex_workflow_session::root_test_support::{
+    pub(crate) use codegpt_workflow_session::normalize_observed_project_path;
+    pub(crate) use codegpt_workflow_session::root_test_support::{
         observed_paths_for_successful_result, session_input_summary_for_tool,
     };
 
@@ -103,7 +103,7 @@ pub(crate) mod events {
     }
 
     pub(crate) fn changed_paths_for_tool(tool_name: &str, arguments: &Value) -> Vec<String> {
-        webcodex_workflow_session::root_test_support::changed_paths_for_tool(
+        codegpt_workflow_session::root_test_support::changed_paths_for_tool(
             super::session_tool_contract(tool_name),
             arguments,
         )
@@ -112,14 +112,14 @@ pub(crate) mod events {
 
 #[cfg(test)]
 pub(crate) mod model {
-    pub(crate) use webcodex_workflow_session::root_test_support::{
+    pub(crate) use codegpt_workflow_session::root_test_support::{
         PersistedSessionLedger, MAX_OBSERVED_PATHS_PER_EVENT, SESSION_LEDGER_VERSION,
     };
 }
 
 #[cfg(test)]
 pub(crate) mod persistence {
-    pub(crate) use webcodex_workflow_session::root_test_support::write_ledger_atomic;
+    pub(crate) use codegpt_workflow_session::root_test_support::write_ledger_atomic;
 }
 
 #[cfg(test)]

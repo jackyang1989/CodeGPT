@@ -4,7 +4,7 @@
 # Without -Apply it is a read-only plan renderer.
 [CmdletBinding(SupportsShouldProcess = $true)]
 param(
-    [string]$RunnerPath = "$env:USERPROFILE\.local\bin\webcodex-runner.exe",
+    [string]$RunnerPath = "$env:USERPROFILE\.local\bin\codegpt-runner.exe",
 
     [Parameter(Mandatory = $true)]
     [string]$RunnerConfigPath,
@@ -12,7 +12,7 @@ param(
     [Parameter(Mandatory = $true)]
     [string]$SupervisorPath,
 
-    [string]$TaskName = 'WebCodex MSI Dogfood Runner',
+    [string]$TaskName = 'CodeGPT MSI Dogfood Runner',
     [string]$TaskPath = '\',
     [string]$WorkingDirectory = (Split-Path -Parent $PSScriptRoot),
 
@@ -45,7 +45,7 @@ if ($Apply) {
     $changed = $false
     switch ($plan.task_operation) {
         'create' {
-            if ($PSCmdlet.ShouldProcess("$($expected.TaskPath)$($expected.TaskName)", 'Create WebCodex Windows Runner lifecycle Scheduled Task')) {
+            if ($PSCmdlet.ShouldProcess("$($expected.TaskPath)$($expected.TaskName)", 'Create CodeGPT Windows Runner lifecycle Scheduled Task')) {
                 $definition = New-WindowsRunnerScheduledTaskDefinition -ExpectedSpec $expected
                 $freshCurrent = Get-WindowsRunnerLifecycleTaskObservation `
                     -TaskName $expected.TaskName `
@@ -62,7 +62,7 @@ if ($Apply) {
             if (-not $current.IsLifecycleLike) {
                 throw "Refusing to update an unrecognized existing Scheduled Task: $($expected.TaskPath)$($expected.TaskName)"
             }
-            if ($PSCmdlet.ShouldProcess("$($expected.TaskPath)$($expected.TaskName)", 'Update WebCodex Windows Runner lifecycle Scheduled Task definition')) {
+            if ($PSCmdlet.ShouldProcess("$($expected.TaskPath)$($expected.TaskName)", 'Update CodeGPT Windows Runner lifecycle Scheduled Task definition')) {
                 $definition = New-WindowsRunnerScheduledTaskDefinition -ExpectedSpec $expected
                 $freshCurrent = Get-WindowsRunnerLifecycleTaskObservation `
                     -TaskName $expected.TaskName `
@@ -76,7 +76,7 @@ if ($Apply) {
             }
         }
         'enable' {
-            if ($PSCmdlet.ShouldProcess("$($expected.TaskPath)$($expected.TaskName)", 'Enable WebCodex Windows Runner lifecycle Scheduled Task')) {
+            if ($PSCmdlet.ShouldProcess("$($expected.TaskPath)$($expected.TaskName)", 'Enable CodeGPT Windows Runner lifecycle Scheduled Task')) {
                 $freshCurrent = Get-WindowsRunnerLifecycleTaskObservation `
                     -TaskName $expected.TaskName `
                     -TaskPath $expected.TaskPath `

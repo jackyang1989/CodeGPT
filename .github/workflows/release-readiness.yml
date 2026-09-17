@@ -74,7 +74,7 @@ jobs:
               headers={
                   "Accept": "application/vnd.github+json",
                   "Authorization": f"Bearer {os.environ['GH_TOKEN']}",
-                  "User-Agent": "webcodex-release-readiness",
+                  "User-Agent": "codegpt-release-readiness",
                   "X-GitHub-Api-Version": "2022-11-28",
               },
           )
@@ -158,19 +158,19 @@ jobs:
         run: |
           test "$(git rev-parse HEAD)" = "${{ inputs.source_sha }}"
           test -z "$(git status --porcelain --untracked-files=all)"
-          cargo build --locked -p webcodex --bin webcodex-server
-          cargo build --locked -p webcodex-runner --bin webcodex-runner
+          cargo build --locked -p codegpt --bin codegpt-server
+          cargo build --locked -p codegpt-runner --bin codegpt-runner
 
       - name: Run WebSocket zero-config E2E
         env:
-          E2E_SERVER_BIN: ${{ github.workspace }}/target/debug/webcodex-server
-          E2E_RUNNER_BIN: ${{ github.workspace }}/target/debug/webcodex-runner
+          E2E_SERVER_BIN: ${{ github.workspace }}/target/debug/codegpt-server
+          E2E_RUNNER_BIN: ${{ github.workspace }}/target/debug/codegpt-runner
         run: bash scripts/e2e_zero_config_ws.sh
 
       - name: Run polling zero-config E2E
         env:
-          E2E_SERVER_BIN: ${{ github.workspace }}/target/debug/webcodex-server
-          E2E_RUNNER_BIN: ${{ github.workspace }}/target/debug/webcodex-runner
+          E2E_SERVER_BIN: ${{ github.workspace }}/target/debug/codegpt-server
+          E2E_RUNNER_BIN: ${{ github.workspace }}/target/debug/codegpt-runner
           E2E_TRANSPORT: polling
         run: bash scripts/e2e_zero_config_ws.sh
 
@@ -221,14 +221,14 @@ jobs:
         run: |
           test "$(git rev-parse HEAD)" = "${{ inputs.source_sha }}"
           test -z "$(git status --porcelain --untracked-files=all)"
-          cargo build --locked -p webcodex --bin webcodex-server
-          cargo build --locked -p webcodex-runner --bin webcodex-runner
+          cargo build --locked -p codegpt --bin codegpt-server
+          cargo build --locked -p codegpt-runner --bin codegpt-runner
 
       - name: Run coding-loop eval compare
         env:
           EVAL_MODE: compare
-          EVAL_SERVER_BIN: ${{ github.workspace }}/target/debug/webcodex-server
-          EVAL_RUNNER_BIN: ${{ github.workspace }}/target/debug/webcodex-runner
+          EVAL_SERVER_BIN: ${{ github.workspace }}/target/debug/codegpt-server
+          EVAL_RUNNER_BIN: ${{ github.workspace }}/target/debug/codegpt-runner
         run: bash scripts/eval_coding_loop.sh
 
       - name: Require final eval source cleanliness
@@ -302,11 +302,11 @@ jobs:
             *) echo "Unexpected native Server-image architecture: $(uname -m) for $EXPECTED_ARCH" >&2; exit 1 ;;
           esac
 
-          version="$(python3 -c 'import json; print(json.load(open("npm/webcodex/package.json", encoding="utf-8"))["version"])')"
+          version="$(python3 -c 'import json; print(json.load(open("npm/codegpt/package.json", encoding="utf-8"))["version"])')"
           built_at="$(git show -s --format=%ct HEAD)"
           short_commit="${INPUT_SOURCE_SHA:0:12}"
-          image="webcodex-server-readiness:${INPUT_REQUEST_ID#rr_}-$IMAGE_SLUG"
-          name="webcodex-server-readiness-${GITHUB_RUN_ID}-$IMAGE_SLUG"
+          image="codegpt-server-readiness:${INPUT_REQUEST_ID#rr_}-$IMAGE_SLUG"
+          name="codegpt-server-readiness-${GITHUB_RUN_ID}-$IMAGE_SLUG"
           cleanup() {
             docker rm -f "$name" >/dev/null 2>&1 || true
             docker image rm -f "$image" >/dev/null 2>&1 || true
@@ -314,30 +314,30 @@ jobs:
           trap cleanup EXIT
 
           DOCKER_BUILDKIT=1 docker build \
-            --build-arg "WEBCODEX_GIT_COMMIT=$short_commit" \
-            --build-arg WEBCODEX_GIT_DIRTY=false \
-            --build-arg "WEBCODEX_BUILT_AT=$built_at" \
+            --build-arg "CODEGPT_GIT_COMMIT=$short_commit" \
+            --build-arg CODEGPT_GIT_DIRTY=false \
+            --build-arg "CODEGPT_BUILT_AT=$built_at" \
             -t "$image" \
             -f Dockerfile \
             .
 
           test "$(docker image inspect --format '{{.Architecture}}' "$image")" = "$EXPECTED_ARCH"
           test "$(docker image inspect --format '{{.Os}}' "$image")/$EXPECTED_ARCH" = "$EXPECTED_PLATFORM"
-          test "$(docker image inspect --format '{{.Config.User}}' "$image")" = "webcodex:webcodex"
+          test "$(docker image inspect --format '{{.Config.User}}' "$image")" = "codegpt:codegpt"
           docker run --rm --entrypoint sh "$image" -ec '
             test "$(id -u)" = 10001
             test "$(id -g)" = 10001
-            test ! -e /usr/local/bin/webcodex-runner
+            test ! -e /usr/local/bin/codegpt-runner
           '
 
-          expected_server="webcodex-server $version (commit $short_commit, dirty=false, built_at=$built_at)"
-          expected_cli="webcodex $version (commit $short_commit, dirty=false, built_at=$built_at)"
+          expected_server="codegpt-server $version (commit $short_commit, dirty=false, built_at=$built_at)"
+          expected_cli="codegpt $version (commit $short_commit, dirty=false, built_at=$built_at)"
           test "$(docker run --rm "$image" --version)" = "$expected_server"
-          test "$(docker run --rm --entrypoint /usr/local/bin/webcodex "$image" --version)" = "$expected_cli"
+          test "$(docker run --rm --entrypoint /usr/local/bin/codegpt "$image" --version)" = "$expected_cli"
 
           docker run -d --name "$name" \
-            -e WEBCODEX_TOKEN=0000000000000000000000000000000000000000000000000000000000000000 \
-            -e WEBCODEX_PUBLIC_URL=https://webcodex.invalid \
+            -e CODEGPT_TOKEN=0000000000000000000000000000000000000000000000000000000000000000 \
+            -e CODEGPT_PUBLIC_URL=https://codegpt.invalid \
             "$image" >/dev/null
           for _ in $(seq 1 40); do
             health="$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}missing{{end}}' "$name")"
@@ -373,10 +373,10 @@ jobs:
             --output-dir "$deployment_dir" \
             --digest "$digest" \
             --summary "$deployment_summary" >/dev/null
-          bootstrap="$deployment_dir/webcodex-server-bootstrap.sh"
+          bootstrap="$deployment_dir/codegpt-server-bootstrap.sh"
           sh -n "$bootstrap"
-          grep -Fq "ghcr.io/yyjeqhc/webcodex-server@$digest" "$bootstrap"
-          if grep -Fq "ghcr.io/yyjeqhc/webcodex-server:latest" "$bootstrap"; then
+          grep -Fq "ghcr.io/yyjeqhc/codegpt-server@$digest" "$bootstrap"
+          if grep -Fq "ghcr.io/yyjeqhc/codegpt-server:latest" "$bootstrap"; then
             echo "Disposable release bootstrap retained a mutable latest image reference." >&2
             exit 1
           fi
@@ -390,7 +390,7 @@ jobs:
           summary = json.loads(pathlib.Path(sys.argv[2]).read_text(encoding="utf-8"))
           assets = summary.get("assets")
           expected = hashlib.sha256(bootstrap.read_bytes()).hexdigest()
-          if assets != {"webcodex-server-bootstrap.sh": expected}:
+          if assets != {"codegpt-server-bootstrap.sh": expected}:
               raise SystemExit("disposable Server deployment-asset digest summary is inconsistent")
           PY
 

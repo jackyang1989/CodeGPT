@@ -12,7 +12,7 @@ use serde_json::{json, Value};
 use std::collections::HashSet;
 use std::fs;
 use std::path::Path;
-use webcodex_core::runtime_contract::{
+use codegpt_core::runtime_contract::{
     DEFAULT_GIT_DIFF_HUNKS_PAGE_BYTES, MAX_GIT_DIFF_HUNKS_PAGE_BYTES,
     MIN_GIT_DIFF_HUNKS_PAGE_BYTES, MODEL_INSPECTION_MAX_RESULT_BYTES,
 };
@@ -205,7 +205,7 @@ fn git_commit_paths_audit_keeps_message_private_and_exact_head_bounded() {
     let private_message = "PRIVATE_COMMIT_MESSAGE_MUST_NOT_PERSIST";
     let expected_head = "a".repeat(40);
     let arguments = json!({
-        "project": "agent:oe:webcodex",
+        "project": "agent:oe:codegpt",
         "expected_head": expected_head,
         "paths": ["src/tool_runtime/git.rs"],
         "message": private_message,
@@ -497,7 +497,7 @@ fn git_diff_hunks_tool_is_known_and_schema_is_bounded() {
     let call = ToolCall::from_tool_name(
         "git_diff_hunks",
         json!({
-            "project":"agent:oe:webcodex",
+            "project":"agent:oe:codegpt",
             "paths":["src/runtime_http.rs"],
             "max_hunks":20,
             "max_hunk_lines":120,
@@ -515,7 +515,7 @@ fn git_diff_hunks_tool_is_known_and_schema_is_bounded() {
             max_page_bytes: Some(98304),
             continuation: Some(continuation),
             ..
-        } if project == "agent:oe:webcodex" && continuation == "opaque-continuation"
+        } if project == "agent:oe:codegpt" && continuation == "opaque-continuation"
     ));
 
     let specs = registered_tool_specs();
@@ -557,7 +557,7 @@ fn git_diff_hunks_tool_is_known_and_schema_is_bounded() {
     let committed_call = ToolCall::from_tool_name(
         "git_diff_hunks",
         json!({
-            "project": "agent:oe:webcodex",
+            "project": "agent:oe:codegpt",
             "base_commit": "A".repeat(40),
             "head_commit": "b".repeat(40),
             "paths": ["src/runtime_http.rs"]
@@ -576,7 +576,7 @@ fn git_diff_hunks_tool_is_known_and_schema_is_bounded() {
     let committed_false_call = ToolCall::from_tool_name(
         "git_diff_hunks",
         json!({
-            "project": "agent:oe:webcodex",
+            "project": "agent:oe:codegpt",
             "base_commit": "A".repeat(40),
             "head_commit": "b".repeat(40),
             "cached": false,
@@ -595,7 +595,7 @@ fn git_diff_hunks_tool_is_known_and_schema_is_bounded() {
     assert!(ToolCall::from_tool_name(
         "git_diff_hunks",
         json!({
-            "project": "agent:oe:webcodex",
+            "project": "agent:oe:codegpt",
             "continuation": "x".repeat(GIT_DIFF_HUNKS_CONTINUATION_MAX_BYTES + 1),
         }),
     )
@@ -632,7 +632,7 @@ fn git_diff_hunks_tool_is_known_and_schema_is_bounded() {
 fn git_diff_hunks_session_audit_redacts_continuation() {
     let continuation = "WCDH_UNIQUE_AUDIT_CONTINUATION_7f18b4a2";
     let arguments = json!({
-        "project": "agent:oe:webcodex",
+        "project": "agent:oe:codegpt",
         "paths": ["src/runtime_http.rs", "src/tool_runtime/git.rs"],
         "max_hunks": 7,
         "max_hunk_lines": 33,
@@ -645,7 +645,7 @@ fn git_diff_hunks_session_audit_redacts_continuation() {
         "git_diff_hunks",
         &arguments,
     );
-    assert_eq!(raw_summary["project"], "agent:oe:webcodex");
+    assert_eq!(raw_summary["project"], "agent:oe:codegpt");
     assert_eq!(
         raw_summary["paths"],
         json!(["src/runtime_http.rs", "src/tool_runtime/git.rs"])
@@ -662,7 +662,7 @@ fn git_diff_hunks_session_audit_redacts_continuation() {
 
     let call = ToolCall::from_tool_name("git_diff_hunks", arguments.clone()).unwrap();
     let typed_summary = call.session_log_arguments();
-    assert_eq!(typed_summary["project"], "agent:oe:webcodex");
+    assert_eq!(typed_summary["project"], "agent:oe:codegpt");
     assert_eq!(typed_summary["paths"], raw_summary["paths"]);
     assert_eq!(typed_summary["max_hunks"], 7);
     assert_eq!(typed_summary["max_hunk_lines"], 33);
@@ -675,7 +675,7 @@ fn git_diff_hunks_session_audit_redacts_continuation() {
 
     let defensive =
         super::super::sessions::session_input_summary_for_tool("git_diff_hunks", &arguments);
-    assert_eq!(defensive["project"], "agent:oe:webcodex");
+    assert_eq!(defensive["project"], "agent:oe:codegpt");
     assert_eq!(defensive["paths"], raw_summary["paths"]);
     assert_eq!(defensive["max_hunks"], 7);
     assert_eq!(defensive["max_hunk_lines"], 33);
@@ -688,7 +688,7 @@ fn git_diff_hunks_session_audit_redacts_continuation() {
 
     let runtime = test_runtime();
     let session = runtime.sessions.start_session(
-        Some("agent:oe:webcodex".to_string()),
+        Some("agent:oe:codegpt".to_string()),
         Some("git diff audit".to_string()),
     );
     runtime.sessions.record_tool_call_started(
@@ -703,7 +703,7 @@ fn git_diff_hunks_session_audit_redacts_continuation() {
         .summary(&session.session_id, Some(10))
         .unwrap();
     let input_summary = summary.events[0].input_summary.as_ref().unwrap();
-    assert_eq!(input_summary["project"], "agent:oe:webcodex");
+    assert_eq!(input_summary["project"], "agent:oe:codegpt");
     assert_eq!(input_summary["paths"], raw_summary["paths"]);
     assert_eq!(input_summary["max_hunks"], 7);
     assert_eq!(input_summary["max_hunk_lines"], 33);
@@ -717,7 +717,7 @@ fn git_diff_hunks_session_audit_redacts_continuation() {
     let base = "A".repeat(40);
     let head = "b".repeat(40);
     let committed_arguments = json!({
-        "project": "agent:oe:webcodex",
+        "project": "agent:oe:codegpt",
         "paths": ["src/runtime_http.rs"],
         "base_commit": base,
         "head_commit": head,
@@ -737,7 +737,7 @@ fn git_diff_hunks_session_audit_redacts_continuation() {
     let result_summary = super::super::tool_audit::session_log_result_for_tool(
         "git_diff_hunks",
         &json!({
-            "project": "agent:oe:webcodex",
+            "project": "agent:oe:codegpt",
             "scope": {
                 "mode": "committed",
                 "requested_base": "a".repeat(40),
@@ -774,7 +774,7 @@ fn show_changes_tool_is_known_and_parses() {
     let call = ToolCall::from_tool_name(
         "show_changes",
         json!({
-            "project": "agent:oe:webcodex",
+            "project": "agent:oe:codegpt",
             "include_diff": true,
             "max_hunks": 4,
             "max_hunk_lines": 12,
@@ -792,7 +792,7 @@ fn show_changes_tool_is_known_and_parses() {
             max_hunks: Some(4),
             max_hunk_lines: Some(12),
             session_event_limit: Some(8)
-        } if project == "agent:oe:webcodex" && session_id == "wc_sess_1234"
+        } if project == "agent:oe:codegpt" && session_id == "wc_sess_1234"
     ));
 
     let specs = registered_tool_specs();
@@ -5717,7 +5717,7 @@ async fn show_changes_include_diff_agent_command_does_not_enqueue_python_helper(
 #[test]
 fn show_changes_clean_worktree() {
     let output = parse_show_changes_output(
-            "agent:oe:webcodex",
+            "agent:oe:codegpt",
             "## main...origin/main",
             "commit=b47e4fb000000000000000000000000000000000\nshort=b47e4fb\nsummary=fix: route anchor edit file ops through agent dispatch",
             "",
@@ -5743,7 +5743,7 @@ fn show_changes_clean_worktree() {
 #[test]
 fn show_changes_without_session_id_treats_dirty_workspace_as_advisory() {
     let mut output = parse_show_changes_output(
-        "agent:oe:webcodex",
+        "agent:oe:codegpt",
         "## main\n M src/lib.rs",
         "commit=b47e4fb000000000000000000000000000000000\nshort=b47e4fb\nsummary=fix",
         " src/lib.rs | 2 +-",
@@ -5772,10 +5772,10 @@ fn show_changes_without_session_id_treats_dirty_workspace_as_advisory() {
 fn show_changes_with_session_id_defaults_to_compact_session_summary() {
     let runtime = test_runtime();
     let session = runtime.sessions.start_session(
-        Some("agent:oe:webcodex".to_string()),
+        Some("agent:oe:codegpt".to_string()),
         Some("finish task".to_string()),
     );
-    let write_args = json!({"project": "agent:oe:webcodex", "path": "src/foo.rs"});
+    let write_args = json!({"project": "agent:oe:codegpt", "path": "src/foo.rs"});
     let write = runtime.sessions.record_tool_call_started(
         Some(&session.session_id),
         crate::tool_runtime::sessions::SessionTransport::Api,
@@ -5786,7 +5786,7 @@ fn show_changes_with_session_id_defaults_to_compact_session_summary() {
     runtime
         .sessions
         .record_tool_call_finished(write, true, &json!({}), None, None);
-    let shell_args = json!({"project": "agent:oe:webcodex", "command": "cargo test"});
+    let shell_args = json!({"project": "agent:oe:codegpt", "command": "cargo test"});
     let shell = runtime.sessions.record_tool_call_started(
         Some(&session.session_id),
         crate::tool_runtime::sessions::SessionTransport::Api,
@@ -5799,7 +5799,7 @@ fn show_changes_with_session_id_defaults_to_compact_session_summary() {
         .record_tool_call_finished(shell, true, &json!({}), None, None);
 
     let mut output = parse_show_changes_output(
-        "agent:oe:webcodex",
+        "agent:oe:codegpt",
         "## main\n M src/foo.rs",
         "commit=b47e4fb000000000000000000000000000000000\nshort=b47e4fb\nsummary=fix",
         " src/foo.rs | 2 +-",
@@ -5835,7 +5835,7 @@ fn show_changes_with_session_id_defaults_to_compact_session_summary() {
 #[test]
 fn show_changes_with_missing_session_id_returns_warning_not_panic() {
     let mut output = parse_show_changes_output(
-        "agent:oe:webcodex",
+        "agent:oe:codegpt",
         "## main",
         "commit=b47e4fb000000000000000000000000000000000\nshort=b47e4fb\nsummary=fix",
         "",
@@ -5861,7 +5861,7 @@ fn show_changes_session_changed_paths_are_deduped() {
     let runtime = test_runtime();
     let session = runtime.sessions.start_session(None, None);
     for path in ["src/foo.rs", "src/foo.rs", "src/bar.rs"] {
-        let args = json!({"project": "agent:oe:webcodex", "path": path});
+        let args = json!({"project": "agent:oe:codegpt", "path": path});
         let start = runtime.sessions.record_tool_call_started(
             Some(&session.session_id),
             crate::tool_runtime::sessions::SessionTransport::Api,
@@ -5874,7 +5874,7 @@ fn show_changes_session_changed_paths_are_deduped() {
             .record_tool_call_finished(start, true, &json!({}), None, None);
     }
     let mut output = parse_show_changes_output(
-        "agent:oe:webcodex",
+        "agent:oe:codegpt",
         "## main\n M src/foo.rs",
         "commit=b47e4fb000000000000000000000000000000000\nshort=b47e4fb\nsummary=fix",
         " src/foo.rs | 2 +-",
@@ -5939,7 +5939,7 @@ async fn show_changes_explicit_session_event_limit_is_bounded() {
 #[test]
 fn show_changes_reports_modified_file() {
     let output = parse_show_changes_output(
-        "agent:oe:webcodex",
+        "agent:oe:codegpt",
         "## main\n M src/users_http.rs",
         "commit=b47e4fb000000000000000000000000000000000\nshort=b47e4fb\nsummary=fix",
         " src/users_http.rs | 2 +-\n 1 file changed, 1 insertion(+), 1 deletion(-)",
@@ -5966,8 +5966,8 @@ fn show_changes_reports_modified_file() {
 #[test]
 fn show_changes_reports_untracked_file() {
     let output = parse_show_changes_output(
-        "agent:oe:webcodex",
-        "## main\n?? webcodex-anchor-edit-smoke-c99f7de.txt",
+        "agent:oe:codegpt",
+        "## main\n?? codegpt-anchor-edit-smoke-c99f7de.txt",
         "commit=b47e4fb000000000000000000000000000000000\nshort=b47e4fb\nsummary=fix",
         "",
         None,
@@ -5994,7 +5994,7 @@ fn show_changes_reports_untracked_file() {
 #[test]
 fn show_changes_reports_conflicted_file() {
     let output = parse_show_changes_output(
-        "agent:oe:webcodex",
+        "agent:oe:codegpt",
         "## main\nUU conflicted.rs",
         "commit=b47e4fb000000000000000000000000000000000\nshort=b47e4fb\nsummary=fix",
         "",
@@ -6048,7 +6048,7 @@ index 1111111..2222222 100644
  omega
 ";
     let output = parse_show_changes_output(
-        "agent:oe:webcodex",
+        "agent:oe:codegpt",
         "## main\n M src/lib.rs",
         "commit=b47e4fb000000000000000000000000000000000\nshort=b47e4fb\nsummary=fix",
         " src/lib.rs | 4 ++--",
@@ -6083,7 +6083,7 @@ async fn show_changes_clean_repo_include_diff_false_has_no_untracked_previews() 
 async fn show_changes_untracked_text_include_diff_false_omits_preview() {
     let tmp = tempfile::tempdir().unwrap();
     init_git_repo(tmp.path());
-    let content = "webcodex untracked preview body";
+    let content = "codegpt untracked preview body";
     fs::write(tmp.path().join("notes.txt"), content).unwrap();
 
     let output = show_changes_output_from_command(tmp.path(), false);
@@ -6190,7 +6190,7 @@ async fn git_diff_hunks_rejects_unsafe_paths_before_project_dispatch() {
     let runtime = test_runtime();
     let result = runtime
         .git_diff_hunks(
-            "agent:oe:webcodex".to_string(),
+            "agent:oe:codegpt".to_string(),
             Some(vec!["../outside".to_string()]),
             None,
             None,
@@ -7523,7 +7523,7 @@ fn show_changes_modern_framing_requires_exact_blocks_and_tail() {
     );
     assert!(split_show_changes_stdout(&synthetic, false).framing_valid);
 
-    let legacy = "## main\n@@WEBCODEX_SHOW_CHANGES_SEP@@\nabc123\0abc123\0head\n@@WEBCODEX_SHOW_CHANGES_SEP@@\n";
+    let legacy = "## main\n@@CODEGPT_SHOW_CHANGES_SEP@@\nabc123\0abc123\0head\n@@CODEGPT_SHOW_CHANGES_SEP@@\n";
     let legacy_frames = split_show_changes_stdout(legacy, false);
     assert!(!legacy_frames.framing_valid);
     assert!(legacy_frames.status.is_empty());
@@ -8074,7 +8074,7 @@ async fn show_changes_status_failure_is_not_masked_by_successful_diff() {
 fn show_changes_parses_upstream_observation_states() {
     let parse = |status: &str| {
         parse_show_changes_output(
-            "agent:oe:webcodex",
+            "agent:oe:codegpt",
             status,
             "commit=b47e4fb000000000000000000000000000000000\nshort=b47e4fb\nsummary=head",
             "",
@@ -8117,7 +8117,7 @@ fn show_changes_parses_upstream_observation_states() {
 fn show_changes_parses_unborn_and_detached_branch_headers() {
     for status in ["## No commits yet on main", "## Initial commit on main"] {
         let output = parse_show_changes_output(
-            "agent:oe:webcodex",
+            "agent:oe:codegpt",
             status,
             "",
             "",
@@ -8134,7 +8134,7 @@ fn show_changes_parses_unborn_and_detached_branch_headers() {
 
     for status in ["## HEAD (no branch)", "## HEAD (detached at b47e4fb)"] {
         let output = parse_show_changes_output(
-            "agent:oe:webcodex",
+            "agent:oe:codegpt",
             status,
             "commit=b47e4fb000000000000000000000000000000000\nshort=b47e4fb\nsummary=head",
             "",
@@ -8462,7 +8462,7 @@ fn show_changes_oversized_no_hunk_preamble_is_bounded_and_drained() {
     let script_path = tmp.path().join("external-diff.sh");
     std::fs::write(
         &script_path,
-        "#!/bin/sh\ncat \"$WEBCODEX_TEST_DIFF_PAYLOAD\"\nexit 7\n",
+        "#!/bin/sh\ncat \"$CODEGPT_TEST_DIFF_PAYLOAD\"\nexit 7\n",
     )
     .unwrap();
     let mut permissions = std::fs::metadata(&script_path).unwrap().permissions();
@@ -8470,7 +8470,7 @@ fn show_changes_oversized_no_hunk_preamble_is_bounded_and_drained() {
     std::fs::set_permissions(&script_path, permissions).unwrap();
 
     let env = format!(
-        "export WEBCODEX_TEST_DIFF_PAYLOAD={}; export GIT_EXTERNAL_DIFF={};",
+        "export CODEGPT_TEST_DIFF_PAYLOAD={}; export GIT_EXTERNAL_DIFF={};",
         shell_single_quote(payload_path.to_str().unwrap()),
         shell_single_quote(script_path.to_str().unwrap())
     );

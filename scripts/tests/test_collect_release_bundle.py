@@ -32,9 +32,9 @@ def _archive_bytes(platform: str) -> bytes:
 
 def _write_bundle(root: Path, tag: str, build_kind: str) -> tuple[str, dict[str, str]]:
     stem = (
-        f"webcodex-v{VERSION}"
+        f"codegpt-v{VERSION}"
         if build_kind == "release"
-        else f"webcodex-{tag}-{SOURCE_SHA[:12]}-v{VERSION}"
+        else f"codegpt-{tag}-{SOURCE_SHA[:12]}-v{VERSION}"
     )
     artifact_hashes: dict[str, str] = {}
     artifact_payload: dict[str, dict[str, str]] = {}
@@ -96,7 +96,7 @@ def _write_bundle(root: Path, tag: str, build_kind: str) -> tuple[str, dict[str,
 class RedirectSafetyTests(unittest.TestCase):
     def test_cross_host_redirect_drops_github_api_credentials(self) -> None:
         request = urllib.request.Request(
-            "https://api.github.com/repos/yyjeqhc/webcodex/actions/artifacts/1/zip",
+            "https://api.github.com/repos/yyjeqhc/codegpt/actions/artifacts/1/zip",
             headers={
                 "Authorization": "Bearer secret-value",
                 "Accept": "application/vnd.github+json",
@@ -128,7 +128,7 @@ class ArtifactSelectionTests(unittest.TestCase):
                 {"id": 1, "name": "native-linux", "expired": False},
                 {
                     "id": 2,
-                    "name": "webcodex-v0.3.8-bundle",
+                    "name": "codegpt-v0.3.8-bundle",
                     "expired": False,
                     "size_in_bytes": 100,
                     "digest": "sha256:" + "b" * 64,
@@ -183,19 +183,19 @@ class BundleTests(unittest.TestCase):
             self.assertEqual(summary["build_kind"], "release")
             self.assertEqual(
                 summary["desktop_artifacts"]["darwin-x64"]["filename"],
-                f"webcodex-desktop-v{VERSION}-darwin-x64.dmg",
+                f"codegpt-desktop-v{VERSION}-darwin-x64.dmg",
             )
             self.assertEqual(
                 summary["desktop_artifacts"]["darwin-arm64"]["filename"],
-                f"webcodex-desktop-v{VERSION}-darwin-arm64.dmg",
+                f"codegpt-desktop-v{VERSION}-darwin-arm64.dmg",
             )
             self.assertEqual(
                 summary["desktop_artifacts"]["win32-x64"]["filename"],
-                f"webcodex-desktop-v{VERSION}-win32-x64-setup.exe",
+                f"codegpt-desktop-v{VERSION}-win32-x64-setup.exe",
             )
             self.assertEqual(
                 summary["desktop_artifacts"]["win32-arm64"]["filename"],
-                f"webcodex-desktop-v{VERSION}-win32-arm64-setup.exe",
+                f"codegpt-desktop-v{VERSION}-win32-arm64-setup.exe",
             )
 
     def test_release_bundle_rejects_missing_desktop(self) -> None:
@@ -240,7 +240,7 @@ class BundleTests(unittest.TestCase):
             metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
             item = metadata["desktop_artifacts"]["darwin-x64"]
             old_name = item["filename"]
-            bad_name = "webcodex-desktop-v0.4.0-macos-x64.dmg"
+            bad_name = "codegpt-desktop-v0.4.0-macos-x64.dmg"
             (root / old_name).rename(root / bad_name)
             item["filename"] = bad_name
             metadata_path.write_text(json.dumps(metadata) + "\n", encoding="utf-8")
@@ -289,7 +289,7 @@ class BundleTests(unittest.TestCase):
                     run_id=RUN_ID,
                     expected_source_sha=SOURCE_SHA,
                     expected_tag=f"v{VERSION}",
-                    artifact_name=f"webcodex-v{VERSION}-bundle",
+                    artifact_name=f"codegpt-v{VERSION}-bundle",
                 )
 
     def test_bundle_rejects_archive_digest_drift(self) -> None:

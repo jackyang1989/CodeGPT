@@ -68,12 +68,12 @@ test("RuntimeApiClient manages token and sends authorized JSON post requests", a
     client.setToken("test-token-123");
     assert.equal(client.getToken(), "test-token-123");
 
-    const result = await client.post("test/path", { query: "webcodex" });
+    const result = await client.post("test/path", { query: "codegpt" });
     assert.equal(capturedUrl, "/test-api/test/path");
     assert.equal(capturedOptions.method, "POST");
     assert.equal(capturedOptions.headers["Authorization"], "Bearer test-token-123");
     assert.equal(capturedOptions.headers["Content-Type"], "application/json");
-    assert.equal(capturedOptions.body, JSON.stringify({ query: "webcodex" }));
+    assert.equal(capturedOptions.body, JSON.stringify({ query: "codegpt" }));
     assert.deepEqual(result, { ok: true, status: 200, data: { success: true } });
 
     client.clearToken();

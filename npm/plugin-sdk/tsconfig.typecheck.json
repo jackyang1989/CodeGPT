@@ -5,7 +5,7 @@
     "rootDir": ".",
     "baseUrl": ".",
     "paths": {
-      "@yyjeqhc/webcodex-plugin-sdk": ["./src/index.ts"]
+      "@yyjeqhc/codegpt-plugin-sdk": ["./src/index.ts"]
     }
   },
   "include": [

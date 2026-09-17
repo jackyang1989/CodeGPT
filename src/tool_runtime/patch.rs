@@ -9,7 +9,7 @@ use super::tool_result::ToolResult;
 use super::ToolRuntime;
 use crate::runner_protocol::{ShellCommandExecutionState, ShellRunRequest, ShellRunResponse};
 
-pub(crate) use webcodex_core::runtime_contract::MAX_UNIFIED_DIFF_BYTES;
+pub(crate) use codegpt_core::runtime_contract::MAX_UNIFIED_DIFF_BYTES;
 const MAX_UNIFIED_DIFF_AFFECTED_FILES: usize = 128;
 const MAX_UNIFIED_DIFF_WARNINGS: usize = 32;
 const UNIFIED_DIFF_STDERR_MAX_CHARS: usize = 4096;
@@ -179,7 +179,7 @@ fn sensitive_path_warning(path: &str) -> Option<String> {
             lower.as_str(),
             "runner.toml"
                 | "agent.toml"
-                | "webcodex.env"
+                | "codegpt.env"
                 | "secret.pem"
                 | "id_rsa"
                 | "project-registry"

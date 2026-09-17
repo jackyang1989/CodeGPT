@@ -74,7 +74,7 @@ pub(super) fn communication_principal(
     };
 
     let mut hasher = Sha256::new();
-    hasher.update(b"webcodex.communication.principal.v1\0");
+    hasher.update(b"codegpt.communication.principal.v1\0");
     hasher.update(kind.as_bytes());
     hasher.update(b"\0");
     hasher.update(subject.as_bytes());

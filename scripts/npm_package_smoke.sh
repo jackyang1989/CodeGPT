@@ -2,9 +2,9 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-PACKAGE_DIR="${WEBCODEX_NPM_PACKAGE_DIR:-$ROOT/npm/webcodex}"
-PROFILE="${WEBCODEX_NPM_SMOKE_PROFILE:-release}"
-BIN_DIR="${WEBCODEX_NPM_BINARY_DIR:-}"
+PACKAGE_DIR="${CODEGPT_NPM_PACKAGE_DIR:-$ROOT/npm/codegpt}"
+PROFILE="${CODEGPT_NPM_SMOKE_PROFILE:-release}"
+BIN_DIR="${CODEGPT_NPM_BINARY_DIR:-}"
 
 usage() {
     cat <<'EOF'
@@ -41,26 +41,26 @@ fi
 if [[ -z "$BIN_DIR" ]]; then
     case "$PROFILE" in
         release)
-            CARGO_ARGS=(build --release -p webcodex-cli --bin webcodex -p webcodex --bin webcodex-server -p webcodex-runner --bin webcodex-runner)
+            CARGO_ARGS=(build --release -p codegpt-cli --bin codegpt -p codegpt --bin codegpt-server -p codegpt-runner --bin codegpt-runner)
             BIN_DIR="$ROOT/target/release"
             ;;
         debug)
-            CARGO_ARGS=(build -p webcodex-cli --bin webcodex -p webcodex --bin webcodex-server -p webcodex-runner --bin webcodex-runner)
+            CARGO_ARGS=(build -p codegpt-cli --bin codegpt -p codegpt --bin codegpt-server -p codegpt-runner --bin codegpt-runner)
             BIN_DIR="$ROOT/target/debug"
             ;;
         *)
-            echo "WEBCODEX_NPM_SMOKE_PROFILE/--profile must be 'release' or 'debug'" >&2
+            echo "CODEGPT_NPM_SMOKE_PROFILE/--profile must be 'release' or 'debug'" >&2
             exit 2
             ;;
     esac
-    echo "[npm-smoke] building three WebCodex binaries ($PROFILE)"
+    echo "[npm-smoke] building three CodeGPT binaries ($PROFILE)"
     cargo "${CARGO_ARGS[@]}"
 else
     [[ -d "$BIN_DIR" ]] || { echo "[npm-smoke] binary directory not found: $BIN_DIR" >&2; exit 2; }
     BIN_DIR="$(cd "$BIN_DIR" && pwd)"
     echo "[npm-smoke] reusing existing native binaries from $BIN_DIR"
 fi
-for name in webcodex webcodex-server webcodex-runner; do
+for name in codegpt codegpt-server codegpt-runner; do
     test -x "$BIN_DIR/$name" || { echo "[npm-smoke] missing executable $BIN_DIR/$name" >&2; exit 1; }
 done
 
@@ -100,10 +100,10 @@ if (reports.length !== 1 || !reports[0] || !Array.isArray(reports[0].files)) {
   throw new Error('unexpected npm pack --json result shape');
 }
 const files = reports[0].files.map((entry) => entry.path);
-for (const required of ['README.md', 'bin/webcodex.js', 'bin/wrapper.js', 'install.js', 'manifest.json', 'package.json']) {
+for (const required of ['README.md', 'bin/codegpt.js', 'bin/wrapper.js', 'install.js', 'manifest.json', 'package.json']) {
   if (!files.includes(required)) throw new Error(`npm pack missing ${required}`);
 }
-for (const forbidden of ['manifest.example.json', 'bin/webcodex-cli.js', 'bin/webcodex-runner.js', 'vendor/bin/webcodex-cli']) {
+for (const forbidden of ['manifest.example.json', 'bin/codegpt-cli.js', 'bin/codegpt-runner.js', 'vendor/bin/codegpt-cli']) {
   if (files.includes(forbidden)) throw new Error(`npm pack contains legacy/private wrapper ${forbidden}`);
 }
 NODE
@@ -124,34 +124,34 @@ TARBALL="$PACK_DIR/$TARBALL_NAME"
 tar -xzf "$TARBALL" -C "$UNPACK"
 node - "$UNPACK/package/package.json" <<'NODE'
 const pkg = require(process.argv[2]);
-if (JSON.stringify(pkg.bin) !== JSON.stringify({webcodex: 'bin/webcodex.js'})) {
+if (JSON.stringify(pkg.bin) !== JSON.stringify({codegpt: 'bin/codegpt.js'})) {
   throw new Error(`unexpected npm bin mapping: ${JSON.stringify(pkg.bin)}`);
 }
 if (!pkg.scripts || pkg.scripts.postinstall !== 'node install.js') {
   throw new Error(`unexpected npm postinstall: ${JSON.stringify(pkg.scripts && pkg.scripts.postinstall)}`);
 }
 NODE
-if find "$UNPACK/package" -type f \( -name '.env' -o -name '*token*' -o -name 'webcodex-cli*' \) | grep -q .; then
+if find "$UNPACK/package" -type f \( -name '.env' -o -name '*token*' -o -name 'codegpt-cli*' \) | grep -q .; then
     echo "[npm-smoke] tarball contains a forbidden sensitive or legacy file" >&2
     exit 1
 fi
 
 echo "[npm-smoke] proving one-shot npx lazy bootstrap from the packed tarball"
 NPX_CACHE="$TMP/npx-cache"
-WEBCODEX_BINARY_DIR="$BIN_DIR" npm_config_cache="$NPX_CACHE" npm_config_ignore_scripts=true \
-    npx --yes --package "$TARBALL" webcodex --version >/dev/null
-NPX_PACKAGE_DIR="$(find "$NPX_CACHE/_npx" -path '*/node_modules/@yyjeqhc/webcodex' -type d -print -quit)"
+CODEGPT_BINARY_DIR="$BIN_DIR" npm_config_cache="$NPX_CACHE" npm_config_ignore_scripts=true \
+    npx --yes --package "$TARBALL" codegpt --version >/dev/null
+NPX_PACKAGE_DIR="$(find "$NPX_CACHE/_npx" -path '*/node_modules/@yyjeqhc/codegpt' -type d -print -quit)"
 test -n "$NPX_PACKAGE_DIR"
-for name in webcodex webcodex-server webcodex-runner; do
+for name in codegpt codegpt-server codegpt-runner; do
     test -x "$NPX_PACKAGE_DIR/vendor/bin/$name"
 done
 
 echo "[npm-smoke] installing tarball into temporary prefix without host lifecycle policy"
 npm install --global --prefix "$PREFIX" --ignore-scripts --no-audit --no-fund "$TARBALL"
-INSTALLED_PACKAGE="$PREFIX/lib/node_modules/@yyjeqhc/webcodex"
-WEBCODEX_BINARY_DIR="$BIN_DIR" node "$INSTALLED_PACKAGE/install.js"
+INSTALLED_PACKAGE="$PREFIX/lib/node_modules/@yyjeqhc/codegpt"
+CODEGPT_BINARY_DIR="$BIN_DIR" node "$INSTALLED_PACKAGE/install.js"
 NATIVE_DIR="$INSTALLED_PACKAGE/vendor/bin"
-for name in webcodex webcodex-server webcodex-runner; do
+for name in codegpt codegpt-server codegpt-runner; do
     test -x "$NATIVE_DIR/$name"
     output="$("$NATIVE_DIR/$name" --version)"
     echo "[npm-smoke] $output"
@@ -164,14 +164,14 @@ for name in webcodex webcodex-server webcodex-runner; do
         exit 1
     fi
 done
-test ! -e "$NATIVE_DIR/webcodex-cli"
-test -x "$PREFIX/bin/webcodex"
-test ! -e "$PREFIX/bin/webcodex-cli"
-test ! -e "$PREFIX/bin/webcodex-runner"
+test ! -e "$NATIVE_DIR/codegpt-cli"
+test -x "$PREFIX/bin/codegpt"
+test ! -e "$PREFIX/bin/codegpt-cli"
+test ! -e "$PREFIX/bin/codegpt-runner"
 
-"$PREFIX/bin/webcodex" --help >/dev/null
-"$PREFIX/bin/webcodex" --version >/dev/null
-"$PREFIX/bin/webcodex" server run --version >/dev/null
-"$PREFIX/bin/webcodex" runner run --version >/dev/null
+"$PREFIX/bin/codegpt" --help >/dev/null
+"$PREFIX/bin/codegpt" --version >/dev/null
+"$PREFIX/bin/codegpt" server run --version >/dev/null
+"$PREFIX/bin/codegpt" runner run --version >/dev/null
 
 echo "[npm-smoke] local npm package smoke passed for $VERSION"

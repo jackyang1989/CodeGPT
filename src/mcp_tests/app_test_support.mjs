@@ -122,6 +122,6 @@ export function stripToolResultStructuredContent(result) {
 export function toolResult(output, privateMeta) {
   return {
     structuredContent: { success: true, output },
-    ...(privateMeta ? { _meta: { "webcodex/agentContinuation": privateMeta } } : {}),
+    ...(privateMeta ? { _meta: { "codegpt/agentContinuation": privateMeta } } : {}),
   };
 }

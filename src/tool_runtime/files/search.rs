@@ -24,7 +24,7 @@ const SEARCH_PROJECT_TEXT_EXCLUDES: &[&str] = &[
     "--exclude=.env.*",
     "--exclude=runner.toml",
     "--exclude=agent.toml",
-    "--exclude=webcodex.env",
+    "--exclude=codegpt.env",
     "--exclude=*.pem",
     "--exclude=*.key",
 ];
@@ -63,8 +63,8 @@ const SEARCH_PROJECT_TEXT_RG_EXCLUDE_GLOBS: &[&str] = &[
     "!**/runner.toml",
     "!agent.toml",
     "!**/agent.toml",
-    "!webcodex.env",
-    "!**/webcodex.env",
+    "!codegpt.env",
+    "!**/codegpt.env",
     "!*.pem",
     "!**/*.pem",
     "!*.key",
@@ -351,7 +351,7 @@ fn search_project_text_rg_glob_args(options: &SearchOptions) -> String {
 
 fn search_project_text_marker_command(backend: &str, feature_unavailable: bool) -> String {
     let marker = json!({
-        "webcodex_search": {
+        "codegpt_search": {
             "backend": backend,
             "feature_unavailable": feature_unavailable,
         }
@@ -520,7 +520,7 @@ trap 'cleanup_search_status' EXIT
 trap 'cleanup_search_status; exit 143' HUP INT TERM
 i=0
 while [ "$i" -lt 100 ]; do
-  candidate="$tmp_base/webcodex-search-$$-$i"
+  candidate="$tmp_base/codegpt-search-$$-$i"
   if (umask 077; set -C; : > "$candidate") 2>/dev/null; then
     status_file=$candidate
     break
@@ -961,9 +961,9 @@ fn parse_search_backend_status(stdout: &str) -> SearchBackendStatus {
     };
     let value = match serde_json::from_str::<Value>(line) {
         Ok(value) => value,
-        Err(_) => return missing_search_backend_status(line.contains("webcodex_search")),
+        Err(_) => return missing_search_backend_status(line.contains("codegpt_search")),
     };
-    let Some(marker) = value.get("webcodex_search") else {
+    let Some(marker) = value.get("codegpt_search") else {
         // Bare {"backend": ...} objects and arbitrary JSON payload are not
         // trusted identity evidence.
         return missing_search_backend_status(false);
@@ -1008,7 +1008,7 @@ fn safe_external_provider_error_code(value: Option<&str>) -> Option<&str> {
 
 fn external_provider_error_result(stdout: &str, options: &SearchOptions) -> Option<ToolResult> {
     let value: Value = serde_json::from_str(stdout.trim()).ok()?;
-    if value.get("format").and_then(Value::as_str) != Some("webcodex.external_provider_error.v1") {
+    if value.get("format").and_then(Value::as_str) != Some("codegpt.external_provider_error.v1") {
         return None;
     }
     let provider_code =
@@ -1032,7 +1032,7 @@ fn external_provider_error_result(stdout: &str, options: &SearchOptions) -> Opti
     Some(ToolResult::err_with_output(
         message,
         json!({
-            "format": "webcodex.external_provider_error.v1",
+            "format": "codegpt.external_provider_error.v1",
             "provider": "claude_code",
             "capability": "search_project_text",
             "code": provider_code,
@@ -1607,7 +1607,7 @@ fn search_timeout_tool_result_with_records(
 
 fn empty_search_project_text_output(project: &str, options: &SearchOptions) -> ToolResult {
     let marker = json!({
-        "webcodex_search": {
+        "codegpt_search": {
             "backend": "native",
             "feature_unavailable": false,
         }
@@ -1788,7 +1788,7 @@ mod tests {
             .expect("system time before epoch")
             .as_nanos();
         let dir = std::env::temp_dir().join(format!(
-            "webcodex-{}-{}-{}",
+            "codegpt-{}-{}-{}",
             name,
             std::process::id(),
             stamp
@@ -1814,7 +1814,7 @@ mod tests {
         let result = search_project_text_output(
             "demo",
             &options,
-            "{\"webcodex_search\":{\"backend\":\"rg\"}}\nsrc/main.rs:42:fn main() {}\n",
+            "{\"codegpt_search\":{\"backend\":\"rg\"}}\nsrc/main.rs:42:fn main() {}\n",
             Some(0),
             "",
         );
@@ -1831,7 +1831,7 @@ mod tests {
 
     #[test]
     fn parse_search_context_matches_returns_context_line_numbers() {
-        let stdout = "{\"webcodex_search\":{\"backend\":\"rg\"}}\nsrc/lib.rs\x001-one\nsrc/lib.rs\x002-two\nsrc/lib.rs\x003:needle\nsrc/lib.rs\x004-four\nsrc/lib.rs\x005-five\n";
+        let stdout = "{\"codegpt_search\":{\"backend\":\"rg\"}}\nsrc/lib.rs\x001-one\nsrc/lib.rs\x002-two\nsrc/lib.rs\x003:needle\nsrc/lib.rs\x004-four\nsrc/lib.rs\x005-five\n";
         let options = SearchOptions::normalize(SearchRequest {
             pattern: "needle".to_string(),
             path: None,
@@ -1885,7 +1885,7 @@ mod tests {
             timeout_secs: None,
         })
         .unwrap();
-        let stdout = "{\"webcodex_search\":{\"backend\":\"rg\"}}\nsrc/a.rs:1:needle one\nsrc/b.rs:2:needle tw";
+        let stdout = "{\"codegpt_search\":{\"backend\":\"rg\"}}\nsrc/a.rs:1:needle one\nsrc/b.rs:2:needle tw";
         let result = search_project_text_output("demo", &options, stdout, Some(0), "");
         let matches = result.output["matches"].as_array().unwrap();
 
@@ -1912,7 +1912,7 @@ mod tests {
             timeout_secs: None,
         })
         .unwrap();
-        let stdout = "{\"webcodex_search\":{\"backend\":\"rg\"}}\nsrc/a.rs:1:needle one\n";
+        let stdout = "{\"codegpt_search\":{\"backend\":\"rg\"}}\nsrc/a.rs:1:needle one\n";
         let result = search_project_text_output("demo", &options, stdout, Some(0), "");
         assert!(result.success);
         assert_eq!(result.output["matches"].as_array().unwrap().len(), 1);
@@ -1937,7 +1937,7 @@ mod tests {
         let prefix = "src/a.rs:1:";
         let text_len = SEARCH_OUTPUT_BYTE_BUDGET - prefix.len() - 1;
         let stdout = format!(
-            "{{\"webcodex_search\":{{\"backend\":\"rg\"}}}}\n{prefix}{}\nX",
+            "{{\"codegpt_search\":{{\"backend\":\"rg\"}}}}\n{prefix}{}\nX",
             "x".repeat(text_len)
         );
         let result = search_project_text_output("demo", &options, &stdout, Some(141), "");
@@ -1967,7 +1967,7 @@ mod tests {
             "a".repeat(SEARCH_OUTPUT_BYTE_BUDGET - "src/".len() - suffix.len()),
             suffix
         );
-        let stdout = format!("{{\"webcodex_search\":{{\"backend\":\"rg\"}}}}\n{path}X");
+        let stdout = format!("{{\"codegpt_search\":{{\"backend\":\"rg\"}}}}\n{path}X");
         let result = search_project_text_output("demo", &options, &stdout, Some(141), "");
         assert!(result.success, "{:?}", result.error);
         assert_eq!(result.output["returned_file_count"], 1);
@@ -1995,7 +1995,7 @@ mod tests {
             "a".repeat(SEARCH_OUTPUT_BYTE_BUDGET - "src/".len() - count_suffix.len())
         );
         let stdout =
-            format!("{{\"webcodex_search\":{{\"backend\":\"rg\"}}}}\n{path}{count_suffix}X");
+            format!("{{\"codegpt_search\":{{\"backend\":\"rg\"}}}}\n{path}{count_suffix}X");
         let result = search_project_text_output("demo", &options, &stdout, Some(141), "");
         assert!(result.success, "{:?}", result.error);
         assert_eq!(result.output["returned_file_count"], 1);
@@ -2024,7 +2024,7 @@ mod tests {
             timeout_secs: None,
         })
         .unwrap();
-        let stdout = "{\"webcodex_search\":{\"backend\":\"rg\"}}\nsrc/a.rs:1:one\nsrc/b.rs:2:two\nsrc/c.rs:3:three\n";
+        let stdout = "{\"codegpt_search\":{\"backend\":\"rg\"}}\nsrc/a.rs:1:one\nsrc/b.rs:2:two\nsrc/c.rs:3:three\n";
         let result = search_project_text_output("demo", &options, stdout, Some(141), "");
         assert!(result.success, "{:?}", result.error);
         assert_eq!(result.output["matches"].as_array().unwrap().len(), 2);
@@ -2047,7 +2047,7 @@ mod tests {
             timeout_secs: None,
         })
         .unwrap();
-        let stdout = "{\"webcodex_search\":{\"backend\":\"rg\"}}\n";
+        let stdout = "{\"codegpt_search\":{\"backend\":\"rg\"}}\n";
         let result = search_project_text_output("demo", &options, stdout, Some(1), "");
         assert!(result.success, "{:?}", result.error);
         assert_eq!(result.output["matches"], json!([]));
@@ -2073,7 +2073,7 @@ mod tests {
         })
         .unwrap();
         let stdout = concat!(
-            "{\"webcodex_search\":{\"backend\":\"rg\"}}\n",
+            "{\"codegpt_search\":{\"backend\":\"rg\"}}\n",
             "src/a.rs:1:needle one\n",
             "src/b.rs:2:needle tw",
         );
@@ -2118,7 +2118,7 @@ mod tests {
             timeout_secs: Some(0),
         })
         .unwrap();
-        let stdout = "{\"webcodex_search\":{\"backend\":\"rg\"}}\n";
+        let stdout = "{\"codegpt_search\":{\"backend\":\"rg\"}}\n";
         let result = search_project_text_output(
             "demo",
             &options,
@@ -2150,7 +2150,7 @@ mod tests {
         .unwrap();
         // Count mode: one complete file record followed by a partial tail.
         let stdout = concat!(
-            "{\"webcodex_search\":{\"backend\":\"rg\"}}\n",
+            "{\"codegpt_search\":{\"backend\":\"rg\"}}\n",
             "src/a.rs:2\n",
             "src/partial.rs:1",
         );
@@ -2186,7 +2186,7 @@ mod tests {
         })
         .unwrap();
         let stdout = concat!(
-            "{\"webcodex_search\":{\"backend\":\"rg\"}}\n",
+            "{\"codegpt_search\":{\"backend\":\"rg\"}}\n",
             "src/a.rs\n",
             "src/b.rs",
         );
@@ -2224,7 +2224,7 @@ mod tests {
             timeout_secs: None,
         })
         .unwrap();
-        let stdout = "{\"webcodex_search\":{\"backend\":\"rg\"}}\nsrc/a.rs:1:needle\n";
+        let stdout = "{\"codegpt_search\":{\"backend\":\"rg\"}}\nsrc/a.rs:1:needle\n";
         let result = search_project_text_output("demo", &options, stdout, Some(2), "");
         assert!(!result.success);
         assert_eq!(result.output["code"], "search_execution_failed");
@@ -2247,8 +2247,8 @@ mod tests {
         // Absolute path, parent traversal, and a temp-file path must be
         // dropped; only the trusted relative record survives.
         let stdout = concat!(
-            "{\"webcodex_search\":{\"backend\":\"rg\"}}\n",
-            "/tmp/webcodex-x:1:secret\n",
+            "{\"codegpt_search\":{\"backend\":\"rg\"}}\n",
+            "/tmp/codegpt-x:1:secret\n",
             "src/../../etc/passwd:1:secret\n",
             "src/a.rs:1:needle\n",
         );
@@ -2321,7 +2321,7 @@ mod tests {
         let stdout = concat!(
             "[output truncated to last 12000 bytes]\n",
             "src/z.rs:1:needle tail\n",
-            "{\"webcodex_search\":{\"backend\":\"rg\"}}\n",
+            "{\"codegpt_search\":{\"backend\":\"rg\"}}\n",
         );
         let result = search_project_text_output("demo", &options, stdout, Some(0), "");
         assert!(!result.success, "{:?}", result.output);
@@ -2348,7 +2348,7 @@ mod tests {
 
         for marker in result_retention_truncation_markers() {
             let stdout = format!(
-                "{marker}{{\"webcodex_search\":{{\"backend\":\"rg\"}}}}\nsrc/a.rs:1:needle one\nsrc/b.rs:2:needle two\n"
+                "{marker}{{\"codegpt_search\":{{\"backend\":\"rg\"}}}}\nsrc/a.rs:1:needle one\nsrc/b.rs:2:needle two\n"
             );
             let result = search_project_text_output("demo", &options, &stdout, Some(0), "");
             assert!(!result.success, "marker {marker:?}: {:?}", result.output);
@@ -2381,7 +2381,7 @@ mod tests {
 
         for marker in result_retention_truncation_markers() {
             let stdout = format!(
-                "{marker}{{\"webcodex_search\":{{\"backend\":\"rg\"}}}}\nsrc/a.rs\nsrc/b.rs\n"
+                "{marker}{{\"codegpt_search\":{{\"backend\":\"rg\"}}}}\nsrc/a.rs\nsrc/b.rs\n"
             );
             let result = search_project_text_output("demo", &options, &stdout, Some(0), "");
             assert!(!result.success, "marker {marker:?}: {:?}", result.output);
@@ -2414,7 +2414,7 @@ mod tests {
 
         for marker in result_retention_truncation_markers() {
             let stdout = format!(
-                "{marker}{{\"webcodex_search\":{{\"backend\":\"rg\"}}}}\nsrc/a.rs:2\nsrc/b.rs:3\n"
+                "{marker}{{\"codegpt_search\":{{\"backend\":\"rg\"}}}}\nsrc/a.rs:2\nsrc/b.rs:3\n"
             );
             let result = search_project_text_output("demo", &options, &stdout, Some(0), "");
             assert!(!result.success, "marker {marker:?}: {:?}", result.output);
@@ -2445,7 +2445,7 @@ mod tests {
         })
         .unwrap();
         let stdout = concat!(
-            "{\"webcodex_search\":{\"backend\":\"rg\"}}\n",
+            "{\"codegpt_search\":{\"backend\":\"rg\"}}\n",
             "src/a.rs:1:needle one\n",
             "[output truncated]\n",
             "src/b.rs:2:needle two\n",
@@ -2477,7 +2477,7 @@ mod tests {
         })
         .unwrap();
         let stdout = concat!(
-            "{\"webcodex_search\":{\"backend\":\"rg\"}}\n",
+            "{\"codegpt_search\":{\"backend\":\"rg\"}}\n",
             "src/a.rs\01-one\n",
             "src/a.rs\02:needle\n",
             "src/a.rs\03-three\n",

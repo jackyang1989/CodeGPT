@@ -1,8 +1,8 @@
 # Read-only status for the supported Windows Runner Scheduled Task lifecycle.
 [CmdletBinding()]
 param(
-    [string]$RunnerPath = "$env:USERPROFILE\.local\bin\webcodex-runner.exe",
-    [string]$TaskName = 'WebCodex MSI Dogfood Runner',
+    [string]$RunnerPath = "$env:USERPROFILE\.local\bin\codegpt-runner.exe",
+    [string]$TaskName = 'CodeGPT MSI Dogfood Runner',
     [string]$TaskPath = '\',
     [switch]$Json
 )

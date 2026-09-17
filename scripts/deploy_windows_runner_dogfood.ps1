@@ -16,9 +16,9 @@ param(
     [Alias('Candidate')]
     [string]$CandidatePath,
 
-    [string]$RunnerPath = "$env:USERPROFILE\.local\bin\webcodex-runner.exe",
-    [string]$WebCodexCliPath,
-    [string]$TaskName = "WebCodex MSI Dogfood Runner",
+    [string]$RunnerPath = "$env:USERPROFILE\.local\bin\codegpt-runner.exe",
+    [string]$CodeGPTCliPath,
+    [string]$TaskName = "CodeGPT MSI Dogfood Runner",
     [string]$TaskPath = "\",
 
     [ValidateRange(1, 120)]
@@ -49,7 +49,7 @@ function Get-RunnerIdentity {
         throw "Runner version probe failed for $Path"
     }
     $identity = [string]$output[0]
-    if (-not $identity.StartsWith("webcodex-runner ")) {
+    if (-not $identity.StartsWith("codegpt-runner ")) {
         throw "Runner version probe returned an unexpected identity for $Path"
     }
     return $identity
@@ -73,10 +73,10 @@ function Wait-Until {
 }
 
 $repoRoot = Split-Path -Parent $PSScriptRoot
-$candidateSelection = Resolve-WebCodexRunnerCandidatePath -ExplicitPath $CandidatePath -RepoRoot $repoRoot
-$cliSelection = Resolve-WebCodexOperatorCliPath -ExplicitPath $WebCodexCliPath -RepoRoot $repoRoot
+$candidateSelection = Resolve-CodeGPTRunnerCandidatePath -ExplicitPath $CandidatePath -RepoRoot $repoRoot
+$cliSelection = Resolve-CodeGPTOperatorCliPath -ExplicitPath $CodeGPTCliPath -RepoRoot $repoRoot
 $Candidate = $candidateSelection.Path
-$WebCodexCliPath = $cliSelection.Path
+$CodeGPTCliPath = $cliSelection.Path
 $RunnerPath = [System.IO.Path]::GetFullPath($RunnerPath)
 $RunnerDir = Split-Path -Parent $RunnerPath
 if (-not (Test-Path -LiteralPath $RunnerDir -PathType Container)) {
@@ -100,7 +100,7 @@ $previousIdentity = Get-RunnerIdentity -Path $RunnerPath
 $oldPrimary = Get-ExactlyOnePrimaryRunner -ExactPath $RunnerPath
 $operatorProfile = Get-RunnerOperatorProfile -PrimaryIdentity $oldPrimary
 $preObservation = Get-RunnerControlPlaneObservation `
-    -WebCodexCliPath $WebCodexCliPath `
+    -CodeGPTCliPath $CodeGPTCliPath `
     -ServerUrl $operatorProfile.ServerUrl `
     -TokenFile $operatorProfile.TokenFile `
     -ClientId $operatorProfile.ClientId `
@@ -115,7 +115,7 @@ $oldAgentInstanceId = [string]$preObservation.agent_instance_id
 # Copy first so the source may be a build directory, network path, or even the
 # current RunnerPath. The staged image is fully verified before the old process
 # is touched.
-$stagedPath = Join-Path $RunnerDir ("webcodex-runner.{0}.new.exe" -f [guid]::NewGuid().ToString("N"))
+$stagedPath = Join-Path $RunnerDir ("codegpt-runner.{0}.new.exe" -f [guid]::NewGuid().ToString("N"))
 $rollbackPath = "$RunnerPath.rollback"
 $failedPath = "$RunnerPath.failed"
 $replacementInstalled = $false
@@ -183,7 +183,7 @@ try {
     $candidateObserve = {
         param([int]$RequestTimeoutMilliseconds)
         $observation = Get-RunnerControlPlaneObservation `
-            -WebCodexCliPath $WebCodexCliPath `
+            -CodeGPTCliPath $CodeGPTCliPath `
             -ServerUrl $operatorProfile.ServerUrl `
             -TokenFile $operatorProfile.TokenFile `
             -ClientId $operatorProfile.ClientId `
@@ -215,7 +215,7 @@ try {
 
     # Successful handoff: remove stale per-deployment staging images but retain
     # one concrete rollback binary for the next operator action.
-    Get-ChildItem -LiteralPath $RunnerDir -Filter "webcodex-runner.*.new.exe" -File -ErrorAction SilentlyContinue |
+    Get-ChildItem -LiteralPath $RunnerDir -Filter "codegpt-runner.*.new.exe" -File -ErrorAction SilentlyContinue |
         Remove-Item -Force -ErrorAction SilentlyContinue
 
     Write-Output "Windows Runner dogfood replacement readiness succeeded."
@@ -254,7 +254,7 @@ try {
         # so that a stale candidate registration cannot satisfy rollback readiness.
         try {
             $beforeRollback = Get-RunnerControlPlaneObservation `
-                -WebCodexCliPath $WebCodexCliPath `
+                -CodeGPTCliPath $CodeGPTCliPath `
                 -ServerUrl $operatorProfile.ServerUrl `
                 -TokenFile $operatorProfile.TokenFile `
                 -ClientId $operatorProfile.ClientId `
@@ -315,7 +315,7 @@ try {
         $rollbackObserve = {
             param([int]$RequestTimeoutMilliseconds)
             Get-RunnerControlPlaneObservation `
-                -WebCodexCliPath $WebCodexCliPath `
+                -CodeGPTCliPath $CodeGPTCliPath `
                 -ServerUrl $operatorProfile.ServerUrl `
                 -TokenFile $operatorProfile.TokenFile `
                 -ClientId $operatorProfile.ClientId `

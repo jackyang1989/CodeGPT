@@ -527,7 +527,7 @@ mod raw_shell_bound_tests {
     }
 }
 
-pub(crate) use webcodex_core::shell_quote::shell_escape_simple;
+pub(crate) use codegpt_core::shell_quote::shell_escape_simple;
 
 pub(crate) fn validate_limited_cleanup_paths(
     paths: &[String],
@@ -657,7 +657,7 @@ pub(crate) fn command_rejected_message(
 
 pub(crate) fn command_outcome_unknown_message(reason: impl AsRef<str>) -> String {
     format!(
-        "Command execution outcome is unknown: {}.\nThe command may have started or produced side effects, but WebCodex did not receive a terminal result.\nDo not automatically retry a potentially side-effecting command.\nRetry guidance: inspect the actual Job, process, service, or target state as appropriate before deciding whether retry is safe.",
+        "Command execution outcome is unknown: {}.\nThe command may have started or produced side effects, but CodeGPT did not receive a terminal result.\nDo not automatically retry a potentially side-effecting command.\nRetry guidance: inspect the actual Job, process, service, or target state as appropriate before deciding whether retry is safe.",
         reason.as_ref()
     )
 }
@@ -671,7 +671,7 @@ pub(crate) fn command_failed_message(
         .map(|code| code.to_string())
         .unwrap_or_else(|| "unknown".to_string());
     format!(
-        "Command exited with status {}.\nNo files were modified by WebCodex itself; command side effects, if any, are from the invoked command.\nstdout_tail:\n{}\nstderr_tail:\n{}\nRetry guidance: inspect stderr/stdout above, then fix the reported issue or use a narrower tool.",
+        "Command exited with status {}.\nNo files were modified by CodeGPT itself; command side effects, if any, are from the invoked command.\nstdout_tail:\n{}\nstderr_tail:\n{}\nRetry guidance: inspect stderr/stdout above, then fix the reported issue or use a narrower tool.",
         status, stdout_tail, stderr_tail
     )
 }
@@ -682,7 +682,7 @@ pub(crate) fn command_timeout_message(
     stderr_tail: &str,
 ) -> String {
     format!(
-        "Command timed out after {}s.\nCommand definitely started, but WebCodex cannot prove its side effects ended with the timeout.\nOutput tails before timeout:\nstdout_tail:\n{}\nstderr_tail:\n{}\nRetry guidance: do not blindly retry. First inspect the actual Job, process, service, and target state. On a fresh safe attempt, keep ordinary long work on its canonical execution tool and Job handoff; use run_job only for intentional asynchronous shell start. If a new native child must survive Runner restart/replacement, use run_detached_process from the start instead of changing tools merely for duration.",
+        "Command timed out after {}s.\nCommand definitely started, but CodeGPT cannot prove its side effects ended with the timeout.\nOutput tails before timeout:\nstdout_tail:\n{}\nstderr_tail:\n{}\nRetry guidance: do not blindly retry. First inspect the actual Job, process, service, and target state. On a fresh safe attempt, keep ordinary long work on its canonical execution tool and Job handoff; use run_job only for intentional asynchronous shell start. If a new native child must survive Runner restart/replacement, use run_detached_process from the start instead of changing tools merely for duration.",
         timeout_secs, stdout_tail, stderr_tail
     )
 }
@@ -698,7 +698,7 @@ pub(crate) fn looks_like_command_timeout(
             .contains(&format!("command timed out after {} seconds", timeout_secs))
 }
 
-pub(crate) use webcodex_core::workflow_session_contract::is_safe_job_id;
+pub(crate) use codegpt_core::workflow_session_contract::is_safe_job_id;
 
 pub(crate) const DEFAULT_JOB_LOG_TAIL_LINES: usize = 200;
 
@@ -716,23 +716,23 @@ mod tests {
 
     #[test]
     fn runner_cwd_preserves_windows_native_path_syntax_across_server_platforms() {
-        let project = windows_project(r"\\?\E:\git\webcodex");
+        let project = windows_project(r"\\?\E:\git\codegpt");
         for (cwd, expected, relative) in [
-            (None, r"\\?\E:\git\webcodex", "."),
-            (Some("."), r"\\?\E:\git\webcodex", "."),
+            (None, r"\\?\E:\git\codegpt", "."),
+            (Some("."), r"\\?\E:\git\codegpt", "."),
             (
                 Some("apps/desktop"),
-                r"\\?\E:\git\webcodex\apps\desktop",
+                r"\\?\E:\git\codegpt\apps\desktop",
                 "apps/desktop",
             ),
             (
                 Some(r"apps\desktop"),
-                r"\\?\E:\git\webcodex\apps\desktop",
+                r"\\?\E:\git\codegpt\apps\desktop",
                 "apps/desktop",
             ),
             (
-                Some(r"e:/GIT/WEBCODEX/apps/桌面 project"),
-                r"\\?\E:\git\webcodex\apps\桌面 project",
+                Some(r"e:/GIT/CODEGPT/apps/桌面 project"),
+                r"\\?\E:\git\codegpt\apps\桌面 project",
                 "apps/桌面 project",
             ),
         ] {
@@ -745,10 +745,10 @@ mod tests {
             );
         }
 
-        let plain_project = windows_project(r"E:\git\webcodex");
+        let plain_project = windows_project(r"E:\git\codegpt");
         let resolved =
-            resolve_runner_cwd(&plain_project, Some(r"\\?\e:\GIT\WEBCODEX\apps/desktop")).unwrap();
-        assert_eq!(resolved, r"E:\git\webcodex\apps\desktop");
+            resolve_runner_cwd(&plain_project, Some(r"\\?\e:\GIT\CODEGPT\apps/desktop")).unwrap();
+        assert_eq!(resolved, r"E:\git\codegpt\apps\desktop");
         assert_eq!(
             project_relative_runner_cwd(&plain_project, &resolved).unwrap(),
             "apps/desktop"
@@ -757,12 +757,12 @@ mod tests {
 
     #[test]
     fn runner_cwd_windows_lexical_boundary_rejects_escape_and_ambiguous_roots() {
-        let project = windows_project(r"\\?\E:\git\webcodex");
+        let project = windows_project(r"\\?\E:\git\codegpt");
         for cwd in [
             r"..\outside",
             "../outside",
             r"E:\git\other",
-            r"F:\git\webcodex",
+            r"F:\git\codegpt",
             r"\Windows",
             r"\\server\share\repo",
             r"E:drive-relative",

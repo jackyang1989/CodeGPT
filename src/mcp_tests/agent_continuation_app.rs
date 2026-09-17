@@ -236,7 +236,7 @@ fn post_message(
 async fn agent_continuation_app_surface_is_sparse_app_only_and_resource_backed() {
     assert_eq!(
         MCP_AGENT_CONTINUATION_UI_RESOURCE_URI,
-        "ui://webcodex/agent-continuation/v17"
+        "ui://codegpt/agent-continuation/v17"
     );
     let (_temp, _db, adaptive) = continuation_runtime();
     let auth = continuation_auth("continuation-surface");
@@ -425,42 +425,42 @@ async fn agent_continuation_app_surface_is_sparse_app_only_and_resource_backed()
         .any(|resource| matches!(
             resource["uri"].as_str(),
             Some(
-                "ui://webcodex/agent-continuation/v1"
-                    | "ui://webcodex/agent-continuation/v2"
-                    | "ui://webcodex/agent-continuation/v3"
-                    | "ui://webcodex/agent-continuation/v4"
-                    | "ui://webcodex/agent-continuation/v5"
-                    | "ui://webcodex/agent-continuation/v6"
-                    | "ui://webcodex/agent-continuation/v7"
-                    | "ui://webcodex/agent-continuation/v8"
-                    | "ui://webcodex/agent-continuation/v9"
-                    | "ui://webcodex/agent-continuation/v10"
-                    | "ui://webcodex/agent-continuation/v11"
-                    | "ui://webcodex/agent-continuation/v12"
-                    | "ui://webcodex/agent-continuation/v13"
-                    | "ui://webcodex/agent-continuation/v14"
-                    | "ui://webcodex/agent-continuation/v15"
-                    | "ui://webcodex/agent-continuation/v16"
+                "ui://codegpt/agent-continuation/v1"
+                    | "ui://codegpt/agent-continuation/v2"
+                    | "ui://codegpt/agent-continuation/v3"
+                    | "ui://codegpt/agent-continuation/v4"
+                    | "ui://codegpt/agent-continuation/v5"
+                    | "ui://codegpt/agent-continuation/v6"
+                    | "ui://codegpt/agent-continuation/v7"
+                    | "ui://codegpt/agent-continuation/v8"
+                    | "ui://codegpt/agent-continuation/v9"
+                    | "ui://codegpt/agent-continuation/v10"
+                    | "ui://codegpt/agent-continuation/v11"
+                    | "ui://codegpt/agent-continuation/v12"
+                    | "ui://codegpt/agent-continuation/v13"
+                    | "ui://codegpt/agent-continuation/v14"
+                    | "ui://codegpt/agent-continuation/v15"
+                    | "ui://codegpt/agent-continuation/v16"
             )
         )));
     for uri in [
         MCP_AGENT_CONTINUATION_UI_RESOURCE_URI,
-        "ui://webcodex/agent-continuation/v1",
-        "ui://webcodex/agent-continuation/v2",
-        "ui://webcodex/agent-continuation/v3",
-        "ui://webcodex/agent-continuation/v4",
-        "ui://webcodex/agent-continuation/v5",
-        "ui://webcodex/agent-continuation/v6",
-        "ui://webcodex/agent-continuation/v7",
-        "ui://webcodex/agent-continuation/v8",
-        "ui://webcodex/agent-continuation/v9",
-        "ui://webcodex/agent-continuation/v10",
-        "ui://webcodex/agent-continuation/v11",
-        "ui://webcodex/agent-continuation/v12",
-        "ui://webcodex/agent-continuation/v13",
-        "ui://webcodex/agent-continuation/v14",
-        "ui://webcodex/agent-continuation/v15",
-        "ui://webcodex/agent-continuation/v16",
+        "ui://codegpt/agent-continuation/v1",
+        "ui://codegpt/agent-continuation/v2",
+        "ui://codegpt/agent-continuation/v3",
+        "ui://codegpt/agent-continuation/v4",
+        "ui://codegpt/agent-continuation/v5",
+        "ui://codegpt/agent-continuation/v6",
+        "ui://codegpt/agent-continuation/v7",
+        "ui://codegpt/agent-continuation/v8",
+        "ui://codegpt/agent-continuation/v9",
+        "ui://codegpt/agent-continuation/v10",
+        "ui://codegpt/agent-continuation/v11",
+        "ui://codegpt/agent-continuation/v12",
+        "ui://codegpt/agent-continuation/v13",
+        "ui://codegpt/agent-continuation/v14",
+        "ui://codegpt/agent-continuation/v15",
+        "ui://codegpt/agent-continuation/v16",
     ] {
         let read = handle_with_server_apps_enabled(
             &adaptive,
@@ -901,7 +901,7 @@ fn restart_recovery_survives_published_projection_output_schema() {
         "host_binding_missing_in_process"
     );
 
-    let published = webcodex_tool_contracts::output_schema_for_tool("present_agent_continuation");
+    let published = codegpt_tool_contracts::output_schema_for_tool("present_agent_continuation");
     let projection_schema = &published["properties"]["output"]["properties"]["agent_continuation"];
     let host_projection =
         host_project_through_output_schema(&runtime_projection, projection_schema);
@@ -1036,7 +1036,7 @@ fn expired_successor_replay_survives_published_recovery_output_schema() {
     );
 
     let published =
-        webcodex_tool_contracts::output_schema_for_tool("agent_continuation_recover_endpoint");
+        codegpt_tool_contracts::output_schema_for_tool("agent_continuation_recover_endpoint");
     let output_schema = &published["properties"]["output"];
     let host_projection =
         host_project_through_output_schema(&old_selector_replay.output, output_schema);
@@ -1064,7 +1064,7 @@ fn task_origin_wake_survives_published_bootstrap_output_schema() {
         "task_id": "wc_agent_task_u7u7u7u7u7u7u7u7".to_string(),
         "task_attempt_id": "wc_agent_task_attempt_zMzMzMzMzMzMzMzM".to_string(),
     });
-    let published = webcodex_tool_contracts::output_schema_for_tool("bootstrap_agent_conversation");
+    let published = codegpt_tool_contracts::output_schema_for_tool("bootstrap_agent_conversation");
     let wake_schema = &published["properties"]["output"]["properties"]["wake"];
     let host_projection = host_project_through_output_schema(&wake, wake_schema);
     assert_eq!(
@@ -1166,7 +1166,7 @@ async fn agent_continuation_app_protocol_uses_standard_result_without_model_proj
         false
     );
     assert!(foreign_bind["result"]["_meta"]
-        .get("webcodex/agentContinuation")
+        .get("codegpt/agentContinuation")
         .is_none());
 
     let bind = handle_with_server_apps_enabled(
@@ -1194,7 +1194,7 @@ async fn agent_continuation_app_protocol_uses_standard_result_without_model_proj
     };
     assert_eq!(bind["result"]["structuredContent"]["success"], true);
     assert!(bind["result"]["_meta"]
-        .get("webcodex/agentContinuation")
+        .get("codegpt/agentContinuation")
         .is_none());
     assert_eq!(
         bind["result"]["structuredContent"]["output"]["agent_continuation"]["host_binding"]
@@ -1299,7 +1299,7 @@ async fn agent_continuation_app_protocol_uses_standard_result_without_model_proj
         );
     }
     assert!(prepare["result"]["_meta"]
-        .get("webcodex/agentContinuation")
+        .get("codegpt/agentContinuation")
         .is_none());
     let automatic_message = prepare["result"]["structuredContent"]["output"]["app_protocol"]
         ["automatic_message"]

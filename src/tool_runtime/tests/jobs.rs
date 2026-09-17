@@ -846,7 +846,7 @@ async fn run_shell_failure_reports_command_started_and_output_tail() {
     assert!(!result.success);
     let error = result.error.as_deref().unwrap_or("");
     assert!(error.contains("Command exited with status 7"));
-    assert!(error.contains("No files were modified by WebCodex itself"));
+    assert!(error.contains("No files were modified by CodeGPT itself"));
     assert!(error.contains("stdout_tail"));
     assert!(error.contains("stderr_tail"));
     assert!(error.contains("Retry guidance"));
@@ -2592,7 +2592,7 @@ async fn job_log_wait_accepts_canonical_max_before_job_lookup() {
             None,
             None,
             None,
-            Some(webcodex_core::runtime_contract::MAX_JOB_OBSERVATION_WAIT_SECS),
+            Some(codegpt_core::runtime_contract::MAX_JOB_OBSERVATION_WAIT_SECS),
         )
         .await;
     assert!(!result.success);

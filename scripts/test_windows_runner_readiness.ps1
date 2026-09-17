@@ -223,16 +223,16 @@ foreach ($call in $deployReadinessCalls) {
 
 # Operator profile lookup carries only the token FILE PATH; token contents never
 # enter the helper projection or command diagnostics.
-$tempRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("webcodex-readiness-test-" + [guid]::NewGuid().ToString("N"))
+$tempRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("codegpt-readiness-test-" + [guid]::NewGuid().ToString("N"))
 New-Item -ItemType Directory -Path $tempRoot | Out-Null
 try {
     $configPath = Join-Path $tempRoot "runner.toml"
-    $tokenPath = Join-Path $tempRoot "webcodex-user-token"
+    $tokenPath = Join-Path $tempRoot "codegpt-user-token"
     $secret = "wc_pat_must_not_leak_from_profile_0123456789"
     Set-Content -LiteralPath $configPath -Encoding UTF8 -Value @('client_id = "msi-test"', 'server_url = "https://runtime.example"')
     Set-Content -LiteralPath $tokenPath -Encoding ASCII -NoNewline -Value $secret
     $primary = [pscustomobject]@{
-        CommandLine = '"C:\fake\webcodex-runner.exe" --config "' + $configPath + '"'
+        CommandLine = '"C:\fake\codegpt-runner.exe" --config "' + $configPath + '"'
     }
     $profile = Get-RunnerOperatorProfile -PrimaryIdentity $primary
     Assert-Equal "msi-test" $profile.ClientId "operator profile client_id mismatch"

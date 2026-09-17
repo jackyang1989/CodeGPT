@@ -20,11 +20,11 @@ use crate::tool_runtime::{
 use serde_json::{json, Value};
 use std::fs;
 use std::path::Path;
-use webcodex_core::plugin::{
+use codegpt_core::plugin::{
     PluginGatewayRequest, PluginGatewayResponse, PluginGatewayResponsePayload,
     PluginSelectionAnnotations, ProjectPluginCatalog, ProjectPluginCatalogEntry,
 };
-use webcodex_core::runner_skill::{
+use codegpt_core::runner_skill::{
     RunnerSkillDescriptor, RunnerSkillListResponse, RunnerSkillRequest,
     RUNNER_SKILL_RESPONSE_FORMAT,
 };
@@ -185,7 +185,7 @@ fn write_project_skill(root: &Path, package: &str, name: &str, description: &str
 
 fn startup_plugin_catalog_fixture() -> ProjectPluginCatalog {
     ProjectPluginCatalog {
-        catalog_revision: format!("wc_plugcat_{}", webcodex_core::compact::encode([0xaa; 32])),
+        catalog_revision: format!("wc_plugcat_{}", codegpt_core::compact::encode([0xaa; 32])),
         total_count: 1,
         entries: vec![ProjectPluginCatalogEntry {
             plugin: "repo-context".to_string(),
@@ -331,9 +331,9 @@ fn seed_managed_tool_runtime_fixture(source: &Path, worktree: &Path) -> String {
     managed_fixture_git(source, &["init"]);
     managed_fixture_git(
         source,
-        &["config", "user.email", "webcodex@example.invalid"],
+        &["config", "user.email", "codegpt@example.invalid"],
     );
-    managed_fixture_git(source, &["config", "user.name", "WebCodex Test"]);
+    managed_fixture_git(source, &["config", "user.name", "CodeGPT Test"]);
     std::fs::write(source.join("hello.txt"), "committed\n").unwrap();
     managed_fixture_git(source, &["add", "hello.txt"]);
     managed_fixture_git(source, &["commit", "-m", "seed"]);
@@ -1380,7 +1380,7 @@ async fn work_on_project_plugin_extension_uses_project_catalog_without_binding_o
     assert_eq!(plugins["status"], "available");
     assert_eq!(
         plugins["catalog_revision"],
-        format!("wc_plugcat_{}", webcodex_core::compact::encode([0xaa; 32]))
+        format!("wc_plugcat_{}", codegpt_core::compact::encode([0xaa; 32]))
     );
     assert_eq!(plugins["total_count"], 1);
     assert_eq!(plugins["returned_count"], 1);
@@ -3147,7 +3147,7 @@ async fn work_on_project_continues_exact_session_and_appends_instruction() {
     assert!(
         !serde_json::to_string(&summary)
             .unwrap()
-            .contains("webcodex.coding_workflow"),
+            .contains("codegpt.coding_workflow"),
         "workflow projection must not become Session state"
     );
 }

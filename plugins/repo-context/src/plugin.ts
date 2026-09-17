@@ -5,7 +5,7 @@ import {
   runPlugin,
   schema,
   textResult,
-} from "@yyjeqhc/webcodex-plugin-sdk";
+} from "@yyjeqhc/codegpt-plugin-sdk";
 
 import {
   AFFECTED_PACKAGE_LIMIT,
