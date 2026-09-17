@@ -112,7 +112,7 @@ class TestInventoryScriptTests(unittest.TestCase):
         )
         self.assertEqual(
             list(rows),
-            ["crates/codegpt-cli", "crates/codegpt-runner", "codegpt"],
+            ["codegpt", "crates/codegpt-cli", "crates/codegpt-runner"],
         )
         self.assertEqual(rows["codegpt"], ["1", "1", "0", "0", "1", "0", "0", "0", "0"])
         self.assertEqual(
