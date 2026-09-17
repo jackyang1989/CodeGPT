@@ -394,15 +394,9 @@ a:focus-visible {
 
 .main-content:focus { outline: none; }
 
-.page-section, .first-run {
+.page-section, .first-run, .setup-shell {
   width: 100%;
   max-width: 100%;
-  margin: 0;
-}
-
-.setup-shell {
-  width: 100%;
-  max-width: 640px;
   margin: 0;
 }
 
