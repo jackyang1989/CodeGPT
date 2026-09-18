@@ -1613,8 +1613,16 @@ button:disabled {
 .status-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: 1fr;
   gap: 14px;
   margin-top: 14px;
+}
+
+.status-grid > .status-card,
+.status-grid > .status-card + .status-card {
+  margin-top: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .status-card {
@@ -1636,6 +1644,7 @@ button:disabled {
   line-height: 1.5;
   color: var(--text-secondary);
   margin: 0;
+  margin-top: auto;
 }
 
 .runtime-details {
@@ -2105,12 +2114,14 @@ button:disabled {
   justify-content: space-between;
   gap: 12px;
   font-size: 12px;
+  line-height: 1.5;
 }
 
 .project-card-details .detail-label {
   color: var(--text-secondary);
   white-space: nowrap;
   font-size: 12px;
+  line-height: 1.5;
 }
 
 .project-card-details .detail-val {
@@ -2121,6 +2132,7 @@ button:disabled {
   overflow: hidden;
   text-overflow: ellipsis;
   min-width: 0;
+  line-height: 1.5;
 }
 
 .project-card-footer {
@@ -2465,6 +2477,31 @@ details.settings-section summary:hover {
   font-size: 13px;
   line-height: 1.45;
   color: #fca5a5;
+}
+
+.error-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.error-action-btn {
+  background: var(--accent-indigo, #6366f1);
+  color: #ffffff;
+  border: 1px solid #4338ca;
+  border-radius: 6px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  line-height: 1.4;
+  transition: opacity 0.15s ease, background 0.15s ease;
+  white-space: nowrap;
+}
+
+.error-action-btn:hover {
+  background: var(--accent-indigo-hover, #4f46e5);
 }
 
 .error-dismiss-btn {

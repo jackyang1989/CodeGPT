@@ -509,7 +509,14 @@ function AppContent() {
             )}
           </section>
         )}
-        {error && <AppError error={error} onDismiss={() => setError(null)} />}
+        {error && (
+          <AppError
+            error={error}
+            onDismiss={() => setError(null)}
+            actionLabel={!state.readiness.runtime_ready ? t("home.resumeRuntime") : undefined}
+            onAction={!state.readiness.runtime_ready ? () => { setError(null); void resumeRuntime(); } : undefined}
+          />
+        )}
         {navigation === "home" && (needsSetup ? (
           <FirstRun
             state={state}
@@ -568,9 +575,13 @@ function shouldStartPreferredTunnel(state: DesktopState) {
 function AppError({
   error,
   onDismiss,
+  actionLabel,
+  onAction,
 }: {
   error: DesktopError;
   onDismiss?: () => void;
+  actionLabel?: string;
+  onAction?: () => void;
 }) {
   const { t } = useLocale();
   const presentation = desktopErrorPresentation(error, t);
@@ -581,19 +592,30 @@ function AppError({
           <strong>{presentation.title}</strong>
           <span className="error-action-text">{presentation.action}</span>
         </div>
-        {onDismiss && (
-          <button
-            type="button"
-            className="error-dismiss-btn"
-            onClick={onDismiss}
-            title="关闭"
-            aria-label="关闭"
-          >
-            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" width="14" height="14" aria-hidden="true">
-              <path d="M4 4l8 8M12 4l-8 8" />
-            </svg>
-          </button>
-        )}
+        <div className="error-header-actions">
+          {actionLabel && onAction && (
+            <button
+              type="button"
+              className="error-action-btn"
+              onClick={onAction}
+            >
+              {actionLabel}
+            </button>
+          )}
+          {onDismiss && (
+            <button
+              type="button"
+              className="error-dismiss-btn"
+              onClick={onDismiss}
+              title="关闭"
+              aria-label="关闭"
+            >
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" width="14" height="14" aria-hidden="true">
+                <path d="M4 4l8 8M12 4l-8 8" />
+              </svg>
+            </button>
+          )}
+        </div>
       </div>
       <details className="error-details">
         <summary>{t("common.details")}</summary>
