@@ -523,6 +523,32 @@ async fn list_projects_filters_only_after_authorization_visibility() {
 }
 
 #[tokio::test]
+async fn list_projects_excludes_disabled_projects() {
+    let runtime = test_runtime();
+    let mut disabled_proj = registered_project("disabled-proj", "/tmp/disabled");
+    disabled_proj.disabled = true;
+    register_target_agent(
+        &runtime,
+        "client-1",
+        vec![
+            registered_project("active-proj", "/tmp/active"),
+            disabled_proj,
+        ],
+        None,
+    )
+    .await;
+
+    let result = runtime
+        .dispatch(list_projects_call(None, None, None, None, false))
+        .await;
+
+    assert!(result.success);
+    let projects = result.output["projects"].as_array().unwrap();
+    assert_eq!(projects.len(), 1);
+    assert_eq!(projects[0]["id"].as_str(), Some("agent:client-1:active-proj"));
+}
+
+#[tokio::test]
 async fn managed_users_discover_only_their_own_runner_project_metadata() {
     let runtime = test_runtime();
     let alice = managed_discovery_auth("alice");
