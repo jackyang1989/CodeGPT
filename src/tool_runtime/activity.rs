@@ -6,8 +6,8 @@
 //! implementation (SQLite in the server binary). The default is a no-op so
 //! embedded runtimes and tests pay nothing.
 
-use serde_json::Value;
 pub use codegpt_core::activity_contract::{ActivityRecord, ActivityScope, ActivityVisibility};
+use serde_json::Value;
 
 /// Project the already-authenticated root context into the protocol-neutral
 /// persistence scope. Credential hashes and live client ownership are never

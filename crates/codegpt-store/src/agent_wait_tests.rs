@@ -140,7 +140,7 @@ fn wait_input(
 fn wait_wake_id(db: &Database, wait_id: &str) -> String {
     db.conn_for_tests()
         .query_row(
-            "SELECT wake_id FROM wc_agent_wakes WHERE source_wait_id = ?1",
+            "SELECT wake_id FROM cg_agent_wakes WHERE source_wait_id = ?1",
             [wait_id],
             |row| row.get(0),
         )
@@ -176,7 +176,7 @@ fn create_wait_is_exact_keyed_private_and_snapshots_already_terminal_sources() {
     assert_eq!(
         db.conn_for_tests()
             .query_row(
-                "SELECT COUNT(*) FROM wc_agent_wakes WHERE source_wait_id = ?1 AND state = 'pending'",
+                "SELECT COUNT(*) FROM cg_agent_wakes WHERE source_wait_id = ?1 AND state = 'pending'",
                 [created.agent_wait.wait_id.as_str()],
                 |row| row.get::<_, i64>(0),
             )
@@ -233,7 +233,7 @@ fn wait_source_authority_is_independent_and_foreign_task_is_existence_hidden() {
             wait_input(
                 &alice_agent,
                 &endpoint,
-                &["wc_agent_task_________________".to_string()],
+                &["cg_agent_task_________________".to_string()],
                 "wait-authority-missing",
             ),
         )
@@ -377,7 +377,7 @@ fn future_matches_coalesce_only_before_prepare_and_exact_consume_resumes_once() 
     assert_eq!(
         db.conn_for_tests()
             .query_row(
-                "SELECT COUNT(*) FROM wc_agent_wakes WHERE source_wait_id = ?1",
+                "SELECT COUNT(*) FROM cg_agent_wakes WHERE source_wait_id = ?1",
                 [created.agent_wait.wait_id.as_str()],
                 |row| row.get::<_, i64>(0),
             )
@@ -449,7 +449,7 @@ fn prepared_wait_batch_is_sealed_and_post_fence_cancel_fails_closed() {
     assert_eq!(
         db.conn_for_tests()
             .query_row(
-                "SELECT COUNT(*) FROM wc_agent_wakes WHERE source_wait_id = ?1",
+                "SELECT COUNT(*) FROM cg_agent_wakes WHERE source_wait_id = ?1",
                 [wait.wait_id.as_str()],
                 |row| row.get::<_, i64>(0),
             )
@@ -614,7 +614,7 @@ fn wait_creation_enforces_selector_agent_and_endpoint_bounds() {
     let nine = (0..9)
         .map(|index| {
             format!(
-                "wc_agent_task_{}",
+                "cg_agent_task_{}",
                 codegpt_core::compact::encode(&(index as u128).to_be_bytes()[4..])
             )
         })
@@ -777,7 +777,7 @@ fn wait_and_task_wakes_share_the_existing_one_dispatched_wake_fence() {
     assert_eq!(
         db.conn_for_tests()
             .query_row(
-                "SELECT COUNT(*) FROM wc_agent_wakes
+                "SELECT COUNT(*) FROM cg_agent_wakes
                  WHERE target_agent_id = ?1 AND state IN ('prepared', 'delivered', 'delivery_unknown')",
                 [watcher.as_str()],
                 |row| row.get::<_, i64>(0),

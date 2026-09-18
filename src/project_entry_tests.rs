@@ -301,7 +301,7 @@ fn fresh_setup_is_minimal_idempotent_and_does_not_expose_internal_ids() {
         read_private_value(&state.join("credentials/project-credential")).unwrap();
     let agent_token = read_private_value(&state.join("credentials/agent-token")).unwrap();
     assert_ne!(project_credential, agent_token);
-    assert!(agent_token.starts_with("wc_agent_"));
+    assert!(agent_token.starts_with("cg_agent_"));
     assert_eq!(agent_toml["token"].as_str(), Some(agent_token.as_str()));
     let canonical_root = options.root.canonicalize().unwrap();
     let canonical_state = state.canonicalize().unwrap();
@@ -342,7 +342,7 @@ fn fresh_setup_is_minimal_idempotent_and_does_not_expose_internal_ids() {
         "executor_ref",
         "workflow session",
         "agent:local",
-        "wc_proj_",
+        "cg_proj_",
         "token",
         "credentials/",
     ] {
@@ -570,7 +570,7 @@ fn doctor_and_status_share_canonical_readiness_facts_and_stay_read_only() {
         for output in [status, doctor] {
             assert!(!output.contains("agent:"));
             assert!(!output.contains("client_id"));
-            assert!(!output.contains("wc_proj_"));
+            assert!(!output.contains("cg_proj_"));
         }
     }
     assert_eq!(fs::read(runner_config).unwrap(), before);

@@ -262,7 +262,7 @@ fn purge_stale_auth_rows_removes_dead_material_keeps_live() {
             id: "k-live".to_string(),
             user_id: "u-1".to_string(),
             name: "live".to_string(),
-            key_prefix: "wc_pat_live".to_string(),
+            key_prefix: "cg_pat_live".to_string(),
             created_at: now,
             last_used_at: None,
             revoked_at: None,
@@ -279,7 +279,7 @@ fn purge_stale_auth_rows_removes_dead_material_keeps_live() {
             id: "k-revoked".to_string(),
             user_id: "u-1".to_string(),
             name: "revoked".to_string(),
-            key_prefix: "wc_pat_rev".to_string(),
+            key_prefix: "cg_pat_rev".to_string(),
             created_at: now,
             last_used_at: None,
             revoked_at: Some(now - 1),
@@ -296,7 +296,7 @@ fn purge_stale_auth_rows_removes_dead_material_keeps_live() {
             id: "k-expired".to_string(),
             user_id: "u-1".to_string(),
             name: "expired".to_string(),
-            key_prefix: "wc_pat_exp".to_string(),
+            key_prefix: "cg_pat_exp".to_string(),
             created_at: now,
             last_used_at: None,
             revoked_at: None,
@@ -339,7 +339,7 @@ fn purge_stale_auth_rows_removes_dead_material_keeps_live() {
 
     let client = OAuthClientRecord {
         id: "oc-1".to_string(),
-        client_id: "wc_client_test".to_string(),
+        client_id: "cg_client_test".to_string(),
         client_secret_hash: "secret-hash".to_string(),
         name: "test".to_string(),
         owner_user_id: Some("u-1".to_string()),
@@ -631,7 +631,7 @@ fn phase2_token_lifecycle_hash_revoked_expired_disabled_last_used() {
     assert!(dup_err.is_err(), "duplicate username must be rejected");
 
     // Create token: store hash, never plaintext.
-    let plaintext = "wc_pat_testsecretvalue1234567890";
+    let plaintext = "cg_pat_testsecretvalue1234567890";
     let mut hasher = Sha256::new();
     hasher.update(plaintext.as_bytes());
     let key_hash = format!("{:x}", hasher.finalize());
@@ -639,7 +639,7 @@ fn phase2_token_lifecycle_hash_revoked_expired_disabled_last_used() {
         id: "k-1".to_string(),
         user_id: "u-1".to_string(),
         name: "main".to_string(),
-        key_prefix: "wc_pat_testse".to_string(),
+        key_prefix: "cg_pat_testse".to_string(),
         created_at: now,
         last_used_at: None,
         revoked_at: None,
@@ -728,7 +728,7 @@ fn api_key_default_user_kind_is_distinct_from_agent_tokens() {
         id: "k-legacy".to_string(),
         user_id: "u-1".to_string(),
         name: "legacy".to_string(),
-        key_prefix: "wc_pat_legacy".to_string(),
+        key_prefix: "cg_pat_legacy".to_string(),
         created_at: now,
         last_used_at: None,
         revoked_at: None,
@@ -764,7 +764,7 @@ fn phase3_agent_token_stored_with_kind_and_allowed_client_id() {
         updated_at: Some(now),
     })
     .unwrap();
-    let plaintext = "wc_agent_secretvalue1234567890abcdef";
+    let plaintext = "cg_agent_secretvalue1234567890abcdef";
     let mut hasher = Sha256::new();
     hasher.update(plaintext.as_bytes());
     let key_hash = format!("{:x}", hasher.finalize());
@@ -772,7 +772,7 @@ fn phase3_agent_token_stored_with_kind_and_allowed_client_id() {
         id: "k-agent-1".to_string(),
         user_id: "u-1".to_string(),
         name: "laptop agent".to_string(),
-        key_prefix: "wc_agent_secret".to_string(),
+        key_prefix: "cg_agent_secret".to_string(),
         created_at: now,
         last_used_at: None,
         revoked_at: None,
@@ -843,7 +843,7 @@ fn phase3_agent_token_revoked_expired_disabled_checks_apply() {
         id: "k-agent".to_string(),
         user_id: "u-1".to_string(),
         name: "agent".to_string(),
-        key_prefix: "wc_agent_pre".to_string(),
+        key_prefix: "cg_agent_pre".to_string(),
         created_at: now,
         last_used_at: None,
         revoked_at: None,
@@ -903,7 +903,7 @@ fn phase3_list_agent_tokens_returns_only_kind_agent() {
         id: "k-user".to_string(),
         user_id: "u-1".to_string(),
         name: "user".to_string(),
-        key_prefix: "wc_pat_user".to_string(),
+        key_prefix: "cg_pat_user".to_string(),
         created_at: now,
         last_used_at: None,
         revoked_at: None,
@@ -916,7 +916,7 @@ fn phase3_list_agent_tokens_returns_only_kind_agent() {
     let agent_key_1 = ApiKeyRecord {
         id: "k-agent-1".to_string(),
         name: "agent-1".to_string(),
-        key_prefix: "wc_agent_a1".to_string(),
+        key_prefix: "cg_agent_a1".to_string(),
         kind: "agent".to_string(),
         allowed_client_id: Some("laptop".to_string()),
         scopes: "agent:register".to_string(),
@@ -926,7 +926,7 @@ fn phase3_list_agent_tokens_returns_only_kind_agent() {
     let agent_key_2 = ApiKeyRecord {
         id: "k-agent-2".to_string(),
         name: "agent-2".to_string(),
-        key_prefix: "wc_agent_a2".to_string(),
+        key_prefix: "cg_agent_a2".to_string(),
         kind: "agent".to_string(),
         allowed_client_id: Some("desktop".to_string()),
         scopes: "agent:poll agent:result".to_string(),
@@ -975,14 +975,14 @@ fn oauth_fixture_hash(value: &str) -> String {
 }
 
 fn oauth_fixture_plaintext(kind: &str) -> String {
-    format!("wc_test_{kind}_{}", uuid::Uuid::new_v4().simple())
+    format!("cg_test_{kind}_{}", uuid::Uuid::new_v4().simple())
 }
 
 fn oauth_seed_client(db: &Database, user: &UserRecord, name: &str) -> (OAuthClientRecord, String) {
     let now = chrono::Utc::now().timestamp();
     let plaintext_secret = oauth_fixture_plaintext("client_secret");
     let client_id = format!(
-        "wc_client_{}{}",
+        "cg_client_{}{}",
         uuid::Uuid::new_v4().simple(),
         uuid::Uuid::new_v4().simple()
     );

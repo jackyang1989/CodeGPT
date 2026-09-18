@@ -7,6 +7,21 @@ use agent_client_protocol_schema::v1::{
     SessionConfigOption, SessionConfigSelectOptions, SetSessionConfigOptionResponse, StopReason,
 };
 use chrono::Utc;
+#[cfg(all(test, unix))]
+use codegpt_core::coding_agent::CodingAgentCancelRequest;
+use codegpt_core::coding_agent::{
+    validate_coding_agent_run_snapshot, validate_request, CodingAgentConfigValue,
+    CodingAgentDispatchState, CodingAgentEvent, CodingAgentEventKind, CodingAgentExecutionState,
+    CodingAgentObserveResult, CodingAgentProvider, CodingAgentRequest, CodingAgentResponse,
+    CodingAgentResponsePayload, CodingAgentRunInventory, CodingAgentRunSnapshot,
+    CodingAgentRunState, CodingAgentTerminal, CodingAgentUsage,
+    CODING_AGENT_MAX_EVENTS_PER_RESPONSE, CODING_AGENT_MAX_INVENTORY_RUNS,
+    CODING_AGENT_MAX_RETAINED_EVENTS, CODING_AGENT_STOP_REASON_CANCELLED,
+    CODING_AGENT_STOP_REASON_END_TURN, CODING_AGENT_STOP_REASON_MAX_TOKENS,
+    CODING_AGENT_STOP_REASON_MAX_TURN_REQUESTS, CODING_AGENT_STOP_REASON_REFUSAL,
+};
+use codegpt_process::ManagedChild;
+use codegpt_runner_config::paths::paths_equal;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use sha2::{Digest, Sha256};
@@ -23,21 +38,6 @@ use std::sync::{Arc, Condvar, Mutex};
 use std::thread;
 use std::time::{Duration, Instant};
 use uuid::Uuid;
-#[cfg(all(test, unix))]
-use codegpt_core::coding_agent::CodingAgentCancelRequest;
-use codegpt_core::coding_agent::{
-    validate_coding_agent_run_snapshot, validate_request, CodingAgentConfigValue,
-    CodingAgentDispatchState, CodingAgentEvent, CodingAgentEventKind, CodingAgentExecutionState,
-    CodingAgentObserveResult, CodingAgentProvider, CodingAgentRequest, CodingAgentResponse,
-    CodingAgentResponsePayload, CodingAgentRunInventory, CodingAgentRunSnapshot,
-    CodingAgentRunState, CodingAgentTerminal, CodingAgentUsage,
-    CODING_AGENT_MAX_EVENTS_PER_RESPONSE, CODING_AGENT_MAX_INVENTORY_RUNS,
-    CODING_AGENT_MAX_RETAINED_EVENTS, CODING_AGENT_STOP_REASON_CANCELLED,
-    CODING_AGENT_STOP_REASON_END_TURN, CODING_AGENT_STOP_REASON_MAX_TOKENS,
-    CODING_AGENT_STOP_REASON_MAX_TURN_REQUESTS, CODING_AGENT_STOP_REASON_REFUSAL,
-};
-use codegpt_process::ManagedChild;
-use codegpt_runner_config::paths::paths_equal;
 #[cfg(windows)]
 use windows_sys::Win32::Storage::FileSystem::{
     MoveFileExW, MOVEFILE_REPLACE_EXISTING, MOVEFILE_WRITE_THROUGH,
@@ -3172,7 +3172,7 @@ for line in sys.stdin:
         let root = temp.path().join("repo");
         let store = temp.path().join("store");
         let manager = CodingAgentManager::with_store(&cfg, store).unwrap();
-        let run = "wc_agent_run_0123456789abcdef".to_string();
+        let run = "cg_agent_run_0123456789abcdef".to_string();
         let response = manager.handle(start_request(&manager, &root, &run, config), &projects);
         assert!(response.error.is_none(), "{:?}", response.error);
         let observation = wait_for_terminal_observation(&manager, &run);
@@ -3371,7 +3371,7 @@ for line in sys.stdin:
         let temp = TempDir::new().unwrap();
         let cfg = fake_config("unused-provider".to_string(), Vec::new());
         let manager = CodingAgentManager::with_store(&cfg, temp.path().join("store")).unwrap();
-        let run = "wc_agent_run_persistfailed01";
+        let run = "cg_agent_run_persistfailed01";
         let entry = seed_terminal_test_run(
             &manager,
             run,
@@ -3414,7 +3414,7 @@ for line in sys.stdin:
         let temp = TempDir::new().unwrap();
         let cfg = fake_config("unused-provider".to_string(), Vec::new());
         let manager = CodingAgentManager::with_store(&cfg, temp.path().join("store")).unwrap();
-        let run = "wc_agent_run_persisttimeout01";
+        let run = "cg_agent_run_persisttimeout01";
         let entry = seed_terminal_test_run(
             &manager,
             run,
@@ -3444,7 +3444,7 @@ for line in sys.stdin:
         let temp = TempDir::new().unwrap();
         let cfg = fake_config("unused-provider".to_string(), Vec::new());
         let manager = CodingAgentManager::with_store(&cfg, temp.path().join("store")).unwrap();
-        let run = "wc_agent_run_persistlost001";
+        let run = "cg_agent_run_persistlost001";
         let entry = seed_terminal_test_run(
             &manager,
             run,
@@ -3481,7 +3481,7 @@ for line in sys.stdin:
         let root = temp.path().join("repo");
         let store_root = temp.path().join("store");
         let manager = CodingAgentManager::with_store(&cfg, store_root.clone()).unwrap();
-        let run = "wc_agent_run_persistorder001";
+        let run = "cg_agent_run_persistorder001";
         let request = start_request(&manager, &root, run, BTreeMap::new());
         let gate = Arc::new(TerminalWriteGate::default());
         manager
@@ -3555,7 +3555,7 @@ for line in sys.stdin:
         let root = temp.path().join("repo");
         let store_root = temp.path().join("store");
         let manager = CodingAgentManager::with_store(&cfg, store_root.clone()).unwrap();
-        let run = "wc_agent_run_persistendfail1";
+        let run = "cg_agent_run_persistendfail1";
         let request = start_request(&manager, &root, run, BTreeMap::new());
         let gate = Arc::new(TerminalWriteGate::default());
         manager.store.fail_next_terminal_writes(1);
@@ -3619,7 +3619,7 @@ for line in sys.stdin:
         let root = temp.path().join("repo");
         let store_root = temp.path().join("store");
         let manager = CodingAgentManager::with_store(&cfg, store_root.clone()).unwrap();
-        let run = "wc_agent_run_persistcancel01";
+        let run = "cg_agent_run_persistcancel01";
         let request = start_request(&manager, &root, run, BTreeMap::new());
         manager.store.fail_next_terminal_writes(1);
 
@@ -3668,7 +3668,7 @@ for line in sys.stdin:
         let cfg = fake_config("unused-provider".to_string(), Vec::new());
         let manager = CodingAgentManager::with_store(&cfg, temp.path().join("store")).unwrap();
         let provider = manager.providers().remove(0);
-        let run = "wc_agent_run_terminalrace01";
+        let run = "cg_agent_run_terminalrace01";
         let timestamp = now();
         let record = DurableRunRecord {
             schema_version: STORE_SCHEMA_VERSION,
@@ -3788,7 +3788,7 @@ for line in sys.stdin:
         let projects = project_fixture(&temp);
         let root = temp.path().join("repo");
         let manager = CodingAgentManager::with_store(&cfg, temp.path().join("store")).unwrap();
-        let run = "wc_agent_run_sequence0001";
+        let run = "cg_agent_run_sequence0001";
         let response = manager.handle(
             start_request(&manager, &root, run, BTreeMap::new()),
             &projects,
@@ -3861,7 +3861,7 @@ for line in sys.stdin:
         let projects = project_fixture(&temp);
         let root = temp.path().join("repo");
         let manager = CodingAgentManager::with_store(&cfg, temp.path().join("store")).unwrap();
-        let run = "wc_agent_run_config000001";
+        let run = "cg_agent_run_config000001";
         let response = manager.handle(
             start_request(
                 &manager,
@@ -3892,7 +3892,7 @@ for line in sys.stdin:
         let projects = project_fixture(&temp);
         let root = temp.path().join("repo");
         let manager = CodingAgentManager::with_store(&cfg, temp.path().join("store")).unwrap();
-        let run = "wc_agent_run_badconfig001";
+        let run = "cg_agent_run_badconfig001";
         let response = manager.handle(
             start_request(
                 &manager,
@@ -3926,7 +3926,7 @@ for line in sys.stdin:
         let projects = project_fixture(&temp);
         let root = temp.path().join("repo");
         let manager = CodingAgentManager::with_store(&cfg, temp.path().join("store")).unwrap();
-        let run = "wc_agent_run_permcancel01";
+        let run = "cg_agent_run_permcancel01";
         assert!(manager
             .handle(
                 start_request(&manager, &root, run, BTreeMap::new()),
@@ -3974,7 +3974,7 @@ for line in sys.stdin:
         let projects = project_fixture(&temp);
         let root = temp.path().join("repo");
         let manager = CodingAgentManager::with_store(&cfg, temp.path().join("store")).unwrap();
-        let run = "wc_agent_run_unsupported1";
+        let run = "cg_agent_run_unsupported1";
         assert!(manager
             .handle(
                 start_request(&manager, &root, run, BTreeMap::new()),
@@ -4030,7 +4030,7 @@ for line in sys.stdin:
         let projects = project_fixture(&temp);
         let root = temp.path().join("repo");
         let manager = CodingAgentManager::with_store(&cfg, temp.path().join("store")).unwrap();
-        let run = "wc_agent_run_manyevents01";
+        let run = "cg_agent_run_manyevents01";
         assert!(manager
             .handle(
                 start_request(&manager, &root, run, BTreeMap::new()),
@@ -4083,7 +4083,7 @@ for line in sys.stdin:
         let projects = project_fixture(&temp);
         let root = temp.path().join("repo");
         let manager = CodingAgentManager::with_store(&cfg, temp.path().join("store")).unwrap();
-        let run = "wc_agent_run_concurrentdup01";
+        let run = "cg_agent_run_concurrentdup01";
         let request = start_request(&manager, &root, run, BTreeMap::new());
         *manager.admission_test_barrier.lock().unwrap() =
             Some(Arc::new(std::sync::Barrier::new(2)));
@@ -4144,13 +4144,13 @@ for line in sys.stdin:
         let first_request = start_request(
             &manager,
             &root,
-            "wc_agent_run_concurrentcap01",
+            "cg_agent_run_concurrentcap01",
             BTreeMap::new(),
         );
         let second_request = start_request(
             &manager,
             &root,
-            "wc_agent_run_concurrentcap02",
+            "cg_agent_run_concurrentcap02",
             BTreeMap::new(),
         );
 
@@ -4225,7 +4225,7 @@ for line in sys.stdin:
         let projects = project_fixture(&temp);
         let root = temp.path().join("repo");
         let manager = CodingAgentManager::with_store(&cfg, temp.path().join("store")).unwrap();
-        let run = "wc_agent_run_totalinitialize01";
+        let run = "cg_agent_run_totalinitialize01";
         let started_at = Instant::now();
         let started = manager.handle(
             start_request_with_timeout(&manager, &root, run, BTreeMap::new(), 1),
@@ -4270,7 +4270,7 @@ for line in sys.stdin:
         let projects = project_fixture(&temp);
         let root = temp.path().join("repo");
         let manager = CodingAgentManager::with_store(&cfg, temp.path().join("store")).unwrap();
-        let run = "wc_agent_run_totalconfigs001";
+        let run = "cg_agent_run_totalconfigs001";
         let config = ["one", "two", "three", "four"]
             .into_iter()
             .map(|key| {
@@ -4328,7 +4328,7 @@ for line in sys.stdin:
         let projects = project_fixture(&temp);
         let root = temp.path().join("repo");
         let manager = CodingAgentManager::with_store(&cfg, temp.path().join("store")).unwrap();
-        let run = "wc_agent_run_deadlinebarrier01";
+        let run = "cg_agent_run_deadlinebarrier01";
         *manager.prompt_after_barrier_test_delay.lock().unwrap() =
             Some(Duration::from_millis(1100));
         let started = manager.handle(
@@ -4370,7 +4370,7 @@ for line in sys.stdin:
         let projects = project_fixture(&temp);
         let root = temp.path().join("repo");
         let manager = CodingAgentManager::with_store(&cfg, temp.path().join("store")).unwrap();
-        let run = "wc_agent_run_promptbackpressure01";
+        let run = "cg_agent_run_promptbackpressure01";
         let started_at = Instant::now();
         // Process startup and ACP negotiation are setup for this assertion, not
         // the behavior under test. Hosted macOS VMs have already demonstrated
@@ -4437,7 +4437,7 @@ for line in sys.stdin:
         let projects = project_fixture(&temp);
         let root = temp.path().join("repo");
         let manager = CodingAgentManager::with_store(&cfg, temp.path().join("store")).unwrap();
-        let run = "wc_agent_run_cancelblockedprompt1";
+        let run = "cg_agent_run_cancelblockedprompt1";
         let started = manager.handle(max_instruction_request(&manager, &root, run, 10), &projects);
         assert!(started.error.is_none(), "{:?}", started.error);
         wait_for_path(&temp.path().join("stdin_stopped.ready"));
@@ -4496,7 +4496,7 @@ for line in sys.stdin:
         let projects = project_fixture(&temp);
         let root = temp.path().join("repo");
         let manager = CodingAgentManager::with_store(&cfg, temp.path().join("store")).unwrap();
-        let run = "wc_agent_run_shutdownblockedprompt";
+        let run = "cg_agent_run_shutdownblockedprompt";
         let started = manager.handle(max_instruction_request(&manager, &root, run, 10), &projects);
         assert!(started.error.is_none(), "{:?}", started.error);
         wait_for_path(&temp.path().join("stdin_stopped.ready"));
@@ -4543,7 +4543,7 @@ for line in sys.stdin:
         let projects = project_fixture(&temp);
         let root = temp.path().join("repo");
         let manager = CodingAgentManager::with_store(&cfg, temp.path().join("store")).unwrap();
-        let run = "wc_agent_run_blockedcancelwrite1";
+        let run = "cg_agent_run_blockedcancelwrite1";
         let started = manager.handle(
             start_request_with_timeout(&manager, &root, run, BTreeMap::new(), 30),
             &projects,
@@ -4630,7 +4630,7 @@ for line in sys.stdin:
         let projects = project_fixture(&temp);
         let root = temp.path().join("repo");
         let manager = CodingAgentManager::with_store(&cfg, temp.path().join("store")).unwrap();
-        let run = "wc_agent_run_cancelinitialize01";
+        let run = "cg_agent_run_cancelinitialize01";
         let started = manager.handle(
             start_request(&manager, &root, run, BTreeMap::new()),
             &projects,
@@ -4696,7 +4696,7 @@ for line in sys.stdin:
         let projects = project_fixture(&temp);
         let root = temp.path().join("repo");
         let manager = CodingAgentManager::with_store(&cfg, temp.path().join("store")).unwrap();
-        let run = "wc_agent_run_promptgaterace01";
+        let run = "cg_agent_run_promptgaterace01";
         let race = Arc::new(std::sync::Barrier::new(2));
         *manager.prompt_dispatch_test_barrier.lock().unwrap() = Some(Arc::clone(&race));
         let started = manager.handle(
@@ -4766,7 +4766,7 @@ for line in sys.stdin:
         let projects = project_fixture(&temp);
         let root = temp.path().join("repo");
         let manager = CodingAgentManager::with_store(&cfg, temp.path().join("store")).unwrap();
-        let run = "wc_agent_run_shutdownadmission01";
+        let run = "cg_agent_run_shutdownadmission01";
         let publish_barrier = Arc::new(std::sync::Barrier::new(2));
         *manager
             .admission_after_accepting_test_barrier
@@ -4829,7 +4829,7 @@ for line in sys.stdin:
         let projects = project_fixture(&temp);
         let root = temp.path().join("repo");
         let manager = CodingAgentManager::with_store(&cfg, temp.path().join("store")).unwrap();
-        let run = "wc_agent_run_shutdowndrain01";
+        let run = "cg_agent_run_shutdowndrain01";
         let started = manager.handle(
             start_request(&manager, &root, run, BTreeMap::new()),
             &projects,
@@ -4883,7 +4883,7 @@ for line in sys.stdin:
         let projects = project_fixture(&temp);
         let root = temp.path().join("repo");
         let manager = CodingAgentManager::with_store(&cfg, temp.path().join("store")).unwrap();
-        let first_run = "wc_agent_run_capacity0001";
+        let first_run = "cg_agent_run_capacity0001";
         assert!(manager
             .handle(
                 start_request(&manager, &root, first_run, BTreeMap::new()),
@@ -4898,7 +4898,7 @@ for line in sys.stdin:
             start_request(
                 &manager,
                 &root,
-                "wc_agent_run_capacity0002",
+                "cg_agent_run_capacity0002",
                 BTreeMap::new(),
             ),
             &projects,
@@ -4907,7 +4907,7 @@ for line in sys.stdin:
             second.error.as_ref().map(|error| error.code.as_str()),
             Some("coding_agent_capacity_full")
         );
-        let mut stale = start_request(&manager, &root, "wc_agent_run_stale000001", BTreeMap::new());
+        let mut stale = start_request(&manager, &root, "cg_agent_run_stale000001", BTreeMap::new());
         if let CodingAgentRequest::Start(request) = &mut stale {
             request.provider_instance_id = "replaced-provider".to_string();
         }
@@ -4930,7 +4930,7 @@ for line in sys.stdin:
         let projects = project_fixture(&temp);
         let root = temp.path().join("repo");
         let manager = CodingAgentManager::with_store(&cfg, temp.path().join("store")).unwrap();
-        let run = "wc_agent_run_replay000001";
+        let run = "cg_agent_run_replay000001";
         let request = start_request(&manager, &root, run, BTreeMap::new());
         assert!(manager.handle(request.clone(), &projects).error.is_none());
         wait_for_snapshot(&manager, run, |snapshot| snapshot.state.terminal());
@@ -4965,7 +4965,7 @@ for line in sys.stdin:
         let projects = project_fixture(&temp);
         let root = temp.path().join("repo");
         let manager = CodingAgentManager::with_store(&cfg, temp.path().join("store")).unwrap();
-        let run = "wc_agent_run_corruptdurable01";
+        let run = "cg_agent_run_corruptdurable01";
         let request = start_request(&manager, &root, run, BTreeMap::new());
         assert!(manager.handle(request.clone(), &projects).error.is_none());
         wait_for_snapshot(&manager, run, |snapshot| snapshot.state.terminal());
@@ -5034,7 +5034,7 @@ for line in sys.stdin:
         let timestamp = now();
         let mut record = DurableRunRecord {
             schema_version: STORE_SCHEMA_VERSION,
-            run_id: "wc_agent_run_replace_state01".to_string(),
+            run_id: "cg_agent_run_replace_state01".to_string(),
             intent_fingerprint: "fingerprint".to_string(),
             authority_fingerprint: "auth_replace".to_string(),
             runtime_project_id: "agent:test:demo".to_string(),
@@ -5237,7 +5237,7 @@ for line in sys.stdin:
         let projects = project_fixture(&temp);
         let root = temp.path().join("repo");
         let manager = CodingAgentManager::with_store(&cfg, temp.path().join("store")).unwrap();
-        let run = "wc_agent_run_envclear0001";
+        let run = "cg_agent_run_envclear0001";
         assert!(manager
             .handle(
                 start_request(&manager, &root, run, BTreeMap::new()),
@@ -5266,7 +5266,7 @@ for line in sys.stdin:
             start_request(
                 &manager,
                 &root,
-                "wc_agent_run_missingenv01",
+                "cg_agent_run_missingenv01",
                 BTreeMap::new(),
             ),
             &projects,
@@ -5296,7 +5296,7 @@ for line in sys.stdin:
         DurableRunStore::new(store_root.clone())
             .write(&DurableRunRecord {
                 schema_version: STORE_SCHEMA_VERSION,
-                run_id: "wc_agent_run_prebarrier01".to_string(),
+                run_id: "cg_agent_run_prebarrier01".to_string(),
                 intent_fingerprint: "fingerprint".to_string(),
                 authority_fingerprint: "auth_test".to_string(),
                 runtime_project_id: "agent:test:demo".to_string(),
@@ -5315,7 +5315,7 @@ for line in sys.stdin:
             .runs
             .lock()
             .unwrap()
-            .get("wc_agent_run_prebarrier01")
+            .get("cg_agent_run_prebarrier01")
             .unwrap()
             .snapshot();
         assert_eq!(recovered.state, CodingAgentRunState::Failed);
@@ -5330,7 +5330,7 @@ for line in sys.stdin:
         let projects = project_fixture(&temp);
         let root = temp.path().join("repo");
         let manager = CodingAgentManager::with_store(&cfg, temp.path().join("store")).unwrap();
-        let run = "wc_agent_run_reaptree0001";
+        let run = "cg_agent_run_reaptree0001";
         assert!(manager
             .handle(
                 start_request(&manager, &root, run, BTreeMap::new()),
@@ -5407,7 +5407,7 @@ for line in sys.stdin:
             }],
         };
         let manager = CodingAgentManager::with_store(&cfg, temp.path().join("store")).unwrap();
-        let run = "wc_agent_run_realcodexdogfood01";
+        let run = "cg_agent_run_realcodexdogfood01";
         let provider = manager.providers().remove(0);
         let request = CodingAgentRequest::Start(codegpt_core::coding_agent::CodingAgentStartRequest {
             run_id: run.to_string(),

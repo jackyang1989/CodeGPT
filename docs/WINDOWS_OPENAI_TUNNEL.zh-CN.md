@@ -118,7 +118,7 @@ codegpt pairing create `
 
 ```powershell
 codegpt login http://127.0.0.1:18080 `
-  --code <wc_pair_...> `
+  --code <cg_pair_...> `
   --allowed-root C:\src `
   --project C:\src\your-repository `
   --json

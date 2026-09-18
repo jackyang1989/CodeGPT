@@ -985,7 +985,7 @@ fn targeted_inventory_schemas_and_tool_parsing_are_bounded() {
         "list_jobs",
         serde_json::json!({
             "project": "agent:special:codegpt",
-            "session_id": "wc_sess_example",
+            "session_id": "cg_sess_example",
             "status": "running",
             "limit": 2,
         }),
@@ -1022,7 +1022,7 @@ fn targeted_inventory_tool_calls_reject_unknown_filter_fields() {
         ),
         (
             "list_jobs",
-            serde_json::json!({"sesion_id": "wc_sess_example"}),
+            serde_json::json!({"sesion_id": "cg_sess_example"}),
             "sesion_id",
         ),
     ] {

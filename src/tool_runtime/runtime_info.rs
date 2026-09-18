@@ -4,8 +4,8 @@ use super::registry::registered_tool_specs;
 use super::{permissions, ToolResult, ToolRuntime};
 use crate::auth::AuthContext;
 use crate::runner_protocol::{RunnerView, ShellJobInfo};
-use serde_json::{json, Value};
 use codegpt_core::runner_job_lifecycle::RunnerJobLifecycle;
+use serde_json::{json, Value};
 
 const LIST_RUNNERS_MAX_CLIENT_IDS: usize = 8;
 const TARGET_CLIENT_ID_MAX_CHARS: usize = 128;
@@ -1261,8 +1261,7 @@ fn active_jobs_for_client(runner_jobs: &[ShellJobInfo], client_id: &str) -> usiz
     runner_jobs
         .iter()
         .filter(|job| {
-            job.client_id == client_id
-                && codegpt_runner_registry::job_status_is_active(&job.status)
+            job.client_id == client_id && codegpt_runner_registry::job_status_is_active(&job.status)
         })
         .count()
 }

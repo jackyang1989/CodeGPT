@@ -1196,8 +1196,8 @@ async fn agent_job_log_bounded_wait_uses_compact_delta_and_timeout_is_empty() {
 
 #[test]
 fn compact_job_allocation_retries_only_occupied_ids() {
-    let first = format!("wc_job_{}", codegpt_core::compact::random_suffix::<12>());
-    let next = format!("wc_job_{}", codegpt_core::compact::random_suffix::<12>());
+    let first = format!("cg_job_{}", codegpt_core::compact::random_suffix::<12>());
+    let next = format!("cg_job_{}", codegpt_core::compact::random_suffix::<12>());
     let jobs = std::collections::HashMap::from([(first.clone(), 7)]);
     let mut candidates = [first.clone(), next.clone()].into_iter();
     let result = crate::job_updates::allocate_job_id(&jobs, || candidates.next().unwrap()).unwrap();

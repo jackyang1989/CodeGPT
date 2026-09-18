@@ -1,5 +1,5 @@
-use serde_json::Value;
 use codegpt_core::runner_protocol::RunnerConfigOperationResponse;
+use serde_json::Value;
 
 use super::common::wrapped_typed_output_schema;
 

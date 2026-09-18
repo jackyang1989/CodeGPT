@@ -17,9 +17,6 @@ use crate::tool_runtime::sessions::{SessionEvent, SessionGuards};
 use crate::tool_runtime::{
     registered_tool_specs, SessionMode, StartupDetail, ToolCall, ToolResult, ToolRuntime,
 };
-use serde_json::{json, Value};
-use std::fs;
-use std::path::Path;
 use codegpt_core::plugin::{
     PluginGatewayRequest, PluginGatewayResponse, PluginGatewayResponsePayload,
     PluginSelectionAnnotations, ProjectPluginCatalog, ProjectPluginCatalogEntry,
@@ -28,6 +25,9 @@ use codegpt_core::runner_skill::{
     RunnerSkillDescriptor, RunnerSkillListResponse, RunnerSkillRequest,
     RUNNER_SKILL_RESPONSE_FORMAT,
 };
+use serde_json::{json, Value};
+use std::fs;
+use std::path::Path;
 
 fn record_window_activity_fixture(
     db: &std::sync::Arc<crate::Database>,
@@ -185,7 +185,7 @@ fn write_project_skill(root: &Path, package: &str, name: &str, description: &str
 
 fn startup_plugin_catalog_fixture() -> ProjectPluginCatalog {
     ProjectPluginCatalog {
-        catalog_revision: format!("wc_plugcat_{}", codegpt_core::compact::encode([0xaa; 32])),
+        catalog_revision: format!("cg_plugcat_{}", codegpt_core::compact::encode([0xaa; 32])),
         total_count: 1,
         entries: vec![ProjectPluginCatalogEntry {
             plugin: "repo-context".to_string(),
@@ -329,10 +329,7 @@ fn managed_fixture_git(root: &Path, args: &[&str]) -> String {
 fn seed_managed_tool_runtime_fixture(source: &Path, worktree: &Path) -> String {
     std::fs::create_dir_all(source).unwrap();
     managed_fixture_git(source, &["init"]);
-    managed_fixture_git(
-        source,
-        &["config", "user.email", "codegpt@example.invalid"],
-    );
+    managed_fixture_git(source, &["config", "user.email", "codegpt@example.invalid"]);
     managed_fixture_git(source, &["config", "user.name", "CodeGPT Test"]);
     std::fs::write(source.join("hello.txt"), "committed\n").unwrap();
     managed_fixture_git(source, &["add", "hello.txt"]);
@@ -354,11 +351,11 @@ fn seed_managed_tool_runtime_fixture(source: &Path, worktree: &Path) -> String {
 }
 
 fn managed_source_root_fingerprint() -> String {
-    format!("wc_projroot_{}", "1".repeat(64))
+    format!("cg_projroot_{}", "1".repeat(64))
 }
 
 fn managed_target_root_fingerprint() -> String {
-    format!("wc_projroot_{}", "2".repeat(64))
+    format!("cg_projroot_{}", "2".repeat(64))
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -839,7 +836,7 @@ fn valid_work_on_project_projection_input() -> serde_json::Value {
     json!({
         "detail": "standard",
         "session": {
-            "session_id": "wc_sess_0123456789abcdef",
+            "session_id": "cg_sess_0123456789abcdef",
             "continuation": "created",
             "execution_context": {},
         },
@@ -983,7 +980,7 @@ fn work_on_project_schema_and_registration() {
     assert_eq!(props["session_id"]["type"], "string");
     assert_eq!(
         props["session_id"]["pattern"],
-        "^wc_sess_([A-Za-z0-9_-]{16}|[0-9a-f]{32})$"
+        "^cg_sess_([A-Za-z0-9_-]{16}|[0-9a-f]{32})$"
     );
     assert_eq!(props["include_project_instructions"]["type"], "boolean");
     assert_eq!(props["include_project_instructions"]["default"], true);
@@ -1108,7 +1105,7 @@ fn work_on_project_schema_and_registration() {
         json!({
             "project": SAMPLE_PROJECT,
             "instruction": "do the thing",
-            "session_id": "wc_sess_target"
+            "session_id": "cg_sess_target"
         }),
     )
     .unwrap();
@@ -1123,12 +1120,12 @@ fn work_on_project_schema_and_registration() {
             assert!(*include_project_instructions);
             assert!(*include_workflow_guidance);
             assert!(*include_extension_catalog);
-            assert_eq!(session_id.as_deref(), Some("wc_sess_target"));
+            assert_eq!(session_id.as_deref(), Some("cg_sess_target"));
         }
         _ => panic!("expected WorkOnProject"),
     }
     assert_eq!(call.project(), Some(SAMPLE_PROJECT));
-    assert_eq!(call.session_id(), Some("wc_sess_target"));
+    assert_eq!(call.session_id(), Some("cg_sess_target"));
 
     let suppressed = ToolCall::from_tool_name(
         "work_on_project",
@@ -1309,7 +1306,7 @@ async fn work_on_project_extension_catalog_includes_runner_local_configured_skil
     )
     .await;
     let auth = bootstrap_auth_context();
-    let configured_id = "wc_skill_IiIiIiIiIiIiIiIiIiIiIg".to_string();
+    let configured_id = "cg_skill_IiIiIiIiIiIiIiIiIiIiIg".to_string();
     let configured_revision = "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc";
     let (result, requests) = dispatch_startup_with_configured_skill_catalog(
         &runtime,
@@ -1380,7 +1377,7 @@ async fn work_on_project_plugin_extension_uses_project_catalog_without_binding_o
     assert_eq!(plugins["status"], "available");
     assert_eq!(
         plugins["catalog_revision"],
-        format!("wc_plugcat_{}", codegpt_core::compact::encode([0xaa; 32]))
+        format!("cg_plugcat_{}", codegpt_core::compact::encode([0xaa; 32]))
     );
     assert_eq!(plugins["total_count"], 1);
     assert_eq!(plugins["returned_count"], 1);
@@ -1577,7 +1574,7 @@ fn work_on_project_projection_emits_typed_window_session_correlation() {
     );
     assert_eq!(correlation.workflow_sessions.len(), 1);
     let link = &correlation.workflow_sessions[0];
-    assert_eq!(link.session_id, "wc_sess_0123456789abcdef");
+    assert_eq!(link.session_id, "cg_sess_0123456789abcdef");
     assert_eq!(link.project.as_deref(), Some("agent:wop:demo"));
     assert_eq!(
         link.relation,
@@ -1769,7 +1766,7 @@ async fn work_on_project_without_session_id_always_creates_fresh_session() {
 
     // Compact projection keeps identity and omits boring default metadata.
     let session_id = result.output["session_id"].as_str().unwrap().to_string();
-    assert!(session_id.starts_with("wc_sess_"));
+    assert!(session_id.starts_with("cg_sess_"));
     assert_eq!(result.output["project"], "demo");
     assert_eq!(result.output["resolved_project"], project);
     assert_eq!(result.output["continuation"], "created");
@@ -2835,7 +2832,7 @@ async fn path_source_unknown_session_fails_before_registration() {
             client_id,
             &project_path,
             "unknown must not fall back",
-            Some("wc_sess_fedcba9876543210"),
+            Some("cg_sess_fedcba9876543210"),
         ),
         "unknown-a1b2c3d4",
         &project_path,
@@ -3212,7 +3209,7 @@ async fn work_on_project_failures_never_create_or_fall_back() {
         work_on_project_call(
             &project_a,
             "must not create",
-            Some("wc_sess_1111111111111111"),
+            Some("cg_sess_1111111111111111"),
         ),
         Some(&auth),
         "wop-fail-window",
@@ -4147,7 +4144,7 @@ async fn coding_workflow_standard_repository_overview_timeout_is_nonblocking() {
         .iter()
         .any(|warning| warning == "repository_overview_unavailable"));
     let session_id = result.output["session"]["session_id"].as_str().unwrap();
-    assert!(session_id.starts_with("wc_sess_"));
+    assert!(session_id.starts_with("cg_sess_"));
     let summary = runtime.sessions.summary(session_id, Some(20)).unwrap();
     assert_eq!(summary.project.as_deref(), Some(project.as_str()));
 
@@ -4414,7 +4411,7 @@ async fn coding_workflow_standard_repository_overview_rejects_malformed_runner_r
         // A session is still created despite the malformed overview.
         let session_id = result.output["session"]["session_id"].as_str().unwrap();
         assert!(
-            session_id.starts_with("wc_sess_"),
+            session_id.starts_with("cg_sess_"),
             "{label}: session not created"
         );
     }

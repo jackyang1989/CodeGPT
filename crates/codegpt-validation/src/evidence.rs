@@ -5,10 +5,6 @@
 //! execution behavior. Diagnostics are parsed only from safe bounded validation
 //! output metadata captured by session events.
 
-use serde::Serialize;
-use serde_json::{json, Value};
-use sha2::{Digest, Sha256};
-use std::collections::{HashMap, HashSet};
 use codegpt_core::audit_preview::command_preview;
 use codegpt_core::validation_evidence::{
     ValidationDiagnostics, PARSER_KIND, PARSER_LIMITATIONS, PARSER_VERSION,
@@ -25,6 +21,10 @@ use codegpt_workflow_session::{
     safe_model_facing_assertion_name, tool_supports_model_facing_assertion_name, SessionEvent,
     SessionSummary,
 };
+use serde::Serialize;
+use serde_json::{json, Value};
+use sha2::{Digest, Sha256};
+use std::collections::{HashMap, HashSet};
 
 const VALIDATION_SOURCE: &str = "session_ledger";
 const VALIDATION_PARSER_SOURCE: &str = "bounded_validation_metadata";

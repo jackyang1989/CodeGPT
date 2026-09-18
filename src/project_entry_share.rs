@@ -376,8 +376,8 @@ fn prepare_share_oauth_client(
         let client_secret = read_private_value(&client_secret_file)?;
         let persisted_redirect = read_private_value(&redirect_uri_file)?;
         if persisted_redirect != redirect_uri
-            || !valid_generated_oauth_value(&client_id, "wc_client_")
-            || !valid_generated_oauth_value(&client_secret, "wc_csec_")
+            || !valid_generated_oauth_value(&client_id, "cg_client_")
+            || !valid_generated_oauth_value(&client_secret, "cg_csec_")
         {
             return Err(share_oauth_state_error(
                 "the persisted share OAuth client state is invalid",
@@ -1331,7 +1331,7 @@ mod tests {
             "bearer_credential"
         );
         let encoded = serde_json::to_string(&cloudflare).unwrap();
-        assert!(!encoded.contains("wc_pair_"));
+        assert!(!encoded.contains("cg_pair_"));
         assert!(!encoded.contains("codegpt_temporary"));
 
         let openai = machine_share_ready_event(
@@ -1431,8 +1431,8 @@ mod tests {
     #[test]
     fn oauth_share_output_keeps_project_credential_separate_from_client_secret() {
         let oauth = ShareOAuthClient {
-            client_id: "wc_client_test".to_string(),
-            client_secret: "wc_csec_test".to_string(),
+            client_id: "cg_client_test".to_string(),
+            client_secret: "cg_csec_test".to_string(),
             redirect_uri: "https://client.example/callback".to_string(),
         };
         let output = render_share_oauth_ready(
@@ -1445,8 +1445,8 @@ mod tests {
         );
         assert!(output.contains("OAuth 2.0 Authorization Code + PKCE S256"));
         assert!(output.contains("https://share.example/mcp"));
-        assert!(output.contains("wc_client_test"));
-        assert!(output.contains("wc_csec_test"));
+        assert!(output.contains("cg_client_test"));
+        assert!(output.contains("cg_csec_test"));
         assert!(output.contains("codegpt_temporary-print-once"));
         assert!(output.starts_with(
             "CodeGPT ready\n\nTemporary share\nThis session ends when this command exits.\n\nWhat to do next"

@@ -108,7 +108,7 @@ async fn trusted_agent_evaluates_once_executes_and_attaches_same_decision() {
     let request_id = result.output["permission"]["request_id"]
         .as_str()
         .expect("request_id");
-    assert!(request_id.starts_with("wc_perm_"), "{request_id}");
+    assert!(request_id.starts_with("cg_perm_"), "{request_id}");
 
     let summary = runtime
         .sessions
@@ -372,7 +372,7 @@ async fn coding_agent_cancel_inherits_start_approval_without_second_evaluator_de
     let result = runtime
         .dispatch_with_auth(
             ToolCall::CodingAgentCancel {
-                run_id: "wc_car_permission_semantics_missing".to_string(),
+                run_id: "cg_car_permission_semantics_missing".to_string(),
             },
             Some(&auth),
         )
@@ -512,7 +512,7 @@ async fn kernel_path_does_not_double_evaluate_or_duplicate_request_id() {
         !seen_ids.is_empty(),
         "outer recording session should reuse attached decision"
     );
-    assert!(seen_ids.iter().all(|id| id.starts_with("wc_perm_")));
+    assert!(seen_ids.iter().all(|id| id.starts_with("cg_perm_")));
     let unique: std::collections::BTreeSet<_> = seen_ids.iter().collect();
     assert_eq!(
         unique.len(),

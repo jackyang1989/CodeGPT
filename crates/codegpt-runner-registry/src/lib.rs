@@ -33,21 +33,21 @@ mod reconciliation_tests;
 mod tests;
 
 #[cfg(test)]
-pub(crate) use registry::clamp_grace;
-#[cfg(test)]
 pub(crate) use codegpt_core::{
     artifact_policy, job_observation, lsp_bridge, mcp_gateway, runner_protocol,
 };
+#[cfg(test)]
+pub(crate) use registry::clamp_grace;
 
 #[cfg(test)]
 pub(crate) mod test_support {
     use crate::RunnerRegistry;
-    use std::sync::atomic::{AtomicU64, Ordering};
     use codegpt_core::runner_protocol::{
         RunnerCapabilities, RunnerProjectSummary, RunnerRegisterRequest, ShellProjectInventoryPage,
         PROJECT_INVENTORY_PAGE_MAX_SUMMARIES, RUNNER_PROTOCOL_GENERATION_V2,
         RUNNER_PROTOCOL_GENERATION_V2_BASELINE_CAPABILITY_NAMES,
     };
+    use std::sync::atomic::{AtomicU64, Ordering};
 
     pub(crate) fn current_runner_capabilities(
         capabilities: RunnerCapabilities,

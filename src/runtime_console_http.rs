@@ -4012,23 +4012,17 @@ mod tests {
         assert!(!by_runner.truncated);
         assert_eq!(by_runner.projects[0].id, "agent:special:codegpt");
 
-        let by_query =
-            projects_for_filters_auth(&runtime, &auth, None, Some("codegpt"), Some(100))
-                .await
-                .unwrap();
+        let by_query = projects_for_filters_auth(&runtime, &auth, None, Some("codegpt"), Some(100))
+            .await
+            .unwrap();
         assert_eq!(by_query.total, 1);
         assert!(!by_query.truncated);
         assert_eq!(by_query.projects[0].id, "agent:special:codegpt");
 
-        let combined = projects_for_filters_auth(
-            &runtime,
-            &auth,
-            Some("special"),
-            Some("codegpt"),
-            Some(100),
-        )
-        .await
-        .unwrap();
+        let combined =
+            projects_for_filters_auth(&runtime, &auth, Some("special"), Some("codegpt"), Some(100))
+                .await
+                .unwrap();
         assert_eq!(combined.total, 1);
         assert_eq!(combined.projects[0].id, "agent:special:codegpt");
     }
@@ -4484,7 +4478,7 @@ mod tests {
             &auth_a,
             &revoked_session_window,
             None,
-            Some(("wc_sess_hidden", project_b)),
+            Some(("cg_sess_hidden", project_b)),
             4_000,
         );
 
@@ -5013,7 +5007,7 @@ mod tests {
             &auth,
             WorkflowSessionMessagesInput {
                 project: "agent:missing:project".to_string(),
-                session_id: "wc_sess_missing000000000".to_string(),
+                session_id: "cg_sess_missing000000000".to_string(),
                 limit: Some(20),
             },
         )
@@ -5037,7 +5031,7 @@ mod tests {
             &runtime_read_only,
             WorkflowSessionPostMessageInput {
                 project: "agent:missing:project".to_string(),
-                session_id: "wc_sess_missing000000000".to_string(),
+                session_id: "cg_sess_missing000000000".to_string(),
                 kind: SessionMessageKind::Guidance,
                 priority: SessionMessagePriority::High,
                 message: "must not be injected by runtime:read".to_string(),
@@ -5090,7 +5084,7 @@ mod tests {
                 tags: vec!["answer-tag".to_string()],
                 priority: SessionMessagePriority::Normal,
                 completion_id: "a".repeat(64),
-                author_session_id: Some("wc_sess_worker0000000000".to_string()),
+                author_session_id: Some("cg_sess_worker0000000000".to_string()),
                 expected_assignment_fence: assignment_fence,
             })
             .unwrap();
@@ -5447,8 +5441,8 @@ mod tests {
                 &auth_a,
                 WorkflowSessionWithdrawMessageInput {
                     project: project_id.to_string(),
-                    session_id: "wc_sess_missing000000000".to_string(),
-                    message_id: "wc_msg_missing000000000".to_string(),
+                    session_id: "cg_sess_missing000000000".to_string(),
+                    message_id: "cg_msg_missing000000000".to_string(),
                 },
             )
             .await
@@ -5462,7 +5456,7 @@ mod tests {
                 WorkflowSessionWithdrawMessageInput {
                     project: project_id.to_string(),
                     session_id: session.session_id.clone(),
-                    message_id: "wc_msg_missing000000000".to_string(),
+                    message_id: "cg_msg_missing000000000".to_string(),
                 },
             )
             .await
@@ -5578,8 +5572,8 @@ mod tests {
         )
         .json(&serde_json::json!({
             "project": "agent:missing:project",
-            "session_id": "wc_sess_missing000000000",
-            "message_id": "wc_msg_missing000000000",
+            "session_id": "cg_sess_missing000000000",
+            "message_id": "cg_msg_missing000000000",
             "unexpected": true,
         }))
         .send(&service)

@@ -721,7 +721,7 @@ function eraseAllDrafts(): void {
 
 function rememberLocalCollaborationMessage(messageId: unknown): void {
   const id = typeof messageId === "string" ? messageId : "";
-  if (!/^wc_msg_[A-Za-z0-9_]+$/.test(id)) return;
+  if (!/^cg_msg_[A-Za-z0-9_]+$/.test(id)) return;
   locallyAuthoredCollaborationMessageIds.add(id);
 }
 

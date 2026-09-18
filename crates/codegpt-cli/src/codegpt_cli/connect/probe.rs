@@ -1,7 +1,7 @@
+use codegpt_admin::ServerHttpOptions;
 use serde_json::{json, Value as JsonValue};
 use std::path::Path;
 use std::time::{Duration, Instant};
-use codegpt_admin::ServerHttpOptions;
 
 use super::super::http::{fetch_runtime_status, post_json_authed, ApiCall};
 use super::process::local_runner_state_summary;
@@ -22,7 +22,7 @@ pub(super) async fn preflight_shared_key(
     .map(|_| ())
     .map_err(|error| {
         format!(
-            "Server did not accept hosted shared-key access: {error}. Confirm shared-key mode is enabled and use a non-wc_ key"
+            "Server did not accept hosted shared-key access: {error}. Confirm shared-key mode is enabled and use a non-cg_ key"
         )
     })
 }

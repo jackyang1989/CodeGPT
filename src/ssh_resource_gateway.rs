@@ -10,13 +10,13 @@ use crate::tool_runtime::specialized::{
     SpecializedGovernanceDenial, SpecializedOperationPolicy, SpecializedSource,
 };
 use crate::tool_runtime::{SshResourceToolCall, ToolResult, ToolRuntime};
+use codegpt_core::ssh_resource::{
+    validate_response_for_request, SshResourceRequest, SshResourceResponse,
+};
 use serde_json::{json, Value};
 use std::collections::{HashMap, VecDeque};
 use std::sync::Mutex;
 use std::time::Duration;
-use codegpt_core::ssh_resource::{
-    validate_response_for_request, SshResourceRequest, SshResourceResponse,
-};
 
 pub(crate) const SSH_RESOURCE_TOOL_NAME: &str = "ssh_resource";
 const MAX_BINDINGS: usize = 256;
@@ -79,7 +79,7 @@ impl SshResourceGatewayRuntime {
             .lock()
             .unwrap_or_else(|poisoned| poisoned.into_inner());
         let binding = loop {
-            let candidate = format!("wc_sbind_{}", codegpt_core::compact::random_suffix::<16>());
+            let candidate = format!("cg_sbind_{}", codegpt_core::compact::random_suffix::<16>());
             if !store.values.contains_key(&candidate) {
                 break candidate;
             }
@@ -238,7 +238,7 @@ pub(crate) fn mcp_output_schema() -> Value {
                 "additionalProperties": false,
                 "properties": {
                     "runner": {"type": "string", "minLength": 1, "maxLength": 128},
-                    "binding": {"type": "string", "pattern": "^wc_sbind_[A-Za-z0-9_-]{21}[AQgw]$"},
+                    "binding": {"type": "string", "pattern": "^cg_sbind_[A-Za-z0-9_-]{21}[AQgw]$"},
                     "resources": {
                         "type": "array",
                         "maxItems": codegpt_core::ssh_resource::MANAGED_SSH_RESOURCE_MAX_COUNT,
@@ -605,7 +605,7 @@ async fn resolve_binding(
 ) -> Result<(String, Binding, ResolvedRunner), GatewayError> {
     let binding_id = binding.ok_or_else(binding_required_error)?;
     if binding_id
-        .strip_prefix("wc_sbind_")
+        .strip_prefix("cg_sbind_")
         .and_then(codegpt_core::compact::decode::<16>)
         .is_none()
     {
@@ -922,7 +922,7 @@ mod tests {
         let cwd = "C:/private/work";
         let audit = audit_arguments(&json!({
             "action": "register",
-            "binding": "wc_sbind_ASNFZ4mrze8BI0VniavN7w",
+            "binding": "cg_sbind_ASNFZ4mrze8BI0VniavN7w",
             "name": "w10",
             "target": target,
             "default_cwd": cwd
@@ -941,7 +941,7 @@ mod tests {
         for value in [
             json!({
                 "runner": "runner-a",
-                "binding": "wc_sbind_ASNFZ4mrze8BI0VniavN7w",
+                "binding": "cg_sbind_ASNFZ4mrze8BI0VniavN7w",
                 "resources": [{
                     "name": "spe",
                     "source": "managed",

@@ -7,7 +7,7 @@ use super::goal::MAX_GOAL_CORRELATIONS;
 use super::Database;
 use rusqlite::{params, Connection, OptionalExtension, Transaction};
 
-pub(crate) const AGENT_ATTENTION_EVENT_ID_PREFIX: &str = "wc_attention_event_";
+pub(crate) const AGENT_ATTENTION_EVENT_ID_PREFIX: &str = "cg_attention_event_";
 pub(crate) const AGENT_ATTENTION_EVENT_KIND_AGENT_TASK_TERMINAL: &str = "agent_task_terminal";
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -28,7 +28,7 @@ impl Database {
     pub(super) fn ensure_agent_attention_schema(conn: &mut Connection) -> anyhow::Result<()> {
         conn.execute_batch(
             "
-            CREATE TABLE IF NOT EXISTS wc_agent_attention_events (
+            CREATE TABLE IF NOT EXISTS cg_agent_attention_events (
                 event_id TEXT PRIMARY KEY,
                 kind TEXT NOT NULL CHECK(kind = 'agent_task_terminal'),
                 owner_principal_kind TEXT NOT NULL,
@@ -39,16 +39,16 @@ impl Database {
                 task_attempt_id TEXT NOT NULL,
                 terminal_task_state TEXT NOT NULL CHECK(terminal_task_state IN ('succeeded', 'failed')),
                 created_at_unix_ms INTEGER NOT NULL,
-                FOREIGN KEY(target_agent_id) REFERENCES wc_agent_identities(agent_id),
-                FOREIGN KEY(goal_id) REFERENCES wc_goals(goal_id),
-                FOREIGN KEY(task_id) REFERENCES wc_agent_tasks(task_id),
-                FOREIGN KEY(task_attempt_id) REFERENCES wc_agent_task_attempts(attempt_id),
+                FOREIGN KEY(target_agent_id) REFERENCES cg_agent_identities(agent_id),
+                FOREIGN KEY(goal_id) REFERENCES cg_goals(goal_id),
+                FOREIGN KEY(task_id) REFERENCES cg_agent_tasks(task_id),
+                FOREIGN KEY(task_attempt_id) REFERENCES cg_agent_task_attempts(attempt_id),
                 UNIQUE(kind, goal_id, task_attempt_id)
             );
-            CREATE INDEX IF NOT EXISTS idx_wc_agent_attention_events_owner_created
-                ON wc_agent_attention_events(owner_principal_digest, created_at_unix_ms, event_id);
-            CREATE INDEX IF NOT EXISTS idx_wc_agent_attention_events_target_created
-                ON wc_agent_attention_events(target_agent_id, created_at_unix_ms, event_id);
+            CREATE INDEX IF NOT EXISTS idx_cg_agent_attention_events_owner_created
+                ON cg_agent_attention_events(owner_principal_digest, created_at_unix_ms, event_id);
+            CREATE INDEX IF NOT EXISTS idx_cg_agent_attention_events_target_created
+                ON cg_agent_attention_events(target_agent_id, created_at_unix_ms, event_id);
             ",
         )?;
         Ok(())
@@ -75,8 +75,8 @@ pub(super) fn create_agent_task_terminal_attention_in_transaction(
         let mut statement = transaction
             .prepare(
                 "SELECT g.goal_id
-                 FROM wc_goal_correlations c
-                 JOIN wc_goals g ON g.goal_id = c.goal_id
+                 FROM cg_goal_correlations c
+                 JOIN cg_goals g ON g.goal_id = c.goal_id
                  WHERE c.kind = 'agent_task' AND c.reference_id = ?1
                    AND g.owner_principal_kind = ?2 AND g.owner_principal_digest = ?3
                    AND g.lifecycle = 'active'
@@ -110,11 +110,11 @@ pub(super) fn create_agent_task_terminal_attention_in_transaction(
         let event_id = allocate_identity(
             &transaction,
             AGENT_ATTENTION_EVENT_ID_PREFIX,
-            "SELECT EXISTS(SELECT 1 FROM wc_agent_attention_events WHERE event_id = ?1)",
+            "SELECT EXISTS(SELECT 1 FROM cg_agent_attention_events WHERE event_id = ?1)",
         )?;
         transaction
             .execute(
-                "INSERT INTO wc_agent_attention_events (
+                "INSERT INTO cg_agent_attention_events (
                     event_id, kind, owner_principal_kind, owner_principal_digest,
                     target_agent_id, goal_id, task_id, task_attempt_id,
                     terminal_task_state, created_at_unix_ms
@@ -136,11 +136,11 @@ pub(super) fn create_agent_task_terminal_attention_in_transaction(
         let wake_id = allocate_identity(
             &transaction,
             AGENT_WAKE_ID_PREFIX,
-            "SELECT EXISTS(SELECT 1 FROM wc_agent_wakes WHERE wake_id = ?1)",
+            "SELECT EXISTS(SELECT 1 FROM cg_agent_wakes WHERE wake_id = ?1)",
         )?;
         transaction
             .execute(
-                "INSERT INTO wc_agent_wakes (
+                "INSERT INTO cg_agent_wakes (
                     wake_id, target_agent_id, trigger_kind,
                     first_triggering_delivery_id, latest_triggering_delivery_id,
                     latest_conversation_id, latest_message_id,
@@ -184,10 +184,10 @@ pub(crate) fn require_agent_attention_event_for_wake(
             "SELECT e.event_id, e.kind, e.owner_principal_kind, e.owner_principal_digest,
                     e.target_agent_id, e.goal_id, e.task_id, e.task_attempt_id,
                     e.terminal_task_state, e.created_at_unix_ms
-             FROM wc_agent_attention_events e
-             JOIN wc_goals g ON g.goal_id = e.goal_id
-             JOIN wc_agent_tasks t ON t.task_id = e.task_id
-             JOIN wc_agent_task_attempts a
+             FROM cg_agent_attention_events e
+             JOIN cg_goals g ON g.goal_id = e.goal_id
+             JOIN cg_agent_tasks t ON t.task_id = e.task_id
+             JOIN cg_agent_task_attempts a
                ON a.attempt_id = e.task_attempt_id AND a.task_id = e.task_id
              WHERE e.event_id = ?1
                AND e.kind = 'agent_task_terminal'
@@ -202,7 +202,7 @@ pub(crate) fn require_agent_attention_event_for_wake(
                AND a.state = e.terminal_task_state
                AND e.terminal_task_state IN ('succeeded', 'failed')
                AND EXISTS (
-                   SELECT 1 FROM wc_goal_correlations c
+                   SELECT 1 FROM cg_goal_correlations c
                    WHERE c.goal_id = e.goal_id AND c.kind = 'agent_task'
                      AND c.reference_id = e.task_id
                )",
@@ -248,7 +248,7 @@ pub(crate) fn attention_events_for_attempt(
             "SELECT event_id, kind, owner_principal_kind, owner_principal_digest,
                     target_agent_id, goal_id, task_id, task_attempt_id,
                     terminal_task_state, created_at_unix_ms
-             FROM wc_agent_attention_events
+             FROM cg_agent_attention_events
              WHERE task_attempt_id = ?1
              ORDER BY goal_id, event_id",
         )

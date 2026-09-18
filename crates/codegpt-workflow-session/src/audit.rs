@@ -3,17 +3,15 @@
 //! Runtime request/result auditing remains upstream. This layer owns only the final
 //! persisted Session input/context/execution privacy fence and restore-time re-projection.
 
-use serde_json::{json, Value};
 use codegpt_tool_contracts::{
     lookup_tool_definition, ToolAuditContextPolicy, ToolAuditExecutionPolicy, ToolAuditResultField,
     ToolAuditResultPolicy, ToolAuditSessionInputPolicy,
 };
+use serde_json::{json, Value};
 
 use super::util::{redact_and_bound_value, validation_excerpt};
 
-pub(super) fn audit_policy_for_tool(
-    name: &str,
-) -> Option<codegpt_tool_contracts::ToolAuditPolicy> {
+pub(super) fn audit_policy_for_tool(name: &str) -> Option<codegpt_tool_contracts::ToolAuditPolicy> {
     lookup_tool_definition(name).map(|definition| definition.audit_policy())
 }
 
@@ -270,7 +268,7 @@ mod tests {
                 "path": "/private/legacy/path",
                 "prompt": "PRIVATE_PROMPT",
                 "reasoning": "PRIVATE_REASONING",
-                "secret": "wc_agent_private_secret"
+                "secret": "cg_agent_private_secret"
             }),
         );
         assert_eq!(retired["project"], "agent:legacy:demo");
@@ -283,7 +281,7 @@ mod tests {
         assert!(!serialized.contains("/private/legacy/path"));
         assert!(!serialized.contains("PRIVATE_PROMPT"));
         assert!(!serialized.contains("PRIVATE_REASONING"));
-        assert!(!serialized.contains("wc_agent_private_secret"));
+        assert!(!serialized.contains("cg_agent_private_secret"));
     }
 
     #[test]
@@ -321,8 +319,8 @@ mod tests {
         let context = context_result_summary_for_tool_result(
             "skill_load",
             &json!({
-                "catalog_revision": "wc_skillcat_demo",
-                "skill_id": "wc_skill_demo",
+                "catalog_revision": "cg_skillcat_demo",
+                "skill_id": "cg_skill_demo",
                 "name": "PRIVATE SKILL NAME",
                 "source_scope": "runner",
                 "trust": "operator_configured_guidance",
@@ -335,7 +333,7 @@ mod tests {
             }),
         )
         .unwrap();
-        assert_eq!(context["skill_id"], "wc_skill_demo");
+        assert_eq!(context["skill_id"], "cg_skill_demo");
         assert!(context.get("name").is_none());
         assert!(!context.to_string().contains("PRIVATE SKILL NAME"));
     }
@@ -345,25 +343,25 @@ mod tests {
         let agent = context_result_summary_for_tool_result(
             "create_agent_identity",
             &json!({
-                "agent_id":"wc_dagent_demo","profile_revision":3,
+                "agent_id":"cg_dagent_demo","profile_revision":3,
                 "created":true,"replayed":false,"state_changed":true
             }),
         )
         .unwrap();
-        assert_eq!(agent["agent_id"], "wc_dagent_demo");
+        assert_eq!(agent["agent_id"], "cg_dagent_demo");
         let raw_agent = context_result_summary_for_tool_result(
             "create_agent_identity",
             &json!({
-                "agent":{"agent_id":"wc_dagent_raw","profile_revision":4},
+                "agent":{"agent_id":"cg_dagent_raw","profile_revision":4},
                 "created":true,"replayed":false,"state_changed":true
             }),
         )
         .unwrap();
-        assert_eq!(raw_agent["agent_id"], "wc_dagent_raw");
+        assert_eq!(raw_agent["agent_id"], "cg_dagent_raw");
         let raw_memory = context_result_summary_for_tool_result(
             "memory_read",
             &json!({
-                "memory_id":"wc_mem_demo", "memory_key":"policy", "revision":"wc_memrev_demo",
+                "memory_id":"cg_mem_demo", "memory_key":"policy", "revision":"cg_memrev_demo",
                 "body":"PRIVATE_MEMORY_BODY", "bootstrap":false, "priority":"normal"
             }),
         )

@@ -21,9 +21,6 @@ use super::{
     DETACHED_IDEMPOTENCY_RECOVERY_PREFIX,
 };
 use crate::DetachedInitiatorIdentity;
-use sha2::{Digest, Sha256};
-use std::collections::{HashMap, HashSet};
-use std::sync::atomic::Ordering;
 use codegpt_core::runner_operation::{
     RunnerInvocationMetadata, RunnerJobOperation, RunnerJobProcessOperation,
     RunnerJobScriptOperation, RunnerJobShellOperation, RunnerJobSkillResourceOperation,
@@ -40,6 +37,9 @@ use codegpt_core::runner_protocol::{
     STRUCTURED_EXECUTION_TIMEOUT_MIN_SECS,
 };
 use codegpt_core::runner_skill::RunnerSkillExecutionRequest;
+use sha2::{Digest, Sha256};
+use std::collections::{HashMap, HashSet};
+use std::sync::atomic::Ordering;
 
 #[derive(Clone, Copy)]
 struct ValidationProtocolError(&'static str);
@@ -925,7 +925,7 @@ impl RunnerRegistry {
                 key,
             )?,
             None => allocate_job_id(&inner.jobs_by_id, || {
-                format!("wc_job_{}", codegpt_core::compact::random_suffix::<12>())
+                format!("cg_job_{}", codegpt_core::compact::random_suffix::<12>())
             })?,
         };
         let validation_step_names = validation_steps

@@ -228,7 +228,7 @@ New-Item -ItemType Directory -Path $tempRoot | Out-Null
 try {
     $configPath = Join-Path $tempRoot "runner.toml"
     $tokenPath = Join-Path $tempRoot "codegpt-user-token"
-    $secret = "wc_pat_must_not_leak_from_profile_0123456789"
+    $secret = "cg_pat_must_not_leak_from_profile_0123456789"
     Set-Content -LiteralPath $configPath -Encoding UTF8 -Value @('client_id = "msi-test"', 'server_url = "https://runtime.example"')
     Set-Content -LiteralPath $tokenPath -Encoding ASCII -NoNewline -Value $secret
     $primary = [pscustomobject]@{

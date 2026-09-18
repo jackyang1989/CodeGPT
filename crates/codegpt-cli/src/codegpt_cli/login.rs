@@ -15,8 +15,8 @@
 //! built in a staging directory first and only then moved into place; see
 //! [`publish_connection`].
 
-use std::path::{Path, PathBuf};
 use codegpt_admin::ServerHttpOptions;
+use std::path::{Path, PathBuf};
 
 use super::connections::{
     canonical_server_url, connections_for_server, default_base_dir, descriptor_toml,
@@ -1183,9 +1183,9 @@ mod tests {
         result
     }
 
-    const CODE: &str = "wc_pair_supersecretcode";
-    const USER_TOKEN: &str = "wc_pat_usersecret";
-    const AGENT_TOKEN: &str = "wc_agent_agentsecret";
+    const CODE: &str = "cg_pair_supersecretcode";
+    const USER_TOKEN: &str = "cg_pat_usersecret";
+    const AGENT_TOKEN: &str = "cg_agent_agentsecret";
 
     fn login_opts(base: &Path, server_url: &str, overwrite: bool) -> LoginOptions {
         LoginOptions {
@@ -2715,8 +2715,7 @@ mod tests {
             "{text}"
         );
         assert!(
-            text.contains("codegpt project register --config")
-                && text.contains("/path/to/project"),
+            text.contains("codegpt project register --config") && text.contains("/path/to/project"),
             "{text}"
         );
         assert!(!text.contains("device/client_id"), "{text}");
@@ -3092,7 +3091,7 @@ mod tests {
         let temp = canonical_test_tempdir();
         let paths = ConnectionPaths::new(temp.path().join("connection"));
         std::fs::create_dir_all(&paths.dir).unwrap();
-        let secret = "wc_agent_do_not_echo_login_0123456789";
+        let secret = "cg_agent_do_not_echo_login_0123456789";
         std::fs::write(&paths.user_token, format!("{secret}\n")).unwrap();
         let error = render_login_result(
             &paths,

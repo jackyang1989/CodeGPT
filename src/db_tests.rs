@@ -34,7 +34,7 @@ fn verify_oauth_client_secret_works() {
     );
     assert!(!crate::auth::verify_oauth_client_secret(
         &db,
-        "wc_client_nonexistent",
+        "cg_client_nonexistent",
         &plaintext_secret
     )
     .unwrap());

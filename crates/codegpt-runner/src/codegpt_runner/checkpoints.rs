@@ -1,9 +1,9 @@
 use super::output::{ok_cmd, CommandResult};
 use crate::workspace_checkpoint::{create_workspace_checkpoint, restore_workspace_checkpoint};
+use codegpt_core::runner_operation::{RunnerFileOperation, RunnerFilePayload};
 use serde_json::{json, Value};
 use std::path::Path;
 use std::time::Instant;
-use codegpt_core::runner_operation::{RunnerFileOperation, RunnerFilePayload};
 
 #[cfg(test)]
 pub(crate) fn is_checkpoint_request_kind(kind: &str) -> bool {

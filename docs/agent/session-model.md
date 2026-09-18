@@ -15,7 +15,7 @@ source linked from §6. Standing architecture summary:
 
 | Formal name | Casual aliases (avoid in design) | Implementation home |
 |---|---|---|
-| **Workflow Session** | coding session, tool ledger session, `wc_sess_*` session | `tool_runtime::sessions` |
+| **Workflow Session** | coding session, tool ledger session, `cg_sess_*` session | `tool_runtime::sessions` |
 | **Action Audit Session** | HTTP action session, audit session, operator action trail | Internal module `action_audit_sessions` (SQLite table still named `action_sessions` for compatibility) |
 
 When writing code, docs, or reviews, prefer the formal names above. If a
@@ -25,7 +25,7 @@ statement is true for only one kind, name that kind explicitly.
 
 ## ClientWindow is not a third session type
 
-Adapters may derive a bounded, domain-separated `ClientWindow` from host-owned window metadata such as `_meta["openai/session"]`. The raw host value is never persisted or exposed. A principal-scoped `wc_peer_*` id may be derived from the hashed Window for lightweight collaboration routing, but neither identity is a Workflow Session selector, Project authority, credential, model-context-retention proof, implicit recorder, model-turn id, or liveness proof. Stateless MCP still never treats caller-supplied `Mcp-Session-Id` as hidden continuity.
+Adapters may derive a bounded, domain-separated `ClientWindow` from host-owned window metadata such as `_meta["openai/session"]`. The raw host value is never persisted or exposed. A principal-scoped `cg_peer_*` id may be derived from the hashed Window for lightweight collaboration routing, but neither identity is a Workflow Session selector, Project authority, credential, model-context-retention proof, implicit recorder, model-turn id, or liveness proof. Stateless MCP still never treats caller-supplied `Mcp-Session-Id` as hidden continuity.
 
 Window correlation supports ActionAudit, agent-loop observations, bounded Peer awareness/messaging, and other explicitly designed non-authority features, while ordinary coding continuity remains the canonical Workflow Session lifecycle. `work_on_project(session_id=...)` resumes only that exact authorized Session; omission creates a fresh Session. Credentials, Project ids, windows, connections, Peer ids, and prior requests never select a Workflow Session implicitly.
 
@@ -35,7 +35,7 @@ The durable Agent/Conversation/Wake domain is also not a session type. A Server-
 
 Window Peer state is a small communication plane, not a third Session domain. Discovery requires the same authenticated principal, exact Project, and meaningful Window activity within a 10-minute recency window. Discovery produces a retained-state-deduplicated `peer_awareness` hint; the word "recent" is literal and does not imply online/presence state.
 
-After discovery, a `wc_peer_*` route is principal-scoped but Project-independent. `post_peer_message` therefore does not become invalid merely because either collaborator later works in another Project/worktree; bounded Peer retention still applies. The route conveys only the explicit bounded message and safe message metadata. It grants no visibility into the peer's current Project, Workflow Session, files, branch, activity, assignment, or handoff. Session business tools retain their own target/project authorization, including the existing exact-project equality fence for recorder-to-target Workflow Session collaboration.
+After discovery, a `cg_peer_*` route is principal-scoped but Project-independent. `post_peer_message` therefore does not become invalid merely because either collaborator later works in another Project/worktree; bounded Peer retention still applies. The route conveys only the explicit bounded message and safe message metadata. It grants no visibility into the peer's current Project, Workflow Session, files, branch, activity, assignment, or handoff. Session business tools retain their own target/project authorization, including the existing exact-project equality fence for recorder-to-target Workflow Session collaboration.
 
 Peer delivery is ambient on model-facing ToolResults. Ordinary messages are persisted and marked after one projection attempt; ACK-required messages are eligible again whenever the current request omits their id. Persistent `first_projected_at_ms`, `last_projected_at_ms`, `projection_count`, and `first_ack_observed_at_ms` are analysis/observability facts only. They must not be described as delivery, reading, acceptance, current memory, or work completion.
 
@@ -58,13 +58,13 @@ handoff, and finish can reason about the same unit of work.
 - Validation evidence and closeout summaries
 - Handoff / finish tooling (`session_handoff_summary`, `finish_coding_task`, …)
 
-Workflow Session lifecycle is independent from the durable `wc_goal_*` Goal domain. A Session may be explicitly correlated to a Goal, but that correlation grants no Session/Project authority and does not make the Session the Goal's lifecycle owner. In particular, `finish_coding_task` does not transition a Goal to `completed`; any Goal transition is a separate explicit Goal-domain mutation.
+Workflow Session lifecycle is independent from the durable `cg_goal_*` Goal domain. A Session may be explicitly correlated to a Goal, but that correlation grants no Session/Project authority and does not make the Session the Goal's lifecycle owner. In particular, `finish_coding_task` does not transition a Goal to `completed`; any Goal transition is a separate explicit Goal-domain mutation.
 
 ### Identity
 
 | Aspect | Contract |
 |---|---|
-| ID form | `wc_sess_*` (`SESSION_ID_PREFIX`) |
+| ID form | `cg_sess_*` (`SESSION_ID_PREFIX`) |
 | Business field | `session_id` on tools that take a workflow session as input |
 | Coding resume field | `session_id` on canonical external `work_on_project`; the internal startup primitive's `resume_session_id` is not a wire/API field |
 | Recorder field | `recording_session_id` on generic wrappers, including the stateless MCP 2026 tool-argument projection (metadata only; stripped before concrete tool dispatch) |
@@ -105,14 +105,14 @@ facts while making an otherwise silent recorder discontinuity observable.
 
 One real kernel tool request also receives one trusted runtime-generated logical invocation correlation id. The outer recorder event pair and any inner concrete business-execution event pair inherit that id while retaining independent pair-level `call_id` values. A small recorder/business role discriminator lets Session-local semantic projections deterministically prefer authoritative business execution facts when both pairs land in the same Workflow Session. Raw ledger facts remain intact. Correlation never grants authority and is not a permission identity, retry token, idempotency key, execution identity, lifecycle key, or model-supplied input. If recorder Session `W` and business Session `C` differ, each Session keeps its own one-invocation semantic evidence; correlation is never used for cross-Session global deduplication. Current-v2 ledger events without the additive correlation fields remain uncorrelated and are projected conservatively per event; restore never invents an id or rewrites persisted history.
 
-Stateless MCP 2026 also projects optional `ack_session_message_ids` wrapper metadata, bounded to eight opaque `wc_msg_*` ids. For Session messages, an ACK is request-scoped evidence that the current model context still retains an unresolved ACK-required message in the exact authorized recording Workflow Session. For Window Peer messages, the same wrapper may acknowledge an ACK-required message addressed to the current principal-bound ClientWindow even when no Workflow Session recorder exists. The adapter removes ACK metadata before concrete tool parsing; ACK never grants authority, resolves a message, accepts work, or gates the concrete tool effect. Any Session or Peer message kind/priority may request ACK. Accepted ids suppress that body only in the current response; later omission makes an unresolved Session message or retained Peer ACK message eligible for bounded re-projection. Historical ACK state is never used to infer current model-context retention.
+Stateless MCP 2026 also projects optional `ack_session_message_ids` wrapper metadata, bounded to eight opaque `cg_msg_*` ids. For Session messages, an ACK is request-scoped evidence that the current model context still retains an unresolved ACK-required message in the exact authorized recording Workflow Session. For Window Peer messages, the same wrapper may acknowledge an ACK-required message addressed to the current principal-bound ClientWindow even when no Workflow Session recorder exists. The adapter removes ACK metadata before concrete tool parsing; ACK never grants authority, resolves a message, accepts work, or gates the concrete tool effect. Any Session or Peer message kind/priority may request ACK. Accepted ids suppress that body only in the current response; later omission makes an unresolved Session message or retained Peer ACK message eligible for bounded re-projection. Historical ACK state is never used to infer current model-context retention.
 
 An ACK-required Session message may persist `first_ack_observed_at`; an ACK-required Peer message persists the analogous window-message timestamp. For Session messages only the first accepted ACK advances message-observation revision; repeated echoes do not create revision churn. These fields mean only that the Server once observed an explicit ACK echo. They are not delivery/read receipts and do not by themselves change business status. `resolve_session_message` remains the durable processed-state transition for Session messages.
 
 Window Peer transport is bounded retained communication, not a durable task queue. Retention pruning may eventually remove old Peer messages or discovery edges, so ACK-required Peer re-projection lasts only while the message remains retained; durable work ownership and completion continue to use explicit Workflow Session or Agent Task primitives.
 
 
-Workflow Session targeting is explicit in 0.4. Canonical external `work_on_project` creates a fresh Workflow Session when `session_id` is omitted and continues only the exact existing `wc_sess_*` when it is supplied. The retired `start_coding_task` wire/API name is not a second continuation path. Ordinary project tools do not infer a Workflow Session from caller identity, window identity, project identity, or prior calls. To record a call in a Workflow Session, pass an explicitly authorized `recording_session_id`; when a tool has its own Session business input, that explicit id is authorized independently.
+Workflow Session targeting is explicit in 0.4. Canonical external `work_on_project` creates a fresh Workflow Session when `session_id` is omitted and continues only the exact existing `cg_sess_*` when it is supplied. The retired `start_coding_task` wire/API name is not a second continuation path. Ordinary project tools do not infer a Workflow Session from caller identity, window identity, project identity, or prior calls. To record a call in a Workflow Session, pass an explicitly authorized `recording_session_id`; when a tool has its own Session business input, that explicit id is authorized independently.
 
 Project scope is fail-closed. An explicit project-scoped business Session or recorder must match the canonical resolved request project before business execution or Session mutation. There is no cross-project warning/escape mode. `complete_session_message` records an answer author only from an explicitly authorized recorder; without one, author Session provenance is absent rather than inferred.
 
@@ -147,7 +147,7 @@ Missing, malformed or future ACKs no longer replay history or attach automatic `
     "status": "unacknowledged",
     "suggested_call": {
       "tool": "session_handoff_summary",
-      "arguments": {"session_id": "wc_sess_example"}
+      "arguments": {"session_id": "cg_sess_example"}
     }
   }
 }
@@ -418,7 +418,7 @@ explicit lifecycle operation says otherwise.
 `work_on_project` deliberately does not use Workflow Session identity, transport
 identity, a client-window key, credentials, project identity, or Server lifetime
 as evidence that the current model still retains static bootstrap content. The
-same `wc_sess_*` may be explicitly resumed by multiple independent ChatGPT
+same `cg_sess_*` may be explicitly resumed by multiple independent ChatGPT
 conversations. Its `include_workflow_guidance`, `include_project_instructions`, and
 `include_extension_catalog` flags are caller-explicit model-facing projection
 preferences only: their defaults are true, and false is appropriate only when
@@ -448,7 +448,7 @@ hashes are returned to the model.
 The binding field is an additive, serde-defaulted field in ledger version 1, so
 older ledgers load it as empty without migration and keep their existing
 Session events/messages. Restore accepts only bounded, lowercase SHA-256 keys
-that reference known active `wc_sess_*` records. Malformed, duplicate,
+that reference known active `cg_sess_*` records. Malformed, duplicate,
 conflicting, missing, closed, project-mismatched-on-lookup, and excess entries
 are discarded without rejecting valid Session data. Internal status exposes
 only bounded counts (`durable_binding_count`, `restored_binding_count`,
@@ -781,7 +781,7 @@ part of this contract.
 
 | Aspect | Contract |
 |---|---|
-| ID form | UUID string (or client-supplied id via headers/query), **not** `wc_sess_*` |
+| ID form | UUID string (or client-supplied id via headers/query), **not** `cg_sess_*` |
 | Request affinity | Headers `x-action-session-id` / `x-codegpt-session-id`, or query `action_session_id` |
 | Default creation | Server may create a new UUID when no open recent session is reused |
 | Durable caller attribution | `principal_kind`, optional `principal_user_id`, OAuth-only `oauth_client_id`; legacy rows remain `NULL` and are never inferred from target project or session |
@@ -818,7 +818,7 @@ This lifecycle is **orthogonal** to Workflow Session start/finish tools.
 - Not a coding / workflow session
 - Not a substitute for canonical coding-startup / `work_on_project` evidence
 - Not an input to `session_summary`, message board, or `finish_coding_task`
-- Not automatically correlated to any `wc_sess_*`
+- Not automatically correlated to any `cg_sess_*`
 
 ---
 
@@ -845,7 +845,7 @@ Do **not**:
 
 - Fold Action Audit Sessions into `tool_runtime::sessions`
 - Store workflow ledger events in SQLite `action_*` tables
-- Reuse `wc_sess_*` as SQLite `action_sessions.session_id` by convention
+- Reuse `cg_sess_*` as SQLite `action_sessions.session_id` by convention
 - Drive workflow guards from audit session status, or audit close from
   `finish_coding_task`
 - “Simplify” by making one ID type serve both products
@@ -867,7 +867,7 @@ Until that design is implemented, code must treat the systems as unlinked.
 
 | Forbidden | Why |
 |---|---|
-| Infer `wc_sess_*` from current HTTP Action Audit Session | Wrong namespace; audit ids are not workflow ids |
+| Infer `cg_sess_*` from current HTTP Action Audit Session | Wrong namespace; audit ids are not workflow ids |
 | Fall back to Action Audit Session when Workflow Session is missing | Breaks `unknown_session_id` and explicit-wins |
 | Treat `/api/audit/session` payload as coding-task summary | Different evidence model and redaction rules |
 | Pass audit UUID as tool `session_id` expecting ledger semantics | Unknown or wrong session; not a supported bridge |

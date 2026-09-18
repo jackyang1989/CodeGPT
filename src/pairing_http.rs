@@ -18,10 +18,10 @@ use crate::json_error;
 use crate::models::{
     ApiKeyRecord, PairingCodeRecord, UserRecord, TOKEN_KIND_AGENT, TOKEN_KIND_USER,
 };
+use codegpt_core::authority::SCOPE_RUNNER_MANAGE;
 use salvo::prelude::*;
 use serde::Deserialize;
 use serde_json::{json, Value};
-use codegpt_core::authority::SCOPE_RUNNER_MANAGE;
 
 const DEFAULT_TTL_SECS: i64 = 600;
 const MIN_TTL_SECS: i64 = 60;
@@ -98,7 +98,7 @@ fn resolve_pairing_agent_token_name(
 
 fn generate_pairing_code() -> String {
     format!(
-        "wc_pair_{}{}",
+        "cg_pair_{}{}",
         uuid::Uuid::new_v4().simple(),
         uuid::Uuid::new_v4().simple()
     )
@@ -485,7 +485,7 @@ mod tests {
             updated_at: Some(now),
         };
         db.create_user(&user).unwrap();
-        let code = "wc_pair_test_secret";
+        let code = "cg_pair_test_secret";
         db.insert_pairing_code(&PairingCodeRecord {
             id: "p-1".to_string(),
             code_hash: hash_token(code),
@@ -526,7 +526,7 @@ mod tests {
             updated_at: Some(now),
         })
         .unwrap();
-        let code_hash = hash_token("wc_pair_once");
+        let code_hash = hash_token("cg_pair_once");
         db.insert_pairing_code(&PairingCodeRecord {
             id: "p-1".to_string(),
             code_hash: code_hash.clone(),
@@ -572,8 +572,8 @@ mod tests {
         })
         .unwrap();
         for (id, code, expires_at) in [
-            ("p-exp", "wc_pair_exp", now - 1),
-            ("p-wrong", "wc_pair_wrong", now + 600),
+            ("p-exp", "cg_pair_exp", now - 1),
+            ("p-wrong", "cg_pair_wrong", now + 600),
         ] {
             db.insert_pairing_code(&PairingCodeRecord {
                 id: id.to_string(),
@@ -590,11 +590,11 @@ mod tests {
             .unwrap();
         }
         let expired = db
-            .consume_pairing_code(&hash_token("wc_pair_exp"), "alice-laptop", now)
+            .consume_pairing_code(&hash_token("cg_pair_exp"), "alice-laptop", now)
             .unwrap();
         assert!(matches!(expired, PairingConsumeResult::Expired(_)));
         let wrong = db
-            .consume_pairing_code(&hash_token("wc_pair_wrong"), "other", now)
+            .consume_pairing_code(&hash_token("cg_pair_wrong"), "other", now)
             .unwrap();
         assert!(matches!(wrong, PairingConsumeResult::ClientMismatch(_)));
     }
@@ -619,7 +619,7 @@ mod tests {
         .unwrap();
         db.insert_pairing_code(&PairingCodeRecord {
             id: "p-open".to_string(),
-            code_hash: hash_token("wc_pair_open"),
+            code_hash: hash_token("cg_pair_open"),
             user_id: "u-1".to_string(),
             username: "alice".to_string(),
             client_id: String::new(),
@@ -632,7 +632,7 @@ mod tests {
         .unwrap();
 
         let claimed = db
-            .consume_pairing_code(&hash_token("wc_pair_open"), "some-laptop", now)
+            .consume_pairing_code(&hash_token("cg_pair_open"), "some-laptop", now)
             .unwrap();
         match claimed {
             PairingConsumeResult::Consumed(record) => {
@@ -644,7 +644,7 @@ mod tests {
 
         // Still one-time: a second device cannot reuse it.
         let reused = db
-            .consume_pairing_code(&hash_token("wc_pair_open"), "other-laptop", now)
+            .consume_pairing_code(&hash_token("cg_pair_open"), "other-laptop", now)
             .unwrap();
         assert!(matches!(reused, PairingConsumeResult::AlreadyUsed(_)));
     }
@@ -666,7 +666,7 @@ mod tests {
         .unwrap();
         db.insert_pairing_code(&PairingCodeRecord {
             id: "p-bound".to_string(),
-            code_hash: hash_token("wc_pair_bound"),
+            code_hash: hash_token("cg_pair_bound"),
             user_id: "u-1".to_string(),
             username: "alice".to_string(),
             client_id: "alice-laptop".to_string(),
@@ -679,14 +679,14 @@ mod tests {
         .unwrap();
 
         let mismatched = db
-            .consume_pairing_code(&hash_token("wc_pair_bound"), "someone-else", now)
+            .consume_pairing_code(&hash_token("cg_pair_bound"), "someone-else", now)
             .unwrap();
         assert!(matches!(
             mismatched,
             PairingConsumeResult::ClientMismatch(_)
         ));
         let matched = db
-            .consume_pairing_code(&hash_token("wc_pair_bound"), "alice-laptop", now)
+            .consume_pairing_code(&hash_token("cg_pair_bound"), "alice-laptop", now)
             .unwrap();
         assert!(matches!(matched, PairingConsumeResult::Consumed(_)));
     }
@@ -706,7 +706,7 @@ mod tests {
             updated_at: Some(now),
         })
         .unwrap();
-        let code = "wc_pair_endpoint_test";
+        let code = "cg_pair_endpoint_test";
         db.insert_pairing_code(&PairingCodeRecord {
             id: "p-1".to_string(),
             code_hash: hash_token(code),
@@ -734,11 +734,11 @@ mod tests {
             .await;
         assert_eq!(resp.status_code.unwrap(), StatusCode::OK);
         let body: Value = resp.take_json().await.unwrap();
-        assert!(body["user_token"].as_str().unwrap().starts_with("wc_pat_"));
+        assert!(body["user_token"].as_str().unwrap().starts_with("cg_pat_"));
         assert!(body["agent_token"]
             .as_str()
             .unwrap()
-            .starts_with("wc_agent_"));
+            .starts_with("cg_agent_"));
         assert_eq!(
             body["user_token_scopes"],
             json!([

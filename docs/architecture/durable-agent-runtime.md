@@ -42,7 +42,7 @@ domains and must remain explicit in code, schemas, documentation, and reviews.
 | Concept | Meaning | Not interchangeable with |
 | --- | --- | --- |
 | Runtime Project | Runner-registered execution target addressed as `agent:<client_id>:<project_id>` | durable Agent identity |
-| Durable Agent | Server-minted `wc_dagent_*` identity representing who acts/communicates | Runner, browser window, credential, Workflow Session |
+| Durable Agent | Server-minted `cg_dagent_*` identity representing who acts/communicates | Runner, browser window, credential, Workflow Session |
 | Agent Endpoint | Current Host/Client attachment for one Agent, with lifecycle/generation | Agent identity or work ownership |
 | Conversation | Durable communication space | Workflow Session, task queue, execution context |
 | Agent Delivery | Recipient-specific Inbox state for one Message | model invocation or accepted work |
@@ -52,10 +52,10 @@ domains and must remain explicit in code, schemas, documentation, and reviews.
 | Workflow Session | Existing execution/provenance/validation/handoff evidence context | Agent, Conversation, Agent Task |
 | Job | Concrete long-running process/validation execution | Agent Task or TaskAttempt |
 | CodingAgentRun | Existing ACP delegated coding execution | Agent Task itself |
-| Goal | Server-owned high-level durable intent/control state (`wc_goal_*`) | Agent Task, Workflow Session, Job, Project authority, scheduler |
+| Goal | Server-owned high-level durable intent/control state (`cg_goal_*`) | Agent Task, Workflow Session, Job, Project authority, scheduler |
 
 The `agent:` prefix in a runtime Project id is historical Runner-address syntax. It
-is unrelated to the durable `wc_dagent_*` Agent identity domain.
+is unrelated to the durable `cg_dagent_*` Agent identity domain.
 
 In implementation names, use `AgentTask` / `AgentTaskAttempt` for the asynchronous Agent work domain. Ordinary coding work uses Workflow Session and Job terminology; do not introduce an unqualified new `Task` type where ownership would be ambiguous.
 
@@ -149,11 +149,11 @@ Phase 1 adds a deliberately small, Control-owned Goal domain. A Goal answers:
 
 It does **not** answer who owns the next execution attempt, which repository operation should run, or whether a concrete coding Session/Job succeeded. Those remain owned by AgentTask/TaskAttempt, Workflow Session, Project/Runner, and Job domains respectively.
 
-The authoritative model is persisted in the existing Server SQLite database using independent `wc_goals`, `wc_goal_correlations`, and `wc_goal_idempotency` tables. The first model is intentionally bounded:
+The authoritative model is persisted in the existing Server SQLite database using independent `cg_goals`, `cg_goal_correlations`, and `cg_goal_idempotency` tables. The first model is intentionally bounded:
 
 ```text
 Goal
-  goal_id                 # Server-minted wc_goal_*
+  goal_id                 # Server-minted cg_goal_*
   owner principal         # stable authorized communication-management principal
   title                   # <= 200 characters
   objective               # <= 8192 UTF-8 bytes
@@ -178,7 +178,7 @@ Correlation is explicit durable identity only:
 
 A Goal reference never becomes inherited authority. A Goal that references a Project indirectly through an AgentTask still has no Project authority; a Goal that references a Session is not a Session credential; a Goal linked to an AgentTask does not own that TaskAttempt. Any later dereference must run the target domain's normal checks again.
 
-No current execution path accepts or requires `goal_id`: `work_on_project`, read/edit/search, shell/process, Job handoff/observation, validation, Git, and `finish_coding_task` retain their existing semantics. Goal is not selected from ClientWindow, OpenAI/MCP session data, Project identity, credential, Conversation, or Workflow Session. The historical Runner/Codex metadata field named `goal_id` remains compatibility metadata and is **not** the `wc_goal_*` durable identity.
+No current execution path accepts or requires `goal_id`: `work_on_project`, read/edit/search, shell/process, Job handoff/observation, validation, Git, and `finish_coding_task` retain their existing semantics. Goal is not selected from ClientWindow, OpenAI/MCP session data, Project identity, credential, Conversation, or Workflow Session. The historical Runner/Codex metadata field named `goal_id` remains compatibility metadata and is **not** the `cg_goal_*` durable identity.
 
 Lifecycle remains independent across domains. `finish_coding_task` reports/finishes one Workflow Session concern and does not complete a Goal. AgentTask/TaskAttempt terminal completion likewise never transitions Goal lifecycle/revision/objective/terminal reason. The terminal-attention bridge described below records a fact and creates a bounded reasoning opportunity only; Goal progression remains an explicit `update_goal` or other ordinary authorized model decision. There is still no Goal scheduler, automatic next AgentTask, automatic TaskAttempt, Workflow Session, CodingAgentRun, Runner request, process, or Job.
 
@@ -212,7 +212,7 @@ The soft heuristic uses a fixed five-minute attention horizon. A caller-visible 
 
 No meaningful CodeGPT activity for five minutes is **not** proof that a model turn failed. The interval may contain Host scheduling, model inference, user interaction, work through GitHub or other connectors, Web/network delay, or a genuinely stalled turn. The projection is therefore a human-attention signal only: it does not heartbeat/extend/expire a TaskAttempt, create a Wake or successor Attempt, resume a model, terminalize a Task, mutate Goal lifecycle/revision, or grant execution authority. TaskAttempt correctness leases remain a separate hard fencing mechanism.
 
-The App receives exact `goal_id` and revision in the initial presentation result and polls the authoritative Store by that id after successful Host initialization. Derived activity is live state rather than Goal revision truth, so the card may refresh `active → attention_needed → active` while the authoritative Goal revision remains unchanged; this never mutates `wc_goals`. Early results can render while initialization is pending. Active cards converge again after foreground/visibility changes; terminal Goals stop polling and retain a stable terminal presentation even if an older active notification arrives later. Teardown/page unload stops timers. Refresh/reopen requires no localStorage or Server process-local Goal map: the rebuilt View can recover current state from the exact durable identity and SQLite truth. Multiple Views observing the same Goal are safe because both presentation tools are pure reads.
+The App receives exact `goal_id` and revision in the initial presentation result and polls the authoritative Store by that id after successful Host initialization. Derived activity is live state rather than Goal revision truth, so the card may refresh `active → attention_needed → active` while the authoritative Goal revision remains unchanged; this never mutates `cg_goals`. Early results can render while initialization is pending. Active cards converge again after foreground/visibility changes; terminal Goals stop polling and retain a stable terminal presentation even if an older active notification arrives later. Teardown/page unload stops timers. Refresh/reopen requires no localStorage or Server process-local Goal map: the rebuilt View can recover current state from the exact durable identity and SQLite truth. Multiple Views observing the same Goal are safe because both presentation tools are pure reads.
 
 There is no stable Goal page in the Web UI yet, so G2 deliberately omits an `Open in CodeGPT` link rather than emitting a dead or semantically incorrect URL.
 
@@ -562,7 +562,7 @@ claimable queue, or choose execution capacity.
 A4a is implemented through `start_agent_task_coding_run` and
 `reconcile_agent_task_coding_run`. The runtime re-authorizes the exact TaskAttempt,
 Project, and CodingAgent backend; persists the prepared binding in
-`wc_agent_task_coding_runs`; durably claims dispatch before starting the backend;
+`cg_agent_task_coding_runs`; durably claims dispatch before starting the backend;
 preserves uncertain dispatch as `outcome_unknown`; and reconciles the authoritative
 CodingAgentRun before terminalizing the exact TaskAttempt. The binding retains the
 run/provider/authority/intent identities needed to reject a changed or stale backend
@@ -577,10 +577,10 @@ backend-response uncertainty.
 A4b is implemented through `start_agent_task_endpoint_continuation`. The model supplies
 only the exact `task_id`, `attempt_id`, `assignee_agent_id`, `attempt_fence`, and
 `attempt_controller_generation`; startup never selects an Endpoint. The Store records
-one concrete `wc_agent_task_endpoint_executions` row plus one durable
+one concrete `cg_agent_task_endpoint_executions` row plus one durable
 `agent_task_attempt` Wake. Its Endpoint id/generation are nullable until an existing
 wake-capable carrier later claims the Wake. Attempt controller generation remains
-authoritative only in `wc_agent_task_attempts`; the backend row does not duplicate it.
+authoritative only in `cg_agent_task_attempts`; the backend row does not duplicate it.
 A4a and A4b are mutually exclusive per Attempt rather than hidden behind a universal
 execution-provider abstraction.
 

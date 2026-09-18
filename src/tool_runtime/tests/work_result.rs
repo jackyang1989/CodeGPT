@@ -78,7 +78,7 @@ fn work_result_projection_is_sparse_bounded_and_honest() {
     });
     let projected = build_work_result_projection(
         "agent:special:demo",
-        &format!("wc_sess_{}", "1".repeat(32)),
+        &format!("cg_sess_{}", "1".repeat(32)),
         true,
         &workspace,
         &validation("mixed", "passed", 8, 1),
@@ -111,7 +111,7 @@ fn work_result_projection_is_sparse_bounded_and_honest() {
 fn work_result_state_version_matches_buffered_projection_hash() {
     let projection = build_work_result_projection(
         "agent:special:项目-🦀",
-        &format!("wc_sess_{}", "9".repeat(32)),
+        &format!("cg_sess_{}", "9".repeat(32)),
         true,
         &json!({
             "git_available": true,
@@ -147,7 +147,7 @@ fn work_result_state_version_matches_buffered_projection_hash() {
 fn work_result_projection_handles_clean_non_git_and_unknown_validation_without_invention() {
     let clean = build_work_result_projection(
         "agent:special:demo",
-        &format!("wc_sess_{}", "2".repeat(32)),
+        &format!("cg_sess_{}", "2".repeat(32)),
         true,
         &json!({
             "git_available": true,
@@ -169,7 +169,7 @@ fn work_result_projection_handles_clean_non_git_and_unknown_validation_without_i
 
     let unavailable = build_work_result_projection(
         "agent:special:demo",
-        &format!("wc_sess_{}", "3".repeat(32)),
+        &format!("cg_sess_{}", "3".repeat(32)),
         true,
         &json!({
             "git_available": false,
@@ -199,7 +199,7 @@ fn work_result_projection_marks_bounded_history_partial_without_inventing_absenc
         "files_total": 0,
         "files": []
     });
-    let session_id = format!("wc_sess_{}", "4".repeat(32));
+    let session_id = format!("cg_sess_{}", "4".repeat(32));
     let partial = build_work_result_projection(
         "agent:special:demo",
         &session_id,
@@ -491,14 +491,14 @@ fn work_result_tool_contract_requires_exact_project_and_session() {
         assert!(ToolCall::from_tool_name(name, json!({"project": "agent:x:y"})).is_err());
         assert!(ToolCall::from_tool_name(
             name,
-            json!({"session_id": format!("wc_sess_{}", "1".repeat(32))})
+            json!({"session_id": format!("cg_sess_{}", "1".repeat(32))})
         )
         .is_err());
         let call = ToolCall::from_tool_name(
             name,
             json!({
                 "project": "agent:x:y",
-                "session_id": format!("wc_sess_{}", "1".repeat(32))
+                "session_id": format!("cg_sess_{}", "1".repeat(32))
             }),
         )
         .unwrap();

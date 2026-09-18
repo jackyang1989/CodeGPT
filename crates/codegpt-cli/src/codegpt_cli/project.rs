@@ -1,7 +1,7 @@
+use codegpt_admin::ServerHttpOptions;
 use serde::Deserialize;
 use serde_json::{json, Value};
 use std::path::{Path, PathBuf};
-use codegpt_admin::ServerHttpOptions;
 
 use super::connect::profile::{atomic_write, render_project_file, resolve_project};
 use super::{http_post_json_status, read_optional_token, shell_command, validate_user_api_token};
@@ -1037,7 +1037,7 @@ mod tests {
     use std::net::TcpListener;
     use std::thread;
 
-    const TEST_USER_TOKEN: &str = "wc_pat_project_activation_test";
+    const TEST_USER_TOKEN: &str = "cg_pat_project_activation_test";
 
     pub(super) fn activation_config(
         path: &Path,

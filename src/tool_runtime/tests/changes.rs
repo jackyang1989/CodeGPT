@@ -330,7 +330,7 @@ async fn final_changes_uses_startup_tree_whole_final_workspace_and_frozen_lazy_d
         .changes_file_diff(
             project,
             session.session_id,
-            format!("wc_changes_snapshot_{}", "f".repeat(32)),
+            format!("cg_changes_snapshot_{}", "f".repeat(32)),
             "generated.rs".to_string(),
             Some(&auth),
         )

@@ -2398,16 +2398,16 @@ mod tests {
                 "tools/call",
                 Some(tool_name.to_string()),
             );
-            guard.set_app_call_id(Some("wc_app_call_0123456789abcdef_1".to_string()));
+            guard.set_app_call_id(Some("cg_app_call_0123456789abcdef_1".to_string()));
             guard.parsed("ok");
             guard.capture_payload(
                 "raw_request",
-                &json!({"binding_id": "wc_host_binding_PRIVATE", "consume_token": "PRIVATE"}),
+                &json!({"binding_id": "cg_host_binding_PRIVATE", "consume_token": "PRIVATE"}),
             );
             guard.capture_payload(
                 "final_response",
                 &json!({"structuredContent": {"success": true, "output": {
-                    "app_protocol": {"automatic_message": "consume_token=wc_wake_consume_PRIVATE_RESUME_ENVELOPE"}
+                    "app_protocol": {"automatic_message": "consume_token=cg_wake_consume_PRIVATE_RESUME_ENVELOPE"}
                 }}}),
             );
             drop(guard);
@@ -2418,9 +2418,9 @@ mod tests {
             );
             let events = fs::read_to_string(temp.path().join(&trace_id).join("events.jsonl"))
                 .expect("continuation trace metadata");
-            assert!(events.contains("wc_app_call_0123456789abcdef_1"));
+            assert!(events.contains("cg_app_call_0123456789abcdef_1"));
             assert!(events.contains("mcp_tool_request_parsed"));
-            assert!(!events.contains("wc_host_binding_PRIVATE"));
+            assert!(!events.contains("cg_host_binding_PRIVATE"));
             assert!(!events.contains("PRIVATE_RESUME_ENVELOPE"));
         }
     }

@@ -63,7 +63,7 @@ structured unregister，再删除本地 registration；Runner 已停止时，只
 
 | 命令 | 用途 | 说明 |
 | --- | --- | --- |
-| `codegpt login <server-url> --code <wc_pair_...> [--project PATH]` | 用一次性登录码把本机接入 Server | 普通 managed 接入入口；`--project` 选择实际项目，`--allowed-root` 指定以后允许添加项目的父目录；`--print-mcp-config` 可显式打印敏感的 ChatGPT MCP 连接信息。 |
+| `codegpt login <server-url> --code <cg_pair_...> [--project PATH]` | 用一次性登录码把本机接入 Server | 普通 managed 接入入口；`--project` 选择实际项目，`--allowed-root` 指定以后允许添加项目的父目录；`--print-mcp-config` 可显式打印敏感的 ChatGPT MCP 连接信息。 |
 | `codegpt project register --config PATH <PROJECT>` | 给现有 Runner 再添加一个项目 | 写入该 Runner 的项目配置；不要求 Server 在线即可持久化，运行中的 Runner 是否需 reload 以命令输出为准。 |
 | `codegpt pairing create` | Server/admin 侧：创建短期 pairing code | 需要 server bootstrap/admin 认证。 |
 | `codegpt logout <server-url> [--user USER|--all]` | 移除本机对某 Server 的凭据 | 只有一个 saved user 时自动选择；多个 saved user 时必须用 `--user USER` 选择一个，或显式用 `--all` 选择全部；真正删除仍遵守现有 confirmation/`--yes` 流程。 |
@@ -149,11 +149,11 @@ Admin 用户/令牌操作由 Server API 支撑；`auth status` 读取本机连�
 | `codegpt auth status` | 显示本机已登录哪些 Server | 只读；支持 `--dir` 与 `--json`。 |
 | `codegpt users create` | 创建用户；`--issue-credential` 返回一次性 account credential | Server/admin 侧；使用 `--server-url`。 |
 | `codegpt users list` | 列出用户 | |
-| `codegpt tokens create-local` | 本地生成 `wc_pat_*` 个人 API 令牌并注册其 hash | 使用 `--server-url`、`--username` 与 account credential。 |
+| `codegpt tokens create-local` | 本地生成 `cg_pat_*` 个人 API 令牌并注册其 hash | 使用 `--server-url`、`--username` 与 account credential。 |
 | `codegpt tokens create` | Admin：在服务端创建 PAT | 使用 `--server-url`。 |
 | `codegpt tokens generate` | 离线生成令牌素材 | **不会**在 Server 注册。 |
 | `codegpt tokens list` / `revoke` / `register-hash` | 列出或撤销 PAT；注册外部计算的 hash | Admin 侧；使用 `--server-url`。 |
-| `codegpt runner-tokens create-local` | 本地生成 `wc_agent_*` Runner 令牌并注册其 hash | 使用 `--server-url` 并绑定 `--client-id`。 |
+| `codegpt runner-tokens create-local` | 本地生成 `cg_agent_*` Runner 令牌并注册其 hash | 使用 `--server-url` 并绑定 `--client-id`。 |
 | `codegpt runner-tokens create` / `list` / `revoke` / `register-hash` | Admin 变体 | |
 
 所有面向 Server 的 credential 命令统一使用 canonical `--server-url`。
@@ -179,7 +179,7 @@ credential；admin token management 也使用相同的 plural namespace。
 - **Job** —— 发起调用返回后仍继续运行的命令或 validation。
 - **Workflow Session** —— runtime 用于 coding evidence/continuity 的有界状态。普通用户通常不需要管理其内部协议字段。
 
-部分兼容名称仍保留 `agent`，主要是 `wc_agent_*` 与 `agent:<client_id>:<project_id>`。它们属于 Runner 时代的兼容名称，不是独立 Durable Agent domain；其它 process/protocol identifier 继续留在内部。新文档除引用这些公开名称外应统一写 **Runner**。
+部分兼容名称仍保留 `agent`，主要是 `cg_agent_*` 与 `agent:<client_id>:<project_id>`。它们属于 Runner 时代的兼容名称，不是独立 Durable Agent domain；其它 process/protocol identifier 继续留在内部。新文档除引用这些公开名称外应统一写 **Runner**。
 
 ## 凭据：我到底需要哪个令牌？
 
@@ -192,10 +192,10 @@ CodeGPT 把 bootstrap 管理、账号接入、runtime API 访问与 Runner 连�
 | Server bootstrap token | （env `CODEGPT_TOKEN`） | `codegpt server init` | server/admin 设置、建用户、pairing | GPT Actions、MCP、Runner、日常使用 |
 | 共享 key | `wck_...` | `codegpt connect`（一次性生成） | hosted shared-key 的 MCP + Runner | 生产 IAM |
 | Project Credential | （私有文件） | `codegpt setup` | 一个 ProjectGrant 的普通 runtime API/MCP 访问 | 其它 ProjectGrant、admin、Runner transport |
-| Account credential | `wc_acct_...` | `codegpt users create --issue-credential` | 本地创建令牌 | GPT Actions、MCP、Runner |
-| 个人 API 令牌（PAT） | `wc_pat_...` | `codegpt tokens create-local` | GPT Actions、MCP、REST API | Runner 连接 |
-| Runner 令牌 | `wc_agent_...` | `codegpt runner-tokens create-local` | 仅 `codegpt-runner` 传输 | MCP、REST、GPT Actions |
-| OAuth 访问令牌 | `wc_oat_...` | OAuth2 授权流程 | 启用 OAuth 时的 GPT Actions / MCP | — |
+| Account credential | `cg_acct_...` | `codegpt users create --issue-credential` | 本地创建令牌 | GPT Actions、MCP、Runner |
+| 个人 API 令牌（PAT） | `cg_pat_...` | `codegpt tokens create-local` | GPT Actions、MCP、REST API | Runner 连接 |
+| Runner 令牌 | `cg_agent_...` | `codegpt runner-tokens create-local` | 仅 `codegpt-runner` 传输 | MCP、REST、GPT Actions |
+| OAuth 访问令牌 | `cg_oat_...` | OAuth2 授权流程 | 启用 OAuth 时的 GPT Actions / MCP | — |
 
 ### 实际使用规则
 
@@ -203,7 +203,7 @@ CodeGPT 把 bootstrap 管理、账号接入、runtime API 访问与 Runner 连�
 - 已有 shared-key Server：使用 operator 提供的 `wck_...` 配合 `codegpt connect`。
 - Project-first/manual setup：Project Credential 只留在受保护的项目私有状态里，不要当作通用 user/admin token。
 - `CODEGPT_TOKEN` 只留在 Server；它不是 MCP 或 Runner 凭据。
-- `wc_agent_*` 只用于 Runner transport；`wc_pat_*` 才是普通 managed user API token。
+- `cg_agent_*` 只用于 Runner transport；`cg_pat_*` 才是普通 managed user API token。
 - 优先使用 `--token-file`，不要把完整配置文件粘贴进聊天。
 - OAuth client 应走 OAuth flow，而不是人工复制 access token。见[认证](AUTH_MODEL.zh-CN.md#oauth2)与 [MCP](MCP.zh-CN.md#oauth2)。
 
@@ -212,7 +212,7 @@ CodeGPT 把 bootstrap 管理、账号接入、runtime API 访问与 Runner 连�
 日常完整使用：先按[完整使用指南](PERSONAL_SETUP.zh-CN.md)启动普通 Server，再在项目机器上完成一次性登录并启动 Runner：
 
 ```bash
-codegpt login https://your-server.example --code <wc_pair_...> \
+codegpt login https://your-server.example --code <cg_pair_...> \
   --allowed-root "$HOME/git" \
   --project "$HOME/git/my-repo" \
   --print-mcp-config

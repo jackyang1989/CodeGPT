@@ -274,8 +274,8 @@ async fn managed_user_coding_agent_inventory_does_not_cross_owner() {
     let bootstrap_access = runner_access_from_auth(Some(&bootstrap)).unwrap();
 
     for (client_id, owner, run_id) in [
-        ("alice-runner", "alice", "wc_agent_run_alice"),
-        ("bob-runner", "bob", "wc_agent_run_bob"),
+        ("alice-runner", "alice", "cg_agent_run_alice"),
+        ("bob-runner", "bob", "cg_agent_run_bob"),
     ] {
         registry
             .register(RunnerRegisterRequest {
@@ -290,25 +290,23 @@ async fn managed_user_coding_agent_inventory_does_not_cross_owner() {
                         name: "Codex".to_string(),
                     },
                 ]),
-                coding_agent_inventory: Some(
-                    codegpt_core::coding_agent::CodingAgentRunInventory {
-                        runs: vec![codegpt_core::coding_agent::CodingAgentRunSnapshot {
-                            run_id: run_id.to_string(),
-                            intent_fingerprint: format!("intent-{owner}"),
-                            authority_fingerprint: format!("auth_{owner}"),
-                            runtime_project_id: format!("agent:{client_id}:private"),
-                            provider_id: "codex".to_string(),
-                            provider_instance_id: format!("provider-{owner}"),
-                            state: codegpt_core::coding_agent::CodingAgentRunState::Running,
-                            execution_state:
-                                codegpt_core::coding_agent::CodingAgentExecutionState::Started,
-                            observation_revision: 1,
-                            created_at: 1,
-                            updated_at: 1,
-                            terminal: None,
-                        }],
-                    },
-                ),
+                coding_agent_inventory: Some(codegpt_core::coding_agent::CodingAgentRunInventory {
+                    runs: vec![codegpt_core::coding_agent::CodingAgentRunSnapshot {
+                        run_id: run_id.to_string(),
+                        intent_fingerprint: format!("intent-{owner}"),
+                        authority_fingerprint: format!("auth_{owner}"),
+                        runtime_project_id: format!("agent:{client_id}:private"),
+                        provider_id: "codex".to_string(),
+                        provider_instance_id: format!("provider-{owner}"),
+                        state: codegpt_core::coding_agent::CodingAgentRunState::Running,
+                        execution_state:
+                            codegpt_core::coding_agent::CodingAgentExecutionState::Started,
+                        observation_revision: 1,
+                        created_at: 1,
+                        updated_at: 1,
+                        terminal: None,
+                    }],
+                }),
                 client_id: client_id.to_string(),
                 runner_instance_id: format!("inst-{client_id}"),
                 runner_protocol_generation: crate::runner_protocol::RUNNER_PROTOCOL_GENERATION_V2,
@@ -332,24 +330,24 @@ async fn managed_user_coding_agent_inventory_does_not_cross_owner() {
         .coding_agent_run_for_runner_for_auth(
             Some(&alice_access),
             "alice-runner",
-            "wc_agent_run_alice",
+            "cg_agent_run_alice",
         )
         .await
         .is_some());
     assert!(registry
-        .coding_agent_run_for_runner_for_auth(Some(&alice_access), "bob-runner", "wc_agent_run_bob")
+        .coding_agent_run_for_runner_for_auth(Some(&alice_access), "bob-runner", "cg_agent_run_bob")
         .await
         .is_none());
     assert!(registry
-        .coding_agent_run_for_auth(Some(&alice_access), "wc_agent_run_bob")
+        .coding_agent_run_for_auth(Some(&alice_access), "cg_agent_run_bob")
         .await
         .is_none());
     assert!(registry
-        .coding_agent_run_for_auth(Some(&bob_access), "wc_agent_run_alice")
+        .coding_agent_run_for_auth(Some(&bob_access), "cg_agent_run_alice")
         .await
         .is_none());
     assert!(registry
-        .coding_agent_run_for_auth(Some(&bootstrap_access), "wc_agent_run_bob")
+        .coding_agent_run_for_auth(Some(&bootstrap_access), "cg_agent_run_bob")
         .await
         .is_some());
 }
@@ -359,8 +357,8 @@ async fn same_client_id_in_different_project_grants_is_isolated() {
     // A matching client/instance identity in another ProjectGrant must not replace
     // or reveal the original grant's Runner lease.
     let registry = RunnerRegistry::default();
-    let grant_a = crate::auth::shared_key::project_credential_context("wc_pgrant_aaaaaaaaaaaaaaaa");
-    let grant_b = crate::auth::shared_key::project_credential_context("wc_pgrant_bbbbbbbbbbbbbbbb");
+    let grant_a = crate::auth::shared_key::project_credential_context("cg_pgrant_aaaaaaaaaaaaaaaa");
+    let grant_b = crate::auth::shared_key::project_credential_context("cg_pgrant_bbbbbbbbbbbbbbbb");
     let grant_a_access = runner_access_from_auth(Some(&grant_a)).unwrap();
     let grant_b_access = runner_access_from_auth(Some(&grant_b)).unwrap();
     let registration = |hostname: &str| RunnerRegisterRequest {

@@ -1,13 +1,13 @@
 use crate::state::{RunnerRegistryInner, ShellJobRecord, ShellJobVisibility};
 use crate::{now_ts, RunnerRegistry};
-use std::collections::HashSet;
-use std::ops::{Deref, DerefMut};
-use std::sync::{Arc, Mutex};
-use tokio::sync::{Mutex as AsyncMutex, MutexGuard};
 pub use codegpt_core::runner_job_receipt::RetainedJobReceipt;
 use codegpt_core::runner_protocol::{
     ShellJobContext, ShellJobSnapshot, ShellJobStreamSnapshot, JOB_TERMINAL_RETENTION_SECS,
 };
+use std::collections::HashSet;
+use std::ops::{Deref, DerefMut};
+use std::sync::{Arc, Mutex};
+use tokio::sync::{Mutex as AsyncMutex, MutexGuard};
 
 /// Synchronous, best-effort historical persistence, invoked only after unlocking
 /// registry state. Implementations must keep writes bounded and first-write-wins;

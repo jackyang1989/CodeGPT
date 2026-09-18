@@ -1,12 +1,12 @@
 //! Deterministic project-aware plans for the hosted `checks_run` capability.
 
+use codegpt_core::runner_protocol::{normalize_rust_test_filter, ShellJobValidationStep};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use sha2::{Digest, Sha256};
 use std::collections::BTreeSet;
 use std::fs;
 use std::path::{Component, Path, PathBuf};
-use codegpt_core::runner_protocol::{normalize_rust_test_filter, ShellJobValidationStep};
 
 const RECIPE_VERSION: u32 = 1;
 const RECIPE_NAMES: [&str; 4] = ["rust", "node", "python", "go"];

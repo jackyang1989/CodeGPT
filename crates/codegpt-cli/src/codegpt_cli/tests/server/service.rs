@@ -44,8 +44,7 @@ fn install_service_generates_expected_unit_without_tokens() {
     assert!(unit.contains("ExecStart=\"/usr/local/bin/codegpt-server\"\n"));
     assert!(unit.contains("TimeoutStopSec=330s\n"));
     assert!(
-        codegpt::SERVER_SYSTEMD_TIMEOUT_STOP_SECS
-            > codegpt::SERVER_GRACEFUL_SHUTDOWN_TIMEOUT_SECS
+        codegpt::SERVER_SYSTEMD_TIMEOUT_STOP_SECS > codegpt::SERVER_GRACEFUL_SHUTDOWN_TIMEOUT_SECS
     );
     assert!(unit.contains("WorkingDirectory=/var/lib/codegpt\n"));
     assert!(unit.contains("User=codegpt\n"));
@@ -53,7 +52,7 @@ fn install_service_generates_expected_unit_without_tokens() {
     assert!(unit.contains("WantedBy=multi-user.target\n"));
     assert!(!unit.contains("CODEGPT_TOKEN"));
     assert!(!unit.contains("secret-never-inline"));
-    assert!(!unit.contains("wc_boot_"));
+    assert!(!unit.contains("cg_boot_"));
 }
 
 /// Unix-only: systemd service unit semantics with Unix absolute-path
@@ -912,7 +911,7 @@ fn runner_status_rejects_runner_transport_token_in_user_runtime_token_file_witho
     )
     .unwrap();
     let token_file = tmp.path().join("codegpt-user-token");
-    let secret = "wc_agent_do_not_echo_status_0123456789";
+    let secret = "cg_agent_do_not_echo_status_0123456789";
     std::fs::write(&token_file, format!("{secret}\n")).unwrap();
     let opts = parse_runner_status(&args(&[
         "--scope",

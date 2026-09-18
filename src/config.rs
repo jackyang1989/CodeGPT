@@ -435,7 +435,7 @@ impl Default for OAuth2Config {
 
 fn normalize_trusted_mcp_file_client_id(value: &str) -> Option<String> {
     let value = crate::auth::validate_allowed_client_id(value).ok()?;
-    let random = value.strip_prefix("wc_client_")?;
+    let random = value.strip_prefix("cg_client_")?;
     if random.len() != 64
         || !random
             .bytes()
@@ -744,12 +744,12 @@ mod tests {
         env.set("CODEGPT_OAUTH2_REQUIRE_PKCE", "false");
         env.set("CODEGPT_OAUTH2_SHARED_KEY_BRIDGE", "true");
         env.set("CODEGPT_MCP_TRUST_LOOPBACK_API_TOKEN_FILE_IMPORT", "true");
-        let trusted_a = format!("wc_client_{}", "a".repeat(64));
-        let trusted_b = format!("wc_client_{}", "b".repeat(64));
+        let trusted_a = format!("cg_client_{}", "a".repeat(64));
+        let trusted_b = format!("cg_client_{}", "b".repeat(64));
         env.set(
             "CODEGPT_OAUTH2_TRUSTED_MCP_FILE_CLIENT_IDS",
             format!(
-                " {trusted_a} , invalid-client, {trusted_a}, {trusted_b}, wc_client_{} ",
+                " {trusted_a} , invalid-client, {trusted_a}, {trusted_b}, cg_client_{} ",
                 "A".repeat(64)
             ),
         );

@@ -1,5 +1,6 @@
 use super::adapter::{handle_lsp_request, is_lsp_request_kind};
 use super::navigation_test_support::{fake_server_path, wait_until};
+use crate::codegpt_runner::config::RunnerPolicy;
 use crate::lsp_bridge::{
     parse_runner_lsp_result_envelope, CallHierarchyDirection, RunnerLspPayload, RunnerLspRequest,
     AGENT_LSP_REQUEST_KIND, MAX_CALL_HIERARCHY_CALL_ENTRIES_INSPECTED_PER_RPC,
@@ -7,7 +8,9 @@ use crate::lsp_bridge::{
     MAX_CALL_HIERARCHY_RAW_CALL_SITE_RANGES_INSPECTED_PER_ENTRY,
 };
 use crate::runner_protocol::{RunnerCapabilities, RunnerRequest};
-use crate::codegpt_runner::config::RunnerPolicy;
+use codegpt_lsp::{
+    LspCommand, LspServerKind, LspSupervisor, LspSupervisorConfig, MAX_LSP_DOCUMENT_BYTES,
+};
 use serde_json::Value;
 use std::collections::HashMap;
 use std::fs;
@@ -15,9 +18,6 @@ use std::path::{Path, PathBuf};
 #[cfg(windows)]
 use std::process::Command;
 use std::time::{Duration, Instant};
-use codegpt_lsp::{
-    LspCommand, LspServerKind, LspSupervisor, LspSupervisorConfig, MAX_LSP_DOCUMENT_BYTES,
-};
 
 /// Minimal agent shell request carrying a typed LSP payload.
 fn shell_lsp_request(payload: RunnerLspPayload) -> RunnerRequest {

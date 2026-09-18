@@ -688,7 +688,7 @@ fn plugin_parser_requires_exact_targets_and_rejects_invented_surfaces() {
 
 #[test]
 fn plugin_parser_rejects_duplicate_and_invalid_flags_without_echoing_token() {
-    let secret = "wc_pat_plugin_parser_secret_0123456789";
+    let secret = "cg_pat_plugin_parser_secret_0123456789";
     for args in [
         vec!["plugin", "list", "--runner", "special", "--runner", "other"],
         vec!["plugin", "list", "--json", "--json"],
@@ -777,7 +777,7 @@ async fn plugin_describe_check_and_reload_map_to_one_canonical_runtime_call() {
                 "plugin": "safe-delete",
                 "pluginName": "Safe Delete",
                 "tool": safe_delete_tool(),
-                "binding": "wc_pbind_test"
+                "binding": "cg_pbind_test"
             }),
         ),
         (
@@ -810,7 +810,7 @@ async fn plugin_describe_check_and_reload_map_to_one_canonical_runtime_call() {
 
 #[tokio::test]
 async fn plugin_bearer_token_is_header_only_and_never_rendered() {
-    let secret = "wc_pat_plugin_header_secret_0123456789";
+    let secret = "cg_pat_plugin_header_secret_0123456789";
     let (server_url, stop_tx, handle) =
         spawn_plugin_server(runtime_success(json!({"runners": []})));
     let args = vec![
@@ -845,7 +845,7 @@ async fn plugin_bearer_token_is_header_only_and_never_rendered() {
 
 #[tokio::test]
 async fn plugin_rejects_runner_transport_token_before_any_request() {
-    let secret = "wc_agent_plugin_wrong_credential_0123456789";
+    let secret = "cg_agent_plugin_wrong_credential_0123456789";
     let (server_url, stop_tx, handle) =
         spawn_plugin_server(runtime_success(json!({"runners": []})));
     let args = vec![
@@ -910,7 +910,7 @@ async fn plugin_json_output_preserves_canonical_output_without_wrapper() {
         "plugin": "safe-delete",
         "pluginName": "Safe Delete",
         "tool": safe_delete_tool(),
-        "binding": "wc_pbind_exact"
+        "binding": "cg_pbind_exact"
     });
     let (result, requests) = run_once(
         "describe",

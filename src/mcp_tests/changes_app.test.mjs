@@ -3,8 +3,8 @@ import assert from "node:assert/strict";
 import { app, flush, toolResult } from "./app_test_support.mjs";
 
 const project = "agent:special:demo";
-const session_id = `wc_sess_${"1".repeat(32)}`;
-const snapshot_id = `wc_changes_snapshot_${"2".repeat(32)}`;
+const session_id = `cg_sess_${"1".repeat(32)}`;
+const snapshot_id = `cg_changes_snapshot_${"2".repeat(32)}`;
 const input = { project, session_id };
 
 function file(index, overrides = {}) {
@@ -164,7 +164,7 @@ for (const first of ["input", "result"]) {
     if (first === "input") view.toolInput(input);
     else view.toolResult({ changes: snapshot });
     await view.initialize();
-    const foreign = { project: "agent:special:other", session_id: `wc_sess_${"3".repeat(32)}` };
+    const foreign = { project: "agent:special:other", session_id: `cg_sess_${"3".repeat(32)}` };
     if (first === "input") view.toolResult({ changes: { ...snapshot, ...foreign } });
     else view.toolInput(foreign);
     await flush();

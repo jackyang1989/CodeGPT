@@ -65,7 +65,7 @@ try {
     $configPath = Join-Path $tempRoot 'runner.toml'
     $supervisorPath = Join-Path $tempRoot 'runner supervisor.ps1'
     $workingDirectory = Join-Path $tempRoot 'work'
-    $secret = 'wc_pat_lifecycle_must_not_leak_0123456789'
+    $secret = 'cg_pat_lifecycle_must_not_leak_0123456789'
     New-Item -ItemType File -Path $runnerPath | Out-Null
     Set-Content -LiteralPath $configPath -Encoding UTF8 -Value @('client_id = "msi-test"', ('token = "{0}"' -f $secret))
     Set-Content -LiteralPath $supervisorPath -Encoding UTF8 -Value '# fixture supervisor'

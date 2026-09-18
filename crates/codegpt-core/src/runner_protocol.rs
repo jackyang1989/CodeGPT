@@ -1067,7 +1067,7 @@ impl Default for RunnerCapabilities {
     }
 }
 
-pub const PROJECT_ROOT_FINGERPRINT_PREFIX: &str = "wc_projroot_";
+pub const PROJECT_ROOT_FINGERPRINT_PREFIX: &str = "cg_projroot_";
 pub const PROJECT_ROOT_IDENTITY_DOMAIN: &str = "codegpt-project-root-identity-v1";
 
 /// Runner-owned Project lineage facts. This is descriptive identity metadata,
@@ -2245,7 +2245,7 @@ mod envelope_tests {
     fn project_lineage_wire_kind_is_closed_and_explicit() {
         let lineage = RunnerProjectLineage::ManagedWorktreeSource {
             source_project_id: "source".to_string(),
-            source_root_fingerprint: format!("wc_projroot_{}", "1".repeat(64)),
+            source_root_fingerprint: format!("cg_projroot_{}", "1".repeat(64)),
             base_sha: "a".repeat(40),
         };
         let encoded = serde_json::to_value(&lineage).unwrap();
@@ -2255,7 +2255,7 @@ mod envelope_tests {
             serde_json::from_value::<RunnerProjectLineage>(serde_json::json!({
                 "kind": "git_remote_guess",
                 "source_project_id": "source",
-                "source_root_fingerprint": format!("wc_projroot_{}", "1".repeat(64)),
+                "source_root_fingerprint": format!("cg_projroot_{}", "1".repeat(64)),
                 "base_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
             }))
             .is_err()
@@ -2931,7 +2931,7 @@ mod envelope_tests {
                 command_execution_state: None,
                 context: ShellJobContext {
                     runtime_project_id: Some("agent:oe:demo".to_string()),
-                    workflow_session_id: Some("wc_sess_reconcile".to_string()),
+                    workflow_session_id: Some("cg_sess_reconcile".to_string()),
                     ssh_resource: None,
                     project_cwd: Some("/srv/demo".to_string()),
                     cwd: Some("/srv/demo".to_string()),
@@ -3469,8 +3469,8 @@ mod envelope_tests {
             "created_at": 123,
             "persistent_shell": {
                 "action": "exec",
-                "shell_id": "wc_shell_1234",
-                "workflow_session_id": "wc_sess_1234",
+                "shell_id": "cg_shell_1234",
+                "workflow_session_id": "cg_sess_1234",
                 "runtime_project_id": "agent:ws-1:demo",
                 "command": "printf ready",
                 "timeout_secs": 30,
@@ -3483,15 +3483,15 @@ mod envelope_tests {
             RunnerEnvelope::Request { request } => {
                 let operation = request.persistent_shell.unwrap();
                 assert_eq!(operation.action, "exec");
-                assert_eq!(operation.shell_id, "wc_shell_1234");
+                assert_eq!(operation.shell_id, "cg_shell_1234");
                 assert_eq!(operation.command.as_deref(), Some("printf ready"));
             }
             other => panic!("expected request, got {:?}", other.kind()),
         }
 
         let result = PersistentShellResult {
-            shell_id: "wc_shell_1234".to_string(),
-            workflow_session_id: "wc_sess_1234".to_string(),
+            shell_id: "cg_shell_1234".to_string(),
+            workflow_session_id: "cg_sess_1234".to_string(),
             runtime_project_id: "agent:ws-1:demo".to_string(),
             shell_state: "running".to_string(),
             execution_state: "completed".to_string(),
@@ -4070,7 +4070,7 @@ mod envelope_tests {
             coding_agent_providers: None,
             coding_agent_inventory: None,
         };
-        let frame = QuicRegisterFrame::new(payload, Some("wc_agent_secret".to_string()));
+        let frame = QuicRegisterFrame::new(payload, Some("cg_agent_secret".to_string()));
         let encoded = encode_quic_register_frame(&frame).unwrap();
         let json = std::str::from_utf8(&encoded[4..]).unwrap();
         assert!(json.contains(r#""type":"register""#), "json was: {json}");
@@ -4084,7 +4084,7 @@ mod envelope_tests {
             "json was: {json}"
         );
         assert!(
-            json.contains(r#""auth_token":"wc_agent_secret""#),
+            json.contains(r#""auth_token":"cg_agent_secret""#),
             "json was: {json}"
         );
 
@@ -4099,7 +4099,7 @@ mod envelope_tests {
             RUNNER_PROTOCOL_GENERATION_V2
         );
         assert!(decoded.capabilities.shell);
-        assert_eq!(token.as_deref(), Some("wc_agent_secret"));
+        assert_eq!(token.as_deref(), Some("cg_agent_secret"));
     }
 }
 

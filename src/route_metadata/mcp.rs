@@ -3,9 +3,7 @@ use super::{
     route, AuditClass::*, RouteId::*, RouteMethod::*, RouteOpenApiProjection::*, RouteSpec,
     RouteSurface::*,
 };
-use codegpt_core::authority::{
-    OAuthBodyAwarePolicy, OAuthRouteScopePolicy::*, SCOPE_RUNTIME_READ,
-};
+use codegpt_core::authority::{OAuthBodyAwarePolicy, OAuthRouteScopePolicy::*, SCOPE_RUNTIME_READ};
 
 pub(super) const ROUTES: &[RouteSpec] = &[
     route(

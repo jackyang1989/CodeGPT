@@ -828,7 +828,7 @@ fn polling_persistent_shell_request(
     request.persistent_shell = Some(crate::runner_protocol::PersistentShellRequest {
         action: action.to_string(),
         shell_id: shell_id.to_string(),
-        workflow_session_id: "wc_sess_lkaw44QDG0J6FfyY".to_string(),
+        workflow_session_id: "cg_sess_lkaw44QDG0J6FfyY".to_string(),
         runtime_project_id: "agent:oe:demo".to_string(),
         cwd: None,
         shell: Some("bash".to_string()),
@@ -1932,7 +1932,7 @@ fn runner_real_process_polling_persistent_shell_exec_remains_responsive_to_close
     .unwrap();
     let started = project.join("persistent-started");
     let marker = project.join("persistent-marker");
-    let shell_id = "wc_shell_polling_e1";
+    let shell_id = "cg_shell_polling_e1";
     let open = polling_persistent_shell_request("req-ps-open", "open", shell_id, None);
     let exec = polling_persistent_shell_request(
         "req-ps-exec",

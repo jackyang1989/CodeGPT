@@ -218,8 +218,8 @@ fn correlations_are_bounded_explicit_identity_only_and_replayed() {
     let owner = principal('d');
     let created = db.create_goal_at(&owner, input("corr-create"), T0).unwrap();
     let goal_id = created.goal.summary.goal_id;
-    let task_id = "wc_agent_task_ERERERERERERERER".to_string();
-    let session_id = format!("wc_sess_{}", "2".repeat(32));
+    let task_id = "cg_agent_task_ERERERERERERERER".to_string();
+    let session_id = format!("cg_sess_{}", "2".repeat(32));
 
     let task_link = db
         .associate_goal_reference_at(
@@ -267,7 +267,7 @@ fn correlations_are_bounded_explicit_identity_only_and_replayed() {
             &owner,
             &goal_id,
             GoalCorrelationKind::WorkflowSession,
-            &format!("wc_sess_{}", codegpt_core::compact::random_suffix::<12>()),
+            &format!("cg_sess_{}", codegpt_core::compact::random_suffix::<12>()),
             "session-link",
             T0 + 4,
         )
@@ -276,7 +276,7 @@ fn correlations_are_bounded_explicit_identity_only_and_replayed() {
 
     for ordinal in 0..(MAX_GOAL_CORRELATIONS - 2) {
         let reference_id = format!(
-            "wc_agent_task_{}",
+            "cg_agent_task_{}",
             codegpt_core::compact::encode(&(ordinal as u128).to_be_bytes()[4..])
         );
         let key = format!("capacity-link-{ordinal}");
@@ -297,7 +297,7 @@ fn correlations_are_bounded_explicit_identity_only_and_replayed() {
             &owner,
             &goal_id,
             GoalCorrelationKind::AgentTask,
-            &"wc_agent_task_________________".to_string(),
+            &"cg_agent_task_________________".to_string(),
             "capacity-overflow",
             T0 + 100,
         )
@@ -343,7 +343,7 @@ fn bounds_and_unknown_persisted_lifecycle_fail_closed() {
     {
         let conn = db.conn_for_tests();
         conn.execute(
-            "UPDATE wc_goals SET objective = ?2 WHERE goal_id = ?1",
+            "UPDATE cg_goals SET objective = ?2 WHERE goal_id = ?1",
             rusqlite::params![
                 oversized_persisted.goal.summary.goal_id,
                 "x".repeat(MAX_GOAL_OBJECTIVE_BYTES + 1)
@@ -363,13 +363,13 @@ fn bounds_and_unknown_persisted_lifecycle_fail_closed() {
         let conn = db.conn_for_tests();
         for ordinal in 0..=MAX_GOAL_CORRELATIONS {
             conn.execute(
-                "INSERT INTO wc_goal_correlations (
+                "INSERT INTO cg_goal_correlations (
                     goal_id, kind, reference_id, created_at_unix_ms
                  ) VALUES (?1, 'agent_task', ?2, ?3)",
                 rusqlite::params![
                     overlinked.goal.summary.goal_id,
                     format!(
-                        "wc_agent_task_{}",
+                        "cg_agent_task_{}",
                         codegpt_core::compact::encode(&(ordinal as u128).to_be_bytes()[4..])
                     ),
                     T0 + ordinal,
@@ -392,7 +392,7 @@ fn bounds_and_unknown_persisted_lifecycle_fail_closed() {
         conn.execute_batch("PRAGMA ignore_check_constraints = ON;")
             .unwrap();
         conn.execute(
-            "UPDATE wc_goals SET lifecycle = 'waiting_validation' WHERE goal_id = ?1",
+            "UPDATE cg_goals SET lifecycle = 'waiting_validation' WHERE goal_id = ?1",
             [goal_id.as_str()],
         )
         .unwrap();

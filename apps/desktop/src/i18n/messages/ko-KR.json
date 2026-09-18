@@ -335,7 +335,7 @@
   "error.projectTitle": "프로젝트가 준비되지 않았습니다",
   "error.projectAction": "프로젝트를 다시 활성화하세요. Desktop이 정확한 접근 권한을 다시 적용하고 현재 Runner에서 준비합니다.",
   "error.pairingTitle": "일회용 로그인 코드가 유효하지 않습니다",
-  "error.pairingAction": "기존 Server가 발급한 wc_pair_… 코드를 입력하세요.",
+  "error.pairingAction": "기존 Server가 발급한 cg_pair_… 코드를 입력하세요.",
   "error.enrollmentTitle": "등록이 완료되지 않았습니다",
   "error.enrollmentAction": "Server 및 등록 정보를 확인한 뒤 다시 시도하세요.",
   "error.tunnelTitle": "보안 터널을 사용할 수 없습니다",

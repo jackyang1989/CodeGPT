@@ -63,7 +63,7 @@ codegpt pairing create --server-url http://127.0.0.1:8080 --env-file $envFile --
 Then, on the Windows machine that owns the repositories, redeem only that short-lived code and run the generated Runner config in the foreground:
 
 ```powershell
-codegpt login http://127.0.0.1:8080 --code <wc_pair_...> --allowed-root C:\src --project C:\src\my-repo
+codegpt login http://127.0.0.1:8080 --code <cg_pair_...> --allowed-root C:\src --project C:\src\my-repo
 codegpt runner run --config <login-reported-runner-config>
 ```
 
@@ -207,7 +207,7 @@ On the machine that owns the repositories, as the ordinary user who will run
 project commands (do not use `sudo`):
 
 ```bash
-codegpt login https://your-domain.example --code <wc_pair_...> \
+codegpt login https://your-domain.example --code <cg_pair_...> \
   --allowed-root "$HOME/git" \
   --project "$HOME/git/my-repo"
 codegpt runner install --scope user \
@@ -231,7 +231,7 @@ codegpt pairing create \
   --ttl-secs 600
 ```
 
-Copy only the short-lived `wc_pair_*` code to the client. Do not copy
+Copy only the short-lived `cg_pair_*` code to the client. Do not copy
 `CODEGPT_TOKEN`, user API tokens, Runner tokens, env files, or complete
 `runner.toml` files between machines. Each friend should use a unique
 `username`.
@@ -461,7 +461,7 @@ protocol-level refresh-token scope and grants no extra CodeGPT permission.
 ## GPT Actions and MCP
 
 - **MCP:** connect a client to `https://your-domain.example/mcp` with a user
-  API token (`wc_pat_*`) or, when OAuth is enabled, the OAuth flow. MCP remains
+  API token (`cg_pat_*`) or, when OAuth is enabled, the OAuth flow. MCP remains
   the primary ChatGPT integration.
 - **GPT Actions:** import `https://your-domain.example/openapi.json` into a
   Custom GPT with HTTP Bearer authentication. On a generic runtime Server this

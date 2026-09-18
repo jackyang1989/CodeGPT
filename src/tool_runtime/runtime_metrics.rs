@@ -457,7 +457,7 @@ mod tests {
         );
 
         for label in sources.into_iter().chain(operations).chain(outcomes) {
-            assert!(!label.contains("wc_skill_"));
+            assert!(!label.contains("cg_skill_"));
             assert!(!label.contains('/'));
             assert!(!label.contains('\\'));
         }

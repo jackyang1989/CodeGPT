@@ -201,8 +201,8 @@ async fn valid_authorization_code_grant_returns_tokens() {
     let json: serde_json::Value = resp.take_json().await.unwrap();
     let access_token = json["access_token"].as_str().unwrap();
     let refresh_token = json["refresh_token"].as_str().unwrap();
-    assert!(access_token.starts_with("wc_oat_"));
-    assert!(refresh_token.starts_with("wc_ort_"));
+    assert!(access_token.starts_with("cg_oat_"));
+    assert!(refresh_token.starts_with("cg_ort_"));
     assert_eq!(json["token_type"], "Bearer");
     assert_eq!(json["expires_in"], 3600);
     assert_eq!(json["scope"], "runtime:read");
@@ -593,9 +593,9 @@ async fn token_endpoint_rejects_invalid_client_credentials() {
         let service = Service::new(build_router(config.clone(), db));
         let body = form_body(&[
             ("grant_type", "authorization_code"),
-            ("code", "wc_oac_dummy"),
+            ("code", "cg_oac_dummy"),
             ("redirect_uri", "https://example.com/callback"),
-            ("client_id", "wc_client_nonexistent"),
+            ("client_id", "cg_client_nonexistent"),
             ("client_secret", "some-secret"),
         ]);
         let mut resp = post_form("http://localhost/oauth/token", body)
@@ -615,7 +615,7 @@ async fn token_endpoint_rejects_invalid_client_credentials() {
         let service = Service::new(build_router(config.clone(), db));
         let body = form_body(&[
             ("grant_type", "authorization_code"),
-            ("code", "wc_oac_dummy"),
+            ("code", "cg_oac_dummy"),
             ("redirect_uri", "https://example.com/callback"),
             ("client_id", &client.client_id),
             ("client_secret", &secret),
@@ -663,7 +663,7 @@ async fn malformed_token_requests_return_structured_errors() {
             "unknown code",
             vec![
                 ("grant_type", "authorization_code"),
-                ("code", "wc_oac_nonexistent"),
+                ("code", "cg_oac_nonexistent"),
                 ("redirect_uri", "https://example.com/callback"),
                 ("client_id", client.client_id.as_str()),
                 ("client_secret", secret.as_str()),
@@ -683,7 +683,7 @@ async fn malformed_token_requests_return_structured_errors() {
             "unknown refresh_token",
             vec![
                 ("grant_type", "refresh_token"),
-                ("refresh_token", "wc_ort_nonexistent"),
+                ("refresh_token", "cg_ort_nonexistent"),
                 ("client_id", client.client_id.as_str()),
                 ("client_secret", secret.as_str()),
             ],
@@ -969,7 +969,7 @@ async fn valid_s256_verifier_succeeds() {
     assert!(json["access_token"]
         .as_str()
         .unwrap()
-        .starts_with("wc_oat_"));
+        .starts_with("cg_oat_"));
 }
 
 #[tokio::test]
@@ -1492,11 +1492,11 @@ async fn valid_refresh_token_grant_returns_new_tokens() {
     assert!(json["access_token"]
         .as_str()
         .unwrap()
-        .starts_with("wc_oat_"));
+        .starts_with("cg_oat_"));
     assert!(json["refresh_token"]
         .as_str()
         .unwrap()
-        .starts_with("wc_ort_"));
+        .starts_with("cg_ort_"));
     assert_eq!(json["token_type"], "Bearer");
     assert_eq!(json["expires_in"], 3600);
     assert_eq!(json["scope"], "runtime:read");
@@ -1804,8 +1804,8 @@ async fn refresh_token_unknown_client_returns_invalid_client() {
     let service = Service::new(build_router(config, db));
     let body = form_body(&[
         ("grant_type", "refresh_token"),
-        ("refresh_token", "wc_ort_dummy"),
-        ("client_id", "wc_client_nonexistent"),
+        ("refresh_token", "cg_ort_dummy"),
+        ("client_id", "cg_client_nonexistent"),
         ("client_secret", "some-secret"),
     ]);
     let mut resp = post_form("http://localhost/oauth/token", body)
@@ -1828,7 +1828,7 @@ async fn refresh_token_revoked_client_returns_invalid_client() {
     let service = Service::new(build_router(config, db));
     let body = form_body(&[
         ("grant_type", "refresh_token"),
-        ("refresh_token", "wc_ort_dummy"),
+        ("refresh_token", "cg_ort_dummy"),
         ("client_id", &client.client_id),
         ("client_secret", &secret),
     ]);

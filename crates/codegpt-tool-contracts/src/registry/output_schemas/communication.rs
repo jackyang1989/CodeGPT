@@ -183,7 +183,7 @@ fn participant_schema() -> Value {
         "properties": {
             "participant_id": {
                 "type": "string",
-                "pattern": "^wc_participant_[A-Za-z0-9_-]{16}$",
+                "pattern": "^cg_participant_[A-Za-z0-9_-]{16}$",
                 "description": "Canonical Conversation participant record id."
             },
             "participant_kind": {"type": "string", "enum": ["human", "agent"]},

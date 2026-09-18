@@ -242,7 +242,7 @@ fn server_init_writes_env_file_and_0600_permissions() {
     let content = std::fs::read_to_string(&env_file).unwrap();
     assert!(content.contains("CODEGPT_ADDR=127.0.0.1:9090\n"));
     assert!(content.contains(&format!("CODEGPT_DATA={}\n", data_dir.display())));
-    assert!(content.contains("CODEGPT_TOKEN=wc_boot_"));
+    assert!(content.contains("CODEGPT_TOKEN=cg_boot_"));
     assert!(content.contains("CODEGPT_PUBLIC_URL=https://example.test\n"));
     assert!(content.contains("CODEGPT_OAUTH2_ENABLED=true\n"));
     assert!(content.contains("CODEGPT_OAUTH2_ISSUER=https://example.test\n"));
@@ -305,7 +305,7 @@ fn server_init_json_output_does_not_include_full_token() {
     assert!(json["token_prefix"]
         .as_str()
         .unwrap()
-        .starts_with("wc_boot"));
+        .starts_with("cg_boot"));
     assert!(json.get("token").is_none());
 }
 

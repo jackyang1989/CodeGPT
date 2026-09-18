@@ -148,11 +148,11 @@ impl TokenVerifier for PatVerifier {
 
 /// OAuth2 bearer token verifier.
 ///
-/// Validates CodeGPT-issued opaque OAuth2 access tokens (`wc_oat_*`). The
+/// Validates CodeGPT-issued opaque OAuth2 access tokens (`cg_oat_*`). The
 /// database stores only SHA-256 hashes; the plaintext token is never persisted.
 ///
 /// Validation steps:
-/// 1. Token must start with `wc_oat_` — non-matching tokens return `Ok(None)`
+/// 1. Token must start with `cg_oat_` — non-matching tokens return `Ok(None)`
 ///    (not recognized), allowing `PatVerifier` to handle them.
 /// 2. OAuth2 must be enabled in config; otherwise returns `Ok(None)`.
 /// 3. Hash the plaintext token and look up `oauth_access_tokens`.
@@ -163,13 +163,13 @@ impl TokenVerifier for PatVerifier {
 /// 8. On success, `last_used_at` is updated and an `AuthContext` with
 ///    `AuthKind::OAuth2Token` is returned.
 ///
-/// Refresh tokens (`wc_ort_*`), authorization codes (`wc_oac_*`), client
-/// secrets (`wc_csec_*`), and client IDs (`wc_client_*`) are never accepted.
+/// Refresh tokens (`cg_ort_*`), authorization codes (`cg_oac_*`), client
+/// secrets (`cg_csec_*`), and client IDs (`cg_client_*`) are never accepted.
 pub(crate) struct OAuth2Verifier;
 
 /// Prefix for OAuth2 access tokens. Only tokens starting with this prefix are
 /// handled by [`OAuth2Verifier`]; all others return `Ok(None)`.
-const OAUTH2_ACCESS_TOKEN_PREFIX: &str = "wc_oat_";
+const OAUTH2_ACCESS_TOKEN_PREFIX: &str = "cg_oat_";
 
 /// Returns `true` when `token` looks like an OAuth2 access token by prefix.
 ///
@@ -189,7 +189,7 @@ impl TokenVerifier for OAuth2Verifier {
         db: Option<&Arc<Database>>,
         token: &str,
     ) -> Result<Option<AuthContext>, String> {
-        // Only handle wc_oat_* tokens. Non-matching tokens are not recognized by
+        // Only handle cg_oat_* tokens. Non-matching tokens are not recognized by
         // this verifier — let PatVerifier try.
         if !token.starts_with(OAUTH2_ACCESS_TOKEN_PREFIX) {
             return Ok(None);

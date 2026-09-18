@@ -432,12 +432,12 @@ impl ToolRuntime {
                     || !sessions::is_valid_session_id(&session_id) =>
             {
                 return ToolResult::err_with_output(
-                    "resume_session_id must be a valid wc_sess_* Workflow Session id",
+                    "resume_session_id must be a valid cg_sess_* Workflow Session id",
                     json!({
                         "error_kind": "invalid_resume_session_id",
                         "failure_kind": "invalid_arguments",
                         "field": "resume_session_id",
-                        "expected_format": "wc_sess_*",
+                        "expected_format": "cg_sess_*",
                         "state_changed": false,
                     }),
                 );
@@ -942,12 +942,12 @@ impl ToolRuntime {
             Err(sessions::CodingSessionError::InvalidResumeSessionId) => {
                 return attach_project_resolution(
                     ToolResult::err_with_output(
-                        "resume_session_id must be a valid wc_sess_* Workflow Session id",
+                        "resume_session_id must be a valid cg_sess_* Workflow Session id",
                         json!({
                             "error_kind": "invalid_resume_session_id",
                             "failure_kind": "invalid_arguments",
                             "field": "resume_session_id",
-                            "expected_format": "wc_sess_*",
+                            "expected_format": "cg_sess_*",
                             "state_changed": false,
                         }),
                     ),
@@ -1402,12 +1402,12 @@ impl ToolRuntime {
                     || !sessions::is_valid_session_id(&session_id) =>
             {
                 return ToolResult::err_with_output(
-                    "session_id must be a valid wc_sess_* Workflow Session id",
+                    "session_id must be a valid cg_sess_* Workflow Session id",
                     json!({
                         "error_kind": "invalid_session_id",
                         "failure_kind": "invalid_arguments",
                         "field": "session_id",
-                        "expected_format": "wc_sess_*",
+                        "expected_format": "cg_sess_*",
                         "state_changed": false,
                     }),
                 );
@@ -2500,7 +2500,7 @@ fn project_work_on_project_output_with_workflow_inner(
     if !sessions::is_valid_session_id(&projection.session.session_id) {
         return work_on_project_projection_failed(
             "session.session_id",
-            "valid wc_sess_* string",
+            "valid cg_sess_* string",
             "invalid string",
             None,
         );

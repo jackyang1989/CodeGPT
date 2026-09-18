@@ -530,7 +530,7 @@ async fn git_log_unknown_project_and_unknown_session_are_structured_errors() {
             head_commit: None,
             limit: None,
             skip: None,
-            session_id: Some("wc_sess_missing".to_string()),
+            session_id: Some("cg_sess_missing".to_string()),
         })
         .await;
     assert!(!unknown_session.success);

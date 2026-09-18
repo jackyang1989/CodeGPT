@@ -593,7 +593,7 @@ pub(crate) fn read_optional_token(
 }
 
 pub(crate) fn validate_user_api_token(token: &str) -> Result<(), String> {
-    if token.trim().starts_with("wc_agent_") {
+    if token.trim().starts_with("cg_agent_") || token.trim().starts_with("wc_agent_") {
         return Err(
             "This is a Runner transport token and cannot be used for project/runtime APIs. Use the generated codegpt-user-token instead."
                 .to_string(),
@@ -659,7 +659,7 @@ mod tests {
 
     #[test]
     fn user_api_token_validation_rejects_runner_transport_tokens_without_echoing_them() {
-        let token = "wc_agent_do_not_echo_0123456789";
+        let token = "cg_agent_do_not_echo_0123456789";
         let error = validate_user_api_token(token).unwrap_err();
         assert!(error.contains("Runner transport token"));
         assert!(error.contains("codegpt-user-token"));
@@ -668,7 +668,7 @@ mod tests {
 
     #[test]
     fn user_api_token_validation_accepts_user_tokens() {
-        validate_user_api_token("wc_pat_user_api_token_0123456789").unwrap();
+        validate_user_api_token("cg_pat_user_api_token_0123456789").unwrap();
         validate_user_api_token("shared-key-without-managed-prefix").unwrap();
     }
 
@@ -684,11 +684,7 @@ mod tests {
         let token_file = temp.path().join("user-token");
         let env_file = temp.path().join("codegpt.env");
         std::fs::write(&token_file, "file-token\n").unwrap();
-        std::fs::write(
-            &env_file,
-            "CODEGPT_TOKEN=env-token\nCODEGPT_PAT=env-pat\n",
-        )
-        .unwrap();
+        std::fs::write(&env_file, "CODEGPT_TOKEN=env-token\nCODEGPT_PAT=env-pat\n").unwrap();
 
         let explicit = Some("explicit-token".to_string());
         let selected = resolve_user_api_token(
@@ -714,11 +710,7 @@ mod tests {
         let temp = tempfile::tempdir().unwrap();
         let env_file = temp.path().join("codegpt.env");
 
-        std::fs::write(
-            &env_file,
-            "CODEGPT_TOKEN=env-token\nCODEGPT_PAT=env-pat\n",
-        )
-        .unwrap();
+        std::fs::write(&env_file, "CODEGPT_TOKEN=env-token\nCODEGPT_PAT=env-pat\n").unwrap();
         let selected = resolve_user_api_token(&None, &None, &Some(env_file.clone())).unwrap();
         assert!(selected.as_deref() == Some("env-token"));
 
@@ -743,7 +735,7 @@ mod tests {
             .remove("CODEGPT_PAT");
         let temp = tempfile::tempdir().unwrap();
         let env_file = temp.path().join("codegpt.env");
-        let secret = "wc_agent_pat_alias_must_not_echo_0123456789";
+        let secret = "cg_agent_pat_alias_must_not_echo_0123456789";
         std::fs::write(&env_file, format!("CODEGPT_PAT={secret}\n")).unwrap();
 
         let error = resolve_user_api_token(&None, &None, &Some(env_file)).unwrap_err();

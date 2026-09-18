@@ -1,8 +1,8 @@
+use codegpt_admin::build_server_http_client;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use sha2::{Digest, Sha256};
 use std::path::{Path, PathBuf};
-use codegpt_admin::build_server_http_client;
 
 use super::super::http::{post_json_authed, ApiCall};
 use super::profile::{atomic_write, validate_existing_regular_file, ConnectOptions, ResolvedKey};
@@ -254,8 +254,10 @@ fn read_profile(path: &Path) -> Result<Option<SharedKeyOAuthProfile>, String> {
     let profile: SharedKeyOAuthProfile = toml::from_str(&content)
         .map_err(|error| format!("failed to parse shared-key OAuth profile: {error}"))?;
     if profile.version != BRIDGE_PROFILE_VERSION
-        || !profile.client_id.starts_with("wc_client_")
-        || !profile.client_secret.starts_with("wc_csec_")
+        || (!profile.client_id.starts_with("cg_client_")
+            && !profile.client_id.starts_with("wc_client_"))
+        || (!profile.client_secret.starts_with("cg_csec_")
+            && !profile.client_secret.starts_with("wc_csec_"))
         || !profile_scope_ceiling_is_valid(&profile)
     {
         return Err(
@@ -471,7 +473,7 @@ async fn provision_client(
     let client_secret = value
         .get("client_secret")
         .and_then(Value::as_str)
-        .filter(|secret| secret.starts_with("wc_csec_"))
+        .filter(|secret| secret.starts_with("cg_csec_") || secret.starts_with("wc_csec_"))
         .ok_or_else(|| "new shared-key OAuth client response omitted client_secret".to_string())?
         .to_string();
     Ok((
@@ -641,10 +643,10 @@ pub(super) async fn finish_shared_key_oauth_connect(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use codegpt_admin::ServerHttpOptions;
     use std::io::{Read, Write};
     use std::net::TcpListener;
     use std::thread;
-    use codegpt_admin::ServerHttpOptions;
 
     fn options(server_url: String) -> ConnectOptions {
         ConnectOptions {
@@ -714,17 +716,17 @@ mod tests {
                 "success": true,
                 "reused": false,
                 "client": {
-                    "client_id": "wc_client_bridge_created",
+                    "client_id": "cg_client_bridge_created",
                     "redirect_uri": "https://chatgpt.example/callback",
                     "allowed_scopes": scopes,
                 },
-                "client_secret": "wc_csec_bridge_created"
+                "client_secret": "cg_csec_bridge_created"
             }),
             json!({
                 "success": true,
                 "reused": true,
                 "client": {
-                    "client_id": "wc_client_bridge_created",
+                    "client_id": "cg_client_bridge_created",
                     "redirect_uri": "https://chatgpt.example/callback",
                     "allowed_scopes": [
                         "runtime:read",
@@ -749,8 +751,8 @@ mod tests {
         .await
         .unwrap();
         assert!(did_create);
-        assert_eq!(created.client_id, "wc_client_bridge_created");
-        assert_eq!(created.client_secret, "wc_csec_bridge_created");
+        assert_eq!(created.client_id, "cg_client_bridge_created");
+        assert_eq!(created.client_secret, "cg_csec_bridge_created");
         assert_eq!(created.allowed_scopes, scopes);
 
         let (reused, did_create) = provision_client(
@@ -783,7 +785,7 @@ mod tests {
             "reused": true,
             "scope_ceiling_changed": true,
             "client": {
-                "client_id": "wc_client_bridge_existing",
+                "client_id": "cg_client_bridge_existing",
                 "redirect_uri": "https://chatgpt.example/callback",
                 "allowed_scopes": narrow_computer_scopes,
             }
@@ -793,8 +795,8 @@ mod tests {
         let existing = SharedKeyOAuthProfile {
             version: BRIDGE_PROFILE_VERSION,
             server_url: server.clone(),
-            client_id: "wc_client_bridge_existing".to_string(),
-            client_secret: "wc_csec_existing_secret".to_string(),
+            client_id: "cg_client_bridge_existing".to_string(),
+            client_secret: "cg_csec_existing_secret".to_string(),
             redirect_uri: "https://chatgpt.example/callback".to_string(),
             allowed_scopes: vec!["runtime:read".to_string(), "project:read".to_string()],
             computer_permissions_enabled: false,
@@ -835,11 +837,11 @@ mod tests {
             "success": true,
             "reused": false,
             "client": {
-                "client_id": "wc_client_bridge_rotated",
+                "client_id": "cg_client_bridge_rotated",
                 "redirect_uri": "https://chatgpt.example/callback",
                 "allowed_scopes": narrow_computer_scopes,
             },
-            "client_secret": "wc_csec_rotated_secret"
+            "client_secret": "cg_csec_rotated_secret"
         })]);
         let mut opts = options(server.clone());
         opts.oauth_computer_permissions = true;
@@ -855,7 +857,7 @@ mod tests {
         assert!(changed);
         assert!(rotated.computer_permissions_enabled);
         assert_eq!(rotated.allowed_scopes, narrow_computer_scopes);
-        assert_eq!(rotated.client_secret, "wc_csec_rotated_secret");
+        assert_eq!(rotated.client_secret, "cg_csec_rotated_secret");
         handle.join().unwrap();
 
         let mut future_scopes = narrow_computer_scopes
@@ -868,7 +870,7 @@ mod tests {
             "success": true,
             "reused": true,
             "client": {
-                "client_id": "wc_client_bridge_existing",
+                "client_id": "cg_client_bridge_existing",
                 "redirect_uri": "https://chatgpt.example/callback",
                 "allowed_scopes": future_scopes,
             }
@@ -896,11 +898,11 @@ mod tests {
             "success": true,
             "reused": false,
             "client": {
-                "client_id": "wc_client_bridge_fresh_computer",
+                "client_id": "cg_client_bridge_fresh_computer",
                 "redirect_uri": "https://chatgpt.example/callback",
                 "allowed_scopes": full_scopes,
             },
-            "client_secret": "wc_csec_fresh_computer"
+            "client_secret": "cg_csec_fresh_computer"
         })]);
         let mut opts = options(server.clone());
         opts.oauth_computer_permissions = true;
@@ -927,8 +929,8 @@ mod tests {
         let baseline = SharedKeyOAuthProfile {
             version: BRIDGE_PROFILE_VERSION,
             server_url: "https://server.example".to_string(),
-            client_id: "wc_client_baseline".to_string(),
-            client_secret: "wc_csec_baseline".to_string(),
+            client_id: "cg_client_baseline".to_string(),
+            client_secret: "cg_csec_baseline".to_string(),
             redirect_uri: "https://chatgpt.example/callback".to_string(),
             allowed_scopes: vec!["runtime:read".to_string(), "project:read".to_string()],
             computer_permissions_enabled: false,
@@ -1059,8 +1061,8 @@ mod tests {
         let oauth = SharedKeyOAuthProfile {
             version: BRIDGE_PROFILE_VERSION,
             server_url: "https://server.example".to_string(),
-            client_id: "wc_client_test".to_string(),
-            client_secret: "wc_csec_test_once".to_string(),
+            client_id: "cg_client_test".to_string(),
+            client_secret: "cg_csec_test_once".to_string(),
             redirect_uri: "https://chatgpt.example/callback".to_string(),
             allowed_scopes: vec!["runtime:read".to_string()],
             computer_permissions_enabled: false,
@@ -1071,9 +1073,9 @@ mod tests {
         };
         let state_path = Path::new("/protected/profile/shared-key-oauth.toml");
         let first = bridge_client_secret_line(&oauth, true, state_path);
-        assert_eq!(first.matches("wc_csec_test_once").count(), 1);
+        assert_eq!(first.matches("cg_csec_test_once").count(), 1);
         let reused = bridge_client_secret_line(&oauth, false, state_path);
-        assert!(!reused.contains("wc_csec_test_once"));
+        assert!(!reused.contains("cg_csec_test_once"));
         assert!(reused.contains("/protected/profile/shared-key-oauth.toml"));
         assert!(reused.contains("not reprinted"));
 

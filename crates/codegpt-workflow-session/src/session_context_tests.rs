@@ -775,7 +775,7 @@ fn session_context_revision_restore_revalidates_bounded_context_result_summary()
             "branch": "b".repeat(500),
             "counts": {
                 "modified": 21,
-                "token": "wc_pat_must_not_survive"
+                "token": "cg_pat_must_not_survive"
             }
         }),
     );
@@ -806,7 +806,7 @@ fn session_context_revision_restore_revalidates_bounded_context_result_summary()
         "branch": "x".repeat(500),
         "counts": {
             "modified": 21,
-            "token": "wc_pat_corrupt_ledger_secret"
+            "token": "cg_pat_corrupt_ledger_secret"
         },
         "arbitrary_untrusted_body": "must not survive restore"
     });

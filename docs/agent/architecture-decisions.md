@@ -21,13 +21,13 @@ Full naming, lifecycle, compatibility, and non-goals:
 
 | Aspect | Contract |
 |---|---|
-| ID form | `wc_sess_*` |
+| ID form | `cg_sess_*` |
 | Purpose | Coding-task workflow: start/finish coding task, tool events, validation evidence, handoff |
 | Storage | In-memory ledger with durable JSON-oriented session records (product surface for MCP / runtime tools) |
 | Identity rules | Existing Workflow Session effects require an explicit business `session_id` or authorized wrapper `recording_session_id`; unknown ids fail closed and omission never infers a Session |
 | Mutation policy | `normal` uses ordinary authority/permission rules; `read_only` denies write-like and shell/job-like tools; guard denial before mutation. The pre-0.4 `inspect` Session mode is retired and malformed persisted v2 rows remain row-closed rather than becoming Normal. |
 
-Do **not** change `wc_sess_*` ID format, ledger event shape, or lifecycle
+Do **not** change `cg_sess_*` ID format, ledger event shape, or lifecycle
 semantics casually. Session / guard / explicit-targeting work must preserve the
 invariants linked from `AGENTS.md` §6 (domain rules) and the Session model.
 
@@ -35,7 +35,7 @@ invariants linked from `AGENTS.md` §6 (domain rules) and the Session model.
 
 A Workflow Session remains a bounded **execution and evidence unit** even when its
 session-local message board is used for coordinator/worker handoff. Do not turn
-`wc_sess_*` lifecycle, ownership, or evidence history into a generic chat room,
+`cg_sess_*` lifecycle, ownership, or evidence history into a generic chat room,
 Agent identity, task queue, worker pool, or scheduler.
 
 The independent durable collaboration domain now exists: Server-minted Agents,
@@ -57,7 +57,7 @@ this concrete Agent/Conversation model. Standing rules are:
   substrate. It is not migrated into Conversation and its todo semantics are not an
   Agent Task lease;
 - the asynchronous work object is an independent **Agent Task** with an exact fenced **Agent TaskAttempt**. It is not a Workflow Session todo, Job, or Conversation Message and is not inferred merely because one of those exists;
-- **Goal** is an independent `wc_goal_*` high-level durable intent/control domain. It is not an Agent Task, Workflow Session, Job, Project selector, execution primitive, or scheduler; Goal identity/status/revision/correlation is never a bearer credential;
+- **Goal** is an independent `cg_goal_*` high-level durable intent/control domain. It is not an Agent Task, Workflow Session, Job, Project selector, execution primitive, or scheduler; Goal identity/status/revision/correlation is never a bearer credential;
 - Goal selection is exact durable identity or explicit creation only. Never infer the current Goal from Project, ClientWindow, credential, MCP/OpenAI session data, Conversation membership, Workflow Session, or shared timing;
 - Goal lifecycle is currently closed to `active | completed | cancelled`. `finish_coding_task`, AgentTask/TaskAttempt completion, Job terminal state, or validation evidence do not automatically transition a Goal;
 - ClientWindow liveness may be projected only as soft observational evidence from an exact authorized Goal through explicit Workflow Session correlations and re-authorized Project visibility. `last_seen` and `last_meaningful_activity` are distinct; five minutes without visible meaningful CodeGPT activity may request human attention but is not proof of model failure and never mutates Goal/Task/Attempt state or authority;
@@ -108,7 +108,7 @@ correlation only:
 
 | Decision | Choice |
 |---|---|
-| Direction | Action Audit → `workflow_session_id: Option<String>` (`wc_sess_*`) |
+| Direction | Action Audit → `workflow_session_id: Option<String>` (`cg_sess_*`) |
 | Authority | Store on the audit side (prefer event/record); Workflow Session does not own an Action Audit id list |
 | Lifecycle | Independent; audit never drives Workflow create/close/guards |
 | Inference | Forbidden from current Action Session, time, thread, connection, window identity, or other implicit Workflow Session selection |
@@ -127,7 +127,7 @@ not Action Audit, and not lifecycle tracing.
 | Layer | Owns |
 |---|---|
 | Authority | auto-authorize / deny outcomes (`trusted_agent` \| `restricted`) |
-| Workflow Session | task context and bounded evidence (`wc_sess_*`) |
+| Workflow Session | task context and bounded evidence (`cg_sess_*`) |
 | Action Audit | HTTP/operator action facts (SQLite) |
 | Lifecycle trace | optional request-path observation |
 
@@ -486,7 +486,7 @@ baseline capabilities, `client_id`, `agent_project_id`, or runtime project ids.
 
 Other older `agent_*` names below have concrete token, persisted-state, or wire
 consumers and are therefore retained rather than cosmetically duplicated. In
-particular, `CODEGPT_AGENT_TOKEN`, `wc_agent_*`, `agent_instance_id`, runtime
+particular, `CODEGPT_AGENT_TOKEN`, `cg_agent_*`, `agent_instance_id`, runtime
 project ids of the form `agent:<client_id>:<project_id>`, and established
 DB/wire `agent_*` fields keep their existing names. This local filename migration does not imply
 a Server/Runner protocol-generation or wire-identity rename.

@@ -266,7 +266,7 @@ fn checkpoint_restore_finished_event_records_trusted_result_changed_paths() {
         Some(&session.session_id),
         SessionTransport::Api,
         "workspace_checkpoint_restore",
-        &json!({"project": "demo", "checkpoint_id": "wc_ckpt_demo", "confirm": true}),
+        &json!({"project": "demo", "checkpoint_id": "cg_ckpt_demo", "confirm": true}),
         crate::tool_runtime::sessions::session_tool_contract("workspace_checkpoint_restore"),
     );
     store.record_tool_call_finished(
@@ -515,7 +515,7 @@ fn exploration_input_audit_omits_queries_and_shell_commands() {
         "search_project_texts",
         &search_project_texts_input(
             "demo",
-            "RAW_SEARCH_PATTERN wc_pat_PRIVATE_TOKEN",
+            "RAW_SEARCH_PATTERN cg_pat_PRIVATE_TOKEN",
             Some("src"),
         ),
     );
@@ -591,8 +591,8 @@ fn exploration_input_audit_omits_queries_and_shell_commands() {
         "session_shell_exec",
         &json!({
             "project": "demo",
-            "session_id": "wc_sess_demo",
-            "shell_id": "wc_shell_demo",
+            "session_id": "cg_sess_demo",
+            "shell_id": "cg_shell_demo",
             "command": "export PRIVATE_TOKEN=secret",
             "command_summary": "export PRIVATE_TOKEN=secret",
             "command_present": true
@@ -616,7 +616,7 @@ fn coding_agent_lifecycle_evidence_is_project_scoped_body_free_and_durable() {
     assert!(store.record_coding_agent_lifecycle_evidence(
         &session.session_id,
         project,
-        "wc_agent_run_recorder0001",
+        "cg_agent_run_recorder0001",
         "codex",
         "coding_agent_started",
         "running",
@@ -627,7 +627,7 @@ fn coding_agent_lifecycle_evidence_is_project_scoped_body_free_and_durable() {
     assert!(store.record_coding_agent_lifecycle_evidence(
         &session.session_id,
         project,
-        "wc_agent_run_recorder0001",
+        "cg_agent_run_recorder0001",
         "codex",
         "coding_agent_waiting_permission",
         "waiting_permission",
@@ -638,7 +638,7 @@ fn coding_agent_lifecycle_evidence_is_project_scoped_body_free_and_durable() {
     assert!(store.record_coding_agent_lifecycle_evidence(
         &session.session_id,
         project,
-        "wc_agent_run_recorder0001",
+        "cg_agent_run_recorder0001",
         "codex",
         "coding_agent_terminal",
         "completed",
@@ -649,7 +649,7 @@ fn coding_agent_lifecycle_evidence_is_project_scoped_body_free_and_durable() {
     assert!(!store.record_coding_agent_lifecycle_evidence(
         &session.session_id,
         "agent:special:other",
-        "wc_agent_run_wrongproject",
+        "cg_agent_run_wrongproject",
         "codex",
         "coding_agent_started",
         "running",
@@ -685,7 +685,7 @@ fn coding_agent_lifecycle_evidence_is_project_scoped_body_free_and_durable() {
     assert!(!serialized.contains(private_reasoning));
     assert!(!serialized.contains("idempotency_key"));
     assert!(!serialized.contains("acp_session"));
-    assert!(!serialized.contains("wc_agent_run_wrongproject"));
+    assert!(!serialized.contains("cg_agent_run_wrongproject"));
 }
 
 #[test]
@@ -713,7 +713,7 @@ fn skill_read_body_and_catalog_descriptions_never_enter_durable_session_ledger()
         true,
         &json!({
             "project": project,
-            "catalog_revision": "wc_skillcat_qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqo",
+            "catalog_revision": "cg_skillcat_qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqo",
             "total_count": 1,
             "returned_count": 1,
             "truncated": false,
@@ -731,7 +731,7 @@ fn skill_read_body_and_catalog_descriptions_never_enter_durable_session_ledger()
         "skill_read_file",
         &json!({
             "project": project,
-            "skill_id": "wc_skill_ASNFZ4mrze8BI0VniavN7w",
+            "skill_id": "cg_skill_ASNFZ4mrze8BI0VniavN7w",
             "path": "SKILL.md",
             "start_line": 1,
             "limit": 20
@@ -743,9 +743,9 @@ fn skill_read_body_and_catalog_descriptions_never_enter_durable_session_ledger()
         true,
         &json!({
             "project": project,
-            "skill_id": "wc_skill_ASNFZ4mrze8BI0VniavN7w",
+            "skill_id": "cg_skill_ASNFZ4mrze8BI0VniavN7w",
             "definition_revision": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
-            "package_revision": "wc_skillpkg_zMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMw",
+            "package_revision": "cg_skillpkg_zMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMw",
             "path": "SKILL.md",
             "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
             "text": private_body,
@@ -764,8 +764,8 @@ fn skill_read_body_and_catalog_descriptions_never_enter_durable_session_ledger()
     assert!(!raw.contains(private_body));
     assert!(!raw.contains(private_description));
     assert!(!raw.contains("\"skills\""));
-    assert!(raw.contains("wc_skill_ASNFZ4mrze8BI0VniavN7w"));
-    assert!(raw.contains("wc_skillpkg_zMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMw"));
+    assert!(raw.contains("cg_skill_ASNFZ4mrze8BI0VniavN7w"));
+    assert!(raw.contains("cg_skillpkg_zMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMw"));
     assert!(raw.contains("returned_lines"));
     assert!(raw.contains("catalog_revision"));
 
@@ -789,13 +789,13 @@ fn memory_body_summary_query_and_tags_never_enter_durable_session_ledger_or_reco
     let private_summary = "PRIVATE_MEMORY_SUMMARY_MUST_NOT_PERSIST";
     let private_body = "PRIVATE_MEMORY_BODY_MUST_NOT_PERSIST";
     let private_tag = "PRIVATE_MEMORY_TAG_MUST_NOT_PERSIST";
-    let memory_id = "wc_mem_iavN7wEjRWeJq83v";
-    let revision = format!("wc_memrev_{}", codegpt_core::compact::encode([0xaa; 32]));
-    let catalog_revision = format!("wc_memcat_{}", codegpt_core::compact::encode([0xbb; 32]));
-    let private_principal_digest = format!("wc_memprincipal_{}", "c".repeat(64));
-    let scope_id = format!("wc_memscope_{}", codegpt_core::compact::encode([0xdd; 32]));
+    let memory_id = "cg_mem_iavN7wEjRWeJq83v";
+    let revision = format!("cg_memrev_{}", codegpt_core::compact::encode([0xaa; 32]));
+    let catalog_revision = format!("cg_memcat_{}", codegpt_core::compact::encode([0xbb; 32]));
+    let private_principal_digest = format!("cg_memprincipal_{}", "c".repeat(64));
+    let scope_id = format!("cg_memscope_{}", codegpt_core::compact::encode([0xdd; 32]));
     let private_root_fingerprint =
-        format!("wc_memroot_{}", codegpt_core::compact::encode([0xee; 32]));
+        format!("cg_memroot_{}", codegpt_core::compact::encode([0xee; 32]));
     let private_native_root = "/PRIVATE/NATIVE/MEMORY/ROOT";
 
     let set_args = super::super::ToolCall::MemorySet {
@@ -1644,9 +1644,9 @@ fn console_list_orders_recent_activity_first_with_deterministic_session_id_ties(
     let tmp = tempfile::tempdir().unwrap();
     let ledger = tmp.path().join("sessions.json");
     let project = "agent:eval:ordering";
-    let older = "wc_sess_0000000000000000";
-    let tie_a = "wc_sess_aaaaaaaaaaaaaaaa";
-    let tie_z = "wc_sess_zzzzzzzzzzzzzzzz";
+    let older = "cg_sess_0000000000000000";
+    let tie_a = "cg_sess_aaaaaaaaaaaaaaaa";
+    let tie_z = "cg_sess_zzzzzzzzzzzzzzzz";
 
     let seed = persistent_store(ledger.clone());
     let seed_older = seed.start_session(Some(project.to_string()), Some("older".to_string()));
@@ -2486,7 +2486,7 @@ fn exploration_ledger_persists_only_bounded_relative_paths_and_safe_metadata() {
         "search_project_texts",
         &search_project_texts_input(
             "demo",
-            "RAW_SEARCH_PATTERN wc_pat_PRIVATE_TOKEN",
+            "RAW_SEARCH_PATTERN cg_pat_PRIVATE_TOKEN",
             Some("src"),
         ),
         crate::tool_runtime::sessions::session_tool_contract("search_project_texts"),
@@ -2648,7 +2648,7 @@ fn exploration_ledger_persists_only_bounded_relative_paths_and_safe_metadata() {
     let serialized = std::fs::read_to_string(&ledger).unwrap();
     for forbidden in [
         "RAW_SEARCH_PATTERN",
-        "wc_pat_PRIVATE_TOKEN",
+        "cg_pat_PRIVATE_TOKEN",
         "RAW_SEARCH_PREVIEW",
         "Authorization: Bearer PRIVATE_SECRET",
         "RAW_CONTEXT_BEFORE",
@@ -2705,7 +2705,7 @@ fn search_project_texts_nested_patterns_are_removed_from_session_input_summary()
             "project": "agent:oe:demo",
             "queries": [
                 {
-                    "pattern": "RAW_BATCH_PATTERN_ALPHA wc_pat_PRIVATE_TOKEN",
+                    "pattern": "RAW_BATCH_PATTERN_ALPHA cg_pat_PRIVATE_TOKEN",
                     "path": "src",
                     "result_mode": "matches"
                 },
@@ -3766,7 +3766,7 @@ fn session_context_handoff_baseline_fences_concurrent_completions_and_recorder()
     establish_handoff_context_baseline(&mut result, &session.session_id, Some(0), Some(1));
     assert!(result.output.get("session_context_revision").is_none());
     establish_handoff_context_baseline(&mut result, &session.session_id, Some(1), Some(1));
-    result.output["session_id"] = json!("wc_sess_different");
+    result.output["session_id"] = json!("cg_sess_different");
     assert!(add_session_context_continuity(&mut result, &recorded));
     assert!(result.output.get("session_context_revision").is_none());
 }

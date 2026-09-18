@@ -4,14 +4,14 @@ use std::time::Duration;
 
 use reqwest::blocking::Client;
 
+use crate::codegpt_runner::config::{HotRunnerConfig, ReloadableRunnerConfig};
+use crate::codegpt_runner::dispatch::runner_tool_trace_enabled;
+use crate::codegpt_runner::ShellCommandResult;
 use crate::runner_protocol::{
     RunnerEnvelope, RunnerJobUpdateRequest, RunnerJobUpdateResponse,
     RunnerPersistentShellResultRequest, RunnerPersistentShellResultResponse, RunnerResultPayload,
     RunnerResultRequest, RunnerResultResponse,
 };
-use crate::codegpt_runner::config::{HotRunnerConfig, ReloadableRunnerConfig};
-use crate::codegpt_runner::dispatch::runner_tool_trace_enabled;
-use crate::codegpt_runner::ShellCommandResult;
 use crate::{CommandResult, RunnerHttpError, RunnerHttpErrorKind};
 
 use super::{concise_log_error, send_provider_metadata, sleep_or_shutdown};

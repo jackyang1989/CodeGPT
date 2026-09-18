@@ -73,7 +73,7 @@ fn workspace_checkpoints_runner_dispatch_create_restore() {
     let mut checkpoint: serde_json::Value =
         serde_json::from_str(result.stdout.as_deref().unwrap()).unwrap();
     assert!(checkpoint.get("error").is_none(), "{checkpoint}");
-    checkpoint["checkpoint_id"] = serde_json::json!("wc_ckpt_test");
+    checkpoint["checkpoint_id"] = serde_json::json!("cg_ckpt_test");
     std::fs::write(root.path().join("file.txt"), "later\n").unwrap();
     let operation = RunnerFileOperation::CheckpointRestore(payload(
         root.path(),

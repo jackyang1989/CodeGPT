@@ -173,7 +173,7 @@ export const RUNTIME_ZH_TEXT: Record<string, string> = {
   "Conversations": "对话",
   "Title": "标题",
   "Agent IDs": "Agent ID",
-  "Select an Agent or enter comma-separated wc_dagent_* ids": "选择 Agent，或输入以逗号分隔的 wc_dagent_* ID",
+  "Select an Agent or enter comma-separated cg_dagent_* ids": "选择 Agent，或输入以逗号分隔的 cg_dagent_* ID",
   "Create Conversation": "创建对话",
   "Durable Conversations": "持久对话",
   "No Conversations are visible to this Human principal.": "此人工主体目前没有可见对话。",

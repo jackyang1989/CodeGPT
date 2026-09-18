@@ -10,13 +10,13 @@ use crate::db::{
     CommunicationStoreError, NewAgentTask, MAX_AGENT_TASK_LIST_LIMIT,
     MAX_AGENT_TASK_TERMINAL_TEXT_BYTES,
 };
+use codegpt_core::coding_agent::{
+    CodingAgentConfigValue, CodingAgentRunSnapshot, CodingAgentRunState,
+};
 use serde::Serialize;
 use serde_json::{json, to_value, Value};
 use sha2::{Digest, Sha256};
 use std::collections::BTreeMap;
-use codegpt_core::coding_agent::{
-    CodingAgentConfigValue, CodingAgentRunSnapshot, CodingAgentRunState,
-};
 
 const DEFAULT_AGENT_TASK_LIST_LIMIT: usize = 50;
 
@@ -66,7 +66,7 @@ mod observation_tests {
     #[test]
     fn coding_run_observation_revision_overflow_fails_closed() {
         let run = CodingAgentRunSnapshot {
-            run_id: "wc_agent_run_revision_overflow".to_string(),
+            run_id: "cg_agent_run_revision_overflow".to_string(),
             intent_fingerprint: "intent-overflow".to_string(),
             authority_fingerprint: "auth_overflow".to_string(),
             runtime_project_id: "agent:test:overflow".to_string(),

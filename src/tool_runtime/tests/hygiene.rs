@@ -696,7 +696,7 @@ fn workspace_hygiene_check_tool_is_known_and_parses() {
             "project": "agent:oe:codegpt",
             "max_findings": 25,
             "include_tracked": true,
-            "session_id": "wc_sess_1234"
+            "session_id": "cg_sess_1234"
         }),
     )
     .unwrap();
@@ -707,11 +707,11 @@ fn workspace_hygiene_check_tool_is_known_and_parses() {
             max_findings: Some(25),
             include_tracked: Some(true),
             session_id: Some(ref session_id),
-        } if project == "agent:oe:codegpt" && session_id == "wc_sess_1234"
+        } if project == "agent:oe:codegpt" && session_id == "cg_sess_1234"
     ));
     assert_eq!(call.tool_name(), "workspace_hygiene_check");
     assert_eq!(call.project(), Some("agent:oe:codegpt"));
-    assert_eq!(call.session_id(), Some("wc_sess_1234"));
+    assert_eq!(call.session_id(), Some("cg_sess_1234"));
 
     let log_args = call.session_log_arguments();
     assert_eq!(log_args["project"], "agent:oe:codegpt");

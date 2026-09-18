@@ -2,8 +2,8 @@
 
 use crate::tool_runtime::activity::ActivityRecorder;
 use crate::Database;
-use std::sync::Arc;
 use codegpt_core::activity_contract::ActivityRecord;
+use std::sync::Arc;
 
 const COMMAND_PREVIEW_MAX_CHARS: usize = 120;
 const DEFAULT_MAX_ROWS: i64 = 2_000;
@@ -97,7 +97,7 @@ mod tests {
             command,
             paths: vec!["a.rs".to_string()],
             error_summary: None,
-            scope: ActivityScope::ProjectGrant("wc_pgrant_aaaaaaaaaaaaaaaa".to_string()),
+            scope: ActivityScope::ProjectGrant("cg_pgrant_aaaaaaaaaaaaaaaa".to_string()),
         }
     }
 
@@ -107,7 +107,7 @@ mod tests {
         let db = Arc::new(Database::open(&tmp.path().join("activity.db")).unwrap());
 
         let off = WorkspaceActivityStore::with_preview(db.clone(), false);
-        off.record(sample(Some("deploy --token wc_pat_supersecret")));
+        off.record(sample(Some("deploy --token cg_pat_supersecret")));
         let rows = db
             .list_workspace_activity_for_clients(10, None, ActivityVisibility::Global, &[])
             .unwrap();

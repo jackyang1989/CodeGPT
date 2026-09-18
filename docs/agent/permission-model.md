@@ -147,7 +147,7 @@ Decision wire shape (stable for ledger / handoff consumers):
 |---|---|
 | `required` | `true` when a decision is emitted |
 | `policy` | `trusted_agent`, `restricted`, or `invalid` |
-| `request_id` | `wc_perm_*` UUID, one per decision |
+| `request_id` | `cg_perm_*` UUID, one per decision |
 | `status` | `auto_approved` or `denied` |
 | `reason` | `trusted_agent_authority`, `restricted_requires_human_authorization`, `invalid_authority_mode:...` |
 | `risk` | Coarse risk label from tool metadata (`write`, `patch`, `shell`, `job`, `destructive`, …) |
@@ -162,7 +162,7 @@ approval records. They remain subject to hard safety.
 ## 5. Invariants (must hold)
 
 1. **One authority decision per request** that reaches the gate for a
-   permission-bearing tool; one `wc_perm_*` id per decision; the kernel reuses
+   permission-bearing tool; one `cg_perm_*` id per decision; the kernel reuses
    the attached decision and never re-evaluates.
 2. **Invalid configuration fails closed** — unknown or conflicting legacy settings
    never fall back to allow.
@@ -207,7 +207,7 @@ never reverse-controls authority decisions.
 
 ## 7. Observability
 
-Safe decision fields: `wc_perm_*` id, policy, status, reason, risk, tool name,
+Safe decision fields: `cg_perm_*` id, policy, status, reason, risk, tool name,
 project, workflow session id (via ledger context), and for
 `authority_auto_authorized` events the mode, source, resolved rule, action
 hash/summary, risk, principal, and project.

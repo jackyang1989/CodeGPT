@@ -27,11 +27,11 @@ pub(super) fn oauth2_enabled_bridge() -> OAuth2Config {
     }
 }
 
-pub(super) const TEST_PROJECT_GRANT_ID: &str = "wc_pgrant_111111111111111111111111";
+pub(super) const TEST_PROJECT_GRANT_ID: &str = "cg_pgrant_111111111111111111111111";
 pub(super) const TEST_PROJECT_SHARE_SESSION_ID: &str =
-    "wc_share_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+    "cg_share_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 pub(super) const TEST_PROJECT_SHARE_SESSION_ID_2: &str =
-    "wc_share_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+    "cg_share_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
 
 pub(super) fn oauth2_enabled_project_share(session_id: &str) -> OAuth2Config {
     OAuth2Config {
@@ -449,7 +449,7 @@ pub(super) async fn authorize_success(
         .get("code")
         .expect("success redirect should include code")
         .clone();
-    assert!(code.starts_with("wc_oac_"));
+    assert!(code.starts_with("cg_oac_"));
     assert!(!params.contains_key("access_token"));
     assert!(!params.contains_key("refresh_token"));
     (resp, location, parsed, code)

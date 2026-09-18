@@ -4,7 +4,6 @@
 //! this module retains only authorization, live Job materialization, SessionStore
 //! mutation, and model-facing ToolResult composition.
 
-use serde_json::{json, Value};
 use codegpt_core::runner_job_lifecycle::RunnerJobLifecycle;
 use codegpt_tool_runtime_contracts::tool_audit::{
     assertion_validation_identity, is_structured_validation_target_identity,
@@ -18,6 +17,7 @@ use codegpt_workflow_session::{
     canonical_tool_call_finished_events, safe_model_facing_assertion_name, SessionEvent,
     SessionSummary,
 };
+use serde_json::{json, Value};
 
 use super::session_context::{
     session_project_mismatch_result, unknown_session_result, SessionProjectMismatch,

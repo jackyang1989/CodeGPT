@@ -1795,7 +1795,7 @@ fn command_token() -> String {
 /// (`exec 2>&1`, etc.) cannot move the protocol targets because FD 7/8 are
 /// reserved at startup, not bound to the current stdout/stderr.
 pub fn remote_command_wrapper(command: &str, token: &str) -> String {
-    let status_variable = format!("__wc_ps_status_{token}");
+    let status_variable = format!("__cg_ps_status_{token}");
     let framed = format!(
         "\\eval {}\n\
          {status_variable}=$?\n\
@@ -1826,7 +1826,7 @@ pub fn shell_quote(value: &str) -> String {
 
 #[cfg(unix)]
 fn command_wrapper(command: &str, token: &str, printf: &str, pwd: &str) -> String {
-    let status_variable = format!("__wc_ps_status_{token}");
+    let status_variable = format!("__cg_ps_status_{token}");
     let framed = format!(
         "\\eval {}\n\
          {status_variable}=$?\n\
@@ -2439,8 +2439,8 @@ mod tests {
         let manager = PersistentShellManager::new(ShellLimits::default());
         let spec = launch(
             temp.path(),
-            "wc_shell_external_login",
-            "wc_sess_external_login",
+            "cg_shell_external_login",
+            "cg_sess_external_login",
         );
         let process = spawn_shell_process(&spec).unwrap();
         let opened = manager
@@ -2459,16 +2459,16 @@ mod tests {
 
         let changed = exec(
             &manager,
-            "wc_shell_external_login",
-            "wc_sess_external_login",
+            "cg_shell_external_login",
+            "cg_sess_external_login",
             "cd /tmp",
         );
         assert_eq!(changed.cwd, PathBuf::from("/tmp"));
 
         let status = manager
             .status(
-                "wc_shell_external_login",
-                "wc_sess_external_login",
+                "cg_shell_external_login",
+                "cg_sess_external_login",
                 "agent:oe:test",
             )
             .unwrap();
@@ -2477,8 +2477,8 @@ mod tests {
 
         let closed = manager
             .close(
-                "wc_shell_external_login",
-                "wc_sess_external_login",
+                "cg_shell_external_login",
+                "cg_sess_external_login",
                 "agent:oe:test",
                 "explicit_close",
             )
@@ -2499,8 +2499,8 @@ mod tests {
         let manager = PersistentShellManager::new(ShellLimits::default());
         let spec = launch(
             &logical,
-            "wc_shell_external_symlink",
-            "wc_sess_external_symlink",
+            "cg_shell_external_symlink",
+            "cg_sess_external_symlink",
         );
         let process = spawn_shell_process(&spec).unwrap();
         let opened = manager
@@ -2519,14 +2519,14 @@ mod tests {
 
         exec(
             &manager,
-            "wc_shell_external_symlink",
-            "wc_sess_external_symlink",
+            "cg_shell_external_symlink",
+            "cg_sess_external_symlink",
             "cd /tmp",
         );
         let status = manager
             .status(
-                "wc_shell_external_symlink",
-                "wc_sess_external_symlink",
+                "cg_shell_external_symlink",
+                "cg_sess_external_symlink",
                 "agent:oe:test",
             )
             .unwrap();
@@ -2538,7 +2538,7 @@ mod tests {
     fn local_initial_cwd_stays_at_launch_directory_when_initialization_changes_cwd() {
         let temp = tempfile::tempdir().unwrap();
         let manager = PersistentShellManager::new(ShellLimits::default());
-        let mut spec = launch(temp.path(), "wc_shell_local_init", "wc_sess_local_init");
+        let mut spec = launch(temp.path(), "cg_shell_local_init", "cg_sess_local_init");
         spec.initialization = Some("cd /tmp".to_string());
         let opened = manager.open(spec).unwrap();
 
@@ -2552,76 +2552,76 @@ mod tests {
         std::fs::create_dir(temp.path().join("nested")).unwrap();
         let manager = PersistentShellManager::new(ShellLimits::default());
         manager
-            .open(launch(temp.path(), "wc_shell_state", "wc_sess_state"))
+            .open(launch(temp.path(), "cg_shell_state", "cg_sess_state"))
             .unwrap();
 
         assert_eq!(
-            exec(&manager, "wc_shell_state", "wc_sess_state", "cd nested").exit_code,
+            exec(&manager, "cg_shell_state", "cg_sess_state", "cd nested").exit_code,
             Some(0)
         );
         let spoofed = exec(
             &manager,
-            "wc_shell_state",
-            "wc_sess_state",
+            "cg_shell_state",
+            "cg_sess_state",
             "PWD=/; pwd() { printf /; }",
         );
         assert_eq!(spoofed.cwd, temp.path().join("nested"));
         exec(
             &manager,
-            "wc_shell_state",
-            "wc_sess_state",
+            "cg_shell_state",
+            "cg_sess_state",
             "cd .; unset -f pwd",
         );
         exec(
             &manager,
-            "wc_shell_state",
-            "wc_sess_state",
-            "export WC_TEST_VALUE=ready; WC_LOCAL=value; wc_fn() { printf 'fn:%s' \"$WC_LOCAL\"; }; umask 027",
+            "cg_shell_state",
+            "cg_sess_state",
+            "export WC_TEST_VALUE=ready; WC_LOCAL=value; cg_fn() { printf 'fn:%s' \"$WC_LOCAL\"; }; umask 027",
         );
         let observed = exec(
             &manager,
-            "wc_shell_state",
-            "wc_sess_state",
-            "printf '%s:%s:' \"$PWD\" \"$WC_TEST_VALUE\"; wc_fn; printf ':%s' \"$(umask)\"",
+            "cg_shell_state",
+            "cg_sess_state",
+            "printf '%s:%s:' \"$PWD\" \"$WC_TEST_VALUE\"; cg_fn; printf ':%s' \"$(umask)\"",
         );
         assert!(observed.stdout.contains("nested:ready:fn:value:0027"));
         exec(
             &manager,
-            "wc_shell_state",
-            "wc_sess_state",
+            "cg_shell_state",
+            "cg_sess_state",
             "unset WC_TEST_VALUE",
         );
         let unset = exec(
             &manager,
-            "wc_shell_state",
-            "wc_sess_state",
+            "cg_shell_state",
+            "cg_sess_state",
             "printf '%s' \"${WC_TEST_VALUE-unset}\"",
         );
         assert_eq!(unset.stdout, "unset");
         let hardened_control = exec(
             &manager,
-            "wc_shell_state",
-            "wc_sess_state",
+            "cg_shell_state",
+            "cg_sess_state",
             "WC_SAVED_PATH=$PATH; enable -n printf; PATH=/definitely-missing",
         );
         assert_eq!(hardened_control.exit_code, Some(0));
         assert_eq!(hardened_control.shell_state, ShellState::Running);
         exec(
             &manager,
-            "wc_shell_state",
-            "wc_sess_state",
+            "cg_shell_state",
+            "cg_sess_state",
             "PATH=$WC_SAVED_PATH; enable printf; unset WC_SAVED_PATH",
         );
         exec(
             &manager,
-            "wc_shell_state",
-            "wc_sess_state",
+            "cg_shell_state",
+            "cg_sess_state",
             "command() { /usr/bin/printf command-fn; }; printf() { /usr/bin/printf printf-fn; }; pwd() { /usr/bin/printf pwd-fn; }",
         );
         let shadowed_builtins = exec(
             &manager,
-            "wc_shell_state",
-            "wc_sess_state",
+            "cg_shell_state",
+            "cg_sess_state",
             "command; printf; pwd",
         );
         assert_eq!(shadowed_builtins.stdout, "command-fnprintf-fnpwd-fn");
@@ -2633,21 +2633,21 @@ mod tests {
         let temp = tempfile::tempdir().unwrap();
         let manager = PersistentShellManager::new(ShellLimits::default());
         manager
-            .open(launch(temp.path(), "wc_shell_a", "wc_sess_a"))
+            .open(launch(temp.path(), "cg_shell_a", "cg_sess_a"))
             .unwrap();
         manager
-            .open(launch(temp.path(), "wc_shell_b", "wc_sess_b"))
+            .open(launch(temp.path(), "cg_shell_b", "cg_sess_b"))
             .unwrap();
         exec(
             &manager,
-            "wc_shell_a",
-            "wc_sess_a",
+            "cg_shell_a",
+            "cg_sess_a",
             "export WC_ISOLATED=only_a",
         );
         let other = exec(
             &manager,
-            "wc_shell_b",
-            "wc_sess_b",
+            "cg_shell_b",
+            "cg_sess_b",
             "printf '%s' \"${WC_ISOLATED-unset}\"",
         );
         assert_eq!(other.stdout, "unset");
@@ -2669,31 +2669,31 @@ mod tests {
         let temp = tempfile::tempdir().unwrap();
         let manager = PersistentShellManager::new(ShellLimits::default());
         manager
-            .open(launch(temp.path(), "wc_shell_old", "wc_sess_one"))
+            .open(launch(temp.path(), "cg_shell_old", "cg_sess_one"))
             .unwrap();
         let mismatch = manager
-            .status("wc_shell_old", "wc_sess_other", "agent:oe:other-project")
+            .status("cg_shell_old", "cg_sess_other", "agent:oe:other-project")
             .unwrap_err();
         assert_eq!(mismatch.code, "persistent_shell_not_found");
         let duplicate = manager
-            .open(launch(temp.path(), "wc_shell_duplicate", "wc_sess_one"))
+            .open(launch(temp.path(), "cg_shell_duplicate", "cg_sess_one"))
             .unwrap_err();
         assert_eq!(duplicate.code, "persistent_shell_already_open");
         manager
             .close(
-                "wc_shell_old",
-                "wc_sess_one",
+                "cg_shell_old",
+                "cg_sess_one",
                 "agent:oe:test",
                 "explicit_close",
             )
             .unwrap();
         manager
-            .open(launch(temp.path(), "wc_shell_new", "wc_sess_one"))
+            .open(launch(temp.path(), "cg_shell_new", "cg_sess_one"))
             .unwrap();
         let stale = manager
             .exec(
-                "wc_shell_old",
-                "wc_sess_one",
+                "cg_shell_old",
+                "cg_sess_one",
                 "agent:oe:test",
                 "true",
                 Duration::from_secs(1),
@@ -2710,10 +2710,10 @@ mod tests {
             ..ShellLimits::default()
         });
         manager
-            .open(launch(temp.path(), "wc_shell_limit_a", "wc_sess_limit_a"))
+            .open(launch(temp.path(), "cg_shell_limit_a", "cg_sess_limit_a"))
             .unwrap();
         let limited = manager
-            .open(launch(temp.path(), "wc_shell_limit_b", "wc_sess_limit_b"))
+            .open(launch(temp.path(), "cg_shell_limit_b", "cg_sess_limit_b"))
             .unwrap_err();
         assert_eq!(limited.code, "persistent_shell_limit_reached");
         assert_eq!(manager.active_count(), 1);
@@ -2725,12 +2725,12 @@ mod tests {
         let temp = tempfile::tempdir().unwrap();
         let manager = PersistentShellManager::new(ShellLimits::default());
         manager
-            .open(launch(temp.path(), "wc_shell_close", "wc_sess_close"))
+            .open(launch(temp.path(), "cg_shell_close", "cg_sess_close"))
             .unwrap();
         let first = manager
             .close(
-                "wc_shell_close",
-                "wc_sess_close",
+                "cg_shell_close",
+                "cg_sess_close",
                 "agent:oe:test",
                 "explicit_close",
             )
@@ -2738,8 +2738,8 @@ mod tests {
         assert!(!first.already_closed);
         let second = manager
             .close(
-                "wc_shell_close",
-                "wc_sess_close",
+                "cg_shell_close",
+                "cg_sess_close",
                 "agent:oe:test",
                 "explicit_close",
             )
@@ -2747,9 +2747,9 @@ mod tests {
         assert!(second.already_closed);
 
         manager
-            .open(launch(temp.path(), "wc_shell_exit", "wc_sess_exit"))
+            .open(launch(temp.path(), "cg_shell_exit", "cg_sess_exit"))
             .unwrap();
-        let exited = exec(&manager, "wc_shell_exit", "wc_sess_exit", "exit 7");
+        let exited = exec(&manager, "cg_shell_exit", "cg_sess_exit", "exit 7");
         assert_eq!(exited.shell_state, ShellState::Exited);
         assert!(exited.command_completed);
         assert_eq!(exited.exit_code, Some(7));
@@ -2757,14 +2757,14 @@ mod tests {
         manager
             .open(launch(
                 temp.path(),
-                "wc_shell_exit_background",
-                "wc_sess_exit_background",
+                "cg_shell_exit_background",
+                "cg_sess_exit_background",
             ))
             .unwrap();
         let background_exit = exec(
             &manager,
-            "wc_shell_exit_background",
-            "wc_sess_exit_background",
+            "cg_shell_exit_background",
+            "cg_sess_exit_background",
             "sleep 30 & echo $! > background.pid; exit 0",
         );
         assert_eq!(background_exit.shell_state, ShellState::Exited);
@@ -2794,14 +2794,14 @@ mod tests {
     fn initialization_output_is_not_attributed_to_the_first_command() {
         let temp = tempfile::tempdir().unwrap();
         let manager = PersistentShellManager::new(ShellLimits::default());
-        let mut spec = launch(temp.path(), "wc_shell_init", "wc_sess_init");
+        let mut spec = launch(temp.path(), "cg_shell_init", "cg_sess_init");
         spec.initialization = Some("printf initialization-output".to_string());
         manager.open(spec).unwrap();
 
         let first = exec(
             &manager,
-            "wc_shell_init",
-            "wc_sess_init",
+            "cg_shell_init",
+            "cg_sess_init",
             "printf user-output",
         );
         assert_eq!(first.stdout, "user-output");
@@ -2813,7 +2813,7 @@ mod tests {
         let temp = tempfile::tempdir().unwrap();
         let manager = PersistentShellManager::new(ShellLimits::default());
         manager
-            .open(launch(temp.path(), "wc_shell_busy", "wc_sess_busy"))
+            .open(launch(temp.path(), "cg_shell_busy", "cg_sess_busy"))
             .unwrap();
         let barrier = Arc::new(Barrier::new(2));
         let worker_manager = manager.clone();
@@ -2822,8 +2822,8 @@ mod tests {
             worker_barrier.wait();
             worker_manager
                 .exec(
-                    "wc_shell_busy",
-                    "wc_sess_busy",
+                    "cg_shell_busy",
+                    "cg_sess_busy",
                     "agent:oe:test",
                     "sleep 0.2; printf first",
                     Duration::from_secs(2),
@@ -2832,7 +2832,7 @@ mod tests {
         });
         barrier.wait();
         while !manager
-            .status("wc_shell_busy", "wc_sess_busy", "agent:oe:test")
+            .status("cg_shell_busy", "cg_sess_busy", "agent:oe:test")
             .unwrap()
             .busy
         {
@@ -2840,8 +2840,8 @@ mod tests {
         }
         let busy = manager
             .exec(
-                "wc_shell_busy",
-                "wc_sess_busy",
+                "cg_shell_busy",
+                "cg_sess_busy",
                 "agent:oe:test",
                 "printf second",
                 Duration::from_secs(1),
@@ -2859,22 +2859,22 @@ mod tests {
         manager
             .open(launch(
                 temp.path(),
-                "wc_shell_close_busy",
-                "wc_sess_close_busy",
+                "cg_shell_close_busy",
+                "cg_sess_close_busy",
             ))
             .unwrap();
         let worker_manager = manager.clone();
         let worker = thread::spawn(move || {
             worker_manager.exec(
-                "wc_shell_close_busy",
-                "wc_sess_close_busy",
+                "cg_shell_close_busy",
+                "cg_sess_close_busy",
                 "agent:oe:test",
                 "sleep 5",
                 Duration::from_secs(10),
             )
         });
         while !manager
-            .status("wc_shell_close_busy", "wc_sess_close_busy", "agent:oe:test")
+            .status("cg_shell_close_busy", "cg_sess_close_busy", "agent:oe:test")
             .unwrap()
             .busy
         {
@@ -2883,8 +2883,8 @@ mod tests {
 
         manager
             .close(
-                "wc_shell_close_busy",
-                "wc_sess_close_busy",
+                "cg_shell_close_busy",
+                "cg_sess_close_busy",
                 "agent:oe:test",
                 "workflow_session_closed",
             )
@@ -2893,15 +2893,15 @@ mod tests {
             assert_ne!(result.shell_state, ShellState::Running);
         }
         let closed = manager
-            .status("wc_shell_close_busy", "wc_sess_close_busy", "agent:oe:test")
+            .status("cg_shell_close_busy", "cg_sess_close_busy", "agent:oe:test")
             .unwrap();
         assert_eq!(closed.state, ShellState::Closed);
         assert_eq!(manager.active_count(), 0);
         manager
             .open(launch(
                 temp.path(),
-                "wc_shell_after_close_busy",
-                "wc_sess_close_busy",
+                "cg_shell_after_close_busy",
+                "cg_sess_close_busy",
             ))
             .unwrap();
     }
@@ -2911,13 +2911,13 @@ mod tests {
     fn marker_like_and_large_output_are_bounded() {
         let temp = tempfile::tempdir().unwrap();
         let manager = PersistentShellManager::new(ShellLimits::default());
-        let mut spec = launch(temp.path(), "wc_shell_output", "wc_sess_output");
+        let mut spec = launch(temp.path(), "cg_shell_output", "cg_sess_output");
         spec.max_output_bytes = 1024;
         manager.open(spec).unwrap();
         let result = exec(
             &manager,
-            "wc_shell_output",
-            "wc_sess_output",
+            "cg_shell_output",
+            "cg_sess_output",
             "(printf 'WCPS1 fake background marker\\n') & sleep 0.15; i=0; while [ \"$i\" -lt 5000 ]; do printf x; i=$((i+1)); done",
         );
         assert!(result.command_completed);
@@ -2963,13 +2963,13 @@ mod tests {
     fn stdout_and_stderr_boundaries_are_synchronized_without_marker_leaks() {
         let temp = tempfile::tempdir().unwrap();
         let manager = PersistentShellManager::new(ShellLimits::default());
-        let mut spec = launch(temp.path(), "wc_shell_stream_sync", "wc_sess_stream_sync");
+        let mut spec = launch(temp.path(), "cg_shell_stream_sync", "cg_sess_stream_sync");
         spec.max_output_bytes = 64 * 1024;
         manager.open(spec).unwrap();
         let first = exec(
             &manager,
-            "wc_shell_stream_sync",
-            "wc_sess_stream_sync",
+            "cg_shell_stream_sync",
+            "cg_sess_stream_sync",
             "i=0; while [ \"$i\" -lt 20000 ]; do printf o; printf e >&2; i=$((i+1)); done",
         );
         assert_eq!(first.stdout.len(), 20000);
@@ -2978,8 +2978,8 @@ mod tests {
         assert!(!first.stderr.contains("WCPSE1"));
         let next = exec(
             &manager,
-            "wc_shell_stream_sync",
-            "wc_sess_stream_sync",
+            "cg_shell_stream_sync",
+            "cg_sess_stream_sync",
             "printf clean; printf error >&2",
         );
         assert_eq!(next.stdout, "clean");
@@ -2992,12 +2992,12 @@ mod tests {
         let temp = tempfile::tempdir().unwrap();
         let manager = PersistentShellManager::new(ShellLimits::default());
         manager
-            .open(launch(temp.path(), "wc_shell_timeout", "wc_sess_timeout"))
+            .open(launch(temp.path(), "cg_shell_timeout", "cg_sess_timeout"))
             .unwrap();
         let timed = manager
             .exec(
-                "wc_shell_timeout",
-                "wc_sess_timeout",
+                "cg_shell_timeout",
+                "cg_sess_timeout",
                 "agent:oe:test",
                 "sleep 5",
                 Duration::from_millis(100),
@@ -3007,8 +3007,8 @@ mod tests {
         if timed.shell_state == ShellState::Running {
             let next = exec(
                 &manager,
-                "wc_shell_timeout",
-                "wc_sess_timeout",
+                "cg_shell_timeout",
+                "cg_sess_timeout",
                 "printf synchronized",
             );
             assert_eq!(next.stdout, "synchronized");
@@ -3016,8 +3016,8 @@ mod tests {
             assert_eq!(timed.error_code.as_deref(), Some("shell_reset_required"));
             assert!(manager
                 .exec(
-                    "wc_shell_timeout",
-                    "wc_sess_timeout",
+                    "cg_shell_timeout",
+                    "cg_sess_timeout",
                     "agent:oe:test",
                     "printf forbidden",
                     Duration::from_secs(1),
@@ -3035,12 +3035,12 @@ mod tests {
             ..ShellLimits::default()
         });
         manager
-            .open(launch(temp.path(), "wc_shell_idle", "wc_sess_idle"))
+            .open(launch(temp.path(), "cg_shell_idle", "cg_sess_idle"))
             .unwrap();
         thread::sleep(Duration::from_millis(1100));
         manager.sweep_idle();
         let status = manager
-            .status("wc_shell_idle", "wc_sess_idle", "agent:oe:test")
+            .status("cg_shell_idle", "cg_sess_idle", "agent:oe:test")
             .unwrap();
         assert_eq!(status.state, ShellState::Closed);
         assert_eq!(status.close_reason.as_deref(), Some("idle_timeout"));
@@ -3049,16 +3049,16 @@ mod tests {
         manager
             .open(launch(
                 temp.path(),
-                "wc_shell_idle_busy",
-                "wc_sess_idle_busy",
+                "cg_shell_idle_busy",
+                "cg_sess_idle_busy",
             ))
             .unwrap();
         let worker_manager = manager.clone();
         let worker = thread::spawn(move || {
             worker_manager
                 .exec(
-                    "wc_shell_idle_busy",
-                    "wc_sess_idle_busy",
+                    "cg_shell_idle_busy",
+                    "cg_sess_idle_busy",
                     "agent:oe:test",
                     "sleep 1.3",
                     Duration::from_secs(2),
@@ -3066,7 +3066,7 @@ mod tests {
                 .unwrap()
         });
         while !manager
-            .status("wc_shell_idle_busy", "wc_sess_idle_busy", "agent:oe:test")
+            .status("cg_shell_idle_busy", "cg_sess_idle_busy", "agent:oe:test")
             .unwrap()
             .busy
         {
@@ -3075,7 +3075,7 @@ mod tests {
         thread::sleep(Duration::from_millis(1100));
         assert_eq!(manager.sweep_idle(), 0);
         assert!(manager
-            .status("wc_shell_idle_busy", "wc_sess_idle_busy", "agent:oe:test",)
+            .status("cg_shell_idle_busy", "cg_sess_idle_busy", "agent:oe:test",)
             .unwrap()
             .state
             .is_active());
@@ -3176,20 +3176,20 @@ mod windows_tests {
         std::fs::create_dir(temp.path().join("sub")).unwrap();
         let manager = PersistentShellManager::new(ShellLimits::default());
         manager
-            .open(launch(temp.path(), "wc_shell_state", "wc_sess_state"))
+            .open(launch(temp.path(), "cg_shell_state", "cg_sess_state"))
             .unwrap();
 
         let set = exec(
             &manager,
-            "wc_shell_state",
-            "wc_sess_state",
+            "cg_shell_state",
+            "cg_sess_state",
             "$env:CODEGPT_PERSIST_TEST='alpha'; Set-Location -LiteralPath 'sub'; $WC_LOCAL='beta'; function WC_FN { [Console]::Out.Write('fn') }",
         );
         assert_eq!(set.exit_code, Some(0));
         let observed = exec(
             &manager,
-            "wc_shell_state",
-            "wc_sess_state",
+            "cg_shell_state",
+            "cg_sess_state",
             "[Console]::Out.Write($env:CODEGPT_PERSIST_TEST + '|' + (Get-Location).Path + '|' + $WC_LOCAL + '|'); WC_FN; [Console]::Error.Write('stderr-only')",
         );
         assert!(observed.stdout.starts_with("alpha|"), "{}", observed.stdout);
@@ -3202,8 +3202,8 @@ mod windows_tests {
 
         let unicode = exec(
             &manager,
-            "wc_shell_state",
-            "wc_sess_state",
+            "cg_shell_state",
+            "cg_sess_state",
             "[Console]::Out.Write(\"hello`r`n中文`r`n🙂`r`nmixed ASCII + Unicode\")",
         );
         assert_eq!(
@@ -3214,8 +3214,8 @@ mod windows_tests {
         assert!(!unicode.stderr.contains("WCPSE1"));
         let host_unicode = exec(
             &manager,
-            "wc_shell_state",
-            "wc_sess_state",
+            "cg_shell_state",
+            "cg_sess_state",
             "Write-Output '中文🙂 host-output'",
         );
         assert!(
@@ -3231,12 +3231,12 @@ mod windows_tests {
         let temp = tempfile::tempdir().unwrap();
         let manager = PersistentShellManager::new(ShellLimits::default());
         manager
-            .open(launch(temp.path(), "wc_shell_failure", "wc_sess_failure"))
+            .open(launch(temp.path(), "cg_shell_failure", "cg_sess_failure"))
             .unwrap();
         let failed = exec(
             &manager,
-            "wc_shell_failure",
-            "wc_sess_failure",
+            "cg_shell_failure",
+            "cg_sess_failure",
             "Write-Error 'expected-failure'",
         );
         assert_eq!(failed.exit_code, Some(1));
@@ -3249,8 +3249,8 @@ mod windows_tests {
         );
         let recovered = exec(
             &manager,
-            "wc_shell_failure",
-            "wc_sess_failure",
+            "cg_shell_failure",
+            "cg_sess_failure",
             "Write-Error 'transient-error'; [Console]::Out.Write('recovered')",
         );
         assert_eq!(recovered.exit_code, Some(0));
@@ -3259,15 +3259,15 @@ mod windows_tests {
 
         let native_failed = exec(
             &manager,
-            "wc_shell_failure",
-            "wc_sess_failure",
+            "cg_shell_failure",
+            "cg_sess_failure",
             "cmd.exe /d /c exit 5",
         );
         assert_eq!(native_failed.exit_code, Some(5));
         let native_recovered = exec(
             &manager,
-            "wc_shell_failure",
-            "wc_sess_failure",
+            "cg_shell_failure",
+            "cg_sess_failure",
             "cmd.exe /d /c exit 5; [Console]::Out.Write('after-native')",
         );
         assert_eq!(native_recovered.exit_code, Some(0));
@@ -3275,8 +3275,8 @@ mod windows_tests {
 
         let next = exec(
             &manager,
-            "wc_shell_failure",
-            "wc_sess_failure",
+            "cg_shell_failure",
+            "cg_sess_failure",
             "[Console]::Out.Write('still-running')",
         );
         assert_eq!(next.stdout, "still-running");
@@ -3287,8 +3287,8 @@ mod windows_tests {
         let temp = tempfile::tempdir().unwrap();
         std::fs::create_dir(temp.path().join("sub")).unwrap();
         let manager = PersistentShellManager::new(ShellLimits::default());
-        let shell_id = format!("wc_shell_status_{label}");
-        let session_id = format!("wc_sess_status_{label}");
+        let shell_id = format!("cg_shell_status_{label}");
+        let session_id = format!("cg_sess_status_{label}");
         manager
             .open(launch_with_program(
                 temp.path(),
@@ -3440,15 +3440,15 @@ Microsoft.PowerShell.Utility\Write-Information -Tags 'CodeGPTPersistentShellComm
         let temp = tempfile::tempdir().unwrap();
         let manager = PersistentShellManager::new(ShellLimits::default());
         manager
-            .open(launch(temp.path(), "wc_shell_exit", "wc_sess_exit"))
+            .open(launch(temp.path(), "cg_shell_exit", "cg_sess_exit"))
             .unwrap();
-        let exited = exec(&manager, "wc_shell_exit", "wc_sess_exit", "exit 7");
+        let exited = exec(&manager, "cg_shell_exit", "cg_sess_exit", "exit 7");
         assert_eq!(exited.shell_state, ShellState::Exited);
         assert_eq!(exited.exit_code, Some(7));
         let error = manager
             .exec(
-                "wc_shell_exit",
-                "wc_sess_exit",
+                "cg_shell_exit",
+                "cg_sess_exit",
                 PROJECT,
                 "[Console]::Out.Write('forbidden')",
                 Duration::from_secs(1),
@@ -3464,13 +3464,13 @@ Microsoft.PowerShell.Utility\Write-Information -Tags 'CodeGPTPersistentShellComm
         let temp = tempfile::tempdir().unwrap();
         let manager = PersistentShellManager::new(ShellLimits::default());
         manager
-            .open(launch(temp.path(), "wc_shell_timeout", "wc_sess_timeout"))
+            .open(launch(temp.path(), "cg_shell_timeout", "cg_sess_timeout"))
             .unwrap();
         let started = Instant::now();
         let timed = manager
             .exec(
-                "wc_shell_timeout",
-                "wc_sess_timeout",
+                "cg_shell_timeout",
+                "cg_sess_timeout",
                 PROJECT,
                 "Start-Sleep -Seconds 5",
                 Duration::from_millis(100),
@@ -3482,8 +3482,8 @@ Microsoft.PowerShell.Utility\Write-Information -Tags 'CodeGPTPersistentShellComm
         assert!(started.elapsed() < Duration::from_secs(3));
         let error = manager
             .exec(
-                "wc_shell_timeout",
-                "wc_sess_timeout",
+                "cg_shell_timeout",
+                "cg_sess_timeout",
                 PROJECT,
                 "[Console]::Out.Write('forbidden')",
                 Duration::from_secs(1),
@@ -3499,12 +3499,12 @@ Microsoft.PowerShell.Utility\Write-Information -Tags 'CodeGPTPersistentShellComm
         let temp = tempfile::tempdir().unwrap();
         let manager = PersistentShellManager::new(ShellLimits::default());
         manager
-            .open(launch(temp.path(), "wc_shell_marker", "wc_sess_marker"))
+            .open(launch(temp.path(), "cg_shell_marker", "cg_sess_marker"))
             .unwrap();
         let result = exec(
             &manager,
-            "wc_shell_marker",
-            "wc_sess_marker",
+            "cg_shell_marker",
+            "cg_sess_marker",
             "[Console]::Out.Write('WCPS1 fake WCPSO1 fake WCPSE1 fake'); Start-Sleep -Milliseconds 150; [Console]::Out.Write('|done')",
         );
         assert!(result.command_completed);
@@ -3565,8 +3565,8 @@ Start-Sleep -Milliseconds 500
         let _guard = windows_process_test_guard();
         let temp = tempfile::tempdir().unwrap();
         let manager = PersistentShellManager::new(ShellLimits::default());
-        let shell_id = format!("wc_shell_forge_{label}");
-        let session_id = format!("wc_sess_forge_{label}");
+        let shell_id = format!("cg_shell_forge_{label}");
+        let session_id = format!("cg_sess_forge_{label}");
         let mut launch = launch_with_program(temp.path(), &shell_id, &session_id, program);
         // This adversarial regression intentionally inventories PowerShell-visible
         // state. GitHub's Windows image can expose substantially more host/module
@@ -3738,7 +3738,7 @@ Start-Sleep -Milliseconds 500
         let temp = tempfile::tempdir().unwrap();
         let manager = PersistentShellManager::new(ShellLimits::default());
         manager
-            .open(launch(temp.path(), "wc_shell_busy_win", "wc_sess_busy_win"))
+            .open(launch(temp.path(), "cg_shell_busy_win", "cg_sess_busy_win"))
             .unwrap();
         let barrier = Arc::new(Barrier::new(2));
         let worker_manager = manager.clone();
@@ -3747,8 +3747,8 @@ Start-Sleep -Milliseconds 500
             worker_barrier.wait();
             worker_manager
                 .exec(
-                    "wc_shell_busy_win",
-                    "wc_sess_busy_win",
+                    "cg_shell_busy_win",
+                    "cg_sess_busy_win",
                     PROJECT,
                     "Start-Sleep -Milliseconds 300; [Console]::Out.Write('first')",
                     Duration::from_secs(2),
@@ -3757,7 +3757,7 @@ Start-Sleep -Milliseconds 500
         });
         barrier.wait();
         while !manager
-            .status("wc_shell_busy_win", "wc_sess_busy_win", PROJECT)
+            .status("cg_shell_busy_win", "cg_sess_busy_win", PROJECT)
             .unwrap()
             .busy
         {
@@ -3765,8 +3765,8 @@ Start-Sleep -Milliseconds 500
         }
         let busy = manager
             .exec(
-                "wc_shell_busy_win",
-                "wc_sess_busy_win",
+                "cg_shell_busy_win",
+                "cg_sess_busy_win",
                 PROJECT,
                 "[Console]::Out.Write('second')",
                 Duration::from_secs(1),
@@ -3785,22 +3785,22 @@ Start-Sleep -Milliseconds 500
         manager
             .open(launch(
                 temp.path(),
-                "wc_shell_close_win",
-                "wc_sess_close_win",
+                "cg_shell_close_win",
+                "cg_sess_close_win",
             ))
             .unwrap();
         let child = exec(
             &manager,
-            "wc_shell_close_win",
-            "wc_sess_close_win",
+            "cg_shell_close_win",
+            "cg_sess_close_win",
             "$p = Start-Process -FilePath 'powershell.exe' -ArgumentList '-NoProfile','-NonInteractive','-Command','Start-Sleep -Seconds 30' -PassThru; [Console]::Out.Write($p.Id)",
         );
         let child_pid: u32 = child.stdout.parse().unwrap();
         assert!(process_alive(child_pid));
         let closed = manager
             .close(
-                "wc_shell_close_win",
-                "wc_sess_close_win",
+                "cg_shell_close_win",
+                "cg_sess_close_win",
                 PROJECT,
                 "explicit_close",
             )
@@ -3816,8 +3816,8 @@ Start-Sleep -Milliseconds 500
         );
         let again = manager
             .close(
-                "wc_shell_close_win",
-                "wc_sess_close_win",
+                "cg_shell_close_win",
+                "cg_sess_close_win",
                 PROJECT,
                 "explicit_close",
             )

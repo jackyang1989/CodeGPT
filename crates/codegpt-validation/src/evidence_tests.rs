@@ -2,7 +2,6 @@ use crate::{
     current_validation_evidence_for_session, parse_cargo_test_run_metadata,
     validation_kind_for_tool, validation_summary_for_session_events,
 };
-use serde_json::{json, Value};
 use codegpt_core::validation_evidence::{
     NO_STABLE_DIAGNOSTICS_REASON, PARSER_KIND, PARSER_VERSION,
     VALIDATION_OUTPUT_METADATA_ABSENT_REASON,
@@ -26,6 +25,7 @@ use codegpt_workflow_session::root_test_support::MAX_VALIDATION_EXCERPT_CHARS;
 use codegpt_workflow_session::{
     SessionGuards, SessionPathHint, SessionStore, SessionToolContract, SessionTransport,
 };
+use serde_json::{json, Value};
 
 fn validation_summary_for_session(summary: &sessions::SessionSummary) -> Value {
     validation_summary_for_session_events(summary, &summary.events, 10)
@@ -1626,12 +1626,7 @@ fn generic_validation_scope_and_complex_script_identity_fail_closed() {
     .unwrap();
     let y = run_process_validation_identity(
         "cargo",
-        &[
-            "test".into(),
-            "other".into(),
-            "-p".into(),
-            "codegpt".into(),
-        ],
+        &["test".into(), "other".into(), "-p".into(), "codegpt".into()],
         None,
         Some("."),
         Some("test"),

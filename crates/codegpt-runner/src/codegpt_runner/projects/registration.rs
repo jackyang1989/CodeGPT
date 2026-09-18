@@ -3,9 +3,9 @@ use std::io::{ErrorKind, Write};
 use std::path::{Path, PathBuf};
 use std::time::Instant;
 
-use sha2::{Digest, Sha256};
 use codegpt_core::runner_operation::RunnerProjectOperation;
 use codegpt_runner_config::paths::paths_equal;
+use sha2::{Digest, Sha256};
 
 use super::super::config::RunnerPolicy;
 use super::super::shell::canonicalize_existing;

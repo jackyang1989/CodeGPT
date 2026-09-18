@@ -75,7 +75,7 @@ class AgentLoopReportTests(unittest.TestCase):
         self,
         event_id: str,
         *,
-        session: str = "wc_sess_test",
+        session: str = "cg_sess_test",
         tool: str = "read_files",
         status: str = "success",
         success: bool = True,
@@ -159,7 +159,7 @@ class AgentLoopReportTests(unittest.TestCase):
         arguments: dict[str, object] = {
             "trace_root": None,
             "audit_db": self.audit_db,
-            "workflow_session_id": "wc_sess_test",
+            "workflow_session_id": "cg_sess_test",
             "case_manifest": None,
             "case_id": None,
             "variant": "direct",
@@ -311,7 +311,7 @@ class AgentLoopReportTests(unittest.TestCase):
         self.insert_event("selected", trace_id="trace-selected")
         self.insert_event(
             "other",
-            session="wc_sess_other",
+            session="cg_sess_other",
             trace_id="trace-other",
             window="hashed-window-other",
             principal="principal-other",
@@ -341,7 +341,7 @@ class AgentLoopReportTests(unittest.TestCase):
         self.assertEqual(result["runner"]["by_kind"], {"read_files": 1})
 
     def test_empty_session_selection_excludes_unrelated_trace_supplement(self) -> None:
-        self.insert_event("other", session="wc_sess_other", trace_id="trace-other")
+        self.insert_event("other", session="cg_sess_other", trace_id="trace-other")
         trace_root = self.write_trace(
             "trace-other",
             [
@@ -356,7 +356,7 @@ class AgentLoopReportTests(unittest.TestCase):
 
         result = self.summarize(
             trace_root=trace_root,
-            workflow_session_id="wc_sess_empty",
+            workflow_session_id="cg_sess_empty",
         )
 
         self.assertEqual(result["evidence"]["audit_events"], 0)
@@ -374,7 +374,7 @@ class AgentLoopReportTests(unittest.TestCase):
             report.summarize(
                 trace_root=trace_root,
                 audit_db=None,
-                workflow_session_id="wc_sess_test",
+                workflow_session_id="cg_sess_test",
                 case_manifest=None,
                 case_id=None,
                 variant=None,
@@ -428,14 +428,14 @@ class AgentLoopReportTests(unittest.TestCase):
     def test_other_session_meaningful_call_blocks_selected_session_gap(self) -> None:
         self.insert_event(
             "selected-1",
-            session="wc_sess_test",
+            session="cg_sess_test",
             started=100,
             handed=120,
             window="hashed-window-a",
         )
         self.insert_event(
             "other-session",
-            session="wc_sess_other",
+            session="cg_sess_other",
             tool="run_process",
             started=150,
             handed=170,
@@ -444,7 +444,7 @@ class AgentLoopReportTests(unittest.TestCase):
         )
         self.insert_event(
             "selected-2",
-            session="wc_sess_test",
+            session="cg_sess_test",
             started=200,
             handed=220,
             transition="serial",

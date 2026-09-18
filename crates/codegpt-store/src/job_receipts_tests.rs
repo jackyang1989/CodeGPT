@@ -2,9 +2,7 @@ use crate::Database;
 use codegpt_core::runner_job_receipt::{
     RetainedJobReceipt, RunnerAccessGroup, JOB_RECEIPT_PAYLOAD_MAX_BYTES,
 };
-use codegpt_core::runner_protocol::{
-    JOB_INVENTORY_MAX_TERMINAL_JOBS, JOB_TERMINAL_RETENTION_SECS,
-};
+use codegpt_core::runner_protocol::{JOB_INVENTORY_MAX_TERMINAL_JOBS, JOB_TERMINAL_RETENTION_SECS};
 
 fn receipt(now: i64, id: &str) -> RetainedJobReceipt {
     RetainedJobReceipt {
@@ -24,7 +22,7 @@ fn job_receipts_schema_additive_reopen_first_write_and_fixed_expiry() {
     let path = temp.path().join("receipts.db");
     // Current pre-feature schema opens additively, including existing data.
     let db = Database::open(&path).unwrap();
-    db.conn_for_tests().execute_batch("DROP TABLE wc_job_receipts; CREATE TABLE legacy_marker(value TEXT); INSERT INTO legacy_marker VALUES ('preserved')").unwrap();
+    db.conn_for_tests().execute_batch("DROP TABLE cg_job_receipts; CREATE TABLE legacy_marker(value TEXT); INSERT INTO legacy_marker VALUES ('preserved')").unwrap();
     drop(db);
     let now = chrono::Utc::now().timestamp();
     let original = receipt(now - JOB_TERMINAL_RETENTION_SECS + 10, "job-reopen");
@@ -73,7 +71,7 @@ fn job_receipts_storage_bounded_per_logical_runner_and_pruned_on_open() {
     assert_eq!(rows.len(), JOB_INVENTORY_MAX_TERMINAL_JOBS);
     assert_eq!(rows[0].snapshot.job_id, "job-005");
     db.conn_for_tests()
-        .execute("UPDATE wc_job_receipts SET expires_at = ?1", [now])
+        .execute("UPDATE cg_job_receipts SET expires_at = ?1", [now])
         .unwrap();
     drop(db);
     let reopened = Database::open(&path).unwrap();
@@ -101,16 +99,16 @@ fn job_receipts_malformed_oversized_active_and_authorization_fail_closed() {
     }
     {
         let conn = db.conn_for_tests();
-        conn.execute_batch("UPDATE wc_job_receipts SET snapshot = '{' WHERE job_id='bad-json';
-            UPDATE wc_job_receipts SET auth_kind = 'unknown' WHERE job_id='bad-auth';
-            UPDATE wc_job_receipts SET owner_at_admission = NULL WHERE job_id='bad-owner';
-            UPDATE wc_job_receipts SET snapshot = json_set(snapshot, '$.status', 'running') WHERE job_id='active';
-            UPDATE wc_job_receipts SET snapshot = json_set(snapshot, '$.job_id', 'other') WHERE job_id='wrong-id';
-            UPDATE wc_job_receipts SET snapshot = json_set(snapshot, '$.context.validation', json('{}')) WHERE job_id='argv';
-            UPDATE wc_job_receipts SET kind = 'run_detached_process' WHERE job_id='detached';
-            UPDATE wc_job_receipts SET snapshot = json_set(snapshot, '$.stdout.next_line', 1) WHERE job_id='cursor';").unwrap();
+        conn.execute_batch("UPDATE cg_job_receipts SET snapshot = '{' WHERE job_id='bad-json';
+            UPDATE cg_job_receipts SET auth_kind = 'unknown' WHERE job_id='bad-auth';
+            UPDATE cg_job_receipts SET owner_at_admission = NULL WHERE job_id='bad-owner';
+            UPDATE cg_job_receipts SET snapshot = json_set(snapshot, '$.status', 'running') WHERE job_id='active';
+            UPDATE cg_job_receipts SET snapshot = json_set(snapshot, '$.job_id', 'other') WHERE job_id='wrong-id';
+            UPDATE cg_job_receipts SET snapshot = json_set(snapshot, '$.context.validation', json('{}')) WHERE job_id='argv';
+            UPDATE cg_job_receipts SET kind = 'run_detached_process' WHERE job_id='detached';
+            UPDATE cg_job_receipts SET snapshot = json_set(snapshot, '$.stdout.next_line', 1) WHERE job_id='cursor';").unwrap();
         conn.execute(
-            "UPDATE wc_job_receipts SET snapshot = ?1 WHERE job_id='oversized'",
+            "UPDATE cg_job_receipts SET snapshot = ?1 WHERE job_id='oversized'",
             ["x".repeat(JOB_RECEIPT_PAYLOAD_MAX_BYTES + 1)],
         )
         .unwrap();

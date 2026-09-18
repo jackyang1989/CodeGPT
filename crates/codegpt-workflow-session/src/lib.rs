@@ -85,11 +85,11 @@ pub use util::redact_and_bound_instruction;
 pub const TEST_ONLY_PROJECT_SESSION_AUTHORITY_FINGERPRINT: &str =
     "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
 #[cfg(test)]
+pub use codegpt_core::workflow_session_contract::TOOL_CALL_EXPECTATION_METADATA_FIELDS;
+#[cfg(test)]
 pub use events::session_input_summary_for_tool;
 #[cfg(test)]
 pub use model::MAX_VALIDATION_EXCERPT_CHARS;
-#[cfg(test)]
-pub use codegpt_core::workflow_session_contract::TOOL_CALL_EXPECTATION_METADATA_FIELDS;
 
 #[cfg(feature = "root-test-support")]
 pub mod root_test_support {

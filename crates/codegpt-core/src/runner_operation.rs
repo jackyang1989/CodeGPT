@@ -1996,7 +1996,7 @@ mod tests {
 
     fn skill_execution_request() -> RunnerSkillExecutionRequest {
         RunnerSkillExecutionRequest {
-            skill_id: "wc_skill_qqqqqqqqqqqqqqqqqqqqqg".to_string(),
+            skill_id: "cg_skill_qqqqqqqqqqqqqqqqqqqqqg".to_string(),
             expected_source: crate::runner_skill::RunnerSkillSource::Configured,
             path: "scripts/probe.py".to_string(),
             expected_definition_revision: "b".repeat(64),
@@ -2315,7 +2315,7 @@ mod tests {
                 request: PersistentShellRequest {
                     action: "status".to_string(),
                     shell_id: "shell-1".to_string(),
-                    workflow_session_id: "wc_sess_123456".to_string(),
+                    workflow_session_id: "cg_sess_123456".to_string(),
                     runtime_project_id: "agent:runner-1:demo".to_string(),
                     cwd: None,
                     shell: None,
@@ -2332,7 +2332,7 @@ mod tests {
             RunnerOperation::PluginGateway(PluginGatewayRequest::Reload),
             RunnerOperation::CodingAgent(crate::coding_agent::CodingAgentRequest::Start(
                 crate::coding_agent::CodingAgentStartRequest {
-                    run_id: "wc_agent_run_0123456789abcdef".to_string(),
+                    run_id: "cg_agent_run_0123456789abcdef".to_string(),
                     intent_fingerprint: "cafebabe".to_string(),
                     authority_fingerprint: "auth_0123456789abcdef".to_string(),
                     runtime_project_id: "agent:runner-1:demo".to_string(),
@@ -2639,7 +2639,7 @@ mod tests {
                 request: PersistentShellRequest {
                     action: "status".to_string(),
                     shell_id: "shell-json".to_string(),
-                    workflow_session_id: "wc_sess_123456".to_string(),
+                    workflow_session_id: "cg_sess_123456".to_string(),
                     runtime_project_id: "agent:runner-1:demo".to_string(),
                     cwd: None,
                     shell: None,
@@ -2668,7 +2668,7 @@ mod tests {
         assert_field(
             RunnerOperation::CodingAgent(crate::coding_agent::CodingAgentRequest::Start(
                 crate::coding_agent::CodingAgentStartRequest {
-                    run_id: "wc_agent_run_0123456789abcdef".to_string(),
+                    run_id: "cg_agent_run_0123456789abcdef".to_string(),
                     intent_fingerprint: "cafebabe".to_string(),
                     authority_fingerprint: "auth_0123456789abcdef".to_string(),
                     runtime_project_id: "agent:runner-1:demo".to_string(),

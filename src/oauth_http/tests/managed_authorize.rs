@@ -124,7 +124,7 @@ async fn oauth_authorize_login_rejects_invalid_token() {
     );
     let service = Service::new(build_router(config, db.clone()));
     let return_to = return_to_for(&client, "https://example.com/callback");
-    let body = form_body(&[("return_to", &return_to), ("token", "wc_pat_bogus")]);
+    let body = form_body(&[("return_to", &return_to), ("token", "cg_pat_bogus")]);
 
     let mut resp = post_form("http://localhost/oauth/authorize/login", body)
         .send(&service)
@@ -160,7 +160,7 @@ async fn oauth_authorize_login_accepts_pat_and_sets_httponly_cookie() {
     assert!(location.starts_with("/oauth/authorize"));
     let cookie =
         set_cookie_value(&resp, AUTHORIZE_SESSION_COOKIE).expect("session cookie should be set");
-    assert!(cookie.starts_with("wc_authsess_"));
+    assert!(cookie.starts_with("cg_authsess_"));
     // Verify HttpOnly + SameSite=Lax attributes on the raw Set-Cookie.
     let raw = resp
         .headers
@@ -270,7 +270,7 @@ async fn oauth_authorize_with_valid_session_shows_consent_page() {
     assert!(text.contains(&client.name), "client name shown");
     assert!(text.contains("runtime:read"), "requested scope shown");
     // No code is issued yet.
-    assert!(!text.contains("wc_oac_"));
+    assert!(!text.contains("cg_oac_"));
 }
 
 #[tokio::test]
@@ -312,7 +312,7 @@ async fn oauth_authorize_consent_shows_resource_when_present() {
         "resource value shown"
     );
     assert!(text.contains("Allow"), "Allow button");
-    assert!(!text.contains("wc_oac_"));
+    assert!(!text.contains("cg_oac_"));
 }
 
 #[tokio::test]
@@ -353,7 +353,7 @@ async fn oauth_authorize_consent_allow_redirects_with_code() {
     let params: std::collections::HashMap<String, String> =
         parsed.query_pairs().into_owned().collect();
     let code = params.get("code").expect("code in redirect");
-    assert!(code.starts_with("wc_oac_"));
+    assert!(code.starts_with("cg_oac_"));
     let record = auth_code_by_plaintext(&db, code);
     assert_eq!(record.shared_key_hash, None);
     assert_eq!(params.get("state").map(String::as_str), Some("state-1"));
@@ -404,7 +404,7 @@ async fn oauth_authorize_consent_allow_stores_resource_on_code() {
     let code = params.get("code").expect("code in redirect");
     let record = auth_code_by_plaintext(&db, code);
 
-    assert!(code.starts_with("wc_oac_"));
+    assert!(code.starts_with("cg_oac_"));
     assert_eq!(record.resource.as_deref(), Some("https://example.test/mcp"));
     assert_eq!(record.shared_key_hash, None);
     assert_eq!(params.get("state").map(String::as_str), Some("state-1"));
@@ -481,7 +481,7 @@ async fn oauth_authorize_consent_requires_valid_session() {
     assert_eq!(auth_code_count(&db), before);
 
     // Bogus cookie.
-    let cookie = format!("{}=wc_authsess_bogus", AUTHORIZE_SESSION_COOKIE);
+    let cookie = format!("{}=cg_authsess_bogus", AUTHORIZE_SESSION_COOKIE);
     let consent_body = consent_form_body(&client, "https://example.com/callback", "allow");
     let resp = post_form_with_cookie(
         "http://localhost/oauth/authorize/consent",

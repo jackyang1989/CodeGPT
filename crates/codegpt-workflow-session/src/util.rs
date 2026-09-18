@@ -54,13 +54,13 @@ pub(super) fn is_sensitive_key(key: &str) -> bool {
 pub(super) fn looks_like_secret_string(value: &str) -> bool {
     let value = value.to_ascii_lowercase();
     value.contains("bearer ")
-        || value.contains("wc_pat_")
-        || value.contains("wc_oat_")
-        || value.contains("wc_ort_")
-        || value.contains("wc_agent_")
-        || value.contains("wc_acct_")
-        || value.contains("wc_pair_")
-        || value.contains("wc_csec_")
+        || value.contains("cg_pat_")
+        || value.contains("cg_oat_")
+        || value.contains("cg_ort_")
+        || value.contains("cg_agent_")
+        || value.contains("cg_acct_")
+        || value.contains("cg_pair_")
+        || value.contains("cg_csec_")
         || value.contains("client_secret")
 }
 

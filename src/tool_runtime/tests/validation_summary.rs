@@ -59,7 +59,7 @@ fn validation_summary_registration_schema_metadata_and_openapi_are_synchronized(
         "validation_summary",
         json!({
             "project": SAMPLE_PROJECT,
-            "session_id": "wc_sess_explicit",
+            "session_id": "cg_sess_explicit",
             "limit": 7
         }),
     )
@@ -71,7 +71,7 @@ fn validation_summary_registration_schema_metadata_and_openapi_are_synchronized(
             limit,
         } => {
             assert_eq!(project, SAMPLE_PROJECT);
-            assert_eq!(session_id, "wc_sess_explicit");
+            assert_eq!(session_id, "cg_sess_explicit");
             assert_eq!(limit, Some(7));
         }
         other => panic!("expected validation_summary, got {other:?}"),
@@ -645,7 +645,7 @@ async fn validation_summary_rejects_unknown_mismatched_and_unauthorized_sessions
         .dispatch_with_auth(
             ToolCall::ValidationSummary {
                 project: one.clone(),
-                session_id: "wc_sess_unknown".to_string(),
+                session_id: "cg_sess_unknown".to_string(),
                 limit: None,
             },
             Some(&bootstrap),

@@ -2,11 +2,11 @@ use super::*;
 use crate::runner_protocol::{
     RunnerPollRequest, RunnerRegisterRequest, RunnerResultPayload, RunnerResultRequest,
 };
-use serde_json::json;
 use codegpt_core::plugin::{
     PluginCheckPhase, PluginCheckReport, PluginDispatchState, PluginGatewayRequest,
     PluginGatewayResponse, PluginGatewayResponsePayload, PluginSchemaObservation, PluginTool,
 };
+use serde_json::json;
 
 fn plugin_tool() -> PluginTool {
     PluginTool {

@@ -181,14 +181,14 @@ fn validate_schema_instance_at(instance: &Value, schema: &Value, path: &str) -> 
         schema.get("pattern").and_then(Value::as_str),
     ) {
         let matches = match pattern {
-            "^wc_host_binding_[A-Za-z0-9_-]{21}[AQgw]$" => value
-                .strip_prefix("wc_host_binding_")
+            "^cg_host_binding_[A-Za-z0-9_-]{21}[AQgw]$" => value
+                .strip_prefix("cg_host_binding_")
                 .and_then(codegpt_core::compact::decode::<16>)
                 .is_some(),
-            "^wc_sess_([A-Za-z0-9_-]{16}|[0-9a-f]{32})$" => {
+            "^cg_sess_([A-Za-z0-9_-]{16}|[0-9a-f]{32})$" => {
                 codegpt_core::workflow_session_contract::is_valid_session_id(value)
             }
-            "^wc_msg_([A-Za-z0-9_-]{16}|[0-9a-f]{32})$" => {
+            "^cg_msg_([A-Za-z0-9_-]{16}|[0-9a-f]{32})$" => {
                 codegpt_core::workflow_session_contract::is_valid_session_message_id(value)
             }
             "^[0-9a-f]{64}$" => {

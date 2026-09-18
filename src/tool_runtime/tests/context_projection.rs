@@ -8,12 +8,12 @@ use super::super::sessions::{
 use super::super::{ToolCall, ToolResult, ToolRuntime};
 use super::support::*;
 use crate::runner_protocol::{RunnerCapabilities, RunnerResultPayload, RunnerResultRequest};
-use serde_json::{json, Value};
-use std::time::{Duration, Instant};
 use codegpt_core::plugin::{
     PluginGatewayRequest, PluginGatewayResponse, PluginGatewayResponsePayload,
     PluginSelectionAnnotations, ProjectPluginCatalog, ProjectPluginCatalogEntry,
 };
+use serde_json::{json, Value};
+use std::time::{Duration, Instant};
 
 fn context_material<'a>(result: &'a ToolResult, key: &str) -> &'a Value {
     result.output["context_projection"]["materials"]
@@ -57,7 +57,7 @@ async fn complete_plugin_catalog_request(
 
 fn plugin_catalog(entries: usize) -> ProjectPluginCatalog {
     ProjectPluginCatalog {
-        catalog_revision: format!("wc_plugcat_{}", codegpt_core::compact::encode([0xaa; 32])),
+        catalog_revision: format!("cg_plugcat_{}", codegpt_core::compact::encode([0xaa; 32])),
         total_count: entries,
         entries: (0..entries)
             .map(|index| ProjectPluginCatalogEntry {

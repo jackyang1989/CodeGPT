@@ -85,7 +85,7 @@ mod windows_guard {
             vec!["share", "--tunnel", "openai"],
             vec!["share", "--tunnel", "none"],
             vec!["connect", "https://server.example.com"],
-            vec!["login", "https://server.example.com", "--code", "wc_pair_x"],
+            vec!["login", "https://server.example.com", "--code", "cg_pair_x"],
             vec!["runner", "status"],
             vec!["runner", "start", "--profile", "demo"],
             vec!["runner", "stop", "--profile", "demo"],

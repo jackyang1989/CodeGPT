@@ -77,7 +77,7 @@ codegpt disconnect
 命令的普通用户兑换并显式安装 Runner：
 
 ```bash
-codegpt login https://codegpt.example --code <wc_pair_...> \
+codegpt login https://codegpt.example --code <cg_pair_...> \
   --allowed-root "$HOME/git" \
   --project "$HOME/git/my-repo"
 codegpt runner install --scope user \
@@ -119,7 +119,7 @@ Runner token 或 bootstrap administrator token 合并成一个概念。
 
 需要把 credential 填进 ChatGPT/Claude 时，要准确说明来源并让**人类**复制。优先使用当前流程显式产生的连接信息，例如完整使用中的 `login --print-mcp-config`，或临时 `share` / 已有 Server `connect` 的成功 disclosure。若必须恢复已保存的值，只指出精确受保护文件/字段，不要由 AI 自己回显。status/log 命令故意不显示 secret。
 
-永远不要用 `wc_agent_*` Runner token 替代 MCP token，不要把 bootstrap
+永远不要用 `cg_agent_*` Runner token 替代 MCP token，不要把 bootstrap
 `CODEGPT_TOKEN` 当作 MCP credential，也不要假设 `codegpt tokens generate` 的离线素材
 已经在远程 Server 注册。
 

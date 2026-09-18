@@ -1,8 +1,8 @@
-use serde_json::{json, Value};
 use codegpt_core::workflow_session_contract::{
     is_validation_like_execution_purpose, EXECUTION_PURPOSE_VALUES,
     MAX_MODEL_VALIDATION_ASSERTION_NAME_CHARS,
 };
+use serde_json::{json, Value};
 
 use super::common::{
     array_schema, cargo_test_count_assertion_schema, continuation_feedback_schema,
@@ -175,7 +175,7 @@ pub(super) fn output_schema_for_tool(name: &str) -> Option<Value> {
             ("success", schema_type("boolean", "Always true on success.")),
             (
                 "session_id",
-                schema_type("string", "Explicit wc_sess_* id that was closed."),
+                schema_type("string", "Explicit cg_sess_* id that was closed."),
             ),
             (
                 "lifecycle",
@@ -214,13 +214,13 @@ pub(super) fn output_schema_for_tool(name: &str) -> Option<Value> {
             ),
             (
                 "message_id",
-                schema_type("string", "Created wc_msg_* message id."),
+                schema_type("string", "Created cg_msg_* message id."),
             ),
             ("message", open_object_schema("Created session message.")),
         ])),
         "post_peer_message" => Some(wrapped_output_schema(vec![
             ("success", schema_type("boolean", "Always true on success.")),
-            ("message_id", schema_type("string", "Created durable wc_msg_* peer message id.")),
+            ("message_id", schema_type("string", "Created durable cg_msg_* peer message id.")),
             ("sender_peer_id", schema_type("string", "Principal-scoped sender window identity.")),
             ("recipient_peer_id", schema_type("string", "Principal-scoped recipient window identity.")),
             ("requires_ack", schema_type("boolean", "Whether omission of the request-scoped ACK causes re-projection.")),
@@ -242,7 +242,7 @@ pub(super) fn output_schema_for_tool(name: &str) -> Option<Value> {
         "get_session_assignment" => Some(wrapped_output_schema(vec![
             ("success", schema_type("boolean", "Always true on success.")),
             ("session_id", schema_type("string", "Exact coordinator/business Session id.")),
-            ("message_id", schema_type("string", "Exact open todo wc_msg_* id.")),
+            ("message_id", schema_type("string", "Exact open todo cg_msg_* id.")),
             ("todo", open_object_schema("Exact retained open todo.")),
             (
                 "direct_replies",
@@ -289,15 +289,15 @@ pub(super) fn output_schema_for_tool(name: &str) -> Option<Value> {
             ),
             (
                 "message_id",
-                schema_type("string", "Resolved wc_msg_* message id."),
+                schema_type("string", "Resolved cg_msg_* message id."),
             ),
             ("message", open_object_schema("Resolved session message.")),
         ])),
         "complete_session_message" => Some(wrapped_output_schema(vec![
             ("success", schema_type("boolean", "Always true on success.")),
             ("session_id", schema_type("string", "Coordinator/business Session id.")),
-            ("message_id", schema_type("string", "Completed todo wc_msg_* id.")),
-            ("answer_message_id", schema_type("string", "Exactly one created answer wc_msg_* id.")),
+            ("message_id", schema_type("string", "Completed todo cg_msg_* id.")),
+            ("answer_message_id", schema_type("string", "Exactly one created answer cg_msg_* id.")),
             ("completion_id", schema_type("string", "Bounded opaque durable completion identity derived from completion_key.")),
             ("replayed", schema_type("boolean", "True when an idempotent retry returned the original completion.")),
             ("todo", open_object_schema("Resolved todo with resolved_by_message_id correlation.")),

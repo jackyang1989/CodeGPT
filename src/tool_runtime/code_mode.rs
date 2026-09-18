@@ -4,12 +4,12 @@ use super::orchestration_host::{
 };
 use super::{ResolvedProject, ToolResult, ToolRuntime};
 use crate::auth::AuthContext;
-use serde_json::json;
-use std::sync::Arc;
 use codegpt_code_mode::{
     CodeModeExecuteRequest, CodeModeHost, CodeModeHostError, CodeModeHostFuture,
     CodeModeTerminationMode, CodeModeToolRequest, CodeModeToolResponse,
 };
+use serde_json::json;
+use std::sync::Arc;
 
 pub(crate) use super::orchestration_host::OrchestrationCompositionSummary as CodeModeCompositionSummary;
 

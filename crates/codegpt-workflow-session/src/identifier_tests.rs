@@ -31,7 +31,7 @@ fn compact_session_and_message_allocators_retry_without_overwrite() {
         inner
             .allocate_session_id(|| suffixes.next().unwrap())
             .unwrap(),
-        "wc_sess_abcdefghijklmnop"
+        "cg_sess_abcdefghijklmnop"
     );
     assert!(inner
         .allocate_session_id(|| session.session_id[8..].to_string())
@@ -49,7 +49,7 @@ fn compact_session_and_message_allocators_retry_without_overwrite() {
     .into_iter();
     assert_eq!(
         allocate_message_id(record, || suffixes.next().unwrap()).unwrap(),
-        "wc_msg_abcdefghijklmnop"
+        "cg_msg_abcdefghijklmnop"
     );
     assert!(allocate_message_id(record, || message.message_id[7..].to_string()).is_err());
     assert_eq!(record.messages.len(), 1);
@@ -62,15 +62,15 @@ fn persisted_message_ids_accept_only_compact_or_legacy_canonical_forms() {
     let message = post(&store, &session.session_id, SessionMessageKind::Note);
 
     let mut malformed_primary = message.clone();
-    malformed_primary.message_id = "wc_msg_garbage".to_string();
+    malformed_primary.message_id = "cg_msg_garbage".to_string();
     assert!(
         crate::persistence::sanitize_persisted_message(malformed_primary, &session.session_id)
             .is_none()
     );
 
     let mut malformed_links = message;
-    malformed_links.reply_to = Some("wc_msg_garbage".to_string());
-    malformed_links.resolved_by_message_id = Some("wc_msg_also_bad".to_string());
+    malformed_links.reply_to = Some("cg_msg_garbage".to_string());
+    malformed_links.resolved_by_message_id = Some("cg_msg_also_bad".to_string());
     let sanitized =
         crate::persistence::sanitize_persisted_message(malformed_links, &session.session_id)
             .expect("canonical primary message id remains restorable");
@@ -113,7 +113,7 @@ fn legacy_ledger_restores_all_links_and_resumes_with_compact_messages() {
         .answer;
     drop(store);
     // Construct a historical fixture; production never rewrites an old ledger.
-    let legacy_session = format!("wc_sess_{}", "1".repeat(32));
+    let legacy_session = format!("cg_sess_{}", "1".repeat(32));
     let mut legacy = std::fs::read_to_string(&path)
         .unwrap()
         .replace(&session.session_id, &legacy_session);
@@ -127,7 +127,7 @@ fn legacy_ledger_restores_all_links_and_resumes_with_compact_messages() {
     .into_iter()
     .enumerate()
     {
-        let old = format!("wc_msg_{index:032x}");
+        let old = format!("cg_msg_{index:032x}");
         legacy = legacy.replace(id, &old);
         ids.push(old);
     }

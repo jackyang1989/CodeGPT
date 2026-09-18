@@ -1,15 +1,6 @@
 use super::artifacts::validate_artifact_runner_path;
 use super::config::RunnerPolicy;
 use super::shell::cwd_allowed;
-use fs2::FileExt;
-use serde::{Deserialize, Serialize};
-use serde_json::Value;
-use sha2::{Digest, Sha256};
-use std::collections::{BTreeMap, BTreeSet};
-use std::fs::{self, File, OpenOptions};
-use std::io::{Cursor, Read, Write};
-use std::path::{Component, Path, PathBuf};
-use std::time::{Instant, UNIX_EPOCH};
 use codegpt_core::runner_skill::{
     RunnerSkillDescriptor, RunnerSkillExecutionRequest, RunnerSkillReadResponse, RunnerSkillSource,
     RUNNER_SKILL_RESPONSE_FORMAT,
@@ -30,6 +21,15 @@ use codegpt_core::skill_store::{
     SKILL_STORE_REPLAY_EFFECT_RETENTION_SECS, SKILL_STORE_RESPONSE_FORMAT,
 };
 use codegpt_workspace::file_read_range;
+use fs2::FileExt;
+use serde::{Deserialize, Serialize};
+use serde_json::Value;
+use sha2::{Digest, Sha256};
+use std::collections::{BTreeMap, BTreeSet};
+use std::fs::{self, File, OpenOptions};
+use std::io::{Cursor, Read, Write};
+use std::path::{Component, Path, PathBuf};
+use std::time::{Instant, UNIX_EPOCH};
 use zip::ZipArchive;
 
 const STORE_DIR: &str = "runner-skills-v1";
@@ -319,7 +319,7 @@ impl SkillStore {
         hasher.update(b"\0");
         hasher.update(skill_key.as_bytes());
         format!(
-            "wc_skill_{}",
+            "cg_skill_{}",
             codegpt_core::compact::encode(&hasher.finalize()[..16])
         )
     }
@@ -507,7 +507,7 @@ impl SkillStore {
             hasher.update(version.package_revision.as_bytes());
         }
         format!(
-            "wc_skillstate_{}",
+            "cg_skillstate_{}",
             codegpt_core::compact::encode(hasher.finalize())
         )
     }
@@ -534,7 +534,7 @@ impl SkillStore {
             }
         }
         format!(
-            "wc_skillstore_{}",
+            "cg_skillstore_{}",
             codegpt_core::compact::encode(hasher.finalize())
         )
     }
@@ -1770,7 +1770,7 @@ fn compute_package_revision(files: &BTreeMap<String, Vec<u8>>) -> String {
         hasher.update(bytes);
     }
     format!(
-        "wc_skillpkg_{}",
+        "cg_skillpkg_{}",
         codegpt_core::compact::encode(hasher.finalize())
     )
 }
@@ -2000,7 +2000,8 @@ fn validate_management_common(skill_key: &str, idempotency_key: &str) -> Result<
 
 fn valid_runtime_skill_id(value: &str) -> bool {
     value
-        .strip_prefix("wc_skill_")
+        .strip_prefix("cg_skill_")
+        .or_else(|| value.strip_prefix("wc_skill_"))
         .and_then(codegpt_core::compact::decode::<16>)
         .is_some()
 }
@@ -2529,7 +2530,7 @@ mod tests {
             )
             .unwrap();
         let stale_expected =
-            "wc_skillstate___________________________________________8".to_string();
+            "cg_skillstate___________________________________________8".to_string();
         let prepared_intent = hash_simple_intent(
             "activate",
             &["demo", &installed.package_revision, &stale_expected],
@@ -3158,7 +3159,7 @@ mod tests {
         let next = SkillActiveState {
             schema_version: STORE_SCHEMA_VERSION,
             active_package_revision: Some(
-                "wc_skillpkg_qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqo".to_string(),
+                "cg_skillpkg_qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqo".to_string(),
             ),
         };
         assert!(store.write_state(skill, &next).is_err());

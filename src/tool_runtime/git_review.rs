@@ -1,7 +1,7 @@
-use serde_json::{json, Value};
-use std::collections::{BTreeMap, BTreeSet};
 use codegpt_workspace::file_read_normalize::MODEL_RESULT_ENVELOPE_RESERVE_BYTES;
 use codegpt_workspace::file_read_range::MAX_SERIALIZED_OUTPUT_BYTES;
+use serde_json::{json, Value};
+use std::collections::{BTreeMap, BTreeSet};
 
 use super::git_committed::{
     checked_git_pipeline_to_file, committed_git_discovery_prefix,

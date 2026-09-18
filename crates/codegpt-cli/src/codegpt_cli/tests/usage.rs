@@ -170,7 +170,7 @@ fn project_registration_activation_and_login_help_prioritize_user_language() {
             "login",
             "https://example.test",
             "--code",
-            "wc_pair_example",
+            "cg_pair_example",
             "--allowed-root",
             "/tmp",
             "--project",
@@ -185,7 +185,7 @@ fn project_registration_activation_and_login_help_prioritize_user_language() {
         "login",
         "https://example.test",
         "--code",
-        "wc_pair_example",
+        "cg_pair_example",
         "--code-stdin",
     ]) {
         CliAction::Exit { code, stderr, .. } => {
@@ -496,7 +496,7 @@ fn canonical_plural_local_credential_namespaces_dispatch() {
             "--username",
             "alice",
             "--credential",
-            "wc_acct_example",
+            "cg_acct_example",
         ]),
         CliAction::TokenCreateLocal(_)
     ));
@@ -509,7 +509,7 @@ fn canonical_plural_local_credential_namespaces_dispatch() {
             "--username",
             "alice",
             "--credential",
-            "wc_acct_example",
+            "cg_acct_example",
             "--client-id",
             "runner-1",
         ]),
@@ -573,7 +573,7 @@ fn legacy_agent_tokens_alias_uses_canonical_runner_token_implementation() {
             "--username",
             "alice",
             "--credential",
-            "wc_acct_example",
+            "cg_acct_example",
             "--client-id",
             "runner-1",
         ]),
@@ -712,7 +712,7 @@ fn login_print_mcp_config_and_json_are_mutually_exclusive() {
         "login",
         "https://example.com",
         "--code",
-        "wc_pair_x",
+        "cg_pair_x",
         "--json",
         "--print-mcp-config",
     ]) {
@@ -730,7 +730,7 @@ fn login_print_mcp_config_and_json_are_mutually_exclusive() {
         "login",
         "https://example.com",
         "--code",
-        "wc_pair_x",
+        "cg_pair_x",
         "--print-mcp-config",
     ]) {
         CliAction::Login(opts) => {

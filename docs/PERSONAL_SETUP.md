@@ -91,7 +91,7 @@ codegpt pairing create \
   --ttl-secs 600
 ```
 
-Only carry the resulting `wc_pair_...` code to the Runner machine. Do not copy the Server administrator token or the whole Server env file.
+Only carry the resulting `cg_pair_...` code to the Runner machine. Do not copy the Server administrator token or the whole Server env file.
 
 Even when Server and Runner are on the same computer, this login flow is useful because everyday development access stays separate from Server administration.
 
@@ -103,7 +103,7 @@ The example below assumes **regular HTTPS MCP**, so it includes `--print-mcp-con
 
 ```bash
 codegpt login <server-url> \
-  --code <wc_pair_...> \
+  --code <cg_pair_...> \
   --allowed-root /path/to/your/projects \
   --project /path/to/your/projects/my-repo \
   --print-mcp-config
@@ -113,7 +113,7 @@ Windows PowerShell example:
 
 ```powershell
 codegpt login <server-url> `
-  --code <wc_pair_...> `
+  --code <cg_pair_...> `
   --allowed-root E:\git `
   --project E:\git\my-repo `
   --print-mcp-config

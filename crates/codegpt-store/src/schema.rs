@@ -71,7 +71,7 @@ impl Database {
         let mut conn = self.lock_connection(crate::StoreDomain::Schema);
         conn.execute_batch(
             "
-            CREATE TABLE IF NOT EXISTS wc_job_receipts (
+            CREATE TABLE IF NOT EXISTS cg_job_receipts (
                 job_id TEXT PRIMARY KEY,
                 client_id TEXT NOT NULL,
                 runner_instance_id TEXT NOT NULL,
@@ -83,9 +83,9 @@ impl Database {
                 terminal_observed_at INTEGER NOT NULL,
                 expires_at INTEGER NOT NULL
             );
-            CREATE INDEX IF NOT EXISTS idx_job_receipts_expiry ON wc_job_receipts(expires_at);
+            CREATE INDEX IF NOT EXISTS idx_job_receipts_expiry ON cg_job_receipts(expires_at);
             CREATE INDEX IF NOT EXISTS idx_job_receipts_runner_history
-                ON wc_job_receipts(client_id, terminal_observed_at DESC, job_id DESC);
+                ON cg_job_receipts(client_id, terminal_observed_at DESC, job_id DESC);
 
             CREATE TABLE IF NOT EXISTS users (
                 id TEXT PRIMARY KEY,

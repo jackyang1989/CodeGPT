@@ -54,7 +54,7 @@ codegpt pairing create --server-url http://127.0.0.1:8080 --env-file $envFile --
 然后在持有仓库的 Windows 机器上只兑换该短期 code，并以前台方式运行登录流程生成的 Runner 配置：
 
 ```powershell
-codegpt login http://127.0.0.1:8080 --code <wc_pair_...> --allowed-root C:\src --project C:\src\my-repo
+codegpt login http://127.0.0.1:8080 --code <cg_pair_...> --allowed-root C:\src --project C:\src\my-repo
 codegpt runner run --config <login-reported-runner-config>
 ```
 
@@ -177,7 +177,7 @@ named Cloudflare Tunnel 也是有效入口。同一 hostname 必须承载普通 
 在持有仓库的机器上，以将运行项目命令的普通用户身份执行（不要用 `sudo`）：
 
 ```bash
-codegpt login https://your-domain.example --code <wc_pair_...> \
+codegpt login https://your-domain.example --code <cg_pair_...> \
   --allowed-root "$HOME/git" \
   --project "$HOME/git/my-repo"
 codegpt runner install --scope user \
@@ -201,7 +201,7 @@ codegpt pairing create \
   --ttl-secs 600
 ```
 
-只把短期 `wc_pair_*` code 传给客户端。不要跨机器复制 `CODEGPT_TOKEN`、user API
+只把短期 `cg_pair_*` code 传给客户端。不要跨机器复制 `CODEGPT_TOKEN`、user API
 token、Runner token、env 文件或完整 `runner.toml`。每个用户使用唯一 `username`。
 
 ## Runner 服务 scope
@@ -402,7 +402,7 @@ refresh-token scope，不授予额外 CodeGPT 权限。
 
 ## GPT Actions 与 MCP
 
-- **MCP：** 用 user API token（`wc_pat_*`）连接
+- **MCP：** 用 user API token（`cg_pat_*`）连接
   `https://your-domain.example/mcp`；启用 OAuth 时使用 OAuth 流程。MCP 仍是
   ChatGPT 的主要接入方式。
 - **GPT Actions：** 把 `https://your-domain.example/openapi.json` 以 HTTP Bearer

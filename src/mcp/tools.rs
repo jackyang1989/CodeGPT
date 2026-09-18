@@ -459,7 +459,7 @@ fn add_context_projection_to_output_shape(
                             json!({
                                 "type": "object",
                                 "properties": {
-                                    "session_id": {"type": "string", "pattern": "^wc_sess_([A-Za-z0-9_-]{16}|[0-9a-f]{32})$"}
+                                    "session_id": {"type": "string", "pattern": "^cg_sess_([A-Za-z0-9_-]{16}|[0-9a-f]{32})$"}
                                 },
                                 "required": ["session_id"],
                                 "additionalProperties": false
@@ -517,7 +517,7 @@ fn stateless_collaboration_ack_schema() -> Value {
         "maxItems": crate::tool_runtime::sessions::MAX_TOOL_CALL_ACK_MESSAGE_IDS,
         "items": {
             "type": "string",
-            "pattern": "^wc_msg_([A-Za-z0-9_-]{16}|[0-9a-f]{32})$"
+            "pattern": "^cg_msg_([A-Za-z0-9_-]{16}|[0-9a-f]{32})$"
         },
         "description": "Proves the current model context still retains the listed ACK-required collaboration messages. For Session messages the id must belong to the explicit recording Session; Peer messages may target the current principal-bound ClientWindow without a recorder. Repeat while retained. If later omitted, unresolved Session messages or retained Peer messages may be surfaced again. ACK neither resolves messages nor grants authority or gates execution."
     })
@@ -557,7 +557,7 @@ pub(super) fn add_stateless_workflow_recorder_metadata(payload: &mut Value) {
             crate::tool_runtime::sessions::TOOL_CALL_RECORDING_SESSION_ID_FIELD.to_string(),
             json!({
                 "type": "string",
-                "pattern": "^wc_sess_([A-Za-z0-9_-]{16}|[0-9a-f]{32})$",
+                "pattern": "^cg_sess_([A-Za-z0-9_-]{16}|[0-9a-f]{32})$",
                 "description": "Optional explicit Workflow Session used only to record this call and trusted collaboration provenance. Separate from any tool business Session input; grants no authority; removed before concrete parsing."
             }),
         );
@@ -570,7 +570,7 @@ pub(super) fn add_stateless_workflow_recorder_metadata(payload: &mut Value) {
                 "properties": {
                     "message_id": {
                         "type": "string",
-                        "pattern": "^wc_msg_([A-Za-z0-9_-]{16}|[0-9a-f]{32})$"
+                        "pattern": "^cg_msg_([A-Za-z0-9_-]{16}|[0-9a-f]{32})$"
                     },
                     "resolution": {
                         "type": "string",
@@ -662,10 +662,10 @@ fn is_agent_continuation_app_tool_name(tool_name: &str) -> bool {
 }
 
 const AGENT_CONTINUATION_APP_CALL_ID_FIELD: &str = "app_call_id";
-const AGENT_CONTINUATION_APP_CALL_ID_PATTERN: &str = "^wc_app_call_[0-9a-f]{16}_[1-9][0-9]{0,5}$";
+const AGENT_CONTINUATION_APP_CALL_ID_PATTERN: &str = "^cg_app_call_[0-9a-f]{16}_[1-9][0-9]{0,5}$";
 
 fn valid_agent_continuation_app_call_id(value: &str) -> bool {
-    let Some(rest) = value.strip_prefix("wc_app_call_") else {
+    let Some(rest) = value.strip_prefix("cg_app_call_") else {
         return false;
     };
     let Some((view_prefix, sequence)) = rest.split_once('_') else {
@@ -1293,7 +1293,7 @@ pub(super) fn strip_stateless_ack_session_message_ids(
     };
     let Value::Array(values) = value else {
         return Err(format!(
-            "field '{}' must be an array of wc_msg_* ids",
+            "field '{}' must be an array of cg_msg_* ids",
             crate::tool_runtime::sessions::TOOL_CALL_ACK_SESSION_MESSAGE_IDS_FIELD
         ));
     };
@@ -1309,14 +1309,14 @@ pub(super) fn strip_stateless_ack_session_message_ids(
     for value in values {
         let Value::String(value) = value else {
             return Err(format!(
-                "field '{}' must contain only wc_msg_* strings",
+                "field '{}' must contain only cg_msg_* strings",
                 crate::tool_runtime::sessions::TOOL_CALL_ACK_SESSION_MESSAGE_IDS_FIELD
             ));
         };
         let value = value.trim();
         if !codegpt_core::workflow_session_contract::is_valid_session_message_id(value) {
             return Err(format!(
-                "field '{}' must contain only valid wc_msg_* ids",
+                "field '{}' must contain only valid cg_msg_* ids",
                 crate::tool_runtime::sessions::TOOL_CALL_ACK_SESSION_MESSAGE_IDS_FIELD
             ));
         }
@@ -1352,12 +1352,12 @@ pub(super) fn strip_stateless_session_message_resolution(
         ));
     }
     let Some(Value::String(message_id)) = fields.remove("message_id") else {
-        return Err("session_message_resolution.message_id must be a wc_msg_* string".to_string());
+        return Err("session_message_resolution.message_id must be a cg_msg_* string".to_string());
     };
     let message_id = message_id.trim().to_string();
     if !codegpt_core::workflow_session_contract::is_valid_session_message_id(&message_id) {
         return Err(
-            "session_message_resolution.message_id must be a valid wc_msg_* id".to_string(),
+            "session_message_resolution.message_id must be a valid cg_msg_* id".to_string(),
         );
     }
     let Some(Value::String(resolution)) = fields.remove("resolution") else {

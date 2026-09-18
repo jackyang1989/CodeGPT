@@ -1,13 +1,13 @@
 use super::state::{ProjectInventoryStaging, ProjectInventoryState, RunnerRecord};
 use super::validation::{sha256_hex, validate_project_summary_batch, validate_runner_instance_id};
 use super::{now_ts, RunnerRegistry};
-use std::collections::{HashSet, VecDeque};
 use codegpt_core::runner_protocol::{
     ShellProjectInventoryPage, ShellProjectInventoryStatus, PROJECT_INVENTORY_GENERATION_MAX_BYTES,
     PROJECT_INVENTORY_MAX_CONCURRENT_SYNCS, PROJECT_INVENTORY_PAGE_MAX_SERIALIZED_BYTES,
     PROJECT_INVENTORY_PAGE_MAX_SUMMARIES, PROJECT_INVENTORY_SNAPSHOT_MAX_SERIALIZED_BYTES,
     PROJECT_INVENTORY_STAGING_TTL_SECS,
 };
+use std::collections::{HashSet, VecDeque};
 
 const MAX_RETIRED_PROJECT_GENERATIONS: usize = 16;
 

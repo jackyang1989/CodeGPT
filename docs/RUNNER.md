@@ -35,7 +35,7 @@ shell state.
 | **client_id** | Stable logical name for one Runner/device. |
 | **Project** | A repository/workspace registered by that Runner. |
 
-Some compatibility-facing values still use the historical word `agent`, including the `wc_agent_*` Runner-token prefix and `agent:<client_id>:<project_id>` runtime Project address. They do not refer to CodeGPT's separate Durable Agent domain, and ordinary users do not need the process-level lease identifiers behind Runner recovery.
+Some compatibility-facing values still use the historical word `agent`, including the `cg_agent_*` Runner-token prefix and `agent:<client_id>:<project_id>` runtime Project address. They do not refer to CodeGPT's separate Durable Agent domain, and ordinary users do not need the process-level lease identifiers behind Runner recovery.
 
 ### Runner config filename compatibility
 
@@ -53,7 +53,7 @@ the `transport` setting in `runner.toml`:
 | WebSocket | `websocket` | Stable fallback for simple deployments without UDP. |
 | Polling | `polling` | Last-resort fallback for constrained networks. |
 
-The Runner authenticates with its Runner token (compatibility prefix `wc_agent_*`) or, in hosted shared-key mode, the matching shared key. This credential is for Runner transport only; it is not an MCP, REST, or GPT Actions credential.
+The Runner authenticates with its Runner token (compatibility prefix `cg_agent_*`) or, in hosted shared-key mode, the matching shared key. This credential is for Runner transport only; it is not an MCP, REST, or GPT Actions credential.
 
 WebSocket and polling authenticate the first-party Runner with
 `Authorization: Bearer <token>`; query-string Runner credentials are not

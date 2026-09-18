@@ -9,10 +9,10 @@ use super::communication::{
 };
 use super::goal::{GoalCorrelationKind, GoalLifecycle, NewGoal};
 use super::Database;
+use codegpt_core::coding_agent::{CodingAgentExecutionState, CodingAgentRunState};
 use rusqlite::params;
 use std::sync::{mpsc, Arc, Barrier};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
-use codegpt_core::coding_agent::{CodingAgentExecutionState, CodingAgentRunState};
 
 const T0: i64 = 1_000_000;
 
@@ -105,7 +105,7 @@ struct EndpointTakeoverFixture {
 fn attempt_lease_expires_at(db: &Database, attempt_id: &str) -> i64 {
     db.conn_for_tests()
         .query_row(
-            "SELECT lease_expires_at_unix_ms FROM wc_agent_task_attempts WHERE attempt_id = ?1",
+            "SELECT lease_expires_at_unix_ms FROM cg_agent_task_attempts WHERE attempt_id = ?1",
             [attempt_id],
             |row| row.get(0),
         )
@@ -272,7 +272,7 @@ fn dispatch_and_consume_next_wake(
 
 fn coding_binding_intent(label: &str) -> AgentTaskCodingRunBindingIntent {
     AgentTaskCodingRunBindingIntent {
-        run_id: format!("wc_agent_run_{label}"),
+        run_id: format!("cg_agent_run_{label}"),
         runtime_project_id: "agent:special:reference-only".to_string(),
         provider_id: "codex".to_string(),
         provider_instance_id: format!("provider-instance-{label}"),
@@ -458,7 +458,7 @@ fn coding_run_binding_is_unique_replayable_and_fenced_before_dispatch() {
     assert_eq!(
         db.conn_for_tests()
             .query_row(
-                "SELECT COUNT(*) FROM wc_agent_task_coding_runs",
+                "SELECT COUNT(*) FROM cg_agent_task_coding_runs",
                 [],
                 |row| { row.get::<_, i64>(0) }
             )
@@ -800,7 +800,7 @@ fn backend_terminal_truth_reconciles_exact_attempt_after_ordinary_lease_expiry()
     assert_eq!(
         db.conn_for_tests()
             .query_row(
-                "SELECT COUNT(*) FROM wc_agent_wakes
+                "SELECT COUNT(*) FROM cg_agent_wakes
                  WHERE trigger_kind = 'agent_wait_events' AND source_wait_id = ?1 AND state = 'pending'",
                 [agent_wait.wait_id.as_str()],
                 |row| row.get::<_, i64>(0),
@@ -819,8 +819,8 @@ fn backend_terminal_truth_reconciles_exact_attempt_after_ordinary_lease_expiry()
         .conn_for_tests()
         .query_row(
             "SELECT COUNT(*)
-             FROM wc_agent_attention_events e
-             JOIN wc_agent_wakes w ON w.source_event_id = e.event_id
+             FROM cg_agent_attention_events e
+             JOIN cg_agent_wakes w ON w.source_event_id = e.event_id
              WHERE e.kind = 'agent_task_terminal' AND e.goal_id = ?1
                AND e.task_id = ?2 AND e.task_attempt_id = ?3
                AND e.target_agent_id = ?4 AND e.terminal_task_state = 'succeeded'
@@ -861,7 +861,7 @@ fn backend_terminal_truth_reconciles_exact_attempt_after_ordinary_lease_expiry()
     let replay_attention_count: i64 = db
         .conn_for_tests()
         .query_row(
-            "SELECT COUNT(*) FROM wc_agent_attention_events
+            "SELECT COUNT(*) FROM cg_agent_attention_events
              WHERE goal_id = ?1 AND task_attempt_id = ?2",
             params![goal_id, started.attempt.attempt_id],
             |row| row.get(0),
@@ -1492,7 +1492,7 @@ fn corrupt_coding_run_observation_states_fail_closed_on_binding_load() {
 
     db.conn_for_tests()
         .execute(
-            "UPDATE wc_agent_task_coding_runs
+            "UPDATE cg_agent_task_coding_runs
              SET last_observed_run_state = 'future_state'
              WHERE task_id = ?1 AND attempt_id = ?2",
             params![task_id, started.attempt.attempt_id],
@@ -1504,7 +1504,7 @@ fn corrupt_coding_run_observation_states_fail_closed_on_binding_load() {
 
     db.conn_for_tests()
         .execute(
-            "UPDATE wc_agent_task_coding_runs
+            "UPDATE cg_agent_task_coding_runs
              SET last_observed_run_state = 'running',
                  last_observed_execution_state = 'future_state'
              WHERE task_id = ?1 AND attempt_id = ?2",
@@ -1681,7 +1681,7 @@ fn concurrent_attempt_start_creates_exactly_one_authoritative_attempt() {
     let count: i64 = reopened
         .conn_for_tests()
         .query_row(
-            "SELECT COUNT(*) FROM wc_agent_task_attempts WHERE task_id = ?1",
+            "SELECT COUNT(*) FROM cg_agent_task_attempts WHERE task_id = ?1",
             [task_id.as_str()],
             |row| row.get(0),
         )
@@ -1786,7 +1786,7 @@ fn live_coding_dispatch_mutations_sample_server_time_after_serialization_wait() 
     let expires_at = wall_now_ms().saturating_add(200);
     guard
         .execute(
-            "UPDATE wc_agent_task_attempts
+            "UPDATE cg_agent_task_attempts
              SET lease_expires_at_unix_ms = ?1
              WHERE attempt_id IN (?2, ?3)",
             params![
@@ -1807,7 +1807,7 @@ fn live_coding_dispatch_mutations_sample_server_time_after_serialization_wait() 
     assert_eq!(
         db.conn_for_tests()
             .query_row(
-                "SELECT COUNT(*) FROM wc_agent_task_coding_runs WHERE attempt_id = ?1",
+                "SELECT COUNT(*) FROM cg_agent_task_coding_runs WHERE attempt_id = ?1",
                 [prepare_attempt.attempt.attempt_id.as_str()],
                 |row| row.get::<_, i64>(0),
             )
@@ -1912,7 +1912,7 @@ fn live_lease_mutations_sample_server_time_after_serialization_wait() {
     let expires_at = wall_now_ms().saturating_add(200);
     guard
         .execute(
-            "UPDATE wc_agent_task_attempts
+            "UPDATE cg_agent_task_attempts
              SET lease_expires_at_unix_ms = ?1
              WHERE attempt_id IN (?2, ?3)",
             params![
@@ -2189,7 +2189,7 @@ fn controller_generation_fences_replaced_carrier_without_creating_attempt() {
     let count: i64 = db
         .conn_for_tests()
         .query_row(
-            "SELECT COUNT(*) FROM wc_agent_task_attempts WHERE task_id = ?1",
+            "SELECT COUNT(*) FROM cg_agent_task_attempts WHERE task_id = ?1",
             [task_id.as_str()],
             |row| row.get(0),
         )
@@ -2570,12 +2570,12 @@ fn source_conversation_is_correlation_only_and_foreign_exact_ids_are_existence_h
     // AgentTask authority.
     db.conn_for_tests()
         .execute(
-            "INSERT INTO wc_conversation_participants (
+            "INSERT INTO cg_conversation_participants (
                 participant_id, conversation_id, participant_kind, agent_id,
                 principal_kind, principal_digest, joined_at_unix_ms
              ) VALUES (?1, ?2, 'human', NULL, ?3, ?4, ?5)",
             params![
-                format!("wc_participant_{}", "e".repeat(32)),
+                format!("cg_participant_{}", "e".repeat(32)),
                 conversation_id,
                 foreign.kind,
                 foreign.digest,
@@ -2654,7 +2654,7 @@ fn replay_record_and_effect_commit_atomically_for_create_start_and_completion() 
     db.conn_for_tests()
         .execute_batch(
             "CREATE TRIGGER fail_task_create_replay
-             BEFORE INSERT ON wc_communication_idempotency
+             BEFORE INSERT ON cg_communication_idempotency
              WHEN NEW.operation = 'create_agent_task'
              BEGIN SELECT RAISE(ABORT, 'forced task create replay failure'); END;",
         )
@@ -2669,7 +2669,7 @@ fn replay_record_and_effect_commit_atomically_for_create_start_and_completion() 
     assert_eq!(failed_create.code(), "communication_store_unavailable");
     assert_eq!(
         db.conn_for_tests()
-            .query_row("SELECT COUNT(*) FROM wc_agent_tasks", [], |row| row
+            .query_row("SELECT COUNT(*) FROM cg_agent_tasks", [], |row| row
                 .get::<_, i64>(0))
             .unwrap(),
         0
@@ -2682,7 +2682,7 @@ fn replay_record_and_effect_commit_atomically_for_create_start_and_completion() 
     db.conn_for_tests()
         .execute_batch(
             "CREATE TRIGGER fail_task_start_replay
-             BEFORE INSERT ON wc_communication_idempotency
+             BEFORE INSERT ON cg_communication_idempotency
              WHEN NEW.operation = 'start_agent_task_attempt'
              BEGIN SELECT RAISE(ABORT, 'forced task start replay failure'); END;",
         )
@@ -2694,7 +2694,7 @@ fn replay_record_and_effect_commit_atomically_for_create_start_and_completion() 
     assert_eq!(
         db.conn_for_tests()
             .query_row(
-                "SELECT COUNT(*) FROM wc_agent_task_attempts WHERE task_id = ?1",
+                "SELECT COUNT(*) FROM cg_agent_task_attempts WHERE task_id = ?1",
                 [task_id.as_str()],
                 |row| row.get::<_, i64>(0),
             )
@@ -2713,7 +2713,7 @@ fn replay_record_and_effect_commit_atomically_for_create_start_and_completion() 
     db.conn_for_tests()
         .execute_batch(
             "CREATE TRIGGER fail_task_completion_replay
-             BEFORE INSERT ON wc_communication_idempotency
+             BEFORE INSERT ON cg_communication_idempotency
              WHEN NEW.operation = 'complete_agent_task_attempt'
              BEGIN SELECT RAISE(ABORT, 'forced task completion replay failure'); END;",
         )
@@ -2777,13 +2777,13 @@ fn endpoint_continuation_start_is_endpoint_independent_replay_safe_and_payload_f
     );
     let before_messages: i64 = db
         .conn_for_tests()
-        .query_row("SELECT COUNT(*) FROM wc_conversation_messages", [], |row| {
+        .query_row("SELECT COUNT(*) FROM cg_conversation_messages", [], |row| {
             row.get(0)
         })
         .unwrap();
     let before_deliveries: i64 = db
         .conn_for_tests()
-        .query_row("SELECT COUNT(*) FROM wc_agent_deliveries", [], |row| {
+        .query_row("SELECT COUNT(*) FROM cg_agent_deliveries", [], |row| {
             row.get(0)
         })
         .unwrap();
@@ -2820,7 +2820,7 @@ fn endpoint_continuation_start_is_endpoint_independent_replay_safe_and_payload_f
     );
     assert_eq!(
         db.conn_for_tests()
-            .query_row("SELECT COUNT(*) FROM wc_conversation_messages", [], |row| {
+            .query_row("SELECT COUNT(*) FROM cg_conversation_messages", [], |row| {
                 row.get::<_, i64>(0)
             })
             .unwrap(),
@@ -2829,7 +2829,7 @@ fn endpoint_continuation_start_is_endpoint_independent_replay_safe_and_payload_f
     );
     assert_eq!(
         db.conn_for_tests()
-            .query_row("SELECT COUNT(*) FROM wc_agent_deliveries", [], |row| row
+            .query_row("SELECT COUNT(*) FROM cg_agent_deliveries", [], |row| row
                 .get::<_, i64>(0))
             .unwrap(),
         before_deliveries,
@@ -2906,7 +2906,7 @@ fn endpoint_continuation_start_is_endpoint_independent_replay_safe_and_payload_f
     assert_eq!(
         db.conn_for_tests()
             .query_row(
-                "SELECT COUNT(*) FROM wc_agent_wakes WHERE source_task_attempt_id = ?1",
+                "SELECT COUNT(*) FROM cg_agent_wakes WHERE source_task_attempt_id = ?1",
                 [started.attempt.attempt_id.as_str()],
                 |row| row.get::<_, i64>(0),
             )
@@ -3099,7 +3099,7 @@ fn ordinary_heartbeat_stays_short_and_non_a4b_proof_cannot_upgrade() {
         heartbeat.attempt.lease_expires_at_unix_ms
     );
 
-    let fake_wake = "wc_wake_3d3d3d3d3d3d3d3d".to_string();
+    let fake_wake = "cg_wake_3d3d3d3d3d3d3d3d".to_string();
     let fake_token = format!(
         "{AGENT_WAKE_CONSUME_TOKEN_PREFIX}{}",
         codegpt_core::compact::encode([0xee; 16])
@@ -3271,7 +3271,7 @@ fn active_turn_proof_rejects_every_unconsumed_task_wake_state() {
     let wake_attempt_id: String = db
         .conn_for_tests()
         .query_row(
-            "SELECT claimed_attempt_id FROM wc_agent_wakes WHERE wake_id = ?1",
+            "SELECT claimed_attempt_id FROM cg_agent_wakes WHERE wake_id = ?1",
             [&fixture.wake_id],
             |row| row.get(0),
         )
@@ -3280,13 +3280,13 @@ fn active_turn_proof_rejects_every_unconsumed_task_wake_state() {
     for state in ["claimed", "prepared", "delivered", "delivery_unknown"] {
         db.conn_for_tests()
             .execute(
-                "UPDATE wc_agent_wakes SET state = ?2 WHERE wake_id = ?1",
+                "UPDATE cg_agent_wakes SET state = ?2 WHERE wake_id = ?1",
                 params![fixture.wake_id, state],
             )
             .unwrap();
         db.conn_for_tests()
             .execute(
-                "UPDATE wc_agent_wake_attempts SET state = ?2 WHERE attempt_id = ?1",
+                "UPDATE cg_agent_wake_attempts SET state = ?2 WHERE attempt_id = ?1",
                 params![wake_attempt_id, state],
             )
             .unwrap();
@@ -3334,7 +3334,7 @@ fn active_turn_proof_fails_closed_for_wrong_identity_authority_and_controller_lo
     )
     .unwrap();
     let lease_before = attempt_lease_expires_at(&db, &fixture.task_attempt_id);
-    let wrong_wake = "wc_wake_________________".to_string();
+    let wrong_wake = "cg_wake_________________".to_string();
     let wrong_token = format!(
         "{AGENT_WAKE_CONSUME_TOKEN_PREFIX}{}",
         codegpt_core::compact::encode([0xff; 16])
@@ -3819,7 +3819,7 @@ fn endpoint_consume_failures_and_expired_source_never_promote_or_revive_attempt(
     let fixture = dispatched_endpoint_takeover_fixture(&db, &owner, "stale-takeover", started_at);
     let initial_lease = fixture.initial_lease_expires_at_unix_ms;
 
-    let wrong_endpoint = "wc_endpoint_________________".to_string();
+    let wrong_endpoint = "cg_endpoint_________________".to_string();
     assert!(db
         .consume_agent_wake_at(
             &owner,
@@ -3852,7 +3852,7 @@ fn endpoint_consume_failures_and_expired_source_never_promote_or_revive_attempt(
         initial_lease
     );
 
-    let wrong_token = "wc_wake_consume_7u7u7u7u7u7u7u7u7u7u7g".to_string();
+    let wrong_token = "cg_wake_consume_7u7u7u7u7u7u7u7u7u7u7g".to_string();
     assert_eq!(
         db.consume_agent_wake_at(
             &owner,

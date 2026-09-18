@@ -41,11 +41,11 @@ pub const SCOPE_AGENT_JOB_UPDATE: &str = "agent:job_update";
 pub const SCOPE_ACCOUNT_MANAGE: &str = "account:manage";
 
 /// Stable project-grant identity grammar shared by auth and persistence.
-pub const PROJECT_GRANT_ID_PREFIX: &str = "wc_pgrant_";
+pub const PROJECT_GRANT_ID_PREFIX: &str = "cg_pgrant_";
 /// Stable OAuth subject vocabulary for project-share credentials.
 pub const PROJECT_SHARE_OAUTH_SUBJECT_KIND: &str = "project_share";
 /// Stable session component prefix inside a project-share OAuth subject id.
-pub const PROJECT_SHARE_SESSION_PREFIX: &str = "wc_share_";
+pub const PROJECT_SHARE_SESSION_PREFIX: &str = "cg_share_";
 
 pub fn validate_project_grant_id(value: &str) -> Result<(), String> {
     let suffix = value

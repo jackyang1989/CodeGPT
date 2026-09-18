@@ -227,7 +227,7 @@ pub(crate) async fn runner_tokens_create(req: &mut Request, depot: &mut Depot, r
 /// Registers an agent token hash generated locally by the CLI. The server
 /// receives only hash/prefix/metadata, stores `kind='agent'` and binds the row
 /// to `allowed_client_id = client_id`. It never accepts or returns the
-/// plaintext `wc_agent_*` token.
+/// plaintext `cg_agent_*` token.
 #[handler]
 pub(crate) async fn runner_tokens_register_hash(
     req: &mut Request,
@@ -301,7 +301,7 @@ pub(crate) async fn runner_tokens_register_hash(
             return;
         }
     };
-    let token_prefix = match validate_token_prefix(&body.token_prefix, "wc_agent_") {
+    let token_prefix = match validate_token_prefix(&body.token_prefix, "cg_agent_") {
         Ok(p) => p,
         Err(e) => {
             res.status_code(StatusCode::BAD_REQUEST);

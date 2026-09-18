@@ -210,8 +210,8 @@ fn artifact_snapshot_changed_result(path: &str) -> ToolResult {
 }
 
 fn validate_artifact_upload_id(upload_id: &str) -> Result<(), String> {
-    if !upload_id.starts_with("wc_upload_") {
-        return Err("upload_id must start with wc_upload_".to_string());
+    if !upload_id.starts_with("cg_upload_") {
+        return Err("upload_id must start with cg_upload_".to_string());
     }
     if upload_id.len() > 96 {
         return Err("upload_id too long".to_string());

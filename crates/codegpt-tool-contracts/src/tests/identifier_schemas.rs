@@ -3,22 +3,22 @@ use super::*;
 #[test]
 fn durable_identifier_schemas_accept_compact_and_reject_retired_hex() {
     let prefixes = [
-        "wc_dagent_",
-        "wc_endpoint_",
-        "wc_agent_task_",
-        "wc_agent_task_attempt_",
-        "wc_wake_",
-        "wc_wake_attempt_",
-        "wc_agent_wait_",
-        "wc_goal_",
-        "wc_conv_",
-        "wc_participant_",
-        "wc_cmsg_",
-        "wc_delivery_",
-        "wc_attention_event_",
-        "wc_agent_task_fence_",
-        "wc_wake_consume_",
-        "wc_host_binding_",
+        "cg_dagent_",
+        "cg_endpoint_",
+        "cg_agent_task_",
+        "cg_agent_task_attempt_",
+        "cg_wake_",
+        "cg_wake_attempt_",
+        "cg_agent_wait_",
+        "cg_goal_",
+        "cg_conv_",
+        "cg_participant_",
+        "cg_cmsg_",
+        "cg_delivery_",
+        "cg_attention_event_",
+        "cg_agent_task_fence_",
+        "cg_wake_consume_",
+        "cg_host_binding_",
     ];
     fn visit(
         value: &serde_json::Value,
@@ -73,7 +73,7 @@ fn durable_identifier_schemas_accept_compact_and_reject_retired_hex() {
     }
     for prefix in prefixes {
         // Attention events are projected only through their enclosing records.
-        if prefix != "wc_attention_event_" {
+        if prefix != "cg_attention_event_" {
             assert!(seen.contains(prefix), "missing schema coverage: {prefix}");
         }
     }
@@ -88,13 +88,13 @@ fn workflow_session_identifier_schemas_accept_compact_and_persisted_legacy_forms
                     let cases = [
                         (
                             "session",
-                            "^wc_sess_([A-Za-z0-9_-]{16}|[0-9a-f]{32})$",
-                            "wc_sess_",
+                            "^cg_sess_([A-Za-z0-9_-]{16}|[0-9a-f]{32})$",
+                            "cg_sess_",
                         ),
                         (
                             "message",
-                            "^wc_msg_([A-Za-z0-9_-]{16}|[0-9a-f]{32})$",
-                            "wc_msg_",
+                            "^cg_msg_([A-Za-z0-9_-]{16}|[0-9a-f]{32})$",
+                            "cg_msg_",
                         ),
                     ];
                     for (name, expected_pattern, prefix) in cases {

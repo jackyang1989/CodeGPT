@@ -1386,14 +1386,14 @@ describe("semantic Desktop UI", () => {
     expect(submit).toBeDisabled();
 
     fireEvent.change(screen.getByLabelText("一次性登录码"), {
-      target: { value: "wc_pair_recovery" },
+      target: { value: "cg_pair_recovery" },
     });
     expect(submit).toBeEnabled();
     fireEvent.click(submit);
     await waitFor(() =>
       expect(api.configureRemote).toHaveBeenLastCalledWith(
         "https://server.example.test",
-        "wc_pair_recovery",
+        "cg_pair_recovery",
         projectB.path,
       ),
     );

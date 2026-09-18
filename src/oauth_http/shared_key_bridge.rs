@@ -291,7 +291,7 @@ fn bridge_client_has_optional_computer_scope(client: &crate::models::OAuthClient
 }
 
 fn is_managed_credential_like(value: &str) -> bool {
-    value.starts_with("wc_")
+    value.starts_with("cg_")
 }
 
 pub(crate) fn bridge_shared_key_hash(value: &str) -> Result<String, &'static str> {

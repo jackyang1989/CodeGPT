@@ -22,6 +22,13 @@
 use super::config::SshConfig;
 use super::shutdown::lock_unpoison;
 use super::ssh::{PreparedPersistentShellCommand, SshConnectionPool};
+use codegpt_persistent_shell::{
+    find_bytes, longest_suffix_prefix, output_sync_marker, remote_command_wrapper, BoundedBuffer,
+    CompletionProgress, ControlFrame, ShellError, ShellTransport, TransportMetadata, WaitOutcome,
+    CONTROL_MAGIC, STDERR_SYNC_MAGIC, STDOUT_SYNC_MAGIC,
+};
+#[cfg(windows)]
+use codegpt_process::ManagedChild;
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 #[cfg(unix)]
@@ -31,13 +38,6 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{mpsc, Arc, Mutex};
 use std::thread;
 use std::time::{Duration, Instant};
-use codegpt_persistent_shell::{
-    find_bytes, longest_suffix_prefix, output_sync_marker, remote_command_wrapper, BoundedBuffer,
-    CompletionProgress, ControlFrame, ShellError, ShellTransport, TransportMetadata, WaitOutcome,
-    CONTROL_MAGIC, STDERR_SYNC_MAGIC, STDOUT_SYNC_MAGIC,
-};
-#[cfg(windows)]
-use codegpt_process::ManagedChild;
 
 /// How long to wait for the ssh child to exit after signalling it during
 /// shutdown/interrupt before forcing a kill. Mirrors the local shell's grace.

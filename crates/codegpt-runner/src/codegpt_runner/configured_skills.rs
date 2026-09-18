@@ -1,10 +1,4 @@
 use super::config::{configured_skill_root_identity, SkillsConfig};
-use sha2::{Digest, Sha256};
-use std::collections::BTreeSet;
-use std::fs::{self, File};
-use std::io::Read;
-use std::path::{Path, PathBuf};
-use std::time::Instant;
 use codegpt_core::runner_skill::{
     normalize_runner_skill_resource_path, RunnerSkillDescriptor, RunnerSkillExecutionRequest,
     RunnerSkillReadResponse, RunnerSkillSource, MAX_RUNNER_SKILL_READ_TEXT_BYTES,
@@ -12,6 +6,12 @@ use codegpt_core::runner_skill::{
 };
 use codegpt_core::skill_metadata::{parse_skill_metadata, MAX_SKILL_DEFINITION_BYTES};
 use codegpt_workspace::file_read_range;
+use sha2::{Digest, Sha256};
+use std::collections::BTreeSet;
+use std::fs::{self, File};
+use std::io::Read;
+use std::path::{Path, PathBuf};
+use std::time::Instant;
 
 const SKILL_DEFINITION_FILE: &str = "SKILL.md";
 const MAX_SKILL_PACKAGE_NAME_BYTES: usize = 160;
@@ -623,7 +623,7 @@ fn configured_skill_id(root: &Path, package_name: &str) -> String {
     hasher.update(b"\0");
     hasher.update(package_name.as_bytes());
     format!(
-        "wc_skill_{}",
+        "cg_skill_{}",
         codegpt_core::compact::encode(&hasher.finalize()[..16])
     )
 }

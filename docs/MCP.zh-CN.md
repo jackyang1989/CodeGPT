@@ -156,8 +156,8 @@ curl -fsS -X POST https://your-domain.example/api/oauth/clients/create \
 | 字段 | 值 |
 | --- | --- |
 | MCP server URL | `https://your-domain.example/mcp` |
-| Client ID | 创建 client 时返回的 `wc_client_*` |
-| Client Secret | 只返回一次的 `wc_csec_*` |
+| Client ID | 创建 client 时返回的 `cg_client_*` |
+| Client Secret | 只返回一次的 `cg_csec_*` |
 | Authorization Endpoint | `https://your-domain.example/oauth/authorize` |
 | Token Endpoint | `https://your-domain.example/oauth/token` |
 | Scopes | `runtime:read`、`project:read`、`project:write`、`job:run`、`offline_access` |
@@ -172,7 +172,7 @@ OAuth client 的 `allowed_scopes` 权限列表。MCP Protected Resource Metadata
 `allowed_scopes`。
 
 打开 CodeGPT Authorization 页面后，用希望 Grok 代表的用户当前有效 PAT
-（`wc_pat_*`）登录。Runner token（`wc_agent_*`）不是用户登录 token。最终签发的
+（`cg_pat_*`）登录。Runner token（`cg_agent_*`）不是用户登录 token。最终签发的
 OAuth access token 会绑定到该用户，同时继续受 client 注册权限和本次请求 scopes
 约束。
 

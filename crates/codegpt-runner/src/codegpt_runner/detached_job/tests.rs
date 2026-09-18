@@ -75,7 +75,7 @@ fn internal_mode_subprocess_entrypoint() {
 fn safe_context() -> ShellJobContext {
     ShellJobContext {
         runtime_project_id: Some("agent:test:project".to_string()),
-        workflow_session_id: Some("wc_sess_n_gsG5blnjZHfyYD".to_string()),
+        workflow_session_id: Some("cg_sess_n_gsG5blnjZHfyYD".to_string()),
         ssh_resource: None,
         project_cwd: Some("/tmp/project".to_string()),
         cwd: Some("/tmp/project".to_string()),
@@ -610,14 +610,16 @@ fn payload_subprocess_entrypoint() {
             fs::write(&parent_marker, std::process::id().to_string()).unwrap();
             let mut child = Command::new(std::env::current_exe().unwrap());
             child
-                    .arg("--exact")
-                    .arg("codegpt_runner::detached_job::tests::payload_descendant_subprocess_entrypoint")
-                    .arg("--nocapture")
-                    .env_clear()
-                    .env("CODEGPT_DETACHED_DESCENDANT_MARKER", child_marker)
-                    .stdin(Stdio::null())
-                    .stdout(Stdio::inherit())
-                    .stderr(Stdio::inherit());
+                .arg("--exact")
+                .arg(
+                    "codegpt_runner::detached_job::tests::payload_descendant_subprocess_entrypoint",
+                )
+                .arg("--nocapture")
+                .env_clear()
+                .env("CODEGPT_DETACHED_DESCENDANT_MARKER", child_marker)
+                .stdin(Stdio::null())
+                .stdout(Stdio::inherit())
+                .stderr(Stdio::inherit());
             #[allow(clippy::zombie_processes)]
             let _child = child.spawn().unwrap();
             std::thread::sleep(Duration::from_secs(60));

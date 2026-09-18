@@ -690,8 +690,7 @@ mod tests {
 
     #[test]
     fn finish_coding_task_nested_show_changes_recovery_projects_with_route() {
-        let canonical_schema =
-            codegpt_tool_contracts::output_schema_for_tool("finish_coding_task");
+        let canonical_schema = codegpt_tool_contracts::output_schema_for_tool("finish_coding_task");
         let canonical_call = json!({
             "tool": "git_diff_hunks",
             "arguments": {

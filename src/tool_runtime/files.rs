@@ -1,4 +1,5 @@
 use base64::{engine::general_purpose, Engine as _};
+use codegpt_workspace::file_read_range::{self, EffectiveRange, FileReadRange, ReadFileReason};
 use serde::Serialize;
 use serde_json::{json, Value};
 use sha2::{Digest, Sha256};
@@ -6,7 +7,6 @@ use std::collections::HashSet;
 use std::path::Path;
 use std::time::Duration;
 use tokio::time::Instant;
-use codegpt_workspace::file_read_range::{self, EffectiveRange, FileReadRange, ReadFileReason};
 
 #[cfg(test)]
 use super::helpers::run_command_sync;

@@ -2148,7 +2148,7 @@ async fn session_handoff_summary_unknown_session() {
     let runtime = test_runtime();
     let result = runtime
         .dispatch(ToolCall::SessionHandoffSummary {
-            session_id: "wc_sess_unknown".to_string(),
+            session_id: "cg_sess_unknown".to_string(),
             project: None,
             include_workspace: None,
             include_checkpoints: None,
@@ -2160,7 +2160,7 @@ async fn session_handoff_summary_unknown_session() {
 
     assert!(!result.success);
     assert_eq!(result.output["error_kind"], "unknown_session_id");
-    assert_eq!(result.output["session_id"], "wc_sess_unknown");
+    assert_eq!(result.output["session_id"], "cg_sess_unknown");
 }
 
 // =========================================================================
@@ -4409,8 +4409,8 @@ fn session_event_omitted_optional_fields_still_deserialize() {
     // Legacy ledgers omit newer optional/defaulted fields. Deserialization must
     // remain compatible and must not invent raw input/diff payloads.
     let legacy = r#"{
-        "event_id": "wc_evt_legacy",
-        "session_id": "wc_sess_legacy",
+        "event_id": "cg_evt_legacy",
+        "session_id": "cg_sess_legacy",
         "kind": "tool_call_finished",
         "timestamp": 1,
         "transport": "api",

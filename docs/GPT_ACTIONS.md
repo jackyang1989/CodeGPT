@@ -17,7 +17,7 @@ Import:
 https://your-domain.example/openapi.json
 ```
 
-ChatGPT requires public HTTPS. Configure API-key authentication as HTTP Bearer and use a generated user token (`wc_pat_*`). Runner tokens (`wc_agent_*`) are Runner-transport credentials and must not be placed in a GPT.
+ChatGPT requires public HTTPS. Configure API-key authentication as HTTP Bearer and use a generated user token (`cg_pat_*`). Runner tokens (`cg_agent_*`) are Runner-transport credentials and must not be placed in a GPT.
 
 After upgrading a Server that used the older generic GPT Actions schema, **re-import `/openapi.json`**. The generic operation names are now the canonical CodeGPT runtime tool names rather than the retired camelCase Action vocabulary.
 

@@ -55,7 +55,7 @@ function Get-BoundedShareLogTail {
         # safe even if a future log message accidentally includes an auth header or
         # one of CodeGPT's opaque credential forms.
         $text = $text -replace '(?i)(authorization\s*:\s*bearer\s+)[^\s"]+', '$1<redacted>'
-        $text = $text -replace '\b(?:wc_pat|wc_agent|wc_csec|codegpt)_[A-Za-z0-9_-]{8,}\b', '<redacted>'
+        $text = $text -replace '\b(?:cg_pat|cg_agent|cg_csec|codegpt)_[A-Za-z0-9_-]{8,}\b', '<redacted>'
         return $text
     } catch {
         return "<unreadable>"

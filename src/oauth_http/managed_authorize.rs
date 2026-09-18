@@ -424,7 +424,7 @@ fn generate_authorize_session_id() -> String {
         random.push_str(&uuid::Uuid::new_v4().simple().to_string());
     }
     random.truncate(64);
-    format!("wc_authsess_{}", random)
+    format!("cg_authsess_{}", random)
 }
 
 /// Build a `Set-Cookie` header value for the authorize session id.
@@ -584,7 +584,7 @@ pub(crate) async fn oauth_authorize_login(
     };
 
     // Reuse the shared verifier chain (PatVerifier -> OAuth2Verifier). This
-    // accepts PAT (wc_pat_*), bootstrap, agent, account credentials, and
+    // accepts PAT (cg_pat_*), bootstrap, agent, account credentials, and
     // OAuth2 access tokens. We then narrow to Bootstrap / ApiToken only;
     // bootstrap is further rejected below because it has no user_id, so only
     // a PAT can complete the authorize login.

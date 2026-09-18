@@ -227,7 +227,7 @@ fn post_as_agent(
 fn count(db: &Database, table: &str) -> i64 {
     assert!(matches!(
         table,
-        "wc_conversation_messages" | "wc_agent_deliveries" | "wc_agent_wakes"
+        "cg_conversation_messages" | "cg_agent_deliveries" | "cg_agent_wakes"
     ));
     db.conn_for_tests()
         .query_row(&format!("SELECT COUNT(*) FROM {table}"), [], |row| {
@@ -239,7 +239,7 @@ fn count(db: &Database, table: &str) -> i64 {
 fn endpoint_recovery_fingerprint(db: &Database, endpoint_id: &str) -> Option<String> {
     db.conn_for_tests()
         .query_row(
-            "SELECT mcp_app_recovery_fingerprint FROM wc_agent_endpoints WHERE endpoint_id = ?1",
+            "SELECT mcp_app_recovery_fingerprint FROM cg_agent_endpoints WHERE endpoint_id = ?1",
             [endpoint_id],
             |row| row.get(0),
         )
@@ -249,7 +249,7 @@ fn endpoint_recovery_fingerprint(db: &Database, endpoint_id: &str) -> Option<Str
 fn endpoint_client_window_key(db: &Database, endpoint_id: &str) -> Option<String> {
     db.conn_for_tests()
         .query_row(
-            "SELECT mcp_app_client_window_key FROM wc_agent_endpoints WHERE endpoint_id = ?1",
+            "SELECT mcp_app_client_window_key FROM cg_agent_endpoints WHERE endpoint_id = ?1",
             [endpoint_id],
             |row| row.get(0),
         )
@@ -259,7 +259,7 @@ fn endpoint_client_window_key(db: &Database, endpoint_id: &str) -> Option<String
 fn wake_id_for(db: &Database, agent_id: &str) -> String {
     db.conn_for_tests()
         .query_row(
-            "SELECT wake_id FROM wc_agent_wakes
+            "SELECT wake_id FROM cg_agent_wakes
              WHERE target_agent_id = ?1 AND state != 'consumed'
              ORDER BY created_at_unix_ms, wake_id LIMIT 1",
             [agent_id],
@@ -271,7 +271,7 @@ fn wake_id_for(db: &Database, agent_id: &str) -> String {
 fn task_attempt_lease_expires_at(db: &Database, attempt_id: &str) -> i64 {
     db.conn_for_tests()
         .query_row(
-            "SELECT lease_expires_at_unix_ms FROM wc_agent_task_attempts WHERE attempt_id = ?1",
+            "SELECT lease_expires_at_unix_ms FROM cg_agent_task_attempts WHERE attempt_id = ?1",
             [attempt_id],
             |row| row.get(0),
         )
@@ -285,7 +285,7 @@ fn bind_mcp_app(
     generation: i64,
 ) -> String {
     let binding_id = format!(
-        "wc_host_binding_{}",
+        "cg_host_binding_{}",
         codegpt_core::compact::random_suffix::<16>()
     );
     let result = runtime.agent_continuation_bind(
@@ -487,7 +487,7 @@ fn natural_agent_message_dispatches_once_and_burst_remains_bounded_and_private()
         "private reviewer description",
         "private-reviewer-label",
         "natural-message-0",
-        "wc_commprincipal_",
+        "cg_commprincipal_",
     ] {
         assert!(
             !envelope_text.contains(private),
@@ -509,10 +509,10 @@ fn natural_agent_message_dispatches_once_and_burst_remains_bounded_and_private()
             None,
         );
     }
-    assert_eq!(count(&db, "wc_conversation_messages"), 50);
-    assert_eq!(count(&db, "wc_agent_deliveries"), 50);
+    assert_eq!(count(&db, "cg_conversation_messages"), 50);
+    assert_eq!(count(&db, "cg_agent_deliveries"), 50);
     assert!(
-        count(&db, "wc_agent_wakes") <= 2,
+        count(&db, "cg_agent_wakes") <= 2,
         "one delivered Wake plus at most one coalesced successor is bounded"
     );
     assert_eq!(
@@ -672,7 +672,7 @@ fn offline_restart_and_replacement_dispatch_the_same_logical_wake() {
         old_process_registration.output["error_kind"], "endpoint_not_attached_in_process",
         "a successor process cannot assume a pre-restart Host callback survived"
     );
-    let wrong_binding = "wc_host_binding_u7u7u7u7u7u7u7u7u7u7uw".to_string();
+    let wrong_binding = "cg_host_binding_u7u7u7u7u7u7u7u7u7u7uw".to_string();
     let wrong_state = runtime.agent_continuation_state(
         None,
         agent_b.clone(),
@@ -896,7 +896,7 @@ fn mcp_app_restart_recovery_fingerprint_fences_replaced_and_unbound_views() {
     );
     assert!(!stale_a.success);
     assert_eq!(stale_a.output["error_kind"], "host_binding_stale");
-    let wrong_view = "wc_host_binding______________________w".to_string();
+    let wrong_view = "cg_host_binding______________________w".to_string();
     let wrong = runtime.agent_continuation_state(
         None,
         agent.clone(),
@@ -989,7 +989,7 @@ fn mcp_app_restart_refresh_recovers_only_same_client_window_without_attachment_s
     let (endpoint, generation) = attach(&runtime, &agent, "restart-refresh-endpoint");
     let window_a = crate::client_window::ClientWindow::for_test("refresh-window-a");
     let window_b = crate::client_window::ClientWindow::for_test("refresh-window-b");
-    let mut old_binding = "wc_host_binding_qqqqqqqqqqqqqqqqqqqqqg".to_string();
+    let mut old_binding = "cg_host_binding_qqqqqqqqqqqqqqqqqqqqqg".to_string();
     let initial = runtime.agent_continuation_bind_for_window(
         None,
         Some(&window_a),
@@ -1032,14 +1032,14 @@ fn mcp_app_restart_refresh_recovers_only_same_client_window_without_attachment_s
         agent.clone(),
         endpoint.clone(),
         generation,
-        "wc_host_binding_mZmZmZmZmZmZmZmZmZmZmQ".to_string(),
+        "cg_host_binding_mZmZmZmZmZmZmZmZmZmZmQ".to_string(),
     );
     assert!(!same_process_stale.success);
     assert_eq!(
         same_process_stale.output["error_kind"],
         "host_binding_stale"
     );
-    old_binding = "wc_host_binding_EREREREREREREREREREREQ".to_string();
+    old_binding = "cg_host_binding_EREREREREREREREREREREQ".to_string();
     let same_process_refresh = runtime.agent_continuation_bind_for_window(
         None,
         Some(&window_a),
@@ -1146,7 +1146,7 @@ fn mcp_app_restart_refresh_recovers_only_same_client_window_without_attachment_s
         "endpoint_not_attached_in_process"
     );
 
-    let refreshed_binding = "wc_host_binding_u7u7u7u7u7u7u7u7u7u7uw".to_string();
+    let refreshed_binding = "cg_host_binding_u7u7u7u7u7u7u7u7u7u7uw".to_string();
     let refreshed = runtime.agent_continuation_bind_for_window(
         None,
         Some(&window_a),
@@ -1170,7 +1170,7 @@ fn mcp_app_restart_refresh_recovers_only_same_client_window_without_attachment_s
         foreign_window_state.output["error_kind"],
         "host_binding_stale"
     );
-    let foreign_window_binding = "wc_host_binding_zMzMzMzMzMzMzMzMzMzMzA".to_string();
+    let foreign_window_binding = "cg_host_binding_zMzMzMzMzMzMzMzMzMzMzA".to_string();
     let foreign_window_bind = runtime.agent_continuation_bind_for_window(
         None,
         Some(&window_b),
@@ -1202,7 +1202,7 @@ fn mcp_app_restart_refresh_recovers_only_same_client_window_without_attachment_s
 
     // Missing Window metadata does not get the Window-continuity path. With the
     // fingerprint cleared by unbind, a new iframe fence remains stale.
-    let no_window_binding = "wc_host_binding_3d3d3d3d3d3d3d3d3d3d3Q".to_string();
+    let no_window_binding = "cg_host_binding_3d3d3d3d3d3d3d3d3d3d3Q".to_string();
     let no_window = runtime.agent_continuation_bind(
         None,
         agent.clone(),
@@ -1224,7 +1224,7 @@ fn mcp_app_restart_refresh_recovers_only_same_client_window_without_attachment_s
         agent,
         endpoint,
         generation,
-        "wc_host_binding_7u7u7u7u7u7u7u7u7u7u7g".to_string(),
+        "cg_host_binding_7u7u7u7u7u7u7u7u7u7u7g".to_string(),
     );
     assert!(!expired.success);
     assert_eq!(expired.output["error_kind"], "endpoint_expired");
@@ -1262,7 +1262,7 @@ fn mcp_app_expired_endpoint_replacement_recovers_same_window_card_and_pending_wa
     );
     let window_a = crate::client_window::ClientWindow::for_test("expired-recovery-window-a");
     let window_b = crate::client_window::ClientWindow::for_test("expired-recovery-window-b");
-    let old_binding = "wc_host_binding_EREREREREREREREREREREQ".to_string();
+    let old_binding = "cg_host_binding_EREREREREREREREREREREQ".to_string();
     let bound = runtime.agent_continuation_bind_for_window(
         None,
         Some(&window_a),
@@ -1315,7 +1315,7 @@ fn mcp_app_expired_endpoint_replacement_recovers_same_window_card_and_pending_wa
     );
     db.conn_for_tests()
         .execute(
-            "UPDATE wc_agent_endpoints SET lease_expires_at_unix_ms = 0 WHERE endpoint_id = ?1",
+            "UPDATE cg_agent_endpoints SET lease_expires_at_unix_ms = 0 WHERE endpoint_id = ?1",
             [&endpoint],
         )
         .unwrap();
@@ -1339,9 +1339,9 @@ fn mcp_app_expired_endpoint_replacement_recovers_same_window_card_and_pending_wa
         AgentWakeState::Pending
     );
     let durable_counts = (
-        count(&db, "wc_conversation_messages"),
-        count(&db, "wc_agent_deliveries"),
-        count(&db, "wc_agent_wakes"),
+        count(&db, "cg_conversation_messages"),
+        count(&db, "cg_agent_deliveries"),
+        count(&db, "cg_agent_wakes"),
     );
     assert_eq!(durable_counts, (1, 1, 1));
 
@@ -1351,14 +1351,14 @@ fn mcp_app_expired_endpoint_replacement_recovers_same_window_card_and_pending_wa
         receiver.clone(),
         endpoint.clone(),
         generation,
-        "wc_host_binding_IiIiIiIiIiIiIiIiIiIiIg".to_string(),
+        "cg_host_binding_IiIiIiIiIiIiIiIiIiIiIg".to_string(),
     );
     assert!(!foreign_window.success);
     assert_eq!(foreign_window.output["error_kind"], "host_binding_stale");
 
     // Reopening/refreshing the original Conversation creates a new iframe fence,
     // but the Host sideband still proves the same canonical Window.
-    let refreshed_binding = "wc_host_binding_MzMzMzMzMzMzMzMzMzMzMw".to_string();
+    let refreshed_binding = "cg_host_binding_MzMzMzMzMzMzMzMzMzMzMw".to_string();
     let recovered = runtime.agent_continuation_recover_endpoint_for_window(
         None,
         Some(&window_a),
@@ -1406,9 +1406,9 @@ fn mcp_app_expired_endpoint_replacement_recovers_same_window_card_and_pending_wa
     );
     assert_eq!(
         (
-            count(&db, "wc_conversation_messages"),
-            count(&db, "wc_agent_deliveries"),
-            count(&db, "wc_agent_wakes"),
+            count(&db, "cg_conversation_messages"),
+            count(&db, "cg_agent_deliveries"),
+            count(&db, "cg_agent_wakes"),
         ),
         durable_counts,
         "replacement must not duplicate Message, Delivery, or logical Wake"
@@ -1442,7 +1442,7 @@ fn mcp_app_expired_endpoint_replacement_recovers_same_window_card_and_pending_wa
         receiver.clone(),
         endpoint.clone(),
         generation,
-        "wc_host_binding_RERERERERERERERERERERA".to_string(),
+        "cg_host_binding_RERERERERERERERERERERA".to_string(),
     );
     assert!(!replay_from_other_window.success);
     assert_eq!(
@@ -1450,7 +1450,7 @@ fn mcp_app_expired_endpoint_replacement_recovers_same_window_card_and_pending_wa
         "communication_idempotency_conflict"
     );
 
-    let new_binding = "wc_host_binding_VVVVVVVVVVVVVVVVVVVVVQ".to_string();
+    let new_binding = "cg_host_binding_VVVVVVVVVVVVVVVVVVVVVQ".to_string();
     let rebound = runtime.agent_continuation_bind_for_window(
         None,
         Some(&window_a),
@@ -1529,9 +1529,9 @@ fn mcp_app_expired_endpoint_replacement_recovers_same_window_card_and_pending_wa
     );
     assert_eq!(
         (
-            count(&db, "wc_conversation_messages"),
-            count(&db, "wc_agent_deliveries"),
-            count(&db, "wc_agent_wakes"),
+            count(&db, "cg_conversation_messages"),
+            count(&db, "cg_agent_deliveries"),
+            count(&db, "cg_agent_wakes"),
         ),
         durable_counts,
         "continuation consume remains distinct from Delivery consumption"
@@ -1554,7 +1554,7 @@ fn mcp_app_expired_endpoint_replacement_replays_across_server_restart_without_ex
     );
     let (endpoint, generation) = attach(&runtime, &agent, "expired-restart-endpoint");
     let window = crate::client_window::ClientWindow::for_test("expired-restart-window");
-    let first_binding = "wc_host_binding_ZmZmZmZmZmZmZmZmZmZmZg".to_string();
+    let first_binding = "cg_host_binding_ZmZmZmZmZmZmZmZmZmZmZg".to_string();
     let bound = runtime.agent_continuation_bind_for_window(
         None,
         Some(&window),
@@ -1575,7 +1575,7 @@ fn mcp_app_expired_endpoint_replacement_replays_across_server_restart_without_ex
     assert!(unbound.success, "{:?}", unbound.output);
     db.conn_for_tests()
         .execute(
-            "UPDATE wc_agent_endpoints SET lease_expires_at_unix_ms = 0 WHERE endpoint_id = ?1",
+            "UPDATE cg_agent_endpoints SET lease_expires_at_unix_ms = 0 WHERE endpoint_id = ?1",
             [&endpoint],
         )
         .unwrap();
@@ -1595,7 +1595,7 @@ fn mcp_app_expired_endpoint_replacement_replays_across_server_restart_without_ex
             .unwrap();
     }
     let runtime = runtime_with_db(reopened.clone());
-    let recovery_binding = "wc_host_binding_d3d3d3d3d3d3d3d3d3d3dw".to_string();
+    let recovery_binding = "cg_host_binding_d3d3d3d3d3d3d3d3d3d3dw".to_string();
     let recovered = runtime.agent_continuation_recover_endpoint_for_window(
         None,
         Some(&window),
@@ -1637,7 +1637,7 @@ fn mcp_app_expired_endpoint_replacement_replays_across_server_restart_without_ex
         agent.clone(),
         endpoint,
         generation,
-        "wc_host_binding_iIiIiIiIiIiIiIiIiIiIiA".to_string(),
+        "cg_host_binding_iIiIiIiIiIiIiIiIiIiIiA".to_string(),
     );
     assert!(replay.success, "{:?}", replay.output);
     assert_eq!(replay.output["replayed"], true);
@@ -1665,7 +1665,7 @@ fn mcp_app_expired_endpoint_replacement_replays_across_server_restart_without_ex
         stale_push.output["error_kind"],
         "endpoint_not_attached_in_process"
     );
-    let binding = "wc_host_binding_mZmZmZmZmZmZmZmZmZmZmQ".to_string();
+    let binding = "cg_host_binding_mZmZmZmZmZmZmZmZmZmZmQ".to_string();
     let rebound = runtime.agent_continuation_bind_for_window(
         None,
         Some(&window),
@@ -1689,7 +1689,7 @@ fn mcp_app_expired_endpoint_replacement_replays_across_server_restart_without_ex
     let current_generation: i64 = reopened
         .conn_for_tests()
         .query_row(
-            "SELECT current_controller_generation FROM wc_agent_identities WHERE agent_id = ?1",
+            "SELECT current_controller_generation FROM cg_agent_identities WHERE agent_id = ?1",
             [&agent],
             |row| row.get(0),
         )
@@ -2040,7 +2040,7 @@ fn wake_derived_reply_identity_closes_response_loss_without_merging_consumption(
         retry["message"]["message_id"],
         first["message"]["message_id"]
     );
-    assert_eq!(count(&db, "wc_conversation_messages"), 3);
+    assert_eq!(count(&db, "cg_conversation_messages"), 3);
 
     let changed = runtime.post_conversation_message(
         None,
@@ -2060,12 +2060,12 @@ fn wake_derived_reply_identity_closes_response_loss_without_merging_consumption(
         changed.output["error_kind"],
         "communication_idempotency_conflict"
     );
-    assert_eq!(count(&db, "wc_conversation_messages"), 3);
+    assert_eq!(count(&db, "cg_conversation_messages"), 3);
 
     let delivery_id: String = db
         .conn_for_tests()
         .query_row(
-            "SELECT delivery_id FROM wc_agent_deliveries
+            "SELECT delivery_id FROM cg_agent_deliveries
              WHERE recipient_agent_id = ?1 AND state = 'queued'
              ORDER BY delivery_order LIMIT 1",
             [&agent_b],
@@ -2119,7 +2119,7 @@ fn replacing_push_with_mcp_app_orders_same_generation_host_carriers() {
             receiver,
             endpoint,
             generation,
-            "wc_host_binding_u7u7u7u7u7u7u7u7u7u7uw".to_string(),
+            "cg_host_binding_u7u7u7u7u7u7u7u7u7u7uw".to_string(),
         );
         tx.send(result).unwrap();
     });
@@ -2149,7 +2149,7 @@ fn replacing_push_with_mcp_app_orders_same_generation_host_carriers() {
         "replacing a carrier after its dispatch accepted path must preserve conservative post-fence uncertainty"
     );
 
-    let binding_id = "wc_host_binding_u7u7u7u7u7u7u7u7u7u7uw".to_string();
+    let binding_id = "cg_host_binding_u7u7u7u7u7u7u7u7u7u7uw".to_string();
     let acquired = acquire_mcp_app(
         &fixture.runtime,
         &fixture.receiver,
@@ -2284,13 +2284,13 @@ fn mcp_app_view_replacement_fences_pre_and_post_dispatch_without_second_lifecycl
         fixture.receiver_generation.to_string()
     );
     assert_eq!(resume_field(&automatic_message, "wake_id"), logical_wake_id);
-    assert!(resume_field(&automatic_message, "consume_token").starts_with("wc_wake_consume_"));
+    assert!(resume_field(&automatic_message, "consume_token").starts_with("cg_wake_consume_"));
     for private in [
         private_body,
         "PRIVATE receiver description",
         "PRIVATE-receiver-label",
         "claim_fence=",
-        "wc_commprincipal_",
+        "cg_commprincipal_",
     ] {
         assert!(
             !automatic_message.contains(private),
@@ -2509,7 +2509,7 @@ fn mcp_app_consume_ack_race_and_teardown_preserve_exact_wake_semantics() {
         fixture.receiver_endpoint.clone(),
         fixture.receiver_generation,
         wake_id.clone(),
-        "wc_wake_consume_AAAAAAAAAAAAAAAAAAAAAA".to_string(),
+        "cg_wake_consume_AAAAAAAAAAAAAAAAAAAAAA".to_string(),
     );
     assert!(!wrong_token.success);
     let wrong_generation = fixture.runtime.consume_agent_wake(
@@ -2781,10 +2781,10 @@ fn mcp_app_fifty_message_burst_coalesces_to_one_current_attempt() {
             &format!("mcp-burst-message-{index}"),
         );
     }
-    assert_eq!(count(&fixture.db, "wc_conversation_messages"), 50);
-    assert_eq!(count(&fixture.db, "wc_agent_deliveries"), 50);
+    assert_eq!(count(&fixture.db, "cg_conversation_messages"), 50);
+    assert_eq!(count(&fixture.db, "cg_agent_deliveries"), 50);
     assert_eq!(
-        count(&fixture.db, "wc_agent_wakes"),
+        count(&fixture.db, "cg_agent_wakes"),
         1,
         "all pending burst deliveries should coalesce into one logical Wake"
     );
@@ -2805,7 +2805,7 @@ fn mcp_app_fifty_message_burst_coalesces_to_one_current_attempt() {
     assert_eq!(first["wake"]["wake_id"], replay["wake"]["wake_id"]);
     assert_eq!(first["wake"]["attempt_id"], replay["wake"]["attempt_id"]);
     assert_eq!(replay["wake"]["replayed"], true);
-    assert_eq!(count(&fixture.db, "wc_agent_wakes"), 1);
+    assert_eq!(count(&fixture.db, "cg_agent_wakes"), 1);
 }
 
 #[test]
@@ -2913,16 +2913,16 @@ fn explicit_activation_bootstrap_is_replayable_and_consumes_wake_separately() {
 fn mcp_app_binding_input_requires_canonical_view_fence() {
     let fixture = mcp_continuation_fixture("mcp-binding-input");
     let valid = format!(
-        "wc_host_binding_{}",
+        "cg_host_binding_{}",
         codegpt_core::compact::encode([0xa0; 16])
     );
     for invalid in [
         String::new(),
-        format!("wc_binding_{}", "a".repeat(32)),
-        format!("wc_host_binding_{}", "A".repeat(32)),
-        format!("wc_host_binding_{}", "a".repeat(31)),
-        format!("wc_host_binding_{}", "a".repeat(33)),
-        format!("wc_host_binding_{}", "g".repeat(32)),
+        format!("cg_binding_{}", "a".repeat(32)),
+        format!("cg_host_binding_{}", "A".repeat(32)),
+        format!("cg_host_binding_{}", "a".repeat(31)),
+        format!("cg_host_binding_{}", "a".repeat(33)),
+        format!("cg_host_binding_{}", "g".repeat(32)),
         format!("{valid}\n"),
     ] {
         let result = fixture.runtime.agent_continuation_bind(
@@ -3029,7 +3029,7 @@ fn mcp_app_same_view_bind_retry_preserves_claim_and_every_dispatch_phase() {
             .db
             .conn_for_tests()
             .query_row(
-                "SELECT wake_capable FROM wc_agent_endpoints WHERE endpoint_id = ?1",
+                "SELECT wake_capable FROM cg_agent_endpoints WHERE endpoint_id = ?1",
                 [&fixture.receiver_endpoint],
                 |row| row.get(0),
             )

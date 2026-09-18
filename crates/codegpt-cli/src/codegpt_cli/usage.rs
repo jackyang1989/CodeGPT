@@ -139,9 +139,9 @@ pub(crate) fn pairing_create_usage() -> &'static str {
        On the client, redeem the code with: codegpt login <server-url> --code <code>\n\
        If --client-id was specified, append the matching\n\
        --device <client-id> to that login command.\n\
-     Copy only the short-lived wc_pair_* code to the client. Do not copy\n\
-     CODEGPT_TOKEN, wc_pat_*, or wc_agent_* values from server to client.\n\
-     This command does not create wc_pat_* or wc_agent_* token files on the\n\
+     Copy only the short-lived cg_pair_* code to the client. Do not copy\n\
+     CODEGPT_TOKEN, cg_pat_*, or cg_agent_* values from server to client.\n\
+     This command does not create cg_pat_* or cg_agent_* token files on the\n\
      server.\n"
 }
 

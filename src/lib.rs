@@ -70,6 +70,7 @@ pub(crate) use codegpt_workspace::project_overview;
 pub(crate) use codegpt_workspace::workspace_checkpoint;
 
 pub(crate) use auth::{get_db, json_error, AuthMiddleware};
+pub use codegpt_store::models::{ActionEventRecord, ActionSessionRecord};
 pub(crate) use config::load_startup_env_files;
 #[cfg(test)]
 pub(crate) use config::parse_env_file_line;
@@ -86,7 +87,6 @@ pub use startup::{
     is_project_command, run_project_command, run_regular_server_tunnel, CliCommandOutput,
     RegularServerTunnelOptions,
 };
-pub use codegpt_store::models::{ActionEventRecord, ActionSessionRecord};
 
 // ============================================================================
 // Main

@@ -120,7 +120,7 @@ The core report needs only the server's ActionAudit SQLite database:
 ```bash
 python3 scripts/agent_loop_report.py summarize \
   --audit-db <server-sqlite-db> \
-  --workflow-session-id <wc_sess_...> \
+  --workflow-session-id <cg_sess_...> \
   --case-id focused_edit_validation \
   --variant direct \
   --surface direct \

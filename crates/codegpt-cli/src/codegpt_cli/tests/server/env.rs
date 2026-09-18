@@ -59,9 +59,9 @@ fn token_generate_api_prints_token_hash_and_prefix() {
     match action {
         CliAction::TokenGenerate(opts) => {
             let out = render_token_generate(opts);
-            assert!(out.contains("Token:\nwc_pat_"));
+            assert!(out.contains("Token:\ncg_pat_"));
             assert!(out.contains("\nHash:\nsha256:"));
-            assert!(out.contains("\nPrefix:\nwc_pat_"));
+            assert!(out.contains("\nPrefix:\ncg_pat_"));
             assert!(out.contains("generated offline and is not registered"));
             assert!(out.contains("use `codegpt connect`"));
         }
@@ -75,9 +75,9 @@ fn token_generate_runner_prints_legacy_compatible_token_prefix() {
     match action {
         CliAction::TokenGenerate(opts) => {
             let out = render_token_generate(opts);
-            assert!(out.contains("Token:\nwc_agent_"));
+            assert!(out.contains("Token:\ncg_agent_"));
             assert!(out.contains("\nHash:\nsha256:"));
-            assert!(out.contains("\nPrefix:\nwc_agent_"));
+            assert!(out.contains("\nPrefix:\ncg_agent_"));
             assert!(out.contains("generated offline and is not registered"));
             assert!(out.contains("use `codegpt connect`"));
         }
@@ -103,19 +103,19 @@ fn token_generate_agent_kind_is_rejected() {
 fn credential_resolution_priority_is_explicit_then_env_name_then_default_env() {
     let _guard = env_test_guard();
     let _env = EnvGuard::new()
-        .set("CODEGPT_ACCOUNT_CREDENTIAL", "wc_acct_default")
-        .set("CUSTOM_ACCT", "wc_acct_custom");
+        .set("CODEGPT_ACCOUNT_CREDENTIAL", "cg_acct_default")
+        .set("CUSTOM_ACCT", "cg_acct_custom");
     assert_eq!(
-        resolve_account_credential(&Some("wc_acct_explicit".to_string()), &None).unwrap(),
-        "wc_acct_explicit"
+        resolve_account_credential(&Some("cg_acct_explicit".to_string()), &None).unwrap(),
+        "cg_acct_explicit"
     );
     assert_eq!(
         resolve_account_credential(&None, &Some("CUSTOM_ACCT".to_string())).unwrap(),
-        "wc_acct_custom"
+        "cg_acct_custom"
     );
     assert_eq!(
         resolve_account_credential(&None, &None).unwrap(),
-        "wc_acct_default"
+        "cg_acct_default"
     );
 }
 
@@ -129,13 +129,13 @@ fn token_register_hash_builds_hash_registration_request() {
         "--username",
         "alice",
         "--credential",
-        "wc_acct_fake",
+        "cg_acct_fake",
         "--name",
         "gpt-action",
         "--hash",
         "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
         "--prefix",
-        "wc_pat_aaaaaaaa",
+        "cg_pat_aaaaaaaa",
         "--scopes",
         "runtime:read,project:read",
     ]));
@@ -143,10 +143,10 @@ fn token_register_hash_builds_hash_registration_request() {
         CliAction::Admin(AdminCliCommand::TokensRegisterHash(opts, t)) => {
             let req = build_admin_request(&AdminCliCommand::TokensRegisterHash(opts, t)).unwrap();
             assert_eq!(req.path, "/api/tokens/register_hash");
-            assert_eq!(req.token, "wc_acct_fake");
+            assert_eq!(req.token, "cg_acct_fake");
             assert_eq!(req.body["username"], "alice");
             assert_eq!(req.body["name"], "gpt-action");
-            assert_eq!(req.body["token_prefix"], "wc_pat_aaaaaaaa");
+            assert_eq!(req.body["token_prefix"], "cg_pat_aaaaaaaa");
             assert_eq!(req.body["scopes"], json!(["runtime:read", "project:read"]));
         }
         other => panic!("expected TokensRegisterHash, got {other:?}"),
@@ -163,7 +163,7 @@ fn agent_token_register_hash_builds_hash_registration_request() {
         "--username",
         "alice",
         "--credential",
-        "wc_acct_fake",
+        "cg_acct_fake",
         "--client-id",
         "alice-laptop",
         "--name",
@@ -171,7 +171,7 @@ fn agent_token_register_hash_builds_hash_registration_request() {
         "--hash",
         "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
         "--prefix",
-        "wc_agent_aaaaaaa",
+        "cg_agent_aaaaaaa",
         "--scopes",
         "agent:register,agent:poll",
     ]));
@@ -180,11 +180,11 @@ fn agent_token_register_hash_builds_hash_registration_request() {
             let req =
                 build_admin_request(&AdminCliCommand::RunnerTokensRegisterHash(opts, t)).unwrap();
             assert_eq!(req.path, "/api/agent-tokens/register_hash");
-            assert_eq!(req.token, "wc_acct_fake");
+            assert_eq!(req.token, "cg_acct_fake");
             assert_eq!(req.body["username"], "alice");
             assert_eq!(req.body["client_id"], "alice-laptop");
             assert_eq!(req.body["name"], "alice laptop");
-            assert_eq!(req.body["token_prefix"], "wc_agent_aaaaaaa");
+            assert_eq!(req.body["token_prefix"], "cg_agent_aaaaaaa");
             assert_eq!(req.body["scopes"], json!(["agent:register", "agent:poll"]));
             assert!(req.body.get("token").is_none());
         }
@@ -286,11 +286,11 @@ async fn token_create_local_does_not_send_plaintext_token_to_server() {
         assert!(request.starts_with("POST /api/tokens/register_hash "));
         assert!(request
             .to_ascii_lowercase()
-            .contains("authorization: bearer wc_acct_fake"));
+            .contains("authorization: bearer cg_acct_fake"));
         assert!(request.contains(r#""token_hash":"sha256:"#));
-        assert!(request.contains(r#""token_prefix":"wc_pat_"#));
-        assert!(!request.contains(r#""token":"wc_pat_"#));
-        let body = r#"{"success":true,"token":{"id":"tok-1","token_prefix":"wc_pat_fake"}}"#;
+        assert!(request.contains(r#""token_prefix":"cg_pat_"#));
+        assert!(!request.contains(r#""token":"cg_pat_"#));
+        let body = r#"{"success":true,"token":{"id":"tok-1","token_prefix":"cg_pat_fake"}}"#;
         write!(
             stream,
             "HTTP/1.1 200 OK\r\ncontent-type: application/json\r\ncontent-length: {}\r\n\r\n{}",
@@ -303,14 +303,14 @@ async fn token_create_local_does_not_send_plaintext_token_to_server() {
         server_url: format!("http://{}", addr),
         username: "alice".to_string(),
         server_http: direct_server_http(),
-        credential: Some("wc_acct_fake".to_string()),
+        credential: Some("cg_acct_fake".to_string()),
         credential_env: None,
         name: Some("gpt-action".to_string()),
         scopes: SETUP_GPT_SCOPES.iter().map(|s| s.to_string()).collect(),
     })
     .await
     .unwrap();
-    assert_eq!(out.matches("wc_pat_").count(), 1);
+    assert_eq!(out.matches("cg_pat_").count(), 1);
     handle.join().unwrap();
 }
 
@@ -326,12 +326,12 @@ async fn runner_token_create_local_does_not_send_plaintext_token_to_server() {
         assert!(request.starts_with("POST /api/agent-tokens/register_hash "));
         assert!(request
             .to_ascii_lowercase()
-            .contains("authorization: bearer wc_acct_fake"));
+            .contains("authorization: bearer cg_acct_fake"));
         assert!(request.contains(r#""token_hash":"sha256:"#));
-        assert!(request.contains(r#""token_prefix":"wc_agent_"#));
+        assert!(request.contains(r#""token_prefix":"cg_agent_"#));
         assert!(request.contains(r#""client_id":"alice-laptop""#));
-        assert!(!request.contains(r#""token":"wc_agent_"#));
-        let body = r#"{"success":true,"token":{"id":"tok-1","token_prefix":"wc_agent_fake","allowed_client_id":"alice-laptop"}}"#;
+        assert!(!request.contains(r#""token":"cg_agent_"#));
+        let body = r#"{"success":true,"token":{"id":"tok-1","token_prefix":"cg_agent_fake","allowed_client_id":"alice-laptop"}}"#;
         write!(
             stream,
             "HTTP/1.1 200 OK\r\ncontent-type: application/json\r\ncontent-length: {}\r\n\r\n{}",
@@ -344,7 +344,7 @@ async fn runner_token_create_local_does_not_send_plaintext_token_to_server() {
         admin: AdminOptions {
             server_url: format!("http://{}", addr),
             server_http: direct_server_http(),
-            credential: Some("wc_acct_fake".to_string()),
+            credential: Some("cg_acct_fake".to_string()),
             ..AdminOptions::default()
         },
         username: "alice".to_string(),
@@ -356,7 +356,7 @@ async fn runner_token_create_local_does_not_send_plaintext_token_to_server() {
     .unwrap();
     assert!(out.contains("Runner transport token created locally and registered with server."));
     assert!(out.contains("Client ID:\nalice-laptop"));
-    assert_eq!(out.matches("wc_agent_").count(), 1);
+    assert_eq!(out.matches("cg_agent_").count(), 1);
     handle.join().unwrap();
 }
 
@@ -367,7 +367,7 @@ async fn runner_token_create_local_does_not_send_plaintext_token_to_server() {
 #[tokio::test(flavor = "current_thread")]
 async fn runner_token_create_local_prefers_admin_token_over_default_account_credential() {
     let _guard = env_test_guard();
-    let _env = EnvGuard::new().set("CODEGPT_ACCOUNT_CREDENTIAL", "wc_acct_default");
+    let _env = EnvGuard::new().set("CODEGPT_ACCOUNT_CREDENTIAL", "cg_acct_default");
     let listener = TcpListener::bind("127.0.0.1:0").unwrap();
     let addr = listener.local_addr().unwrap();
     let handle = thread::spawn(move || {
@@ -378,7 +378,7 @@ async fn runner_token_create_local_prefers_admin_token_over_default_account_cred
         assert!(request
             .to_ascii_lowercase()
             .contains("authorization: bearer fake-admin"));
-        let body = r#"{"success":true,"token":{"id":"tok-1","token_prefix":"wc_agent_fake","allowed_client_id":"alice-laptop"}}"#;
+        let body = r#"{"success":true,"token":{"id":"tok-1","token_prefix":"cg_agent_fake","allowed_client_id":"alice-laptop"}}"#;
         write!(
             stream,
             "HTTP/1.1 200 OK\r\ncontent-type: application/json\r\ncontent-length: {}\r\n\r\n{}",
@@ -401,7 +401,7 @@ async fn runner_token_create_local_prefers_admin_token_over_default_account_cred
     })
     .await
     .unwrap();
-    assert_eq!(out.matches("wc_agent_").count(), 1);
+    assert_eq!(out.matches("cg_agent_").count(), 1);
     handle.join().unwrap();
 }
 
@@ -412,7 +412,7 @@ async fn runner_token_create_local_prefers_admin_token_over_default_account_cred
 #[tokio::test(flavor = "current_thread")]
 async fn runner_token_create_local_uses_default_account_credential() {
     let _guard = env_test_guard();
-    let _env = EnvGuard::new().set("CODEGPT_ACCOUNT_CREDENTIAL", "wc_acct_default");
+    let _env = EnvGuard::new().set("CODEGPT_ACCOUNT_CREDENTIAL", "cg_acct_default");
     let listener = TcpListener::bind("127.0.0.1:0").unwrap();
     let addr = listener.local_addr().unwrap();
     let handle = thread::spawn(move || {
@@ -422,8 +422,8 @@ async fn runner_token_create_local_uses_default_account_credential() {
         let request = String::from_utf8_lossy(&buf[..n]);
         assert!(request
             .to_ascii_lowercase()
-            .contains("authorization: bearer wc_acct_default"));
-        let body = r#"{"success":true,"token":{"id":"tok-1","token_prefix":"wc_agent_fake","allowed_client_id":"alice-laptop"}}"#;
+            .contains("authorization: bearer cg_acct_default"));
+        let body = r#"{"success":true,"token":{"id":"tok-1","token_prefix":"cg_agent_fake","allowed_client_id":"alice-laptop"}}"#;
         write!(
             stream,
             "HTTP/1.1 200 OK\r\ncontent-type: application/json\r\ncontent-length: {}\r\n\r\n{}",
@@ -445,7 +445,7 @@ async fn runner_token_create_local_uses_default_account_credential() {
     })
     .await
     .unwrap();
-    assert_eq!(out.matches("wc_agent_").count(), 1);
+    assert_eq!(out.matches("cg_agent_").count(), 1);
     handle.join().unwrap();
 }
 
@@ -737,8 +737,8 @@ async fn authenticated_explicit_proxy_request_redacts_bearer_from_error() {
 
 #[test]
 fn token_prefix_never_exposes_full_token() {
-    let p = token_prefix("wc_abcdef0123456789");
+    let p = token_prefix("cg_abcdef0123456789");
     assert!(p.ends_with('…'));
     assert!(!p.contains("0123456789"));
-    assert_eq!(p, "wc_abcde…");
+    assert_eq!(p, "cg_abcde…");
 }

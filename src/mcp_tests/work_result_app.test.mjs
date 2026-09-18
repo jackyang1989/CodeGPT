@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { app, flush, toolResult } from "./app_test_support.mjs";
 
 const project = "agent:special:demo";
-const session_id = `wc_sess_${"1".repeat(32)}`;
+const session_id = `cg_sess_${"1".repeat(32)}`;
 const input = { project, session_id };
 const baseState = {
   version: 1,
@@ -193,7 +193,7 @@ for (const first of ["input", "result"]) {
     if (first === "input") view.toolInput(input);
     else view.toolResult({ work_result: baseState });
     await view.initialize();
-    const foreign = { project: "agent:special:other", session_id: `wc_sess_${"2".repeat(32)}` };
+    const foreign = { project: "agent:special:other", session_id: `cg_sess_${"2".repeat(32)}` };
     if (first === "input") view.toolResult({ work_result: { ...baseState, ...foreign } });
     else view.toolInput(foreign);
     await flush();
@@ -264,7 +264,7 @@ for (const method of ["ui/resource-teardown", "pagehide", "beforeunload"]) {
 test("invalid Work input never refreshes", async () => {
   for (const bad of [
     { project: "", session_id },
-    { project, session_id: "wc_sess_bad!" },
+    { project, session_id: "cg_sess_bad!" },
     { project: [project], session_id },
   ]) {
     const view = app("mcp_work_result_app.html");

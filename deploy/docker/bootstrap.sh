@@ -639,7 +639,7 @@ If that code expires, create another with:
 
 On each repository machine, redeem only the short-lived pairing code as the
 ordinary user who will run project commands:
-  codegpt login "$PUBLIC_URL" --code <wc_pair_...> --allowed-root "\$HOME/git"
+  codegpt login "$PUBLIC_URL" --code <cg_pair_...> --allowed-root "\$HOME/git"
   codegpt runner install --scope user --config <login-reported-agent-config>
 
 Keep $ENV_FILE private. It contains the bootstrap administrator token. Do not copy

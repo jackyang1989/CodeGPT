@@ -501,7 +501,7 @@ fn tool_call_trace_effective_arguments(tool: &str, params: &Value) -> Value {
 /// - `{"tool":"list_tools","params":null}`
 /// - `{"tool":"show_changes","params":{"project":"agent:c:p"}}`
 /// - `{"tool":"show_changes","project":"agent:c:p"}`
-/// - `{"tool":"git_status","project":"agent:c:p","recording_session_id":"wc_sess_..."}`
+/// - `{"tool":"git_status","project":"agent:c:p","recording_session_id":"cg_sess_..."}`
 ///
 /// Non-null `params` take precedence over legacy flattened REST fields. A null
 /// `params` wrapper is treated as absent. When `params` is absent/null, every

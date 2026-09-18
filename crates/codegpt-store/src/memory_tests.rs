@@ -13,7 +13,7 @@ fn compact_digest_id(prefix: &str, value: u64) -> String {
 }
 
 fn scope(ch: char) -> String {
-    compact_digest_id("wc_memscope_", ch as u64)
+    compact_digest_id("cg_memscope_", ch as u64)
 }
 
 fn input(key: &str, summary: &str) -> MemorySetInput {
@@ -32,14 +32,14 @@ fn scope_attribution(project: &str, runner: &str, hex: char) -> MemoryScopeAttri
     MemoryScopeAttribution {
         project_runtime_id: project.to_string(),
         runner_client_id: runner.to_string(),
-        root_fingerprint: compact_digest_id("wc_memroot_", hex as u64),
+        root_fingerprint: compact_digest_id("cg_memroot_", hex as u64),
     }
 }
 
 fn principal(kind: &str, hex: char) -> MemoryPrincipalAttribution {
     MemoryPrincipalAttribution {
         kind: kind.to_string(),
-        principal_digest: format!("wc_memprincipal_{}", hex.to_string().repeat(64)),
+        principal_digest: format!("cg_memprincipal_{}", hex.to_string().repeat(64)),
     }
 }
 
@@ -54,8 +54,8 @@ fn memory_create_retry_cas_update_delete_and_restart_are_durable() {
         .set_project_memory(&scope, input("deployment-policy", "Use staged deploys."))
         .unwrap();
     assert!(created.created && created.state_changed);
-    assert!(created.record.memory_id.starts_with("wc_mem_"));
-    assert!(created.record.revision.starts_with("wc_memrev_"));
+    assert!(created.record.memory_id.starts_with("cg_mem_"));
+    assert!(created.record.revision.starts_with("cg_memrev_"));
 
     let retried = db
         .set_project_memory(&scope, input("deployment-policy", "Use staged deploys."))
@@ -165,7 +165,7 @@ fn memory_scope_and_revision_identity_are_content_and_scope_safe() {
         memory_definition_hash("k", "s", "b", MemoryPriority::High, true, &tags_a),
         memory_definition_hash("k", "s", "changed", MemoryPriority::High, true, &tags_a)
     );
-    assert!(created.record.definition_hash.starts_with("wc_memdef_"));
+    assert!(created.record.definition_hash.starts_with("cg_memdef_"));
     assert_eq!(created.record.generation, 1);
 }
 
@@ -227,10 +227,10 @@ fn memory_global_capacity_is_hard_and_does_not_evict() {
         let tx = conn.transaction().unwrap();
         for index in 0..MAX_MEMORIES_GLOBAL {
             let memory_id = format!(
-                "wc_mem_{}",
+                "cg_mem_{}",
                 codegpt_core::compact::encode(&(index as u128).to_be_bytes()[4..])
             );
-            let memory_scope_id = compact_digest_id("wc_memscope_", (index + 100) as u64);
+            let memory_scope_id = compact_digest_id("cg_memscope_", (index + 100) as u64);
             let memory_key = format!("k{index}");
             let definition_hash =
                 memory_definition_hash(&memory_key, "s", "", MemoryPriority::Normal, false, &[]);
@@ -250,7 +250,7 @@ fn memory_global_capacity_is_hard_and_does_not_evict() {
                     memory_key,
                     definition_hash,
                     revision,
-                    format!("wc_memprincipal_{}", "1".repeat(64))
+                    format!("cg_memprincipal_{}", "1".repeat(64))
                 ],
             )
             .unwrap();
@@ -262,14 +262,14 @@ fn memory_global_capacity_is_hard_and_does_not_evict() {
                 params![
                     memory_scope_id,
                     format!("agent:test:global-{index}"),
-                    compact_digest_id("wc_memroot_", (index + 1) as u64),
+                    compact_digest_id("cg_memroot_", (index + 1) as u64),
                 ],
             )
             .unwrap();
         }
         tx.commit().unwrap();
     }
-    let new_scope = compact_digest_id("wc_memscope_", u64::MAX);
+    let new_scope = compact_digest_id("cg_memscope_", u64::MAX);
     assert_eq!(
         db.set_project_memory(&new_scope, input("new", "global full"))
             .unwrap_err()
@@ -284,7 +284,7 @@ fn memory_global_capacity_is_hard_and_does_not_evict() {
         .unwrap();
     assert_eq!(total as usize, MAX_MEMORIES_GLOBAL);
 
-    let reclaim_scope = compact_digest_id("wc_memscope_", 100);
+    let reclaim_scope = compact_digest_id("cg_memscope_", 100);
     let reclaim = db
         .get_project_memory_scope(&reclaim_scope)
         .unwrap()
@@ -501,7 +501,7 @@ fn corrupted_persisted_memory_rows_fail_closed_before_projection() {
         (
             "bad_id",
             Box::new(|conn| {
-                conn.execute("UPDATE project_memories SET memory_id = 'wc_mem_bad'", [])
+                conn.execute("UPDATE project_memories SET memory_id = 'cg_mem_bad'", [])
                     .unwrap();
             }),
         ),
@@ -510,7 +510,7 @@ fn corrupted_persisted_memory_rows_fail_closed_before_projection() {
             Box::new(|conn| {
                 conn.execute(
                     "UPDATE project_memories SET definition_hash = ?1",
-                    params![format!("wc_memdef_{}", "0".repeat(64))],
+                    params![format!("cg_memdef_{}", "0".repeat(64))],
                 )
                 .unwrap();
             }),
@@ -520,7 +520,7 @@ fn corrupted_persisted_memory_rows_fail_closed_before_projection() {
             Box::new(|conn| {
                 conn.execute(
                     "UPDATE project_memories SET revision = ?1",
-                    params![compact_digest_id("wc_memrev_", 0)],
+                    params![compact_digest_id("cg_memrev_", 0)],
                 )
                 .unwrap();
             }),
@@ -853,7 +853,7 @@ fn corrupted_scope_or_provenance_metadata_fails_closed() {
         ),
         (
             "scope_root",
-            "UPDATE project_memory_scopes SET root_fingerprint = 'wc_memroot_bad';",
+            "UPDATE project_memory_scopes SET root_fingerprint = 'cg_memroot_bad';",
         ),
         (
             "scope_project_too_long",
@@ -871,7 +871,7 @@ fn corrupted_scope_or_provenance_metadata_fails_closed() {
         (
             "provenance_digest",
             "UPDATE project_memories
-             SET created_by_kind = 'shared-key', created_by_principal_digest = 'wc_memprincipal_bad';",
+             SET created_by_kind = 'shared-key', created_by_principal_digest = 'cg_memprincipal_bad';",
         ),
         (
             "provenance_kind",

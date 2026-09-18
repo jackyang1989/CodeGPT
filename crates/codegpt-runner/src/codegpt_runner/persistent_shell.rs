@@ -17,8 +17,6 @@ use crate::runner_protocol::RunnerRequest;
 use crate::runner_protocol::{
     PersistentShellRequest, PersistentShellResult, RAW_SHELL_COMMAND_MAX_BYTES,
 };
-use std::path::{Path, PathBuf};
-use std::time::Duration;
 use codegpt_core::runner_operation::RunnerPersistentShellOperation;
 #[cfg(any(unix, windows))]
 use codegpt_persistent_shell::canonical_dialect;
@@ -26,6 +24,8 @@ use codegpt_persistent_shell::{
     PersistentShellManager as ProcessManager, ShellError, ShellExecResult, ShellIdentity,
     ShellLaunch, ShellLimits, ShellState, ShellSummary,
 };
+use std::path::{Path, PathBuf};
+use std::time::Duration;
 
 const EXECUTOR_AGENT: &str = "agent";
 /// Remote named-SSH persistent shells use this executor on supported hosts.
@@ -1204,7 +1204,7 @@ mod tests {
             persistent_shell: Some(PersistentShellRequest {
                 action: action.to_string(),
                 shell_id: shell_id.to_string(),
-                workflow_session_id: "wc_sess_n_gsG5blnjZHfyYD".to_string(),
+                workflow_session_id: "cg_sess_n_gsG5blnjZHfyYD".to_string(),
                 runtime_project_id: "agent:agent-1:demo".to_string(),
                 cwd: None,
                 shell: Some("bash".to_string()),
@@ -1250,7 +1250,7 @@ mod tests {
             &SshConfig::default(),
             1,
             &projects,
-            &request("open", "wc_shell_denied_open", None),
+            &request("open", "cg_shell_denied_open", None),
         );
         assert_eq!(
             denied_open.error_code.as_deref(),
@@ -1264,7 +1264,7 @@ mod tests {
             &SshConfig::default(),
             1,
             &projects,
-            &request("open", "wc_shell_runner", None),
+            &request("open", "cg_shell_runner", None),
         );
         assert_eq!(opened.shell_state, "running");
 
@@ -1276,8 +1276,8 @@ mod tests {
             &projects,
             &request(
                 "exec",
-                "wc_shell_runner",
-                Some("export WC_RUNNER_STATE=ready; cd sub; wc_runner_fn() { printf fn; }"),
+                "cg_shell_runner",
+                Some("export WC_RUNNER_STATE=ready; cd sub; cg_runner_fn() { printf fn; }"),
             ),
         );
         assert_eq!(exported.exit_code, Some(0));
@@ -1289,8 +1289,8 @@ mod tests {
             &projects,
             &request(
                 "exec",
-                "wc_shell_runner",
-                Some("printf '%s:%s:' \"$WC_RUNNER_STATE\" \"$PWD\"; wc_runner_fn"),
+                "cg_shell_runner",
+                Some("printf '%s:%s:' \"$WC_RUNNER_STATE\" \"$PWD\"; cg_runner_fn"),
             ),
         );
         assert!(observed.stdout.starts_with("ready:"));
@@ -1304,7 +1304,7 @@ mod tests {
             &SshConfig::default(),
             1,
             &projects,
-            &request("exec", "wc_shell_runner", Some("printf denied")),
+            &request("exec", "cg_shell_runner", Some("printf denied")),
         );
         assert_eq!(denied.error_code.as_deref(), Some("raw_shell_disabled"));
         assert_eq!(manager.active_count(), 0);
@@ -1323,13 +1323,13 @@ mod tests {
                     &SshConfig::default(),
                     1,
                     &projects,
-                    &request("open", "wc_shell_rejected_exec", None),
+                    &request("open", "cg_shell_rejected_exec", None),
                 )
                 .shell_state,
             "running"
         );
 
-        let mut invalid = request("exec", "wc_shell_rejected_exec", Some("printf ignored"));
+        let mut invalid = request("exec", "cg_shell_rejected_exec", Some("printf ignored"));
         invalid.persistent_shell.as_mut().unwrap().timeout_secs = Some(policy.max_timeout_secs + 1);
         let rejected = manager.handle(
             &policy,
@@ -1354,7 +1354,7 @@ mod tests {
             &projects,
             &request(
                 "exec",
-                "wc_shell_rejected_exec",
+                "cg_shell_rejected_exec",
                 Some(&"x".repeat(RAW_SHELL_COMMAND_MAX_BYTES + 1)),
             ),
         );
@@ -1372,7 +1372,7 @@ mod tests {
             &projects,
             &request(
                 "exec",
-                "wc_shell_rejected_exec",
+                "cg_shell_rejected_exec",
                 Some("printf still-running"),
             ),
         );
@@ -1392,7 +1392,7 @@ mod tests {
                     &SshConfig::default(),
                     1,
                     &projects,
-                    &request("open", "wc_shell_output_policy", None),
+                    &request("open", "cg_shell_output_policy", None),
                 )
                 .shell_state,
             "running"
@@ -1407,7 +1407,7 @@ mod tests {
             &projects,
             &request(
                 "exec",
-                "wc_shell_output_policy",
+                "cg_shell_output_policy",
                 Some("i=0; while [ \"$i\" -lt 5000 ]; do printf x; i=$((i+1)); done"),
             ),
         );
@@ -1442,7 +1442,7 @@ mod tests {
                     &SshConfig::default(),
                     1,
                     &projects,
-                    &request("open", "wc_shell_profile", None),
+                    &request("open", "cg_shell_profile", None),
                 )
                 .shell_state,
             "running"
@@ -1455,7 +1455,7 @@ mod tests {
             &projects,
             &request(
                 "exec",
-                "wc_shell_profile",
+                "cg_shell_profile",
                 Some("printf %s \"$WC_PROFILE_COUNT\"; WC_PROFILE_COUNT=2"),
             ),
         );
@@ -1468,7 +1468,7 @@ mod tests {
             &projects,
             &request(
                 "exec",
-                "wc_shell_profile",
+                "cg_shell_profile",
                 Some("printf %s \"$WC_PROFILE_COUNT\""),
             ),
         );
@@ -1499,7 +1499,7 @@ mod tests {
             &SshConfig::default(),
             1,
             &projects,
-            &request("open", "wc_shell_profile_escape", None),
+            &request("open", "cg_shell_profile_escape", None),
         );
         assert_eq!(
             result.error_code.as_deref(),
@@ -1522,7 +1522,7 @@ mod tests {
                     &SshConfig::default(),
                     1,
                     &projects,
-                    &request("open", "wc_shell_boundary", None),
+                    &request("open", "cg_shell_boundary", None),
                 )
                 .shell_state,
             "running"
@@ -1534,7 +1534,7 @@ mod tests {
             &SshConfig::default(),
             1,
             &projects,
-            &request("exec", "wc_shell_boundary", Some("cd ..")),
+            &request("exec", "cg_shell_boundary", Some("cd ..")),
         );
         assert_eq!(escaped.error_code.as_deref(), Some("shell_reset_required"));
         assert_ne!(escaped.shell_state, "running");
@@ -1546,7 +1546,7 @@ mod tests {
         let (_temp, _project, projects, policy) = fixture();
         let shell = ShellConfig::default();
         let manager = PersistentShellManager::new(&shell, SshConnectionPool::default());
-        let mut wrong = request("open", "wc_shell_wrong", None);
+        let mut wrong = request("open", "cg_shell_wrong", None);
         wrong.persistent_shell.as_mut().unwrap().runtime_project_id =
             "agent:other:demo".to_string();
         let result = manager.handle(&policy, &shell, &SshConfig::default(), 1, &projects, &wrong);
@@ -1597,7 +1597,7 @@ mod windows_tests {
             persistent_shell: Some(PersistentShellRequest {
                 action: action.to_string(),
                 shell_id: shell_id.to_string(),
-                workflow_session_id: "wc_sess_x0hjuH0xLj6xHOl7".to_string(),
+                workflow_session_id: "cg_sess_x0hjuH0xLj6xHOl7".to_string(),
                 runtime_project_id: "agent:msi:demo".to_string(),
                 cwd: None,
                 shell: None,
@@ -1624,7 +1624,7 @@ mod windows_tests {
             "created_at": 0,
             "job_context": {
                 "runtime_project_id": "agent:msi:demo",
-                "workflow_session_id": "wc_sess_x0hjuH0xLj6xHOl7",
+                "workflow_session_id": "cg_sess_x0hjuH0xLj6xHOl7",
                 "ssh_resource": resource,
                 "project_cwd": ".",
                 "purpose": "other",
@@ -1635,7 +1635,7 @@ mod windows_tests {
             "persistent_shell": {
                 "action": action,
                 "shell_id": shell_id,
-                "workflow_session_id": "wc_sess_x0hjuH0xLj6xHOl7",
+                "workflow_session_id": "cg_sess_x0hjuH0xLj6xHOl7",
                 "runtime_project_id": "agent:msi:demo",
                 "cwd": null,
                 "shell": "bash",
@@ -1681,7 +1681,7 @@ mod windows_tests {
             &SshConfig::default(),
             1,
             &projects,
-            &request("open", "wc_shell_windows_runner", None),
+            &request("open", "cg_shell_windows_runner", None),
         );
         assert_eq!(opened.shell_state, "running");
         assert_eq!(opened.shell.as_deref(), Some("powershell"));
@@ -1694,7 +1694,7 @@ mod windows_tests {
             &projects,
             &request(
                 "exec",
-                "wc_shell_windows_runner",
+                "cg_shell_windows_runner",
                 Some("$env:WC_RUNNER_STATE='ready'; Set-Location -LiteralPath 'sub'; $WC_LOCAL='beta'; function WC_FN { [Console]::Out.Write('fn') }"),
             ),
         );
@@ -1707,7 +1707,7 @@ mod windows_tests {
             &projects,
             &request(
                 "exec",
-                "wc_shell_windows_runner",
+                "cg_shell_windows_runner",
                 Some("[Console]::Out.Write($env:WC_RUNNER_STATE + '|' + (Get-Location).Path + '|' + $WC_LOCAL + '|'); WC_FN"),
             ),
         );
@@ -1726,7 +1726,7 @@ mod windows_tests {
             &projects,
             &request(
                 "exec",
-                "wc_shell_windows_runner",
+                "cg_shell_windows_runner",
                 Some("[Console]::Out.Write(\"hello`r`n中文`r`n🙂\")"),
             ),
         );
@@ -1740,7 +1740,7 @@ mod windows_tests {
             &projects,
             &request(
                 "exec",
-                "wc_shell_windows_runner",
+                "cg_shell_windows_runner",
                 Some("Write-Error 'expected-runner-failure'"),
             ),
         );
@@ -1756,7 +1756,7 @@ mod windows_tests {
             &projects,
             &request(
                 "exec",
-                "wc_shell_windows_runner",
+                "cg_shell_windows_runner",
                 Some("[Console]::Out.Write('still-running')"),
             ),
         );
@@ -1776,7 +1776,7 @@ mod windows_tests {
             &projects,
             &request(
                 "exec",
-                "wc_shell_windows_runner",
+                "cg_shell_windows_runner",
                 Some("[Console]::Out.Write('x' * 5000)"),
             ),
         );
@@ -1789,7 +1789,7 @@ mod windows_tests {
             &SshConfig::default(),
             1,
             &projects,
-            &request("close", "wc_shell_windows_runner", None),
+            &request("close", "cg_shell_windows_runner", None),
         );
         assert_eq!(closed.shell_state, "closed");
         assert_eq!(manager.active_count(), 0);
@@ -1822,7 +1822,7 @@ mod windows_tests {
             path: cwd.to_string_lossy().to_string(),
             shell_profile: Some("modern".to_string()),
         };
-        let open = request("open", "wc_shell_profile_mapping", None);
+        let open = request("open", "cg_shell_profile_mapping", None);
         let operation = open.persistent_shell.as_ref().unwrap();
         let launch = build_launch_at_cwd(
             &shell,
@@ -1845,7 +1845,7 @@ mod windows_tests {
             Some(ShellDialect::PowerShell)
         );
 
-        let mut explicit = request("open", "wc_shell_explicit_sh", None);
+        let mut explicit = request("open", "cg_shell_explicit_sh", None);
         explicit.persistent_shell.as_mut().unwrap().shell = Some("bash".to_string());
         let error = build_launch_at_cwd(
             &ShellConfig::default(),
@@ -1869,7 +1869,7 @@ mod windows_tests {
             path: cwd.to_string_lossy().to_string(),
             shell_profile: None,
         };
-        let invalid = request("open", "wc_shell_bad_args", None);
+        let invalid = request("open", "cg_shell_bad_args", None);
         let error = build_launch_at_cwd(
             &invalid_shell,
             invalid.client_id.as_str(),
@@ -1888,7 +1888,7 @@ mod windows_tests {
         let shell = ShellConfig::default();
         let manager = PersistentShellManager::new(&shell, SshConnectionPool::default());
 
-        let mut local_bash = request("open", "wc_shell_local_bash", None);
+        let mut local_bash = request("open", "cg_shell_local_bash", None);
         local_bash.persistent_shell.as_mut().unwrap().shell = Some("bash".to_string());
         let local = manager.handle(
             &policy,
@@ -1910,7 +1910,7 @@ mod windows_tests {
             &SshConfig::default(),
             1,
             &projects,
-            &ssh_request("open", "wc_shell_remote_missing", "missing", None),
+            &ssh_request("open", "cg_shell_remote_missing", "missing", None),
         );
         assert_eq!(
             remote.error_code.as_deref(),
@@ -1952,7 +1952,7 @@ mod windows_tests {
             &config,
             7,
             &projects,
-            &ssh_request("open", "wc_shell_win_ssh_state", "dogfood", None),
+            &ssh_request("open", "cg_shell_win_ssh_state", "dogfood", None),
         );
         assert_eq!(opened.shell_state, "running", "{opened:?}");
         assert_eq!(opened.shell.as_deref(), Some("bash"), "{opened:?}");
@@ -1966,9 +1966,9 @@ mod windows_tests {
             &projects,
             &ssh_request(
                 "exec",
-                "wc_shell_win_ssh_state",
+                "cg_shell_win_ssh_state",
                 "dogfood",
-                Some("export WC_WIN_SSH=ready; cd /tmp; wc_win_fn() { printf fn; }"),
+                Some("export WC_WIN_SSH=ready; cd /tmp; cg_win_fn() { printf fn; }"),
             ),
         );
         assert_eq!(setup.exit_code, Some(0), "{setup:?}");
@@ -1980,9 +1980,9 @@ mod windows_tests {
             &projects,
             &ssh_request(
                 "exec",
-                "wc_shell_win_ssh_state",
+                "cg_shell_win_ssh_state",
                 "dogfood",
-                Some("printf '%s|%s|' \"$WC_WIN_SSH\" \"$PWD\"; wc_win_fn; printf '|中文🙂'; printf '错误🙂' >&2"),
+                Some("printf '%s|%s|' \"$WC_WIN_SSH\" \"$PWD\"; cg_win_fn; printf '|中文🙂'; printf '错误🙂' >&2"),
             ),
         );
         assert_eq!(observed.exit_code, Some(0), "{observed:?}");
@@ -2000,7 +2000,7 @@ mod windows_tests {
             &config,
             7,
             &projects,
-            &ssh_request("exec", "wc_shell_win_ssh_state", "dogfood", Some("false")),
+            &ssh_request("exec", "cg_shell_win_ssh_state", "dogfood", Some("false")),
         );
         assert_eq!(failed.exit_code, Some(1), "{failed:?}");
         assert_eq!(failed.shell_state, "running", "{failed:?}");
@@ -2012,7 +2012,7 @@ mod windows_tests {
             &projects,
             &ssh_request(
                 "exec",
-                "wc_shell_win_ssh_state",
+                "cg_shell_win_ssh_state",
                 "dogfood",
                 Some("printf clean"),
             ),
@@ -2029,7 +2029,7 @@ mod windows_tests {
             &projects,
             &ssh_request(
                 "exec",
-                "wc_shell_win_ssh_state",
+                "cg_shell_win_ssh_state",
                 "dogfood",
                 Some("i=0; while [ \"$i\" -lt 5000 ]; do printf x; i=$((i+1)); done"),
             ),
@@ -2048,7 +2048,7 @@ mod windows_tests {
             &removed,
             7,
             &projects,
-            &ssh_request("status", "wc_shell_win_ssh_state", "dogfood", None),
+            &ssh_request("status", "cg_shell_win_ssh_state", "dogfood", None),
         );
         assert_eq!(
             removed_status.error_code.as_deref(),
@@ -2063,7 +2063,7 @@ mod windows_tests {
             &config,
             7,
             &projects,
-            &ssh_request("open", "wc_shell_win_ssh_generation", "dogfood", None),
+            &ssh_request("open", "cg_shell_win_ssh_generation", "dogfood", None),
         );
         assert_eq!(
             generation_open.shell_state, "running",
@@ -2075,7 +2075,7 @@ mod windows_tests {
             &config,
             8,
             &projects,
-            &ssh_request("status", "wc_shell_win_ssh_generation", "dogfood", None),
+            &ssh_request("status", "cg_shell_win_ssh_generation", "dogfood", None),
         );
         assert_eq!(
             stale.error_code.as_deref(),
@@ -2090,12 +2090,12 @@ mod windows_tests {
             &config,
             8,
             &projects,
-            &ssh_request("open", "wc_shell_win_ssh_timeout", "dogfood", None),
+            &ssh_request("open", "cg_shell_win_ssh_timeout", "dogfood", None),
         );
         assert_eq!(reopened.shell_state, "running", "{reopened:?}");
         let mut timeout_request = ssh_request(
             "exec",
-            "wc_shell_win_ssh_timeout",
+            "cg_shell_win_ssh_timeout",
             "dogfood",
             Some("sleep 3; printf late"),
         );
@@ -2120,7 +2120,7 @@ mod windows_tests {
             &projects,
             &ssh_request(
                 "exec",
-                "wc_shell_win_ssh_timeout",
+                "cg_shell_win_ssh_timeout",
                 "dogfood",
                 Some("printf forbidden"),
             ),
@@ -2133,7 +2133,7 @@ mod windows_tests {
             &config,
             8,
             &projects,
-            &ssh_request("open", "wc_shell_win_ssh_exit", "dogfood", None),
+            &ssh_request("open", "cg_shell_win_ssh_exit", "dogfood", None),
         );
         assert_eq!(reopened.shell_state, "running", "{reopened:?}");
         let exited = manager.handle(
@@ -2142,7 +2142,7 @@ mod windows_tests {
             &config,
             8,
             &projects,
-            &ssh_request("exec", "wc_shell_win_ssh_exit", "dogfood", Some("exit 7")),
+            &ssh_request("exec", "cg_shell_win_ssh_exit", "dogfood", Some("exit 7")),
         );
         assert_eq!(exited.shell_state, "exited", "{exited:?}");
         assert_eq!(exited.exit_code, Some(7), "{exited:?}");
@@ -2154,7 +2154,7 @@ mod windows_tests {
             &projects,
             &ssh_request(
                 "exec",
-                "wc_shell_win_ssh_exit",
+                "cg_shell_win_ssh_exit",
                 "dogfood",
                 Some("printf forbidden"),
             ),
@@ -2167,7 +2167,7 @@ mod windows_tests {
             &config,
             8,
             &projects,
-            &ssh_request("open", "wc_shell_win_ssh_close", "dogfood", None),
+            &ssh_request("open", "cg_shell_win_ssh_close", "dogfood", None),
         );
         assert_eq!(reopened.shell_state, "running", "{reopened:?}");
         let closed = manager.handle(
@@ -2176,7 +2176,7 @@ mod windows_tests {
             &config,
             8,
             &projects,
-            &ssh_request("close", "wc_shell_win_ssh_close", "dogfood", None),
+            &ssh_request("close", "cg_shell_win_ssh_close", "dogfood", None),
         );
         assert_eq!(closed.shell_state, "closed", "{closed:?}");
         assert_eq!(manager.active_count(), 0, "{closed:?}");

@@ -14,7 +14,7 @@ use serde::Serialize;
 use serde_json::json;
 use std::collections::{BTreeSet, HashSet};
 
-pub const AGENT_WAIT_ID_PREFIX: &str = "wc_agent_wait_";
+pub const AGENT_WAIT_ID_PREFIX: &str = "cg_agent_wait_";
 pub const MAX_AGENT_WAIT_SOURCES: usize = 8;
 pub const MAX_ACTIVE_AGENT_WAITS_PER_AGENT: i64 = 32;
 pub const MAX_AGENT_WAITS_PER_SOURCE: i64 = 32;
@@ -135,7 +135,7 @@ impl Database {
     pub(super) fn ensure_agent_wait_schema(conn: &mut Connection) -> anyhow::Result<()> {
         conn.execute_batch(
             "
-            CREATE TABLE IF NOT EXISTS wc_agent_waits (
+            CREATE TABLE IF NOT EXISTS cg_agent_waits (
                 wait_id TEXT PRIMARY KEY,
                 owner_principal_kind TEXT NOT NULL,
                 owner_principal_digest TEXT NOT NULL,
@@ -147,29 +147,29 @@ impl Database {
                 triggered_at_unix_ms INTEGER,
                 resumed_at_unix_ms INTEGER,
                 cancelled_at_unix_ms INTEGER,
-                FOREIGN KEY(target_agent_id) REFERENCES wc_agent_identities(agent_id),
+                FOREIGN KEY(target_agent_id) REFERENCES cg_agent_identities(agent_id),
                 CHECK((state = 'waiting' AND triggered_at_unix_ms IS NULL AND resumed_at_unix_ms IS NULL AND cancelled_at_unix_ms IS NULL)
                    OR (state = 'triggered' AND triggered_at_unix_ms IS NOT NULL AND resumed_at_unix_ms IS NULL AND cancelled_at_unix_ms IS NULL)
                    OR (state = 'resumed' AND triggered_at_unix_ms IS NOT NULL AND resumed_at_unix_ms IS NOT NULL AND cancelled_at_unix_ms IS NULL)
                    OR (state = 'cancelled' AND resumed_at_unix_ms IS NULL AND cancelled_at_unix_ms IS NOT NULL))
             );
-            CREATE INDEX IF NOT EXISTS idx_wc_agent_waits_owner_agent_state
-                ON wc_agent_waits(owner_principal_kind, owner_principal_digest, target_agent_id, state, created_at_unix_ms);
+            CREATE INDEX IF NOT EXISTS idx_cg_agent_waits_owner_agent_state
+                ON cg_agent_waits(owner_principal_kind, owner_principal_digest, target_agent_id, state, created_at_unix_ms);
 
-            CREATE TABLE IF NOT EXISTS wc_agent_wait_sources (
+            CREATE TABLE IF NOT EXISTS cg_agent_wait_sources (
                 wait_id TEXT NOT NULL,
                 ordinal INTEGER NOT NULL CHECK(ordinal >= 0 AND ordinal < 8),
                 kind TEXT NOT NULL CHECK(kind = 'agent_task_terminal'),
                 task_id TEXT NOT NULL,
                 PRIMARY KEY(wait_id, ordinal),
                 UNIQUE(wait_id, kind, task_id),
-                FOREIGN KEY(wait_id) REFERENCES wc_agent_waits(wait_id),
-                FOREIGN KEY(task_id) REFERENCES wc_agent_tasks(task_id)
+                FOREIGN KEY(wait_id) REFERENCES cg_agent_waits(wait_id),
+                FOREIGN KEY(task_id) REFERENCES cg_agent_tasks(task_id)
             );
-            CREATE INDEX IF NOT EXISTS idx_wc_agent_wait_sources_task
-                ON wc_agent_wait_sources(kind, task_id, wait_id);
+            CREATE INDEX IF NOT EXISTS idx_cg_agent_wait_sources_task
+                ON cg_agent_wait_sources(kind, task_id, wait_id);
 
-            CREATE TABLE IF NOT EXISTS wc_agent_wait_matches (
+            CREATE TABLE IF NOT EXISTS cg_agent_wait_matches (
                 wait_id TEXT NOT NULL,
                 sequence INTEGER NOT NULL CHECK(sequence >= 1 AND sequence <= 8),
                 kind TEXT NOT NULL CHECK(kind = 'agent_task_terminal'),
@@ -179,12 +179,12 @@ impl Database {
                 occurred_at_unix_ms INTEGER NOT NULL,
                 PRIMARY KEY(wait_id, sequence),
                 UNIQUE(wait_id, kind, task_id),
-                FOREIGN KEY(wait_id) REFERENCES wc_agent_waits(wait_id),
-                FOREIGN KEY(task_id) REFERENCES wc_agent_tasks(task_id),
-                FOREIGN KEY(task_attempt_id) REFERENCES wc_agent_task_attempts(attempt_id)
+                FOREIGN KEY(wait_id) REFERENCES cg_agent_waits(wait_id),
+                FOREIGN KEY(task_id) REFERENCES cg_agent_tasks(task_id),
+                FOREIGN KEY(task_attempt_id) REFERENCES cg_agent_task_attempts(attempt_id)
             );
-            CREATE INDEX IF NOT EXISTS idx_wc_agent_wait_matches_wait
-                ON wc_agent_wait_matches(wait_id, sequence);
+            CREATE INDEX IF NOT EXISTS idx_cg_agent_wait_matches_wait
+                ON cg_agent_wait_matches(wait_id, sequence);
             ",
         )?;
         Ok(())
@@ -286,7 +286,7 @@ impl Database {
 
         let active_count: i64 = transaction
             .query_row(
-                "SELECT COUNT(*) FROM wc_agent_waits
+                "SELECT COUNT(*) FROM cg_agent_waits
                  WHERE owner_principal_kind = ?1 AND owner_principal_digest = ?2
                    AND target_agent_id = ?3 AND state IN ('waiting', 'triggered')",
                 params![principal.kind, principal.digest, input.target_agent_id],
@@ -305,8 +305,8 @@ impl Database {
             let source_wait_count: i64 = transaction
                 .query_row(
                     "SELECT COUNT(*)
-                     FROM wc_agent_wait_sources s
-                     JOIN wc_agent_waits w ON w.wait_id = s.wait_id
+                     FROM cg_agent_wait_sources s
+                     JOIN cg_agent_waits w ON w.wait_id = s.wait_id
                      WHERE s.kind = 'agent_task_terminal' AND s.task_id = ?1
                        AND w.owner_principal_kind = ?2 AND w.owner_principal_digest = ?3
                        AND w.state IN ('waiting', 'triggered')",
@@ -323,7 +323,7 @@ impl Database {
             let snapshot: Option<(String, Option<String>, Option<i64>)> = transaction
                 .query_row(
                     "SELECT state, terminal_attempt_id, terminal_at_unix_ms
-                     FROM wc_agent_tasks
+                     FROM cg_agent_tasks
                      WHERE task_id = ?1 AND owner_principal_kind = ?2 AND owner_principal_digest = ?3",
                     params![event.task_id, principal.kind, principal.digest],
                     |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
@@ -343,12 +343,12 @@ impl Database {
         let wait_id = allocate_identity(
             &transaction,
             AGENT_WAIT_ID_PREFIX,
-            "SELECT EXISTS(SELECT 1 FROM wc_agent_waits WHERE wait_id = ?1)",
+            "SELECT EXISTS(SELECT 1 FROM cg_agent_waits WHERE wait_id = ?1)",
         )?;
         let now = now_unix_ms();
         transaction
             .execute(
-                "INSERT INTO wc_agent_waits (
+                "INSERT INTO cg_agent_waits (
                     wait_id, owner_principal_kind, owner_principal_digest, target_agent_id,
                     state, revision, created_at_unix_ms, updated_at_unix_ms,
                     triggered_at_unix_ms, resumed_at_unix_ms, cancelled_at_unix_ms
@@ -365,7 +365,7 @@ impl Database {
         for (ordinal, event) in input.events.iter().enumerate() {
             transaction
                 .execute(
-                    "INSERT INTO wc_agent_wait_sources (wait_id, ordinal, kind, task_id)
+                    "INSERT INTO cg_agent_wait_sources (wait_id, ordinal, kind, task_id)
                      VALUES (?1, ?2, 'agent_task_terminal', ?3)",
                     params![wait_id, ordinal as i64, event.task_id],
                 )
@@ -467,7 +467,7 @@ impl Database {
             AgentWaitState::Triggered => {
                 let wake: Option<(String, String, Option<String>)> = transaction
                     .query_row(
-                        "SELECT wake_id, state, claimed_attempt_id FROM wc_agent_wakes
+                        "SELECT wake_id, state, claimed_attempt_id FROM cg_agent_wakes
                          WHERE trigger_kind = 'agent_wait_events' AND source_wait_id = ?1",
                         [wait_id],
                         |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
@@ -486,7 +486,7 @@ impl Database {
                         if let Some(attempt_id) = claimed_attempt_id {
                             transaction
                                 .execute(
-                                    "UPDATE wc_agent_wake_attempts
+                                    "UPDATE cg_agent_wake_attempts
                                      SET state = 'revoked', revoked_at_unix_ms = ?2
                                      WHERE attempt_id = ?1 AND state = 'claimed'",
                                     params![attempt_id, now],
@@ -515,7 +515,7 @@ impl Database {
                 }
                 transaction
                     .execute(
-                        "UPDATE wc_agent_wakes
+                        "UPDATE cg_agent_wakes
                          SET state = 'retired', revision = revision + 1,
                              updated_at_unix_ms = MAX(updated_at_unix_ms, ?2),
                              claimed_attempt_id = NULL, claimed_endpoint_id = NULL,
@@ -534,7 +534,7 @@ impl Database {
         }
         let updated = transaction
             .execute(
-                "UPDATE wc_agent_waits
+                "UPDATE cg_agent_waits
                  SET state = 'cancelled', revision = revision + 1,
                      updated_at_unix_ms = MAX(updated_at_unix_ms, ?2), cancelled_at_unix_ms = ?2
                  WHERE wait_id = ?1 AND owner_principal_kind = ?3 AND owner_principal_digest = ?4
@@ -585,8 +585,8 @@ pub(crate) fn record_agent_task_terminal_wait_matches_in_transaction(
     let mut statement = transaction
         .prepare(
             "SELECT w.wait_id, w.target_agent_id
-             FROM wc_agent_wait_sources s
-             JOIN wc_agent_waits w ON w.wait_id = s.wait_id
+             FROM cg_agent_wait_sources s
+             JOIN cg_agent_waits w ON w.wait_id = s.wait_id
              WHERE s.kind = 'agent_task_terminal' AND s.task_id = ?1
                AND w.owner_principal_kind = ?2 AND w.owner_principal_digest = ?3
                AND w.state IN ('waiting', 'triggered')
@@ -650,7 +650,7 @@ fn record_wait_match_in_transaction(
 ) -> Result<bool, CommunicationStoreError> {
     let next_sequence: i64 = transaction
         .query_row(
-            "SELECT COALESCE(MAX(sequence), 0) + 1 FROM wc_agent_wait_matches WHERE wait_id = ?1",
+            "SELECT COALESCE(MAX(sequence), 0) + 1 FROM cg_agent_wait_matches WHERE wait_id = ?1",
             [wait_id],
             |row| row.get(0),
         )
@@ -663,7 +663,7 @@ fn record_wait_match_in_transaction(
     }
     let inserted = transaction
         .execute(
-            "INSERT OR IGNORE INTO wc_agent_wait_matches (
+            "INSERT OR IGNORE INTO cg_agent_wait_matches (
                 wait_id, sequence, kind, task_id, task_attempt_id, terminal_task_state, occurred_at_unix_ms
              ) VALUES (?1, ?2, 'agent_task_terminal', ?3, ?4, ?5, ?6)",
             params![
@@ -681,7 +681,7 @@ fn record_wait_match_in_transaction(
     }
     let updated = transaction
         .execute(
-            "UPDATE wc_agent_waits
+            "UPDATE cg_agent_waits
              SET state = CASE WHEN state = 'waiting' THEN 'triggered' ELSE state END,
                  revision = revision + 1,
                  updated_at_unix_ms = MAX(updated_at_unix_ms, ?2),
@@ -705,7 +705,7 @@ fn record_wait_match_in_transaction(
     }
     let (match_count, match_sequence): (i64, i64) = transaction
         .query_row(
-            "SELECT COUNT(*), COALESCE(MAX(sequence), 0) FROM wc_agent_wait_matches WHERE wait_id = ?1",
+            "SELECT COUNT(*), COALESCE(MAX(sequence), 0) FROM cg_agent_wait_matches WHERE wait_id = ?1",
             [wait_id],
             |row| Ok((row.get(0)?, row.get(1)?)),
         )
@@ -730,7 +730,7 @@ fn coalesce_wait_wake_in_transaction(
 ) -> Result<bool, CommunicationStoreError> {
     let existing: Option<(String, AgentWakeState)> = transaction
         .query_row(
-            "SELECT wake_id, state FROM wc_agent_wakes
+            "SELECT wake_id, state FROM cg_agent_wakes
              WHERE trigger_kind = 'agent_wait_events' AND source_wait_id = ?1",
             [wait_id],
             |row| {
@@ -746,7 +746,7 @@ fn coalesce_wait_wake_in_transaction(
         if matches!(state, AgentWakeState::Pending | AgentWakeState::Claimed) {
             transaction
                 .execute(
-                    "UPDATE wc_agent_wakes
+                    "UPDATE cg_agent_wakes
                      SET wait_match_count_snapshot = ?2, wait_match_sequence_snapshot = ?3,
                          revision = revision + 1, updated_at_unix_ms = MAX(updated_at_unix_ms, ?4)
                      WHERE wake_id = ?1 AND state IN ('pending', 'claimed')",
@@ -760,11 +760,11 @@ fn coalesce_wait_wake_in_transaction(
     let wake_id = allocate_identity(
         &transaction,
         AGENT_WAKE_ID_PREFIX,
-        "SELECT EXISTS(SELECT 1 FROM wc_agent_wakes WHERE wake_id = ?1)",
+        "SELECT EXISTS(SELECT 1 FROM cg_agent_wakes WHERE wake_id = ?1)",
     )?;
     transaction
         .execute(
-            "INSERT INTO wc_agent_wakes (
+            "INSERT INTO cg_agent_wakes (
                 wake_id, target_agent_id, trigger_kind,
                 first_triggering_delivery_id, latest_triggering_delivery_id,
                 latest_conversation_id, latest_message_id,
@@ -802,9 +802,9 @@ pub(crate) fn require_agent_wait_for_wake(
     let row: Option<(String, String, i64, i64)> = conn
         .query_row(
             "SELECT target_agent_id, state,
-                    (SELECT COUNT(*) FROM wc_agent_wait_matches m WHERE m.wait_id = w.wait_id),
-                    (SELECT COALESCE(MAX(sequence), 0) FROM wc_agent_wait_matches m WHERE m.wait_id = w.wait_id)
-             FROM wc_agent_waits w
+                    (SELECT COUNT(*) FROM cg_agent_wait_matches m WHERE m.wait_id = w.wait_id),
+                    (SELECT COALESCE(MAX(sequence), 0) FROM cg_agent_wait_matches m WHERE m.wait_id = w.wait_id)
+             FROM cg_agent_waits w
              WHERE wait_id = ?1 AND owner_principal_kind = ?2 AND owner_principal_digest = ?3",
             params![wait_id, principal.kind, principal.digest],
             |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?)),
@@ -854,7 +854,7 @@ pub(crate) fn resume_agent_wait_for_wake_in_transaction(
     })?;
     let updated = transaction
         .execute(
-            "UPDATE wc_agent_waits
+            "UPDATE cg_agent_waits
              SET state = 'resumed', revision = revision + 1,
                  updated_at_unix_ms = MAX(updated_at_unix_ms, ?4), resumed_at_unix_ms = ?4
              WHERE wait_id = ?1 AND owner_principal_kind = ?2 AND owner_principal_digest = ?3
@@ -898,7 +898,7 @@ pub(crate) fn verify_agent_wait_resumed_for_consumed_wake(
     }
     let stored_target: String = conn
         .query_row(
-            "SELECT target_agent_id FROM wc_agent_waits WHERE wait_id = ?1",
+            "SELECT target_agent_id FROM cg_agent_waits WHERE wait_id = ?1",
             [wait_id],
             |row| row.get(0),
         )
@@ -919,7 +919,7 @@ fn load_owned_agent_wait_state(
 ) -> Result<AgentWaitState, CommunicationStoreError> {
     let value: Option<String> = conn
         .query_row(
-            "SELECT state FROM wc_agent_waits
+            "SELECT state FROM cg_agent_waits
              WHERE wait_id = ?1 AND owner_principal_kind = ?2 AND owner_principal_digest = ?3",
             params![wait_id, principal.kind, principal.digest],
             |row| row.get(0),
@@ -953,7 +953,7 @@ fn load_owned_agent_wait_detail(
         .query_row(
             "SELECT target_agent_id, state, revision, created_at_unix_ms, updated_at_unix_ms,
                     triggered_at_unix_ms, resumed_at_unix_ms, cancelled_at_unix_ms
-             FROM wc_agent_waits
+             FROM cg_agent_waits
              WHERE wait_id = ?1 AND owner_principal_kind = ?2 AND owner_principal_digest = ?3",
             params![wait_id, principal.kind, principal.digest],
             |row| {
@@ -991,7 +991,7 @@ fn load_owned_agent_wait_detail(
 
     let mut source_stmt = conn
         .prepare(
-            "SELECT ordinal, kind, task_id FROM wc_agent_wait_sources
+            "SELECT ordinal, kind, task_id FROM cg_agent_wait_sources
              WHERE wait_id = ?1 ORDER BY ordinal",
         )
         .map_err(store_error)?;
@@ -1018,7 +1018,7 @@ fn load_owned_agent_wait_detail(
     let mut match_stmt = conn
         .prepare(
             "SELECT sequence, kind, task_id, task_attempt_id, terminal_task_state, occurred_at_unix_ms
-             FROM wc_agent_wait_matches WHERE wait_id = ?1 ORDER BY sequence",
+             FROM cg_agent_wait_matches WHERE wait_id = ?1 ORDER BY sequence",
         )
         .map_err(store_error)?;
     let match_rows = match_stmt

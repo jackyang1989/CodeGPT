@@ -1,9 +1,9 @@
 use crate::Database;
-use rusqlite::{params, Connection};
 use codegpt_core::runner_job_receipt::{
     RetainedJobReceipt, RunnerAccessGroup, JOB_RECEIPT_PAYLOAD_MAX_BYTES,
 };
 use codegpt_core::runner_protocol::JOB_INVENTORY_MAX_TERMINAL_JOBS;
+use rusqlite::{params, Connection};
 
 impl Database {
     /// Insert immutable terminal evidence. Replay cannot replace either the
@@ -25,14 +25,14 @@ impl Database {
         let mut conn = self.lock_connection(crate::StoreDomain::JobReceipts);
         let tx = conn.transaction()?;
         prune_expired(&tx, now)?;
-        tx.execute("INSERT INTO wc_job_receipts (job_id, client_id, runner_instance_id, auth_kind, auth_partition, owner_at_admission, kind, snapshot, terminal_observed_at, expires_at)
+        tx.execute("INSERT INTO cg_job_receipts (job_id, client_id, runner_instance_id, auth_kind, auth_partition, owner_at_admission, kind, snapshot, terminal_observed_at, expires_at)
             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10) ON CONFLICT(job_id) DO NOTHING",
             params![receipt.snapshot.job_id, receipt.client_id, receipt.runner_instance_id, auth_kind, auth_partition, receipt.owner_at_admission, receipt.kind, payload, receipt.terminal_observed_at, receipt.expires_at])?;
         // Bound history by logical Runner, across process replacements and auth
         // partitions. Oldest-first, with a stable tie break for same-second jobs.
         tx.execute(
-            "DELETE FROM wc_job_receipts WHERE job_id IN (
-            SELECT job_id FROM wc_job_receipts WHERE client_id = ?1
+            "DELETE FROM cg_job_receipts WHERE job_id IN (
+            SELECT job_id FROM cg_job_receipts WHERE client_id = ?1
             ORDER BY terminal_observed_at DESC, job_id DESC LIMIT -1 OFFSET ?2)",
             params![receipt.client_id, JOB_INVENTORY_MAX_TERMINAL_JOBS as i64],
         )?;
@@ -53,10 +53,10 @@ impl Database {
         // Also repair excessive history from an older/manual database. Each
         // payload is size-checked in SQLite before being materialized in Rust.
         conn.execute(
-            "DELETE FROM wc_job_receipts WHERE job_id IN (
+            "DELETE FROM cg_job_receipts WHERE job_id IN (
             SELECT job_id FROM (SELECT job_id, ROW_NUMBER() OVER (
                 PARTITION BY client_id ORDER BY terminal_observed_at DESC, job_id DESC) AS n
-                FROM wc_job_receipts) WHERE n > ?1)",
+                FROM cg_job_receipts) WHERE n > ?1)",
             [JOB_INVENTORY_MAX_TERMINAL_JOBS as i64],
         )?;
         let mut stmt = conn.prepare("SELECT job_id, client_id, runner_instance_id, auth_kind, auth_partition, owner_at_admission, kind,
@@ -67,7 +67,7 @@ impl Database {
             AND (auth_partition IS NULL OR length(CAST(auth_partition AS BLOB)) <= 256)
             AND (owner_at_admission IS NULL OR length(CAST(owner_at_admission AS BLOB)) <= 256)
             AND length(CAST(kind AS BLOB)) <= 128
-            FROM wc_job_receipts ORDER BY client_id, terminal_observed_at, job_id")?;
+            FROM cg_job_receipts ORDER BY client_id, terminal_observed_at, job_id")?;
         let rows = stmt.query_map([JOB_RECEIPT_PAYLOAD_MAX_BYTES as i64], |row| {
             if !row.get::<_, bool>(10)? {
                 return Err(rusqlite::Error::InvalidQuery);
@@ -139,5 +139,5 @@ impl Database {
 }
 
 fn prune_expired(conn: &Connection, now: i64) -> rusqlite::Result<usize> {
-    conn.execute("DELETE FROM wc_job_receipts WHERE expires_at <= ?1", [now])
+    conn.execute("DELETE FROM cg_job_receipts WHERE expires_at <= ?1", [now])
 }

@@ -1,9 +1,9 @@
-use serde_json::{json, Value};
-use std::sync::Arc;
 use codegpt_core::runner_operation::RunnerOperation;
 use codegpt_core::runner_protocol::{RunnerJobUpdateRequest, RunnerRequest, RunnerResultPayload};
 use codegpt_core::ssh_resource::SshResourceRequest;
 use codegpt_runner_registry::RunnerRegistryTelemetry;
+use serde_json::{json, Value};
+use std::sync::Arc;
 
 #[derive(Debug, Default)]
 struct ToolRequestTraceRunnerRegistryTelemetry;

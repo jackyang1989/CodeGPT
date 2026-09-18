@@ -154,8 +154,8 @@ The lanes above define test semantics; workflows decide when to run them.
 - Keep the auth-mode semantics separate in tests:
   `CODEGPT_SHARED_KEY_ENABLED` is direct Bearer shared-key fallback, while
   `CODEGPT_OAUTH2_SHARED_KEY_BRIDGE` is only the OAuth authorize bridge.
-  Quick-start shared-key mode intentionally accepts an unknown non-`wc_` Bearer
-  as a lightweight shared-key principal, but invalid `wc_` managed-token
+  Quick-start shared-key mode intentionally accepts an unknown non-`cg_` Bearer
+  as a lightweight shared-key principal, but invalid `cg_` managed-token
   prefixes and empty or whitespace Bearer values must still be rejected.
 - Sleep, timeout, and polling tests must be bounded. Positive readiness uses one
   absolute deadline created once for the whole wait and never reset after partial

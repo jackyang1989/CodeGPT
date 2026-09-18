@@ -1,12 +1,12 @@
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::time::{Duration, Instant};
 
+use crate::codegpt_runner::config::RunnerConfig;
+use crate::codegpt_runner::projects::RunnerProjectCache;
 use crate::runner_protocol::{
     RunnerEnvelope, RunnerProjectSummary, ShellProjectInventoryPage, ShellProjectInventoryStatus,
     PROJECT_INVENTORY_PAGE_MAX_SERIALIZED_BYTES, PROJECT_INVENTORY_PAGE_MAX_SUMMARIES,
 };
-use crate::codegpt_runner::config::RunnerConfig;
-use crate::codegpt_runner::projects::RunnerProjectCache;
 
 use super::{format_delay, RetryBackoff, RunnerRuntimeState, StreamTransport};
 

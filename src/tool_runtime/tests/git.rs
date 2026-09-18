@@ -8,14 +8,14 @@ use super::support::*;
 use crate::runner_protocol::{RunnerCapabilities, RunnerResultRequest};
 use crate::tool_runtime::tool_audit::ToolCallAuditProjection;
 use crate::tool_runtime::ToolRuntime;
-use serde_json::{json, Value};
-use std::collections::HashSet;
-use std::fs;
-use std::path::Path;
 use codegpt_core::runtime_contract::{
     DEFAULT_GIT_DIFF_HUNKS_PAGE_BYTES, MAX_GIT_DIFF_HUNKS_PAGE_BYTES,
     MIN_GIT_DIFF_HUNKS_PAGE_BYTES, MODEL_INSPECTION_MAX_RESULT_BYTES,
 };
+use serde_json::{json, Value};
+use std::collections::HashSet;
+use std::fs;
+use std::path::Path;
 
 const ORDINARY_RUNNER_RESULT_RETENTION_COMPAT_BYTES: usize = 256 * 1024;
 
@@ -778,7 +778,7 @@ fn show_changes_tool_is_known_and_parses() {
             "include_diff": true,
             "max_hunks": 4,
             "max_hunk_lines": 12,
-            "session_id": "wc_sess_1234",
+            "session_id": "cg_sess_1234",
             "session_event_limit": 8
         }),
     )
@@ -792,7 +792,7 @@ fn show_changes_tool_is_known_and_parses() {
             max_hunks: Some(4),
             max_hunk_lines: Some(12),
             session_event_limit: Some(8)
-        } if project == "agent:oe:codegpt" && session_id == "wc_sess_1234"
+        } if project == "agent:oe:codegpt" && session_id == "cg_sess_1234"
     ));
 
     let specs = registered_tool_specs();
@@ -5845,9 +5845,9 @@ fn show_changes_with_missing_session_id_returns_warning_not_panic() {
         Some(0),
         "",
     );
-    apply_show_changes_session(&mut output, Some("wc_sess_missing"), None, None);
+    apply_show_changes_session(&mut output, Some("cg_sess_missing"), None, None);
     assert_eq!(output["session"]["found"], false);
-    assert_eq!(output["session"]["session_id"], "wc_sess_missing");
+    assert_eq!(output["session"]["session_id"], "cg_sess_missing");
     assert!(output["warnings"]
         .as_array()
         .unwrap()
@@ -7181,7 +7181,7 @@ fn git_review_summary_tool_schema_metadata_and_oauth_are_read_only() {
             "project": SAMPLE_PROJECT,
             "base_commit": base,
             "head_commit": head,
-            "session_id": "wc_sess_review"
+            "session_id": "cg_sess_review"
         }),
     )
     .expect("git_review_summary should parse through generic ToolCall");
@@ -7195,7 +7195,7 @@ fn git_review_summary_tool_schema_metadata_and_oauth_are_read_only() {
             assert_eq!(project, SAMPLE_PROJECT);
             assert_eq!(base_commit, "a".repeat(40));
             assert_eq!(head_commit, "b".repeat(40));
-            assert_eq!(session_id.as_deref(), Some("wc_sess_review"));
+            assert_eq!(session_id.as_deref(), Some("cg_sess_review"));
         }
         other => panic!("expected git_review_summary, got {other:?}"),
     }

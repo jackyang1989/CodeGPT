@@ -269,7 +269,7 @@ pub(crate) async fn tokens_register_hash(req: &mut Request, depot: &mut Depot, r
             return;
         }
     };
-    let token_prefix = match validate_token_prefix(&body.token_prefix, "wc_pat_") {
+    let token_prefix = match validate_token_prefix(&body.token_prefix, "cg_pat_") {
         Ok(p) => p,
         Err(e) => {
             res.status_code(StatusCode::BAD_REQUEST);

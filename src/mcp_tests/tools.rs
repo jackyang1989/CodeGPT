@@ -239,7 +239,7 @@ fn memory_tools_are_stateless_protocol_extensions_scope_filtered_and_schema_stat
     let open = crate::auth::open_anonymous_context();
     assert!(memory_names(&render(Some(&open))).is_empty());
     let project_credential =
-        crate::auth::shared_key::project_credential_context("wc_pgrant_memorytools");
+        crate::auth::shared_key::project_credential_context("cg_pgrant_memorytools");
     assert!(memory_names(&render(Some(&project_credential))).is_empty());
     let direct = crate::auth::shared_key_context("memory-tools-direct-shared-key");
     assert_eq!(
@@ -737,22 +737,22 @@ fn stateless_workflow_recorder_metadata_adds_protocol_projection() {
 fn stateless_ack_wrapper_normalizes_and_is_removed_before_concrete_tool_parsing() {
     let mut arguments = json!({
         crate::tool_runtime::sessions::TOOL_CALL_ACK_SESSION_MESSAGE_IDS_FIELD: [
-            "wc_msg_abcd-efgh_ijklmn",
-            "wc_msg_abcd-efgh_ijklmn",
-            "wc_msg_0123456789abcdef"
+            "cg_msg_abcd-efgh_ijklmn",
+            "cg_msg_abcd-efgh_ijklmn",
+            "cg_msg_0123456789abcdef"
         ]
     });
     let normalized = strip_stateless_ack_session_message_ids(&mut arguments).unwrap();
     assert_eq!(
         normalized,
-        vec!["wc_msg_abcd-efgh_ijklmn", "wc_msg_0123456789abcdef"]
+        vec!["cg_msg_abcd-efgh_ijklmn", "cg_msg_0123456789abcdef"]
     );
     assert!(arguments
         .get(crate::tool_runtime::sessions::TOOL_CALL_ACK_SESSION_MESSAGE_IDS_FIELD)
         .is_none());
     assert_eq!(
         normalized,
-        vec!["wc_msg_abcd-efgh_ijklmn", "wc_msg_0123456789abcdef"]
+        vec!["cg_msg_abcd-efgh_ijklmn", "cg_msg_0123456789abcdef"]
     );
     crate::tool_runtime::ToolCall::from_tool_name("list_tools", arguments)
         .expect("wrapper ACK metadata must be gone before concrete parsing");
@@ -764,7 +764,7 @@ fn stateless_ack_wrapper_normalizes_and_is_removed_before_concrete_tool_parsing(
     let mut oversized = json!({
         crate::tool_runtime::sessions::TOOL_CALL_ACK_SESSION_MESSAGE_IDS_FIELD:
             (0..=crate::tool_runtime::sessions::MAX_TOOL_CALL_ACK_MESSAGE_IDS)
-                .map(|index| format!("wc_msg_{index}"))
+                .map(|index| format!("cg_msg_{index}"))
                 .collect::<Vec<_>>()
     });
     assert!(strip_stateless_ack_session_message_ids(&mut oversized).is_err());
@@ -774,14 +774,14 @@ fn stateless_ack_wrapper_normalizes_and_is_removed_before_concrete_tool_parsing(
 fn stateless_message_resolution_wrapper_is_validated_and_removed_before_concrete_parsing() {
     let mut arguments = json!({
         crate::tool_runtime::sessions::TOOL_CALL_SESSION_MESSAGE_RESOLUTION_FIELD: {
-            "message_id": "wc_msg_abcd-efgh_ijklmn",
+            "message_id": "cg_msg_abcd-efgh_ijklmn",
             "resolution": "  handled in the current model turn  "
         }
     });
     let resolution = strip_stateless_session_message_resolution(&mut arguments)
         .unwrap()
         .expect("message resolution wrapper");
-    assert_eq!(resolution.message_id, "wc_msg_abcd-efgh_ijklmn");
+    assert_eq!(resolution.message_id, "cg_msg_abcd-efgh_ijklmn");
     assert_eq!(resolution.resolution, "handled in the current model turn");
     assert!(arguments
         .get(crate::tool_runtime::sessions::TOOL_CALL_SESSION_MESSAGE_RESOLUTION_FIELD)
@@ -798,13 +798,13 @@ fn stateless_message_resolution_wrapper_is_validated_and_removed_before_concrete
         }),
         json!({
             crate::tool_runtime::sessions::TOOL_CALL_SESSION_MESSAGE_RESOLUTION_FIELD: {
-                "message_id": "wc_msg_beta",
+                "message_id": "cg_msg_beta",
                 "resolution": "   "
             }
         }),
         json!({
             crate::tool_runtime::sessions::TOOL_CALL_SESSION_MESSAGE_RESOLUTION_FIELD: {
-                "message_id": "wc_msg_beta",
+                "message_id": "cg_msg_beta",
                 "resolution": "handled",
                 "extra": true
             }
@@ -968,10 +968,10 @@ fn stateless_invocation_metadata_stays_typed_and_business_arguments_stay_clean()
     let mut arguments = json!({
         "project": "proj",
         "items": [{"path": "src/lib.rs"}],
-        crate::tool_runtime::sessions::TOOL_CALL_RECORDING_SESSION_ID_FIELD: "wc_sess_adapter",
-        crate::tool_runtime::sessions::TOOL_CALL_ACK_SESSION_MESSAGE_IDS_FIELD: ["wc_msg_abcd-efgh_ijklmn"],
+        crate::tool_runtime::sessions::TOOL_CALL_RECORDING_SESSION_ID_FIELD: "cg_sess_adapter",
+        crate::tool_runtime::sessions::TOOL_CALL_ACK_SESSION_MESSAGE_IDS_FIELD: ["cg_msg_abcd-efgh_ijklmn"],
         crate::tool_runtime::sessions::TOOL_CALL_SESSION_MESSAGE_RESOLUTION_FIELD: {
-            "message_id": "wc_msg_abcd-efgh_ijklmn",
+            "message_id": "cg_msg_abcd-efgh_ijklmn",
             "resolution": "handled"
         },
         crate::tool_runtime::context_projection::TOOL_CALL_CONTEXT_REQUEST_FIELD: ["codegpt.workflow"],
@@ -992,10 +992,10 @@ fn stateless_invocation_metadata_stays_typed_and_business_arguments_stay_clean()
         ack_session_context_revision,
     };
 
-    assert_eq!(recording_session_id.as_deref(), Some("wc_sess_adapter"));
+    assert_eq!(recording_session_id.as_deref(), Some("cg_sess_adapter"));
     assert_eq!(
         metadata.ack_session_message_ids,
-        vec!["wc_msg_abcd-efgh_ijklmn"]
+        vec!["cg_msg_abcd-efgh_ijklmn"]
     );
     assert_eq!(metadata.context_request, vec!["codegpt.workflow"]);
     assert_eq!(
@@ -2402,8 +2402,8 @@ async fn mcp_show_changes_distinguishes_recording_session_id_from_query_session_
 #[tokio::test]
 async fn project_grant_authority_is_identical_for_project_credential_and_share_oauth_across_direct_and_gateway(
 ) {
-    const GRANT_A: &str = "wc_pgrant_aaaaaaaaaaaaaaaa";
-    const GRANT_B: &str = "wc_pgrant_bbbbbbbbbbbbbbbb";
+    const GRANT_A: &str = "cg_pgrant_aaaaaaaaaaaaaaaa";
+    const GRANT_B: &str = "cg_pgrant_bbbbbbbbbbbbbbbb";
     const CLIENT_A: &str = "project-grant-a-runner";
     const CLIENT_B: &str = "project-grant-b-runner";
     const INSTANCE_A: &str = "inst-project-grant-a";

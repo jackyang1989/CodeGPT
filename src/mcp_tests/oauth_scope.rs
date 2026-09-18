@@ -240,7 +240,7 @@ async fn oauth2_native_plugin_catalog_and_call_require_explicit_plugin_scope() {
             "name": crate::plugin_gateway::PLUGIN_TOOL_NAME,
             "arguments": {
                 "action": "call",
-                "binding": "wc_pbind_AAAAAAAAAAAAAAAAAAAAAA",
+                "binding": "cg_pbind_AAAAAAAAAAAAAAAAAAAAAA",
                 "arguments": {"value": "hello"}
             }
         }),
@@ -929,7 +929,7 @@ async fn oauth2_coding_agent_tools_require_independent_scope_in_catalog_and_dire
         "tools/call",
         adaptive_gateway_params(
             "coding_agent_cancel",
-            json!({"run_id": "wc_agent_run_scopeprobe0001"}),
+            json!({"run_id": "cg_agent_run_scopeprobe0001"}),
         ),
     )
     .await;

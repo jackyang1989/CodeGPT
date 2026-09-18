@@ -261,19 +261,19 @@ fn e3_assignment_schema_parser_scope_and_audit_are_synchronized() {
 
     let get_call = ToolCall::from_tool_name(
         "get_session_assignment",
-        json!({"session_id": "wc_sess_demo", "message_id": "wc_msg_demo"}),
+        json!({"session_id": "cg_sess_demo", "message_id": "cg_msg_demo"}),
     )
     .unwrap();
     assert!(matches!(
         get_call,
         ToolCall::GetSessionAssignment { ref session_id, ref message_id }
-            if session_id == "wc_sess_demo" && message_id == "wc_msg_demo"
+            if session_id == "cg_sess_demo" && message_id == "cg_msg_demo"
     ));
     let missing_fence = ToolCall::from_tool_name(
         "complete_session_message",
         json!({
-            "session_id": "wc_sess_demo",
-            "message_id": "wc_msg_demo",
+            "session_id": "cg_sess_demo",
+            "message_id": "cg_msg_demo",
             "answer": "done",
             "completion_key": "key"
         }),
@@ -287,8 +287,8 @@ fn e3_assignment_schema_parser_scope_and_audit_are_synchronized() {
     let completion_call = ToolCall::from_tool_name(
         "complete_session_message",
         json!({
-            "session_id": "wc_sess_demo",
-            "message_id": "wc_msg_demo",
+            "session_id": "cg_sess_demo",
+            "message_id": "cg_msg_demo",
             "answer": "done",
             "completion_key": "key",
             "expected_assignment_fence": raw_fence
@@ -319,8 +319,8 @@ fn e3_assignment_schema_parser_scope_and_audit_are_synchronized() {
     let input_audit = super::super::tool_audit::session_log_arguments_for_tool_request(
         "complete_session_message",
         &json!({
-            "session_id": "wc_sess_demo",
-            "message_id": "wc_msg_demo",
+            "session_id": "cg_sess_demo",
+            "message_id": "cg_msg_demo",
             "answer": "private answer",
             "completion_key": "private-key",
             "expected_assignment_fence": raw_fence
@@ -336,8 +336,8 @@ fn e3_assignment_schema_parser_scope_and_audit_are_synchronized() {
         "get_session_assignment",
         &json!({
             "success": true,
-            "session_id": "wc_sess_demo",
-            "message_id": "wc_msg_demo",
+            "session_id": "cg_sess_demo",
+            "message_id": "cg_msg_demo",
             "todo": {"message": "private todo"},
             "direct_replies": [{"message": "private reply"}],
             "assignment_fence": raw_fence

@@ -111,29 +111,6 @@ pub(crate) use codegpt_tool_contracts::MODEL_TOOL_DESCRIPTION_MAX_CHARS;
 // Re-export the public API so `crate::tool_runtime::ToolCall` etc. still work.
 #[cfg(test)]
 pub use crate::apply_edits_shared::ApplyTextLineScope;
-#[cfg(test)]
-pub(crate) use files::MAX_PROJECT_ARTIFACT_BYTES;
-pub(crate) use files::{
-    validate_project_artifact_export_snapshot, ProjectArtifactExportSnapshot,
-    MAX_PROJECT_ARTIFACT_EXPORT_BYTES, MAX_READ_PROJECT_ARTIFACT_LENGTH,
-};
-#[cfg(test)]
-pub(crate) use permissions::{AuthorityMode, PermissionEvaluator};
-#[cfg(test)]
-pub(crate) use runner_authorization::required_runner_capability;
-pub use runtime::ToolRuntime;
-pub use runtime_info::RuntimeInfo;
-#[cfg(test)]
-pub(crate) use session_context::workflow_session_authority_fingerprint;
-#[cfg(test)]
-pub(crate) use sessions::{SessionCreateOptions, SessionGuards, SessionSummary};
-#[cfg(test)]
-pub use tool_definition::is_known_tool_name;
-#[cfg(test)]
-pub(crate) use tool_definition::{
-    known_tool_names, model_hidden_tool_names, runtime_tool_category as tool_manifest_category,
-    RunnerCapabilityRequirement,
-};
 pub use codegpt_tool_contracts::tool_call::{
     AgentWaitEventSelectorCall, HostFileImportProvenance, ObserveJobsItem, ObserveJobsWakeOn,
     PluginToolCall, ProjectArtifactAction, ReadFilesItem, SearchPatternMode,
@@ -158,6 +135,29 @@ pub use codegpt_tool_runtime_contracts::tool_result::ToolResult;
 pub(crate) use codegpt_tool_runtime_contracts::tool_result::{
     ContinuationCarrier, ContinuationKind, ContinuationSemantics, RecoveryKind, SuggestedToolCall,
     RECOVERY_KIND_VALUES,
+};
+#[cfg(test)]
+pub(crate) use files::MAX_PROJECT_ARTIFACT_BYTES;
+pub(crate) use files::{
+    validate_project_artifact_export_snapshot, ProjectArtifactExportSnapshot,
+    MAX_PROJECT_ARTIFACT_EXPORT_BYTES, MAX_READ_PROJECT_ARTIFACT_LENGTH,
+};
+#[cfg(test)]
+pub(crate) use permissions::{AuthorityMode, PermissionEvaluator};
+#[cfg(test)]
+pub(crate) use runner_authorization::required_runner_capability;
+pub use runtime::ToolRuntime;
+pub use runtime_info::RuntimeInfo;
+#[cfg(test)]
+pub(crate) use session_context::workflow_session_authority_fingerprint;
+#[cfg(test)]
+pub(crate) use sessions::{SessionCreateOptions, SessionGuards, SessionSummary};
+#[cfg(test)]
+pub use tool_definition::is_known_tool_name;
+#[cfg(test)]
+pub(crate) use tool_definition::{
+    known_tool_names, model_hidden_tool_names, runtime_tool_category as tool_manifest_category,
+    RunnerCapabilityRequirement,
 };
 
 #[cfg(test)]

@@ -217,16 +217,16 @@ fn restore_test_env(name: &str, value: &Option<std::ffi::OsString>) {
 ///
 /// Authentication coverage:
 /// - **Bootstrap token**: yes — returns bootstrap context.
-/// - **Personal API token (`wc_pat_*`)**: yes — returns `AuthKind::ApiToken`.
-/// - **Agent token (`wc_agent_*`)**: yes — returns `AuthKind::AgentToken`.
+/// - **Personal API token (`cg_pat_*`)**: yes — returns `AuthKind::ApiToken`.
+/// - **Agent token (`cg_agent_*`)**: yes — returns `AuthKind::AgentToken`.
 ///   The agent-transport path gate does NOT apply here: the QUIC listener is
 ///   inherently an agent-only transport, so an agent token reaching it is
 ///   already on an allowed surface.
-/// - **Account credential (`wc_acct_*`)**: **rejected** — returns `None`.
+/// - **Account credential (`cg_acct_*`)**: **rejected** — returns `None`.
 ///   Account credentials are only valid on HTTP account-control endpoints.
 ///   The QUIC/Runner transport has no use for them, and accepting them would
 ///   silently update `last_used_at` before the caller rejects the connection.
-/// - **OAuth2 access token (`wc_oat_*`)**: **rejected** — returns `None`
+/// - **OAuth2 access token (`cg_oat_*`)**: **rejected** — returns `None`
 ///   *before* running the verifier chain, so `last_used_at` is not updated.
 ///   OAuth2 tokens are accepted on regular HTTP surfaces via `AuthMiddleware`,
 ///   but not on the QUIC/Runner transport surface.

@@ -813,7 +813,7 @@ fn collaboration_session_message_completion_rejects_invalid_targets_and_author()
     ));
     assert!(matches!(
         store.complete_message(CompleteSessionMessageInput {
-            message_id: "wc_msg_missing".to_string(),
+            message_id: "cg_msg_missing".to_string(),
             ..base.clone()
         }),
         Err(SessionMessageError::UnknownMessage)
@@ -904,7 +904,7 @@ fn collaboration_session_message_exact_lookup_finds_old_retained_todo() {
         .list_messages(
             &session.session_id,
             ListSessionMessagesFilter {
-                message_id: Some("wc_msg_missing_exact".to_string()),
+                message_id: Some("cg_msg_missing_exact".to_string()),
                 limit: Some(1),
                 ..Default::default()
             },

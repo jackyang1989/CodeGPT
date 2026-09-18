@@ -53,9 +53,9 @@ Hosted 日志位于
 Managed Runner Token 不受这些 shared-key 数量和保留期限限制；所有 Runner 注册都有
 64 个项目的输入安全上限。
 
-### `connect` 拒绝 `wc_*`
+### `connect` 拒绝 `cg_*`
 
-这是预期边界。`wc_pat_*`、`wc_agent_*`、`wc_acct_*` 和其他 `wc_*` 都是 managed
+这是预期边界。`cg_pat_*`、`cg_agent_*`、`cg_acct_*` 和其他 `cg_*` 都是 managed
 credentials，绝不会 fallback 成 shared key。Hosted shared-key 流程请使用另一个
 随机 key；需要 managed identity 时使用 `codegpt login`。
 
@@ -133,9 +133,9 @@ sudo ln -s /opt/codegpt/bin/codegpt /usr/local/bin/codegpt
 
 ### Client 误运行 `pairing create`，且 `/etc/codegpt/codegpt.env` 缺失
 
-`codegpt pairing create` 是 server/admin-side 命令，需要 server bootstrap env file。朋友或 client 机器应运行 `codegpt login <server-url> --code <wc_pair_...>`，并使用 server owner 发来的短期 `wc_pair_*` code。
+`codegpt pairing create` 是 server/admin-side 命令，需要 server bootstrap env file。朋友或 client 机器应运行 `codegpt login <server-url> --code <cg_pair_...>`，并使用 server owner 发来的短期 `cg_pair_*` code。
 
-机器之间只复制 `wc_pair_*` code。不要复制 `CODEGPT_TOKEN`、user API tokens、Runner tokens、env files 或完整 `runner.toml` files。
+机器之间只复制 `cg_pair_*` code。不要复制 `CODEGPT_TOKEN`、user API tokens、Runner tokens、env files 或完整 `runner.toml` files。
 
 ### Client 上 doctor 警告 `binary codegpt not found in PATH`
 
@@ -194,11 +194,11 @@ codegpt runner logs --scope user --lines 100
 
 ### Token type 错误
 
-Hosted quick-start 中，MCP 与 Runner 使用同一个非 `wc_` shared key。Managed
+Hosted quick-start 中，MCP 与 Runner 使用同一个非 `cg_` shared key。Managed
 mode 中，GPT Actions、MCP 和普通 REST/project API 使用
-`codegpt-user-token`（`wc_pat_*`）；Runner 令牌（`wc_agent_*`）只给
+`codegpt-user-token`（`cg_pat_*`）；Runner 令牌（`cg_agent_*`）只给
 Runner transport 使用——`codegpt login` 之后它内联在 `runner.toml` 中，
-没有单独的 `codegpt-runner-token` 文件。把 `wc_agent_*` 放入
+没有单独的 `codegpt-runner-token` 文件。把 `cg_agent_*` 放入
 `--token` 或 `--token-file` 后得到 403，正是预期安全边界；应改用生成的
 `codegpt-user-token`。新版 CLI 也会在不打印完整 token 的前提下诊断这个错误。
 `CODEGPT_TOKEN` 面向 bootstrap/admin，

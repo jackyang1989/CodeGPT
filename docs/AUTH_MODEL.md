@@ -17,13 +17,13 @@ Do not copy the Server bootstrap token to a client, and do not use a Runner toke
 | Credential | Typical form | Used for |
 | --- | --- | --- |
 | Server bootstrap token | `CODEGPT_TOKEN` in the Server env | Initial administration and emergency recovery |
-| Pairing code | `wc_pair_...` | One-time device/user enrollment |
-| Personal API token (PAT) | `wc_pat_...` | MCP, GPT Actions, and runtime API access for a managed user |
-| Runner token | `wc_agent_...` | `codegpt-runner` transport only |
+| Pairing code | `cg_pair_...` | One-time device/user enrollment |
+| Personal API token (PAT) | `cg_pat_...` | MCP, GPT Actions, and runtime API access for a managed user |
+| Runner token | `cg_agent_...` | `codegpt-runner` transport only |
 | Shared key | `wck_...` | Hosted shared-key MCP/runtime access and the matching Runner group |
 | Project Credential | protected project-private file | One ProjectGrant's ordinary runtime API/MCP access |
-| OAuth access token | `wc_oat_...` | Delegated MCP/GPT access when OAuth is enabled |
-| Account credential | `wc_acct_...` | Advanced managed-account token creation only |
+| OAuth access token | `cg_oat_...` | Delegated MCP/GPT access when OAuth is enabled |
+| Account credential | `cg_acct_...` | Advanced managed-account token creation only |
 
 The prefixes are useful for diagnosing configuration mistakes. They are not a reason to expose every internal identifier to users.
 
@@ -53,21 +53,21 @@ The rule is simple: **knowing an ID or opaque tool value never substitutes for a
 
 ## Pairing and managed login
 
-`codegpt pairing create` produces a short-lived `wc_pair_*` code. A repository machine redeems it with `codegpt login <server-url> --code <code>`. Login then creates the ordinary local files needed for user/API access and Runner connectivity.
+`codegpt pairing create` produces a short-lived `cg_pair_*` code. A repository machine redeems it with `codegpt login <server-url> --code <code>`. Login then creates the ordinary local files needed for user/API access and Runner connectivity.
 
 The pairing code is temporary; it is not a long-lived API credential.
 
-## Personal API token (`wc_pat_*`)
+## Personal API token (`cg_pat_*`)
 
 A PAT represents a managed user on MCP, GPT Actions, and the runtime API. The Server stores only its hash. `codegpt login` normally writes the user's token to `codegpt-user-token` under that Server/user's local configuration directory.
 
 Use the smallest scopes needed for the workflow. A PAT used by an MCP coding client normally needs runtime/project scopes appropriate to the actions that client will perform. Account-management authority is separate and should not be added to ordinary coding clients.
 
-## Runner token (`wc_agent_*`)
+## Runner token (`cg_agent_*`)
 
 A Runner token authenticates `codegpt-runner` and is bound to the configured Runner `client_id`. It is rejected on MCP/runtime/account surfaces.
 
-The `wc_agent_*` prefix is a compatibility-facing historical name. In current product terminology this is a **Runner token**, not a Durable Agent identity. The same rule applies to other retained `agent_*` wire/storage names: do not infer the Durable Agent domain from the compatibility name.
+The `cg_agent_*` prefix is a compatibility-facing historical name. In current product terminology this is a **Runner token**, not a Durable Agent identity. The same rule applies to other retained `agent_*` wire/storage names: do not infer the Durable Agent domain from the compatibility name.
 
 ## Shared key (`wck_...`)
 
@@ -119,7 +119,7 @@ OAuth clients receive these optional permissions only through explicit operator/
 
 Some compatibility-facing names remain because changing them would break stored configuration or wire compatibility:
 
-- `wc_agent_*` — Runner token;
+- `cg_agent_*` — Runner token;
 - `agent:<client_id>:<project_id>` — runtime Project address;
 
 These do **not** refer to CodeGPT's separate Durable Agent / Conversation / Agent Task domain. Other process/protocol compatibility fields remain implementation details. New documentation should say **Runner** unless it is quoting one of the public compatibility-facing names above.

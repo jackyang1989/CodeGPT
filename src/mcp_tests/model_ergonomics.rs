@@ -275,7 +275,7 @@ async fn http_mcp_work_on_project_preferences_persist_without_private_request_va
     let private_project = "PRIVATE_MCP_PROJECT_SENTINEL";
     let private_client = "PRIVATE_MCP_CLIENT_SENTINEL";
     let private_path = "/PRIVATE_MCP_PATH_SENTINEL";
-    let private_session = "wc_sess_PRIVATE_MCP_SESSION_SENTINEL";
+    let private_session = "cg_sess_PRIVATE_MCP_SESSION_SENTINEL";
     let private_base_ref = "PRIVATE_MCP_BASE_REF_SENTINEL";
 
     let mut response = TestClient::post("http://localhost/mcp")

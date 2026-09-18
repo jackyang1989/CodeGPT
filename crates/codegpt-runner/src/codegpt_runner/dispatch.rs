@@ -20,12 +20,12 @@ use crate::runner_protocol::{
     RUNNER_CONFIG_RESPONSE_MAX_BYTES,
 };
 use crate::{handle_file_operation, JobManager, PendingJobStart};
-use std::path::Path;
-use std::sync::atomic::Ordering;
 use codegpt_core::runner_operation::{
     RunnerFileOperation, RunnerJobOperation, RunnerOperation, RunnerProjectOperation,
     RunnerProjectOperationKind, RunnerShellOperation,
 };
+use std::path::Path;
+use std::sync::atomic::Ordering;
 
 fn internal_search_script(command: &str) -> Option<&str> {
     let rest = command.strip_prefix(EXTERNAL_SEARCH_REQUEST_PREFIX)?;

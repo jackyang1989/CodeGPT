@@ -14,7 +14,7 @@ use crate::action_audit_sessions::secret_like_value;
 use crate::projects::ProjectConfig;
 
 const CHECKPOINT_VERSION: u32 = 1;
-const CHECKPOINT_ID_PREFIX: &str = "wc_ckpt_";
+const CHECKPOINT_ID_PREFIX: &str = "cg_ckpt_";
 const DEFAULT_LIST_LIMIT: usize = 20;
 const MAX_LIST_LIMIT: usize = 100;
 const DEFAULT_CHECKPOINT_KIND: &str = "snapshot";
@@ -898,7 +898,7 @@ fn safe_project_id(project: &str) -> String {
 
 fn validate_checkpoint_id(checkpoint_id: &str) -> Result<(), String> {
     let Some(rest) = checkpoint_id.strip_prefix(CHECKPOINT_ID_PREFIX) else {
-        return Err("checkpoint_id must start with wc_ckpt_".to_string());
+        return Err("checkpoint_id must start with cg_ckpt_".to_string());
     };
     if codegpt_core::compact::decode::<12>(rest).is_none() {
         return Err("checkpoint_id must have a canonical compact suffix".to_string());
@@ -914,8 +914,8 @@ mod identifier_tests {
     fn checkpoint_publication_retries_collision_without_overwrite() {
         let temp = tempfile::tempdir().unwrap();
         let store = CheckpointStore::new(temp.path());
-        let occupied = "wc_ckpt_AAAAAAAAAAAAAAAA";
-        let fresh = "wc_ckpt_AAAAAAAAAAAAAAAB";
+        let occupied = "cg_ckpt_AAAAAAAAAAAAAAAA";
+        let fresh = "cg_ckpt_AAAAAAAAAAAAAAAB";
         let mut first = json!({"title": "preserve"});
         let path = store
             .create_with("project", &mut first, || occupied.into())

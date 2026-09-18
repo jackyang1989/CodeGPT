@@ -4,9 +4,9 @@ use crate::protocol::AcceptedRunnerProtocol;
 use crate::registry::{MAX_SHARED_KEY_RUNNERS_PER_GROUP, SHARED_KEY_OFFLINE_TTL_SECS};
 use crate::validation::{validate_file_request, validate_run_request, MAX_RUN_STDIN_BYTES};
 use crate::*;
+use codegpt_core::runner_protocol::*;
 use std::sync::Arc;
 use tokio::sync::Notify;
-use codegpt_core::runner_protocol::*;
 
 fn auth_context(username: Option<&str>, is_bootstrap: bool) -> RunnerAccess {
     RunnerAccess {

@@ -199,7 +199,7 @@ async fn coding_task_semantic_navigation_available_is_recommended_and_bounded() 
     assert!(result.output["session"]["session_id"]
         .as_str()
         .unwrap()
-        .starts_with("wc_sess_"));
+        .starts_with("cg_sess_"));
     assert_eq!(result.output["startup_verdict"]["status"], "pass");
     assert!(!result.output["warnings"]
         .as_array()

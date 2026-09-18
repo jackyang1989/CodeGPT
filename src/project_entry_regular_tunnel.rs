@@ -196,8 +196,8 @@ mod tests {
         assert!(!encoded.contains("CONTROL_PLANE_API_KEY"));
         assert!(!encoded.contains("Authorization"));
         assert!(!encoded.contains("Bearer"));
-        assert!(!encoded.contains("wc_pat_"));
-        assert!(!encoded.contains("wc_boot_"));
+        assert!(!encoded.contains("cg_pat_"));
+        assert!(!encoded.contains("cg_boot_"));
     }
 
     #[test]
@@ -211,7 +211,7 @@ mod tests {
     #[test]
     fn authorization_file_is_private_distinct_and_cleaned_up() {
         let temp = tempfile::tempdir().unwrap();
-        let bootstrap_token = "wc_boot_test_secret";
+        let bootstrap_token = "cg_boot_test_secret";
         let session = RegularTunnelSession::create(temp.path()).unwrap();
         let session_dir = session.directory.clone();
         let authorization_file = session.write_authorization_file(bootstrap_token).unwrap();

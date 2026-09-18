@@ -601,10 +601,7 @@ async fn download_tunnel_client_asset(url: &str, destination: &Path) -> Result<(
         .map_err(|_| download_error("could not initialize the download client"))?;
     let mut response = client
         .get(url)
-        .header(
-            USER_AGENT,
-            format!("codegpt/{}", env!("CARGO_PKG_VERSION")),
-        )
+        .header(USER_AGENT, format!("codegpt/{}", env!("CARGO_PKG_VERSION")))
         .send()
         .await
         .map_err(|error| {
@@ -822,7 +819,9 @@ fn tunnel_runtime_error(message: &'static str) -> ProductError {
     ProductError::new(
         "tunnel_unavailable",
         message,
-        Some("Check the OpenAI tunnel-client configuration and retry codegpt share --tunnel openai."),
+        Some(
+            "Check the OpenAI tunnel-client configuration and retry codegpt share --tunnel openai.",
+        ),
     )
 }
 

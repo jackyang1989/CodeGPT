@@ -439,7 +439,7 @@ fn goal_schemas_are_bounded_private_and_existing_coding_tools_do_not_accept_goal
 
 #[test]
 fn goal_tool_calls_and_audit_keep_goal_identity_distinct_and_private_text_out_of_logs() {
-    let goal_id = "wc_goal_AAAAAAAAAAAAAAAA".to_string();
+    let goal_id = "cg_goal_AAAAAAAAAAAAAAAA".to_string();
     let call = ToolCall::from_tool_name(
         "update_goal",
         json!({
@@ -518,8 +518,8 @@ fn goal_tool_calls_and_audit_keep_goal_identity_distinct_and_private_text_out_of
     assert!(ToolCall::from_tool_name(
         "associate_goal_agent_task",
         json!({
-            "goal_id": "wc_goal_ERERERERERERERER".to_string(),
-            "task_id": "wc_agent_task_IiIiIiIiIiIiIiIi".to_string(),
+            "goal_id": "cg_goal_ERERERERERERERER".to_string(),
+            "task_id": "cg_agent_task_IiIiIiIiIiIiIiIi".to_string(),
             "idempotency_key": "link"
         })
     )
@@ -566,7 +566,7 @@ fn goal_runtime_crud_replay_and_exact_read_hide_foreign_existence() {
     assert_eq!(changed.output["error_kind"], "goal_idempotency_conflict");
 
     let foreign = runtime.get_goal(Some(&alice), goal_id.clone());
-    let missing = runtime.get_goal(Some(&alice), "wc_goal_________________".to_string());
+    let missing = runtime.get_goal(Some(&alice), "cg_goal_________________".to_string());
     assert!(!foreign.success);
     assert!(!missing.success);
     assert_eq!(foreign.output["error_kind"], "goal_not_found");
@@ -656,7 +656,7 @@ async fn goal_plan_projection_is_exact_pure_revisioned_terminal_and_existence_hi
 
     let foreign = runtime.goal_plan_state(Some(&alice), goal_id.clone()).await;
     let missing = runtime
-        .goal_plan_state(Some(&alice), "wc_goal_________________".to_string())
+        .goal_plan_state(Some(&alice), "cg_goal_________________".to_string())
         .await;
     assert!(!foreign.success);
     assert!(!missing.success);
@@ -1049,7 +1049,7 @@ async fn goal_plan_projection_fails_closed_on_malformed_persisted_goal() {
         conn.execute_batch("PRAGMA ignore_check_constraints = ON;")
             .unwrap();
         conn.execute(
-            "UPDATE wc_goals SET lifecycle = 'waiting_validation' WHERE goal_id = ?1",
+            "UPDATE cg_goals SET lifecycle = 'waiting_validation' WHERE goal_id = ?1",
             [goal_id.as_str()],
         )
         .unwrap();
@@ -1112,7 +1112,7 @@ fn goal_agent_task_link_reauthorizes_task_and_task_completion_never_completes_go
     assert_eq!(
         db.conn_for_tests()
             .query_row(
-                "SELECT COUNT(*) FROM wc_agent_task_coding_runs",
+                "SELECT COUNT(*) FROM cg_agent_task_coding_runs",
                 [],
                 |row| row.get::<_, i64>(0)
             )
@@ -1198,8 +1198,8 @@ fn goal_agent_task_link_reauthorizes_task_and_task_completion_never_completes_go
         .conn_for_tests()
         .query_row(
             "SELECT e.event_id, w.wake_id
-             FROM wc_agent_attention_events e
-             JOIN wc_agent_wakes w ON w.source_event_id = e.event_id
+             FROM cg_agent_attention_events e
+             JOIN cg_agent_wakes w ON w.source_event_id = e.event_id
              WHERE e.kind = 'agent_task_terminal'
                AND e.goal_id = ?1 AND e.task_id = ?2 AND e.task_attempt_id = ?3
                AND e.target_agent_id = ?4 AND e.terminal_task_state = 'succeeded'

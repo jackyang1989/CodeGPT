@@ -117,7 +117,7 @@ Workflow Session W
       |
       | optional provenance / evidence relationship only
       v
-CodingAgentRun R          model-visible: wc_agent_run_...
+CodingAgentRun R          model-visible: cg_agent_run_...
       |
       | Runner-private protocol execution
       v
@@ -132,7 +132,7 @@ CodeGPT Job J             independent process-execution primitive
 ### Workflow Session
 
 A Workflow Session remains the bounded coding-task evidence and collaboration
-ledger described by `session-model.md`. A Run may record the `wc_sess_*` that
+ledger described by `session-model.md`. A Run may record the `cg_sess_*` that
 initiated it, but that reference is provenance only.
 
 Knowing a Workflow Session id does not authorize a Run. Recorder metadata must
@@ -143,7 +143,7 @@ caller/project/provider ownership on observe and cancel.
 
 `CodingAgentRun` is the CodeGPT business identity for one admitted autonomous
 coding turn. The future public id should be opaque and CodeGPT-owned, for
-example `wc_agent_run_*`. It is the only agent-execution identity a model needs
+example `cg_agent_run_*`. It is the only agent-execution identity a model needs
 to retain after successful admission.
 
 A Run owns the bounded normalized event history, current state, exact Project,
@@ -314,8 +314,8 @@ Identity lifetime is intentionally asymmetric:
 | JSON-RPC request id | Connection/process-local correlation only; never recovery or authority identity. |
 | ACP `sessionId` | Provider-private. Current Codex ACP can persist/load it across adapter processes, but that is a provider capability, not a universal ACP/CodeGPT guarantee. |
 | ACP provider instance id | CodeGPT Runner process/provider-instance fence; replacement makes old requests stale. |
-| `wc_agent_run_*` | Future CodeGPT business identity, retained independently of one HTTP/MCP request and reconciled only from authoritative Runner Run state. |
-| Workflow `wc_sess_*` | Independent evidence/collaboration identity; optional Run provenance only. |
+| `cg_agent_run_*` | Future CodeGPT business identity, retained independently of one HTTP/MCP request and reconciled only from authoritative Runner Run state. |
+| Workflow `cg_sess_*` | Independent evidence/collaboration identity; optional Run provenance only. |
 
 The Runner must own the JSON-RPC id space/correlation machinery. Remote callers
 must never provide a JSON-RPC method or id.
@@ -912,7 +912,7 @@ secret-free advertisement, and dispatch certainty.
 
 Add a `CodingAgentRun` registry/runtime path separate from `jobs.rs`, with:
 
-- deterministic `wc_agent_run_*` identity derived from stable principal +
+- deterministic `cg_agent_run_*` identity derived from stable principal +
   idempotency key before Runner dispatch;
 - bounded intent fingerprinting and detached-style idempotency conflict checking;
 - exact Project/Runner/provider binding;

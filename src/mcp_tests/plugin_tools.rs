@@ -1,10 +1,10 @@
 use super::*;
 use crate::runner_protocol::{RunnerPolicySummary, RunnerResultPayload};
-use std::sync::Arc;
 use codegpt_core::plugin::{
     PluginContent, PluginDispatchState, PluginGatewayRequest, PluginGatewayResponse,
     PluginGatewayResponsePayload, PluginProviderView, PluginTool, PluginToolResult,
 };
+use std::sync::Arc;
 
 async fn wait_for_plugin_request(
     registry: &crate::runner_http::RunnerRegistry,
@@ -369,7 +369,7 @@ async fn describe_binding_with_provider_set(
         .as_str()
         .expect("describe must return opaque binding")
         .to_string();
-    assert!(binding.starts_with("wc_pbind_"));
+    assert!(binding.starts_with("cg_pbind_"));
     let encoded = serde_json::to_string(&result["result"]["structuredContent"]).unwrap();
     assert!(!encoded.contains(runner_instance_id));
     assert!(!encoded.contains(&provider.provider_instance_id));
@@ -461,7 +461,7 @@ async fn plugin_operation_scopes_are_independent_and_fail_closed() {
             681,
             json!({
                 "action":"call",
-                "binding":"wc_pbind_AAAAAAAAAAAAAAAAAAAAAA",
+                "binding":"cg_pbind_AAAAAAAAAAAAAAAAAAAAAA",
                 "arguments":{}
             }),
             crate::auth::SCOPE_PLUGIN_INVOKE,
@@ -504,7 +504,7 @@ async fn plugin_operation_scopes_are_independent_and_fail_closed() {
                 "name": crate::plugin_gateway::PLUGIN_TOOL_NAME,
                 "arguments": {
                     "action":"call",
-                    "binding":"wc_pbind_AAAAAAAAAAAAAAAAAAAAAA",
+                    "binding":"cg_pbind_AAAAAAAAAAAAAAAAAAAAAA",
                     "arguments":{}
                 }
             }),
@@ -557,7 +557,7 @@ async fn plugin_operation_scopes_are_independent_and_fail_closed() {
                 "name": crate::plugin_gateway::PLUGIN_TOOL_NAME,
                 "arguments": {
                     "action":"call",
-                    "binding":"wc_pbind_AAAAAAAAAAAAAAAAAAAAAA",
+                    "binding":"cg_pbind_AAAAAAAAAAAAAAAAAAAAAA",
                     "arguments":{}
                 }
             }),
@@ -644,7 +644,7 @@ async fn read_only_session_allows_plugin_inspect_but_denies_call_before_provider
                 "name": crate::plugin_gateway::PLUGIN_TOOL_NAME,
                 "arguments": {
                     "action":"call",
-                    "binding":"wc_pbind_ASNFZ4mrze8BI0VniavN7w",
+                    "binding":"cg_pbind_ASNFZ4mrze8BI0VniavN7w",
                     "arguments":{"query":"must-not-run"},
                     "recording_session_id":session.session_id
                 }
@@ -679,7 +679,7 @@ async fn read_only_session_allows_plugin_inspect_but_denies_call_before_provider
         runtime.sessions.summary(&session.session_id, Some(100))
     );
     assert!(!ledger.contains("must-not-run"));
-    assert!(!ledger.contains("wc_pbind_ASNFZ4mrze8BI0VniavN7w"));
+    assert!(!ledger.contains("cg_pbind_ASNFZ4mrze8BI0VniavN7w"));
 }
 
 #[tokio::test]
@@ -746,7 +746,7 @@ async fn plugin_tool_accepts_collaboration_ack_but_rejects_other_stateless_wrapp
                 "name": crate::plugin_gateway::PLUGIN_TOOL_NAME,
                 "arguments": {
                     "action":"list",
-                    crate::tool_runtime::sessions::TOOL_CALL_ACK_SESSION_MESSAGE_IDS_FIELD: ["wc_msg_0123456789abcdef"]
+                    crate::tool_runtime::sessions::TOOL_CALL_ACK_SESSION_MESSAGE_IDS_FIELD: ["cg_msg_0123456789abcdef"]
                 }
             })),
         ),
@@ -790,7 +790,7 @@ async fn plugin_tool_accepts_collaboration_ack_but_rejects_other_stateless_wrapp
             json!({
                 "action":"list",
                 crate::tool_runtime::sessions::TOOL_CALL_SESSION_MESSAGE_RESOLUTION_FIELD: {
-                    "message_id": "wc_msg_cached",
+                    "message_id": "cg_msg_cached",
                     "resolution": "handled"
                 }
             }),
@@ -853,7 +853,7 @@ async fn restricted_permission_denies_plugin_call_and_outer_direct_name_never_di
                 "name": crate::plugin_gateway::PLUGIN_TOOL_NAME,
                 "arguments": {
                     "action":"call",
-                    "binding":"wc_pbind_ASNFZ4mrze8BI0VniavN7w",
+                    "binding":"cg_pbind_ASNFZ4mrze8BI0VniavN7w",
                     "arguments":{"query":"must-not-run"}
                 }
             }),
@@ -1437,7 +1437,7 @@ async fn plugin_tool_list_argument_matrix_rejects_ambiguous_inputs_before_dispat
         ),
         (
             769,
-            json!({"action":"list","runner":"runner-a","binding":"wc_pbind_AAAAAAAAAAAAAAAAAAAAAA"}),
+            json!({"action":"list","runner":"runner-a","binding":"cg_pbind_AAAAAAAAAAAAAAAAAAAAAA"}),
         ),
         (
             770,
@@ -1574,7 +1574,7 @@ async fn generic_runtime_plugin_gateway_list_describe_call_and_error_certainty_s
         .as_str()
         .unwrap()
         .to_string();
-    assert!(binding.starts_with("wc_pbind_"));
+    assert!(binding.starts_with("cg_pbind_"));
 
     let call = spawn_generic_plugin_call(
         &runtime,
@@ -1747,7 +1747,7 @@ async fn generic_runtime_plugin_governance_is_action_aware_and_records_one_api_l
         &invoke,
         json!({
             "action":"call",
-            "binding":"wc_pbind_AAAAAAAAAAAAAAAAAAAAAA",
+            "binding":"cg_pbind_AAAAAAAAAAAAAAAAAAAAAA",
             "arguments":{}
         }),
         None,
@@ -1949,7 +1949,7 @@ async fn tool_manifest_returns_sparse_static_plugin_tool_contract_without_runner
     assert!(output["route"].get("via").is_none());
     assert_eq!(
         output["input_schema"]["properties"]["binding"]["pattern"],
-        "^wc_pbind_[A-Za-z0-9_-]{21}[AQgw]$"
+        "^cg_pbind_[A-Za-z0-9_-]{21}[AQgw]$"
     );
     assert_eq!(output["authority"]["policy"], "require_any");
     let scopes = output["authority"]["scopes"]
@@ -2002,7 +2002,7 @@ async fn tool_manifest_returns_sparse_static_plugin_tool_contract_without_runner
     }
     assert_eq!(
         stateless_gateway["inputSchema"]["properties"]["recording_session_id"]["pattern"],
-        "^wc_sess_([A-Za-z0-9_-]{16}|[0-9a-f]{32})$"
+        "^cg_sess_([A-Za-z0-9_-]{16}|[0-9a-f]{32})$"
     );
 }
 
@@ -2290,7 +2290,7 @@ async fn plugin_tool_reload_describe_call_binds_exact_dynamic_provider_and_forge
         .as_str()
         .expect("describe binding")
         .to_string();
-    assert!(binding.starts_with("wc_pbind_"));
+    assert!(binding.starts_with("cg_pbind_"));
 
     let call_task = spawn_binding_call(
         &runtime,

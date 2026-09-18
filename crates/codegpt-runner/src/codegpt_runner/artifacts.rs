@@ -5,6 +5,9 @@ use crate::artifact_policy::MAX_MCP_IMAGE_BYTES;
 #[cfg(test)]
 use crate::runner_protocol::RunnerRequest;
 use base64::{engine::general_purpose, Engine as _};
+#[cfg(test)]
+use codegpt_core::runner_operation::RunnerOperation;
+use codegpt_core::runner_operation::{RunnerFileOperation, RunnerFilePayload};
 use serde_json::{json, Value};
 use std::io::{Read, Seek, SeekFrom, Write};
 use std::path::{Path, PathBuf};
@@ -12,9 +15,6 @@ use std::sync::Mutex;
 #[cfg(test)]
 use std::time::{Duration, SystemTime};
 use std::time::{Instant, UNIX_EPOCH};
-#[cfg(test)]
-use codegpt_core::runner_operation::RunnerOperation;
-use codegpt_core::runner_operation::{RunnerFileOperation, RunnerFilePayload};
 
 mod inspection;
 mod upload;
@@ -1105,7 +1105,7 @@ mod tests {
         let orphan_parent = tmp.path().join("artifacts/orphans");
         std::fs::create_dir_all(&active_parent).unwrap();
         std::fs::create_dir_all(&orphan_parent).unwrap();
-        let active_id = "wc_upload_active";
+        let active_id = "cg_upload_active";
         write_test_upload_pair(
             &active_parent,
             active_id,
@@ -1113,9 +1113,9 @@ mod tests {
             b"abc",
         );
 
-        let (orphan_part, _) = upload_paths(&orphan_parent, "wc_upload_orphan_part");
+        let (orphan_part, _) = upload_paths(&orphan_parent, "cg_upload_orphan_part");
         std::fs::write(&orphan_part, b"orphan").unwrap();
-        let (_, orphan_sidecar) = upload_paths(&orphan_parent, "wc_upload_orphan_sidecar");
+        let (_, orphan_sidecar) = upload_paths(&orphan_parent, "cg_upload_orphan_sidecar");
         write_upload_state(
             &orphan_sidecar,
             &test_upload_state("artifacts/orphans/orphan.bin"),
@@ -1281,7 +1281,7 @@ mod tests {
         for index in 0..MAX_ACTIVE_ARTIFACT_UPLOADS_PER_PROJECT {
             let parent = tmp.path().join(format!("artifacts/set-{index}"));
             std::fs::create_dir_all(&parent).unwrap();
-            let upload_id = format!("wc_upload_limit_{index}");
+            let upload_id = format!("cg_upload_limit_{index}");
             write_test_upload_pair(
                 &parent,
                 &upload_id,
@@ -1316,7 +1316,7 @@ mod tests {
         for index in 0..2 {
             let parent = tmp.path().join(format!("artifacts/quota-{index}"));
             std::fs::create_dir_all(&parent).unwrap();
-            let upload_id = format!("wc_upload_quota_{index}");
+            let upload_id = format!("cg_upload_quota_{index}");
             write_test_upload_pair(
                 &parent,
                 &upload_id,
@@ -1348,7 +1348,7 @@ mod tests {
     #[test]
     fn read_upload_state_rejects_requested_path_mismatch() {
         let tmp = tempfile::tempdir().unwrap();
-        let (_part, sidecar) = upload_paths(tmp.path(), "wc_upload_test_1");
+        let (_part, sidecar) = upload_paths(tmp.path(), "cg_upload_test_1");
         write_upload_state(
             &sidecar,
             &ArtifactUploadState {
@@ -1369,7 +1369,7 @@ mod tests {
     #[test]
     fn read_upload_state_rejects_oversized_sidecar() {
         let tmp = tempfile::tempdir().unwrap();
-        let (_, sidecar) = upload_paths(tmp.path(), "wc_upload_oversized_state");
+        let (_, sidecar) = upload_paths(tmp.path(), "cg_upload_oversized_state");
         std::fs::write(&sidecar, vec![b'x'; MAX_ARTIFACT_UPLOAD_STATE_BYTES + 1]).unwrap();
 
         let err = read_upload_state_file(&sidecar).unwrap_err();
@@ -1382,7 +1382,7 @@ mod tests {
         let path = "artifacts/imports/legacy-oversized.bin";
         let parent = tmp.path().join("artifacts/imports");
         std::fs::create_dir_all(&parent).unwrap();
-        let upload_id = "wc_upload_legacy_oversized";
+        let upload_id = "cg_upload_legacy_oversized";
         let (part, sidecar) = upload_paths(&parent, upload_id);
         std::fs::write(&part, b"").unwrap();
         write_upload_state(
@@ -1587,7 +1587,7 @@ mod tests {
     fn artifact_upload_abort_reports_cleanup_and_no_final_file() {
         let tmp = tempfile::tempdir().unwrap();
         let path = "artifacts/smoke/abort.artifact";
-        let upload_id = "wc_upload_test_abort";
+        let upload_id = "cg_upload_test_abort";
         let resolved = tmp.path().join(path);
         let parent = resolved.parent().unwrap();
         std::fs::create_dir_all(parent).unwrap();
@@ -1631,7 +1631,7 @@ mod tests {
     fn artifact_upload_abort_preserves_preexisting_final_file() {
         let tmp = tempfile::tempdir().unwrap();
         let path = "artifacts/smoke/preexisting.artifact";
-        let upload_id = "wc_upload_test_preexisting";
+        let upload_id = "cg_upload_test_preexisting";
         let resolved = tmp.path().join(path);
         let parent = resolved.parent().unwrap();
         std::fs::create_dir_all(parent).unwrap();
@@ -1715,7 +1715,7 @@ mod tests {
             assert!(output["upload_id"]
                 .as_str()
                 .unwrap()
-                .starts_with("wc_upload_"));
+                .starts_with("cg_upload_"));
         }
     }
 

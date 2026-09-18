@@ -12,7 +12,7 @@ Knowing a `session_id`, `message_id`, worker Session id, Job id, checkpoint id, 
 
 ## Window Peer awareness and cross-Project messaging
 
-A stable host window may be represented by a principal-scoped `wc_peer_*` identity derived from the already-hashed `ClientWindow`. Stateless MCP obtains that `ClientWindow` from host metadata such as `_meta["openai/session"]`; CodeGPT never exposes or persists the raw host value. Peer identity is communication identity only: it is not a Workflow Session selector, Project authority, credential, task lease, model-turn id, or proof that the host/model is currently running.
+A stable host window may be represented by a principal-scoped `cg_peer_*` identity derived from the already-hashed `ClientWindow`. Stateless MCP obtains that `ClientWindow` from host metadata such as `_meta["openai/session"]`; CodeGPT never exposes or persists the raw host value. Peer identity is communication identity only: it is not a Workflow Session selector, Project authority, credential, task lease, model-turn id, or proof that the host/model is currently running.
 
 Peer **discovery** is deliberately narrower than peer **contact**. CodeGPT may piggyback `peer_awareness` when another window owned by the same authenticated principal has meaningful activity in the exact same visible Project within the last 10 minutes. The hint is deduplicated by retained Server state per observer/peer/Project and reports recent activity, not liveness or presence. A window that has merely opened a connection or issued non-meaningful discovery traffic is not thereby an active collaborator.
 
@@ -27,7 +27,7 @@ Delivery is model-facing and intentionally lightweight:
 
 Peer transport is deliberately bounded rather than a permanent task queue. Old retained Peer messages and discovery edges may be pruned; `requires_ack` therefore means repeat while retained, not indefinite durable work. ActionAudit activity is discovery input only and never establishes a communication route by itself: a peer route exists only while retained Peer discovery/message state can still resolve it. Use Workflow Session todos and assignment fencing for durable work commitments.
 
-The sender's current Workflow Session and Project may be persisted as analysis context when they are already trusted runtime facts, but they are not part of the recipient projection and never become routing authority. Peer ids are resolved only inside the same authenticated principal; knowing another principal's `wc_peer_*` value does not cross that boundary.
+The sender's current Workflow Session and Project may be persisted as analysis context when they are already trusted runtime facts, but they are not part of the recipient projection and never become routing authority. Peer ids are resolved only inside the same authenticated principal; knowing another principal's `cg_peer_*` value does not cross that boundary.
 
 ## Canonical coordinator -> worker flow
 
@@ -81,8 +81,8 @@ A successful completion is fenced through the Session-ledger writer generation t
 `list_session_messages` supports narrow exact filters for browsing and coordinator result lookup. It is not the executable assignment source; workers use `get_session_assignment` for the atomic todo + direct-replies + fence snapshot:
 
 ```text
-message_id=<wc_msg_*>
-reply_to=<wc_msg_*>
+message_id=<cg_msg_*>
+reply_to=<cg_msg_*>
 kind=<optional>
 status=<optional>
 ```
@@ -95,7 +95,7 @@ All supplied filters use deterministic AND semantics. `message_id` therefore giv
 
 The token is bounded, opaque, bound to the exact Workflow Session, and backed by a durable Session-local monotonic message-observation revision. It is observation state only: it is not authority, an idempotency key, execution identity, an implicit Workflow Session selector, or message-delivery receipt. The same recorder/target authorization fence used by the other collaboration tools applies before any observation result is returned. Token issuance fences the ledger generation containing its revision so a valid token remains usable after Server restart when that Workflow Session can be restored.
 
-Assignment and continuity identities are intentionally separate domains: `assignment_fence` is a semantic todo snapshot, `completion_key` is caller replay identity, `ack_session_context_revision` is model-result continuity evidence, `ack_session_message_ids` is request-scoped retained-message proof, an observation token is a generic Session message-state cursor, business `session_id` names the authorized target, `recording_session_id` is Session provenance only, and `wc_peer_*` names a principal-scoped communication endpoint. None substitutes for another or grants Project/Session authority by possession.
+Assignment and continuity identities are intentionally separate domains: `assignment_fence` is a semantic todo snapshot, `completion_key` is caller replay identity, `ack_session_context_revision` is model-result continuity evidence, `ack_session_message_ids` is request-scoped retained-message proof, an observation token is a generic Session message-state cursor, business `session_id` names the authorized target, `recording_session_id` is Session provenance only, and `cg_peer_*` names a principal-scoped communication endpoint. None substitutes for another or grants Project/Session authority by possession.
 
 Observation tracks real message-state mutation, not deque length. Posts advance it; a resolve advances it only when status/resolution really changes; a new atomic completion advances for the todo resolution and answer creation; exact completion replay and no-op resolve do not advance it. If one retained message changes multiple times between observations, the observer may receive only its latest current state because this primitive is not an event/audit log.
 
@@ -151,7 +151,7 @@ When multiple workers operate on the same source, use normal Git/CodeGPT Project
 
 The hosted Runtime Console may post `note`, `guidance`, `question`, and `todo` messages into an exact authorized Workflow Session through the same `post_session_message` kernel path. This is a browser affordance, not a Participant entity, membership record, presence signal, or identity-spoofing surface. The browser route keeps the current collaboration metadata authority policy (`runtime:read`) and still applies the stored Session/project authority fence.
 
-Any Session message may opt into `requires_ack`, independently of kind and priority. A Stateless MCP 2026 caller can echo the visible `wc_msg_*` id in `ack_session_message_ids` on an otherwise ordinary tool call; the same bounded wrapper is also reused for ACK-required Peer messages addressed to the current window. The original tool executes normally whether the ACK is present, missing, unknown, foreign, or stale. A valid ACK suppresses that message body only for the same request/response. If a later request omits the ACK while a Session message remains open, or while a Peer ACK message remains retained, the Server may piggyback it again. The first observed ACK timestamp is observability only; it must never be described as delivered, read, accepted, or currently remembered. Session durable completion still requires normal message resolution.
+Any Session message may opt into `requires_ack`, independently of kind and priority. A Stateless MCP 2026 caller can echo the visible `cg_msg_*` id in `ack_session_message_ids` on an otherwise ordinary tool call; the same bounded wrapper is also reused for ACK-required Peer messages addressed to the current window. The original tool executes normally whether the ACK is present, missing, unknown, foreign, or stale. A valid ACK suppresses that message body only for the same request/response. If a later request omits the ACK while a Session message remains open, or while a Peer ACK message remains retained, the Server may piggyback it again. The first observed ACK timestamp is observability only; it must never be described as delivered, read, accepted, or currently remembered. Session durable completion still requires normal message resolution.
 
 ## Bounded payload guidance
 

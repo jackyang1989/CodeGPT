@@ -140,7 +140,7 @@ fn sparse_context_recovery_events_retain_more_under_the_same_hard_budget() {
         })
         .collect::<Vec<_>>();
     let recorded = sessions::RecordedModelFacingToolCall {
-        session_id: "wc_sess_projection".to_string(),
+        session_id: "cg_sess_projection".to_string(),
         context_revision: SESSION_CONTINUITY_RECOVERY_EVENT_LIMIT as u64,
         pre_response_context_revision: SESSION_CONTINUITY_RECOVERY_EVENT_LIMIT as u64,
         checkpoint_advanced: false,

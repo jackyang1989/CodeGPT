@@ -14,7 +14,7 @@ const OPENAI_CONVERSATION_HEADER: &str = "openai-conversation-id";
 const WINDOW_COOKIE: &str = "codegpt_window";
 const WINDOW_COOKIE_MAX_AGE_SECS: i64 = 60 * 60 * 24 * 90;
 const MAX_OPAQUE_ID_BYTES: usize = 256;
-pub(crate) const PEER_ID_PREFIX: &str = "wc_peer_";
+pub(crate) const PEER_ID_PREFIX: &str = "cg_peer_";
 const PEER_WINDOW_KEY_PREFIX_HEX_LEN: usize = 32;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -80,7 +80,7 @@ pub(crate) fn mcp_window(req: &Request, initialize: bool) -> McpWindow {
             issued_session_id: None,
         };
     }
-    let raw = format!("wc_mcp_{}", uuid::Uuid::new_v4().simple());
+    let raw = format!("cg_mcp_{}", uuid::Uuid::new_v4().simple());
     McpWindow {
         identity: ClientWindow::from_opaque("mcp", &raw),
         issued_session_id: Some(raw),
@@ -152,7 +152,7 @@ pub(crate) fn api_window(req: &Request, res: &mut Response) -> ClientWindow {
         }
     }
 
-    let raw = format!("wc_win_{}", uuid::Uuid::new_v4().simple());
+    let raw = format!("cg_win_{}", uuid::Uuid::new_v4().simple());
     let window =
         ClientWindow::from_opaque("http-cookie", &raw).expect("generated window id is valid");
     let mut cookie = format!(

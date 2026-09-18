@@ -1,10 +1,11 @@
 //! Bounded process execution for validation adapters.
 
+use crate::codegpt_runner::output_text::{normalize_output_text, OutputTextSource};
 use crate::validation_bridge::{
     sanitize_bridge_text, MAX_VALIDATION_STDERR_CAPTURE_BYTES, MAX_VALIDATION_STDERR_SUMMARY_CHARS,
     MAX_VALIDATION_STDOUT_BYTES,
 };
-use crate::codegpt_runner::output_text::{normalize_output_text, OutputTextSource};
+use codegpt_process::{GracefulTermination, ManagedChild};
 use std::io::Read;
 use std::path::{Path, PathBuf};
 use std::process::{Command, ExitStatus, Stdio};
@@ -12,7 +13,6 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc;
 use std::thread;
 use std::time::{Duration, Instant};
-use codegpt_process::{GracefulTermination, ManagedChild};
 
 #[derive(Debug)]
 pub(crate) struct CapturedProcess {

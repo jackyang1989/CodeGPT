@@ -20,9 +20,9 @@ use std::time::{Duration, Instant};
 use tokio::sync::{mpsc, OwnedSemaphorePermit, Semaphore};
 
 pub(super) const MCP_ARTIFACT_EXPORT_URI_PREFIX: &str = "codegpt-artifact://export/";
-pub(super) const MCP_ARTIFACT_EXPORT_ID_PREFIX: &str = "wc_export_";
+pub(super) const MCP_ARTIFACT_EXPORT_ID_PREFIX: &str = "cg_export_";
 pub(super) const MCP_SNAPSHOT_RESOURCE_URI_PREFIX: &str = "codegpt-snapshot://view/";
-pub(super) const MCP_SNAPSHOT_RESOURCE_ID_PREFIX: &str = "wc_snapshot_";
+pub(super) const MCP_SNAPSHOT_RESOURCE_ID_PREFIX: &str = "cg_snapshot_";
 pub(super) const MCP_SNAPSHOT_RESOURCE_TTL: Duration = Duration::from_secs(5 * 60);
 pub(super) const MAX_MCP_SNAPSHOT_RESOURCES: usize = 32;
 pub(super) const MAX_MCP_SNAPSHOT_RESOURCES_PER_CALLER: usize = 8;

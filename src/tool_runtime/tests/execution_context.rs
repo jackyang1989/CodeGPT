@@ -1023,7 +1023,7 @@ async fn update_session_context_requires_authorized_exact_project_and_preserves_
         .dispatch_with_auth(
             ToolCall::UpdateSessionContext {
                 project: first_project,
-                session_id: "wc_sess_unknowncontext01".to_string(),
+                session_id: "cg_sess_unknowncontext01".to_string(),
                 execution_context: sessions::SessionExecutionContext::default(),
             },
             Some(&owner),

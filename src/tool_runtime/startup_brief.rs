@@ -2087,12 +2087,12 @@ mod tests {
         });
         let extensions = StartupExtensions {
             skills: StartupSkillsCatalog::available(
-                "wc_skillcat_qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqo".to_string(),
+                "cg_skillcat_qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqo".to_string(),
                 false,
                 (0..64)
                     .map(|index| StartupSkillEntry {
                         skill_id: format!(
-                            "wc_skill_{}",
+                            "cg_skill_{}",
                             codegpt_core::compact::encode(&(index as u128).to_be_bytes()[0..])
                         ),
                         name: format!("skill-{index:02}"),
@@ -2104,7 +2104,7 @@ mod tests {
                     .collect(),
             ),
             plugins: StartupPluginsCatalog::available(
-                format!("wc_plugcat_{}", codegpt_core::compact::encode([0xbb; 32])),
+                format!("cg_plugcat_{}", codegpt_core::compact::encode([0xbb; 32])),
                 64,
                 (0..64)
                     .map(|index| StartupPluginEntry {

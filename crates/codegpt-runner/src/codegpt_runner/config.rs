@@ -922,10 +922,7 @@ impl ReloadableRunnerConfig {
                 );
             }
         }
-        eprintln!(
-            "codegpt-runner config reload {}",
-            status.last_reload_result
-        );
+        eprintln!("codegpt-runner config reload {}", status.last_reload_result);
         let mut fields = status.restart_required_fields.clone();
         fields.sort();
         let response = RunnerConfigOperationResponse {
@@ -1317,8 +1314,8 @@ fn validate_ssh_config(ssh: &mut SshConfig) -> Result<(), String> {
         validate_ssh_resource_name(name)?;
         resource.host = codegpt_core::ssh_resource::normalize_ssh_resource_target(&resource.host)
             .map_err(|_| {
-                format!("ssh.resources.{name}.host must be a non-empty safe SSH destination")
-            })?;
+            format!("ssh.resources.{name}.host must be a non-empty safe SSH destination")
+        })?;
         resource.default_cwd = codegpt_core::ssh_resource::normalize_ssh_resource_default_cwd(
             resource.default_cwd.as_deref(),
         )
@@ -1650,11 +1647,11 @@ fn validate_acp_env_name(value: &str) -> Result<(), ()> {
 }
 
 fn validate_acp_config(config: &AcpConfig) -> Result<(), String> {
-    use std::collections::HashSet;
     use codegpt_core::coding_agent::{
         validate_provider_id, CODING_AGENT_MAX_CONFIG_KEY_BYTES, CODING_AGENT_MAX_PROVIDERS,
         CODING_AGENT_MAX_PROVIDER_NAME_BYTES,
     };
+    use std::collections::HashSet;
 
     if !(ACP_MIN_CONCURRENT_RUNS..=ACP_MAX_CONCURRENT_RUNS).contains(&config.max_concurrent_runs) {
         return Err(format!(
@@ -1900,10 +1897,10 @@ fn validate_mcp_gateway_config(config: &McpGatewayConfig) -> Result<(), String> 
 }
 
 fn validate_plugin_config(config: &PluginConfig, shell: &ShellConfig) -> Result<(), String> {
-    use std::collections::HashSet;
     use codegpt_core::plugin::{
         validate_provider_id, validate_provider_name, PLUGIN_MAX_PROVIDERS,
     };
+    use std::collections::HashSet;
 
     if !(1..=120).contains(&config.request_timeout_secs) {
         return Err("plugins.request_timeout_secs must be between 1 and 120".to_string());

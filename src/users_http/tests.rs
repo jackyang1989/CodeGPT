@@ -126,8 +126,8 @@ async fn http_users_create_issue_credential_returns_plaintext_once_and_stores_ha
     assert_eq!(effective_status(&resp), StatusCode::OK);
     let body: Value = resp.take_json().await.unwrap();
     let credential = body["account_credential"].as_str().unwrap();
-    assert!(credential.starts_with("wc_acct_"));
-    assert_eq!(credential.len(), "wc_acct_".len() + 64);
+    assert!(credential.starts_with("cg_acct_"));
+    assert_eq!(credential.len(), "cg_acct_".len() + 64);
     assert_eq!(body["account_credential_prefix"], &credential[..16]);
 
     let hash = hash_token(credential);
@@ -277,13 +277,13 @@ async fn http_tokens_create_returns_plaintext_once_and_authenticates() {
     let token = body["token"].as_str().unwrap().to_string();
     // Token format check.
     assert!(
-        token.starts_with("wc_pat_"),
-        "token must use wc_pat_ prefix"
+        token.starts_with("cg_pat_"),
+        "token must use cg_pat_ prefix"
     );
-    assert!(token.len() > "wc_pat_".len() + 32);
+    assert!(token.len() > "cg_pat_".len() + 32);
     // Prefix returned for display must not equal the full token.
     let prefix = body["token_prefix"].as_str().unwrap();
-    assert!(prefix.starts_with("wc_pat_"));
+    assert!(prefix.starts_with("cg_pat_"));
     assert_ne!(prefix, token);
     assert_eq!(body["name"], "laptop");
     assert_eq!(body["username"], "alice");
@@ -345,7 +345,7 @@ async fn http_tokens_create_rejects_wrong_token() {
     seed_user(&db, "alice", "user");
     let service = Service::new(build_router(config, db));
     let resp = TestClient::post("http://localhost/api/tokens/list")
-        .bearer_auth("wc_pat_deadbeef")
+        .bearer_auth("cg_pat_deadbeef")
         .json(&json!({"username": "alice"}))
         .send(&service)
         .await;
@@ -499,7 +499,7 @@ async fn http_tokens_register_hash_rejects_existing_account_credential_hash() {
         .json(&json!({
             "username": "alice",
             "token_hash": hash_token(&credential),
-            "token_prefix": "wc_pat_conflict",
+            "token_prefix": "cg_pat_conflict",
             "scopes": ["runtime:read"],
         }))
         .send(&service)
@@ -524,11 +524,11 @@ async fn http_tokens_register_hash_validates_hash_prefix_scope_and_duplicate() {
         ),
         (
             "plaintext token field",
-            json!({"username":"alice","token":"wc_pat_plaintext","token_hash":hash,"token_prefix":prefix,"scopes":["runtime:read"]}),
+            json!({"username":"alice","token":"cg_pat_plaintext","token_hash":hash,"token_prefix":prefix,"scopes":["runtime:read"]}),
         ),
         (
             "bad prefix",
-            json!({"username":"alice","token_hash":hash,"token_prefix":"wc_agent_bad","scopes":["runtime:read"]}),
+            json!({"username":"alice","token_hash":hash,"token_prefix":"cg_agent_bad","scopes":["runtime:read"]}),
         ),
         (
             "admin scope",
@@ -622,7 +622,7 @@ async fn http_tokens_list_never_returns_hash_or_plaintext() {
     let service = Service::new(build_router(config, db));
     // Create two tokens, capturing their plaintext values so we can prove
     // the list response never echoes them. The short `token_prefix`
-    // (which legitimately starts with `wc_pat_`) is allowed to appear.
+    // (which legitimately starts with `cg_pat_`) is allowed to appear.
     let mut plaintext_tokens = Vec::new();
     for name in ["a", "b"] {
         let mut resp = TestClient::post("http://localhost/api/tokens/create")
@@ -709,7 +709,7 @@ async fn http_tokens_revoke_works_and_token_no_longer_authenticates() {
     assert_eq!(body["success"], true);
     assert!(body["token"]["revoked_at"].is_number());
     // Revoke response must not leak the plaintext token. The
-    // `token_prefix` (first 16 chars, starts with `wc_pat_`) is allowed;
+    // `token_prefix` (first 16 chars, starts with `cg_pat_`) is allowed;
     // only the full secret must never appear.
     let serialized = serde_json::to_string(&body).unwrap();
     assert!(!serialized.contains(&token));

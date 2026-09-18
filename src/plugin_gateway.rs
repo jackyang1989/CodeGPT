@@ -16,12 +16,12 @@ use crate::tool_runtime::specialized::{
     SpecializedGovernanceDenial, SpecializedOperationPolicy, SpecializedSource,
 };
 use crate::tool_runtime::{PluginToolCall, ToolResult, ToolRuntime};
+use codegpt_tool_contracts::PluginToolAction;
 use serde::Serialize;
 use serde_json::{json, Value};
 use std::collections::{HashMap, VecDeque};
 use std::sync::Mutex;
 use std::time::Duration;
-use codegpt_tool_contracts::PluginToolAction;
 
 pub(crate) const PLUGIN_TOOL_NAME: &str = "plugin_tool";
 const MAX_PLUGIN_BINDINGS: usize = 512;
@@ -56,7 +56,7 @@ impl PluginGatewayRuntime {
             .lock()
             .unwrap_or_else(|poisoned| poisoned.into_inner());
         let binding = loop {
-            let candidate = format!("wc_pbind_{}", codegpt_core::compact::random_suffix::<16>());
+            let candidate = format!("cg_pbind_{}", codegpt_core::compact::random_suffix::<16>());
             if !store.values.contains_key(&candidate) {
                 break candidate;
             }
@@ -1124,7 +1124,7 @@ fn required_binding(value: Option<&str>) -> Result<&str, GatewayError> {
     let value = value
         .filter(|value| !value.trim().is_empty())
         .ok_or_else(|| GatewayError::local("invalid_arguments", "action=call requires binding"))?;
-    let Some(random) = value.strip_prefix("wc_pbind_") else {
+    let Some(random) = value.strip_prefix("cg_pbind_") else {
         return Err(GatewayError::local(
             "invalid_arguments",
             "binding is not a valid opaque Plugin binding",
@@ -1337,8 +1337,8 @@ mod tests {
         let first = runtime.remember(test_binding("provider-a", "tool-a"));
         let second = runtime.remember(test_binding("provider-b", "tool-b"));
         assert_ne!(first, second);
-        assert!(first.starts_with("wc_pbind_"));
-        assert!(second.starts_with("wc_pbind_"));
+        assert!(first.starts_with("cg_pbind_"));
+        assert!(second.starts_with("cg_pbind_"));
         assert_eq!(runtime.binding(&first).unwrap().tool_name, "tool-a");
         assert_eq!(runtime.binding(&second).unwrap().tool_name, "tool-b");
 
@@ -1380,7 +1380,7 @@ mod tests {
             .any(|action| action == "check"));
         assert_eq!(
             spec["inputSchema"]["properties"]["binding"]["pattern"],
-            "^wc_pbind_[A-Za-z0-9_-]{21}[AQgw]$"
+            "^cg_pbind_[A-Za-z0-9_-]{21}[AQgw]$"
         );
         assert!(spec["description"]
             .as_str()
@@ -1396,7 +1396,7 @@ mod tests {
 
     #[test]
     fn plugin_audit_projection_never_contains_binding_or_arbitrary_arguments() {
-        let binding = "wc_pbind_private_binding_marker";
+        let binding = "cg_pbind_private_binding_marker";
         let secret = "PLUGIN_PRIVATE_ARGUMENT_MARKER";
         let audit = audit_arguments(&json!({
             "action": "call",
@@ -1437,7 +1437,7 @@ mod tests {
     #[test]
     fn plugin_audit_projection_resolves_bounded_binding_identity_without_opaque_values() {
         let binding = test_binding("provider-a", "tool-a");
-        let opaque = "wc_pbind_private_binding_marker";
+        let opaque = "cg_pbind_private_binding_marker";
         let secret = "PLUGIN_PRIVATE_ARGUMENT_MARKER";
         let audit = audit_arguments_with_resolved_binding(
             audit_arguments(&json!({

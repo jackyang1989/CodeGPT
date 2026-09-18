@@ -1150,7 +1150,7 @@ mod tests {
             call_id: None,
             logical_invocation_id: None,
             logical_invocation_role: None,
-            session_id: "wc_sess_legacy".to_string(),
+            session_id: "cg_sess_legacy".to_string(),
             kind: "tool_call_finished".to_string(),
             context_revision: None,
             context_result_summary: None,
@@ -1335,7 +1335,7 @@ mod tests {
         };
         let list = WorkflowSessionConsoleList {
             sessions: vec![WorkflowSessionConsoleListItem {
-                session_id: "wc_sess_test".to_string(),
+                session_id: "cg_sess_test".to_string(),
                 title: "test".to_string(),
                 lifecycle: "active".to_string(),
                 mode: "normal".to_string(),

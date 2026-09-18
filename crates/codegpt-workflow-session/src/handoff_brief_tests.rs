@@ -8,9 +8,9 @@ use crate::{
     HANDOFF_NEXT_ACTIONS_MAX_ITEMS, HANDOFF_OPEN_FAILURES_MAX_ITEMS,
     HANDOFF_RECENT_FILES_MAX_ITEMS, TEST_ONLY_PROJECT_SESSION_AUTHORITY_FINGERPRINT,
 };
+use codegpt_core::workflow_session_contract::SessionMode;
 use serde_json::{json, Value};
 use std::collections::HashSet;
-use codegpt_core::workflow_session_contract::SessionMode;
 
 const PROJECT: &str = "test-project";
 
@@ -908,7 +908,7 @@ fn handoff_brief_redacts_instruction_credentials() {
     let workspace = clean_workspace();
     let jobs = empty_jobs();
     for credential in [
-        "wc_pat_test_secret_value",
+        "cg_pat_test_secret_value",
         "Bearer test_bearer_value",
         "client_secret=test_client_secret_value",
     ] {

@@ -1,12 +1,12 @@
 use super::*;
 use base64::engine::general_purpose::STANDARD as BASE64;
 use base64::Engine as _;
+use codegpt_process::ManagedChild;
 use std::fs;
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 use std::process::{ChildStdin, Command, Stdio};
 use tempfile::TempDir;
-use codegpt_process::ManagedChild;
 
 const POWERSHELL_UTF8_PREAMBLE: &str = concat!(
     "try { $OutputEncoding = [Console]::InputEncoding = ",
@@ -404,11 +404,11 @@ fn powershell_bootstrap_script() -> String {
     // would not hide variables kept by an outer PowerShell controller.
     format!(
         "{POWERSHELL_UTF8_PREAMBLE}\n\
-         $__wc_controller_source = @'\n\
+         $__cg_controller_source = @'\n\
 {POWERSHELL_CONTROLLER_SOURCE}\n\
 '@\n\
-         Add-Type -TypeDefinition $__wc_controller_source -Language CSharp\n\
-         Remove-Variable __wc_controller_source -Force\n\
+         Add-Type -TypeDefinition $__cg_controller_source -Language CSharp\n\
+         Remove-Variable __cg_controller_source -Force\n\
          try {{ [CodeGPTPersistentShell.Controller]::Run($Host) }} catch {{ [Console]::Error.WriteLine($_.Exception.ToString()); [Environment]::Exit(125) }}\n"
     )
 }

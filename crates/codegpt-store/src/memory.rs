@@ -13,12 +13,12 @@ pub use codegpt_core::memory_contract::{
     MAX_MEMORY_TAG_CHARS,
 };
 
-const MEMORY_ID_PREFIX: &str = "wc_mem_";
-const MEMORY_DEFINITION_HASH_PREFIX: &str = "wc_memdef_";
-const MEMORY_REVISION_PREFIX: &str = "wc_memrev_";
-const MEMORY_CATALOG_REVISION_PREFIX: &str = "wc_memcat_";
-const MEMORY_ROOT_FINGERPRINT_PREFIX: &str = "wc_memroot_";
-const MEMORY_PRINCIPAL_DIGEST_PREFIX: &str = "wc_memprincipal_";
+const MEMORY_ID_PREFIX: &str = "cg_mem_";
+const MEMORY_DEFINITION_HASH_PREFIX: &str = "cg_memdef_";
+const MEMORY_REVISION_PREFIX: &str = "cg_memrev_";
+const MEMORY_CATALOG_REVISION_PREFIX: &str = "cg_memcat_";
+const MEMORY_ROOT_FINGERPRINT_PREFIX: &str = "cg_memroot_";
+const MEMORY_PRINCIPAL_DIGEST_PREFIX: &str = "cg_memprincipal_";
 const COMPACT_SHA256_SUFFIX_LEN: usize = 43;
 const MAX_MEMORY_TAGS_JSON_BYTES: usize = 4 * 1024;
 const MEMORY_PROVENANCE_KINDS: &[&str] = &[
@@ -225,7 +225,7 @@ impl MemoryStoreError {
 }
 
 fn validate_scope(scope_id: &str) -> Result<(), MemoryStoreError> {
-    if valid_compact_sha256_prefixed(scope_id, "wc_memscope_") {
+    if valid_compact_sha256_prefixed(scope_id, "cg_memscope_") {
         Ok(())
     } else {
         Err(MemoryStoreError::InvalidScope)
@@ -486,7 +486,7 @@ fn parse_scope_row(row: &rusqlite::Row<'_>) -> rusqlite::Result<ProjectMemorySco
     // Reject malformed or hostile persisted metadata before materializing its
     // TEXT values. Scope inventory is bounded by Memory cardinality, and each
     // descriptor must also remain bounded independently.
-    if row.get::<_, i64>(7)? != ("wc_memscope_".len() + COMPACT_SHA256_SUFFIX_LEN) as i64 {
+    if row.get::<_, i64>(7)? != ("cg_memscope_".len() + COMPACT_SHA256_SUFFIX_LEN) as i64 {
         return Err(corrupt_row(
             0,
             rusqlite::types::Type::Text,
@@ -675,7 +675,7 @@ fn parse_row(
     // not a generic DB streaming abstraction.
     let exact_lengths = [
         (17, MEMORY_ID_PREFIX.len() + 16),
-        (18, "wc_memscope_".len() + COMPACT_SHA256_SUFFIX_LEN),
+        (18, "cg_memscope_".len() + COMPACT_SHA256_SUFFIX_LEN),
         (24, MEMORY_DEFINITION_HASH_PREFIX.len() + 64),
         (25, MEMORY_REVISION_PREFIX.len() + COMPACT_SHA256_SUFFIX_LEN),
     ];
@@ -1295,11 +1295,11 @@ impl Database {
         let scope_attribution = MemoryScopeAttribution {
             project_runtime_id: "agent:test:memory".to_string(),
             runner_client_id: "test-runner".to_string(),
-            root_fingerprint: format!("wc_memroot_{}", codegpt_core::compact::encode([0_u8; 32])),
+            root_fingerprint: format!("cg_memroot_{}", codegpt_core::compact::encode([0_u8; 32])),
         };
         let principal = MemoryPrincipalAttribution {
             kind: "dev".to_string(),
-            principal_digest: format!("wc_memprincipal_{}", "1".repeat(64)),
+            principal_digest: format!("cg_memprincipal_{}", "1".repeat(64)),
         };
         self.set_project_memory_attributed(memory_scope_id, &scope_attribution, &principal, input)
     }
@@ -1314,7 +1314,7 @@ impl Database {
         let scope_attribution = MemoryScopeAttribution {
             project_runtime_id: "agent:test:memory".to_string(),
             runner_client_id: "test-runner".to_string(),
-            root_fingerprint: format!("wc_memroot_{}", codegpt_core::compact::encode([0_u8; 32])),
+            root_fingerprint: format!("cg_memroot_{}", codegpt_core::compact::encode([0_u8; 32])),
         };
         self.delete_project_memory_attributed(
             memory_scope_id,

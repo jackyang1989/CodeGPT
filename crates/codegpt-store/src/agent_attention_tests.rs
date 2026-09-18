@@ -123,8 +123,8 @@ fn attention_wake_count(db: &Database, attempt_id: &str) -> i64 {
     db.conn_for_tests()
         .query_row(
             "SELECT COUNT(*)
-             FROM wc_agent_wakes w
-             JOIN wc_agent_attention_events e ON e.event_id = w.source_event_id
+             FROM cg_agent_wakes w
+             JOIN cg_agent_attention_events e ON e.event_id = w.source_event_id
              WHERE w.trigger_kind = 'attention_event' AND e.task_attempt_id = ?1",
             [attempt_id],
             |row| row.get(0),
@@ -135,7 +135,7 @@ fn attention_wake_count(db: &Database, attempt_id: &str) -> i64 {
 fn wake_id_for_event(db: &Database, event_id: &str) -> String {
     db.conn_for_tests()
         .query_row(
-            "SELECT wake_id FROM wc_agent_wakes
+            "SELECT wake_id FROM cg_agent_wakes
              WHERE trigger_kind = 'attention_event' AND source_event_id = ?1",
             [event_id],
             |row| row.get(0),
@@ -274,7 +274,7 @@ fn correlated_success_is_atomic_replay_safe_and_never_mutates_goal() {
     let columns = {
         let conn = db.conn_for_tests();
         let mut statement = conn
-            .prepare("SELECT name FROM pragma_table_info('wc_agent_attention_events') ORDER BY cid")
+            .prepare("SELECT name FROM pragma_table_info('cg_agent_attention_events') ORDER BY cid")
             .unwrap();
         statement
             .query_map([], |row| row.get::<_, String>(0))
@@ -396,7 +396,7 @@ fn attention_write_failure_rolls_back_task_attempt_event_wake_and_replay_record(
     db.conn_for_tests()
         .execute_batch(
             "CREATE TRIGGER fail_attention_wake
-             BEFORE INSERT ON wc_agent_wakes
+             BEFORE INSERT ON cg_agent_wakes
              WHEN NEW.trigger_kind = 'attention_event'
              BEGIN
                  SELECT RAISE(ABORT, 'forced attention Wake failure');
@@ -423,7 +423,7 @@ fn attention_write_failure_rolls_back_task_attempt_event_wake_and_replay_record(
         .conn_for_tests()
         .query_row(
             "SELECT t.state, a.state
-             FROM wc_agent_tasks t JOIN wc_agent_task_attempts a ON a.task_id = t.task_id
+             FROM cg_agent_tasks t JOIN cg_agent_task_attempts a ON a.task_id = t.task_id
              WHERE t.task_id = ?1 AND a.attempt_id = ?2",
             params![task_id, attempt_id],
             |row| Ok((row.get(0)?, row.get(1)?)),
@@ -663,10 +663,10 @@ fn terminal_attention_uses_continuation_without_requiring_live_task_attempt() {
         Some(attempt_id.as_str())
     );
 
-    let bogus_event_id = "wc_attention_event_________________".to_string();
+    let bogus_event_id = "cg_attention_event_________________".to_string();
     db.conn_for_tests()
         .execute(
-            "UPDATE wc_agent_wakes SET source_event_id = ?2 WHERE wake_id = ?1",
+            "UPDATE cg_agent_wakes SET source_event_id = ?2 WHERE wake_id = ?1",
             params![wake_id, bogus_event_id],
         )
         .unwrap();
@@ -685,7 +685,7 @@ fn terminal_attention_uses_continuation_without_requiring_live_task_attempt() {
     );
     db.conn_for_tests()
         .execute(
-            "UPDATE wc_agent_wakes SET source_event_id = ?2 WHERE wake_id = ?1",
+            "UPDATE cg_agent_wakes SET source_event_id = ?2 WHERE wake_id = ?1",
             params![wake_id, event.event_id],
         )
         .unwrap();
@@ -813,8 +813,8 @@ fn active_goal_fanout_is_bounded_before_completion_and_maximum_fanout_is_determi
     let pending_attention_wakes: i64 = db
         .conn_for_tests()
         .query_row(
-            "SELECT COUNT(*) FROM wc_agent_wakes w
-             JOIN wc_agent_attention_events e ON e.event_id = w.source_event_id
+            "SELECT COUNT(*) FROM cg_agent_wakes w
+             JOIN cg_agent_attention_events e ON e.event_id = w.source_event_id
              WHERE e.task_attempt_id = ?1
                AND w.trigger_kind = 'attention_event' AND w.state = 'pending'",
             [&attempt_id],
@@ -838,9 +838,9 @@ fn legacy_wake_schema_migration_preserves_existing_task_wake() {
         let conn = db.conn_for_tests();
         conn.execute_batch("PRAGMA foreign_keys = OFF;").unwrap();
         conn.execute_batch(
-            "DROP TABLE wc_agent_wake_attempts;
-             DROP TABLE wc_agent_wakes;
-             CREATE TABLE wc_agent_wakes (
+            "DROP TABLE cg_agent_wake_attempts;
+             DROP TABLE cg_agent_wakes;
+             CREATE TABLE cg_agent_wakes (
                 wake_id TEXT PRIMARY KEY,
                 target_agent_id TEXT NOT NULL,
                 trigger_kind TEXT NOT NULL,
@@ -864,7 +864,7 @@ fn legacy_wake_schema_migration_preserves_existing_task_wake() {
                 consumed_by_endpoint_id TEXT,
                 consumed_controller_generation INTEGER
              );
-             CREATE TABLE wc_agent_wake_attempts (
+             CREATE TABLE cg_agent_wake_attempts (
                 attempt_id TEXT PRIMARY KEY,
                 wake_id TEXT NOT NULL,
                 endpoint_id TEXT NOT NULL,
@@ -884,7 +884,7 @@ fn legacy_wake_schema_migration_preserves_existing_task_wake() {
         )
         .unwrap();
         conn.execute(
-            "INSERT INTO wc_agent_wakes (
+            "INSERT INTO cg_agent_wakes (
                 wake_id, target_agent_id, trigger_kind,
                 first_triggering_delivery_id, latest_triggering_delivery_id,
                 latest_conversation_id, latest_message_id,
@@ -919,7 +919,7 @@ fn legacy_wake_schema_migration_preserves_existing_task_wake() {
     let has_source_event: bool = reopened
         .conn_for_tests()
         .query_row(
-            "SELECT EXISTS(SELECT 1 FROM pragma_table_info('wc_agent_wakes') WHERE name = 'source_event_id')",
+            "SELECT EXISTS(SELECT 1 FROM pragma_table_info('cg_agent_wakes') WHERE name = 'source_event_id')",
             [],
             |row| row.get(0),
         )

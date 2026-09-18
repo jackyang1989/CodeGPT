@@ -307,7 +307,7 @@ fn expired_and_malformed_durable_rows_fail_closed() {
     {
         let conn = db.lock_connection(crate::StoreDomain::JobTerminalWait);
         conn.execute(
-            "UPDATE wc_job_terminal_waits SET terminal_status='not-a-job-status' WHERE wait_id=?1",
+            "UPDATE cg_job_terminal_waits SET terminal_status='not-a-job-status' WHERE wait_id=?1",
             [&created.wait.wait_id],
         )
         .unwrap();

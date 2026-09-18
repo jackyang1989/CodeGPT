@@ -462,7 +462,7 @@ fn fenced_completion_replays_same_key_and_conflicts_on_same_key_body_change() {
     ));
 
     let mut different_author = input.clone();
-    different_author.author_session_id = Some("wc_sess_aaaaaaaaaaaaaaaa".to_string());
+    different_author.author_session_id = Some("cg_sess_aaaaaaaaaaaaaaaa".to_string());
     assert!(matches!(
         store.complete_message(different_author),
         Err(SessionMessageError::IdempotencyConflict)
@@ -625,7 +625,7 @@ fn sanitized_relevant_history_and_corrupt_observation_metadata_fail_closed() {
                 .iter_mut()
                 .find(|message| message["message_id"] == direct.message_id)
                 .unwrap();
-            direct_raw["session_id"] = Value::String("wc_sess_wrong".to_string());
+            direct_raw["session_id"] = Value::String("cg_sess_wrong".to_string());
         }
         std::fs::write(&ledger, serde_json::to_vec_pretty(&raw).unwrap()).unwrap();
 
@@ -671,7 +671,7 @@ fn relevant_change_then_sanitization_cannot_look_safe_again() {
         .unwrap()
         .iter_mut()
         .find(|message| message["message_id"] == direct.message_id)
-        .unwrap()["session_id"] = Value::String("wc_sess_wrong".to_string());
+        .unwrap()["session_id"] = Value::String("cg_sess_wrong".to_string());
     std::fs::write(&ledger, serde_json::to_vec_pretty(&raw).unwrap()).unwrap();
 
     let restored = SessionStore::with_persistence(&ledger, 10, 50);

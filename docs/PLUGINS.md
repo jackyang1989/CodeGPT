@@ -98,7 +98,7 @@ is a direct canonical operation, so pass its normal business arguments directly:
 
 ```json
 {"action":"describe","runner":"my-runner","plugin":"repo-tools","tool":"safe_delete"}
-{"action":"call","binding":"wc_pbind_...","arguments":{"path":"build/old.bin"}}
+{"action":"call","binding":"cg_pbind_...","arguments":{"path":"build/old.bin"}}
 ```
 
 The separate `call_runtime_tool` operation is only for Adaptive long-tail tools
@@ -129,8 +129,8 @@ plugin_tool(action="check", runner="my-runner", plugin="repo-tools")
 plugin_tool(action="reload", runner="my-runner")
     -> reread runner.toml, admit candidates, atomically replace committed provider set
 plugin_tool(action="describe", runner="my-runner", plugin="repo-tools", tool="search_symbol")
-    -> { ..., "binding": "wc_pbind_..." }
-plugin_tool(action="call", binding="wc_pbind_...", arguments={"query":"foo"})
+    -> { ..., "binding": "cg_pbind_..." }
+plugin_tool(action="call", binding="cg_pbind_...", arguments={"query":"foo"})
 ```
 
 The identity hierarchy is always:

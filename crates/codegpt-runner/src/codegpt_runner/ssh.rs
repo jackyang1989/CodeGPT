@@ -9,6 +9,8 @@ use super::config::SshConfig;
 use super::output::{CommandResult, ShellCommandResult};
 use super::shutdown::lock_unpoison;
 use super::RunnerPolicy;
+#[cfg(windows)]
+use codegpt_process::ManagedChild;
 use std::collections::HashMap;
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
@@ -16,8 +18,6 @@ use std::process::{Child, ChildStdin, Command, ExitStatus, Stdio};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{mpsc, Arc, Mutex};
 use std::time::{Duration, Instant};
-#[cfg(windows)]
-use codegpt_process::ManagedChild;
 
 const SSH_CONNECT_TIMEOUT_SECS: u64 = 10;
 const SSH_CONTROL_PERSIST_SECS: u64 = 300;
@@ -1480,11 +1480,11 @@ mod tests {
 
     #[test]
     fn session_id_validation_uses_canonical_compact_alphabet() {
-        assert!(super::is_safe_session_id("wc_sess_AAAAAAAA-AAAAAA_"));
+        assert!(super::is_safe_session_id("cg_sess_AAAAAAAA-AAAAAA_"));
         assert!(super::is_safe_session_id(
-            "wc_sess_0123456789abcdef0123456789abcdef"
+            "cg_sess_0123456789abcdef0123456789abcdef"
         ));
-        assert!(!super::is_safe_session_id("wc_sess_not-canonical"));
+        assert!(!super::is_safe_session_id("cg_sess_not-canonical"));
     }
 
     #[cfg(target_os = "linux")]
@@ -2140,7 +2140,7 @@ mod tests {
                 7,
                 &config,
                 "tmp",
-                "wc_sess_VnF_n8064HjRw95_",
+                "cg_sess_VnF_n8064HjRw95_",
                 None,
                 &remote_command,
             )
@@ -2161,7 +2161,7 @@ mod tests {
             &config,
             &RunnerPolicy::default(),
             "tmp",
-            "wc_sess_VnF_n8064HjRw95_",
+            "cg_sess_VnF_n8064HjRw95_",
             None,
             "printf new-generation",
             None,
@@ -2197,7 +2197,7 @@ mod tests {
             &pool,
             &config,
             "missing",
-            "wc_sess_fE6UDb0Lo74agSws",
+            "cg_sess_fE6UDb0Lo74agSws",
             "printf no",
         );
         assert!(
@@ -2218,7 +2218,7 @@ mod tests {
             &cwd_pool,
             &config,
             "tmp",
-            "wc_sess_qYRGGo6GSA5DCAqZ",
+            "cg_sess_qYRGGo6GSA5DCAqZ",
             Some(&unavailable_cwd_path),
             "printf never-runs",
         );
@@ -2235,7 +2235,7 @@ mod tests {
             &pool,
             &config,
             "tmp",
-            "wc_sess_1curTyGXcaXzyiCH",
+            "cg_sess_1curTyGXcaXzyiCH",
             "export CODEGPT_SSH_TEST_STATE=kept; pwd; printf first",
         );
         assert_eq!(first.exit_code, Some(0), "{first:?}");
@@ -2249,7 +2249,7 @@ mod tests {
             "{first:?}"
         );
         let first_control = pool
-            .control_path_for(7, "tmp", "wc_sess_1curTyGXcaXzyiCH")
+            .control_path_for(7, "tmp", "cg_sess_1curTyGXcaXzyiCH")
             .expect("initial control socket");
         assert_eq!(
             std::fs::metadata(first_control.parent().expect("control root"))
@@ -2266,7 +2266,7 @@ mod tests {
             &pool,
             &config,
             "tmp",
-            "wc_sess_1curTyGXcaXzyiCH",
+            "cg_sess_1curTyGXcaXzyiCH",
             "test -z \"${CODEGPT_SSH_TEST_STATE+x}\" && printf isolated",
         );
         assert_eq!(isolated.exit_code, Some(0), "{isolated:?}");
@@ -2282,7 +2282,7 @@ mod tests {
             &pool,
             &config,
             "tmp",
-            "wc_sess_D9m1iFjHg2ecytf8",
+            "cg_sess_D9m1iFjHg2ecytf8",
             "printf other-session",
         );
         assert_eq!(other_session.exit_code, Some(0), "{other_session:?}");
@@ -2290,7 +2290,7 @@ mod tests {
             &pool,
             &config,
             "alt",
-            "wc_sess_1curTyGXcaXzyiCH",
+            "cg_sess_1curTyGXcaXzyiCH",
             "printf other-resource",
         );
         assert_eq!(other_resource.exit_code, Some(0), "{other_resource:?}");
@@ -2339,13 +2339,13 @@ mod tests {
             &pool,
             &config,
             "tmp",
-            "wc_sess_1curTyGXcaXzyiCH",
+            "cg_sess_1curTyGXcaXzyiCH",
             "printf reconnected",
         );
         assert_eq!(reconnected.exit_code, Some(0), "{reconnected:?}");
         assert_eq!(reconnected.stdout.as_deref(), Some("reconnected"));
         assert_ne!(
-            pool.control_path_for(7, "tmp", "wc_sess_1curTyGXcaXzyiCH"),
+            pool.control_path_for(7, "tmp", "cg_sess_1curTyGXcaXzyiCH"),
             Some(first_control),
             "a dead master gets a fresh control socket on the next command"
         );
@@ -2356,7 +2356,7 @@ mod tests {
             &pool,
             &removed_resource_config,
             "tmp",
-            "wc_sess_1curTyGXcaXzyiCH",
+            "cg_sess_1curTyGXcaXzyiCH",
             "printf never-started",
         );
         assert!(
@@ -2367,7 +2367,7 @@ mod tests {
             "{removed:?}"
         );
         assert!(
-            pool.control_path_for(7, "tmp", "wc_sess_1curTyGXcaXzyiCH")
+            pool.control_path_for(7, "tmp", "cg_sess_1curTyGXcaXzyiCH")
                 .is_none(),
             "removing a resource releases its old Session transport"
         );
@@ -2488,7 +2488,7 @@ mod tests {
     #[test]
     fn unix_mux_exit_255_classification_remains_transport_evidence_based() {
         let transport = PreparedSshTransport::Mux(SshConnectionKey {
-            session_id: "wc_sess_n49UP-fMkGvNQ3nV".to_string(),
+            session_id: "cg_sess_n49UP-fMkGvNQ3nV".to_string(),
             resource_name: "tmp".to_string(),
             generation: 7,
         });
@@ -2525,7 +2525,7 @@ mod tests {
             "created_at": 1,
             "job_context": {
                 "runtime_project_id": "agent:ssh-agent:remote-project",
-                "workflow_session_id": "wc_sess_6Y770wfrS6xHRiFn",
+                "workflow_session_id": "cg_sess_6Y770wfrS6xHRiFn",
                 "ssh_resource": resource,
                 "project_cwd": ".",
                 "purpose": "other",
@@ -2601,7 +2601,7 @@ mod tests {
             "created_at": 1,
             "job_context": {
                 "runtime_project_id": "agent:ssh-agent:remote-project",
-                "workflow_session_id": "wc_sess_p0aMg2K8XCywyBgl",
+                "workflow_session_id": "cg_sess_p0aMg2K8XCywyBgl",
                 "ssh_resource": resource,
                 "project_cwd": ".",
                 "purpose": "other",
@@ -2612,7 +2612,7 @@ mod tests {
             "persistent_shell": {
                 "action": action,
                 "shell_id": shell_id,
-                "workflow_session_id": "wc_sess_p0aMg2K8XCywyBgl",
+                "workflow_session_id": "cg_sess_p0aMg2K8XCywyBgl",
                 "runtime_project_id": "agent:ssh-agent:remote-project",
                 "cwd": cwd,
                 "shell": "bash",
@@ -2658,7 +2658,7 @@ mod tests {
             &config,
             7,
             &projects,
-            &ssh_persistent_shell_request("open", "wc_shell_rps", "tmp", None),
+            &ssh_persistent_shell_request("open", "cg_shell_rps", "tmp", None),
         );
         assert_eq!(opened.shell_state, "running", "{opened:?}");
         assert_eq!(opened.error_code, None, "{opened:?}");
@@ -2672,7 +2672,7 @@ mod tests {
             &projects,
             &ssh_persistent_shell_request(
                 "exec",
-                "wc_shell_rps",
+                "cg_shell_rps",
                 "tmp",
                 Some("cd /tmp; export WC_RPS=kept; WC_LOCAL=v; rps_fn() { printf fn; }; umask 027"),
             ),
@@ -2688,7 +2688,7 @@ mod tests {
             &projects,
             &ssh_persistent_shell_request(
                 "exec",
-                "wc_shell_rps",
+                "cg_shell_rps",
                 "tmp",
                 Some("printf '%s:%s:' \"$PWD\" \"$WC_RPS\"; rps_fn; printf ':%s' \"$(umask)\""),
             ),
@@ -2719,7 +2719,7 @@ mod tests {
             &config,
             7,
             &projects,
-            &ssh_persistent_shell_request("exec", "wc_shell_rps", "tmp", Some("unset WC_RPS")),
+            &ssh_persistent_shell_request("exec", "cg_shell_rps", "tmp", Some("unset WC_RPS")),
         );
         assert_eq!(unset.exit_code, Some(0), "{unset:?}");
         let gone = manager.handle(
@@ -2730,7 +2730,7 @@ mod tests {
             &projects,
             &ssh_persistent_shell_request(
                 "exec",
-                "wc_shell_rps",
+                "cg_shell_rps",
                 "tmp",
                 Some("printf '%s' \"${WC_RPS-unset}\""),
             ),
@@ -2743,7 +2743,7 @@ mod tests {
             &config,
             7,
             &projects,
-            &ssh_persistent_shell_request("close", "wc_shell_rps", "tmp", None),
+            &ssh_persistent_shell_request("close", "cg_shell_rps", "tmp", None),
         );
         assert_eq!(closed.shell_state, "closed", "{closed:?}");
     }
@@ -2770,7 +2770,7 @@ mod tests {
             &config,
             7,
             &projects,
-            &ssh_persistent_shell_request("open", "wc_shell_rps_reset", "tmp", None),
+            &ssh_persistent_shell_request("open", "cg_shell_rps_reset", "tmp", None),
         );
         assert_eq!(opened.shell_state, "running", "{opened:?}");
 
@@ -2785,7 +2785,7 @@ mod tests {
             &projects,
             &ssh_persistent_shell_request(
                 "exec",
-                "wc_shell_rps_reset",
+                "cg_shell_rps_reset",
                 "tmp",
                 Some("printf forbidden"),
             ),
@@ -2812,7 +2812,7 @@ mod tests {
         let policy = RunnerPolicy::default();
         let project_registry_dir = ssh_project_registry_dir();
         let projects = project_registry_dir.path().to_path_buf();
-        let shell_id = "wc_shell_rps_gen";
+        let shell_id = "cg_shell_rps_gen";
         let resource = "tmp";
 
         let opened = manager.handle(
@@ -2887,7 +2887,7 @@ mod tests {
             &config,
             8,
             &projects,
-            &ssh_persistent_shell_request("open", "wc_shell_rps_gen_new", resource, None),
+            &ssh_persistent_shell_request("open", "cg_shell_rps_gen_new", resource, None),
         );
         assert_eq!(reopened.shell_state, "running", "{reopened:?}");
         let after = manager.handle(
@@ -2898,7 +2898,7 @@ mod tests {
             &projects,
             &ssh_persistent_shell_request(
                 "exec",
-                "wc_shell_rps_gen_new",
+                "cg_shell_rps_gen_new",
                 resource,
                 Some("printf generation-8-command"),
             ),
@@ -2933,7 +2933,7 @@ mod tests {
             &projects,
             &ssh_persistent_shell_request_at_cwd(
                 "open",
-                "wc_shell_cwd_explicit",
+                "cg_shell_cwd_explicit",
                 "tmp",
                 Some("/tmp"),
                 None,
@@ -2954,7 +2954,7 @@ mod tests {
             &config,
             7,
             &projects,
-            &ssh_persistent_shell_request("exec", "wc_shell_cwd_explicit", "tmp", Some("pwd -P")),
+            &ssh_persistent_shell_request("exec", "cg_shell_cwd_explicit", "tmp", Some("pwd -P")),
         );
         assert_eq!(observed.exit_code, Some(0), "{observed:?}");
         assert_eq!(observed.stdout.trim(), "/tmp", "{observed:?}");
@@ -3001,7 +3001,7 @@ mod tests {
             &projects,
             &ssh_persistent_shell_request_at_cwd(
                 "open",
-                "wc_shell_cwd_session",
+                "cg_shell_cwd_session",
                 "tmp",
                 Some(&session_cwd),
                 None,
@@ -3025,7 +3025,7 @@ mod tests {
             &config,
             7,
             &projects,
-            &ssh_persistent_shell_request("exec", "wc_shell_cwd_session", "tmp", Some("pwd -P")),
+            &ssh_persistent_shell_request("exec", "cg_shell_cwd_session", "tmp", Some("pwd -P")),
         );
         assert_eq!(observed.exit_code, Some(0), "{observed:?}");
         assert_eq!(observed.stdout.trim(), session_cwd, "{observed:?}");
@@ -3059,7 +3059,7 @@ mod tests {
             &config,
             7,
             &projects,
-            &ssh_persistent_shell_request("open", "wc_shell_cwd_resource", "tmp", None),
+            &ssh_persistent_shell_request("open", "cg_shell_cwd_resource", "tmp", None),
         );
         assert_eq!(opened.shell_state, "running", "{opened:?}");
         assert_eq!(
@@ -3074,7 +3074,7 @@ mod tests {
             &config,
             7,
             &projects,
-            &ssh_persistent_shell_request("exec", "wc_shell_cwd_resource", "tmp", Some("pwd -P")),
+            &ssh_persistent_shell_request("exec", "cg_shell_cwd_resource", "tmp", Some("pwd -P")),
         );
         assert_eq!(observed.exit_code, Some(0), "{observed:?}");
         assert_eq!(observed.stdout.trim(), resource_cwd, "{observed:?}");
@@ -3126,7 +3126,7 @@ mod tests {
             &config,
             7,
             &projects,
-            &ssh_persistent_shell_request("open", "wc_shell_cwd_login", "nodefault", None),
+            &ssh_persistent_shell_request("open", "cg_shell_cwd_login", "nodefault", None),
         );
         assert_eq!(opened.shell_state, "running", "{opened:?}");
         assert!(opened.error.is_none(), "{opened:?}");
@@ -3149,7 +3149,7 @@ mod tests {
             &projects,
             &ssh_persistent_shell_request(
                 "exec",
-                "wc_shell_cwd_login",
+                "cg_shell_cwd_login",
                 "nodefault",
                 Some("cd /tmp"),
             ),
@@ -3163,7 +3163,7 @@ mod tests {
             &config,
             7,
             &projects,
-            &ssh_persistent_shell_request("status", "wc_shell_cwd_login", "nodefault", None),
+            &ssh_persistent_shell_request("status", "cg_shell_cwd_login", "nodefault", None),
         );
         assert_eq!(status.cwd.as_deref(), Some("/tmp"), "{status:?}");
         assert_eq!(
@@ -3178,7 +3178,7 @@ mod tests {
             &config,
             7,
             &projects,
-            &ssh_persistent_shell_request("close", "wc_shell_cwd_login", "nodefault", None),
+            &ssh_persistent_shell_request("close", "cg_shell_cwd_login", "nodefault", None),
         );
         assert_eq!(closed.cwd.as_deref(), Some("/tmp"), "{closed:?}");
         assert_eq!(
@@ -3219,7 +3219,7 @@ mod tests {
             &projects,
             &ssh_persistent_shell_request_at_cwd(
                 "open",
-                "wc_shell_cwd_symlink",
+                "cg_shell_cwd_symlink",
                 "tmp",
                 Some(&logical),
                 None,
@@ -3239,7 +3239,7 @@ mod tests {
             &config,
             7,
             &projects,
-            &ssh_persistent_shell_request("exec", "wc_shell_cwd_symlink", "tmp", Some("cd /tmp")),
+            &ssh_persistent_shell_request("exec", "cg_shell_cwd_symlink", "tmp", Some("cd /tmp")),
         );
         assert_eq!(changed.exit_code, Some(0), "{changed:?}");
 
@@ -3249,7 +3249,7 @@ mod tests {
             &config,
             7,
             &projects,
-            &ssh_persistent_shell_request("status", "wc_shell_cwd_symlink", "tmp", None),
+            &ssh_persistent_shell_request("status", "cg_shell_cwd_symlink", "tmp", None),
         );
         assert_eq!(status.cwd.as_deref(), Some("/tmp"), "{status:?}");
         assert_eq!(
@@ -3264,7 +3264,7 @@ mod tests {
             &config,
             7,
             &projects,
-            &ssh_persistent_shell_request("close", "wc_shell_cwd_symlink", "tmp", None),
+            &ssh_persistent_shell_request("close", "cg_shell_cwd_symlink", "tmp", None),
         );
         assert_eq!(closed.cwd.as_deref(), Some("/tmp"), "{closed:?}");
         assert_eq!(
@@ -3303,7 +3303,7 @@ mod tests {
             &projects,
             &ssh_persistent_shell_request_at_cwd(
                 "open",
-                "wc_shell_cwd_missing",
+                "cg_shell_cwd_missing",
                 "tmp",
                 Some(&missing),
                 None,
@@ -3327,7 +3327,7 @@ mod tests {
             &projects,
             &ssh_persistent_shell_request(
                 "exec",
-                "wc_shell_cwd_missing",
+                "cg_shell_cwd_missing",
                 "tmp",
                 Some("printf never-runs"),
             ),
@@ -3343,8 +3343,8 @@ mod tests {
 #[cfg(all(test, windows))]
 mod windows_tests {
     use super::*;
-    use crate::runner_protocol::ShellCommandExecutionState;
     use crate::codegpt_runner::config::{RunnerPolicy, SshResourceConfig};
+    use crate::runner_protocol::ShellCommandExecutionState;
     use std::collections::BTreeMap;
     use std::ffi::OsString;
     use std::path::PathBuf;
@@ -3664,7 +3664,7 @@ fn main() {
             "created_at": 1,
             "job_context": {
                 "runtime_project_id": "agent:ssh-agent:remote-project",
-                "workflow_session_id": "wc_sess_xu_vxXzu8_XUSoeY",
+                "workflow_session_id": "cg_sess_xu_vxXzu8_XUSoeY",
                 "ssh_resource": "spe",
                 "project_cwd": ".",
                 "purpose": "other",
@@ -3763,7 +3763,7 @@ fn main() {
                 7,
                 &config,
                 "spe",
-                "wc_sess_uofM1DA_zr_u9gjR",
+                "cg_sess_uofM1DA_zr_u9gjR",
                 Some("/srv/override"),
                 "printf test",
             )
@@ -3797,7 +3797,7 @@ fn main() {
                 7,
                 &config,
                 "spe",
-                "wc_sess_uofM1DA_zr_u9gjR",
+                "cg_sess_uofM1DA_zr_u9gjR",
                 None,
                 "printf job",
             )
@@ -3835,7 +3835,7 @@ fn main() {
                 7,
                 &ssh_config(&max_host, None),
                 "spe",
-                "wc_sess_ADDp7DZoppje_T8N",
+                "cg_sess_ADDp7DZoppje_T8N",
                 None,
                 &wrapped,
             )
@@ -3864,7 +3864,7 @@ fn main() {
             &ssh_config("spe", None),
             &RunnerPolicy::default(),
             "spe",
-            "wc_sess_ADDp7DZoppje_T8N",
+            "cg_sess_ADDp7DZoppje_T8N",
             None,
             &wrapped,
             None,
@@ -3894,7 +3894,7 @@ fn main() {
                 7,
                 &ssh_config("spe", None),
                 "spe",
-                "wc_sess_windows_max_wire",
+                "cg_sess_windows_max_wire",
                 None,
                 &max_wire,
             )
@@ -3910,7 +3910,7 @@ fn main() {
                 7,
                 &ssh_config("spe", None),
                 "spe",
-                "wc_sess_P9IJbN_ES1Lcl2G4",
+                "cg_sess_P9IJbN_ES1Lcl2G4",
                 Some(&quote_dense_cwd),
                 "printf cwd",
             )
@@ -3928,7 +3928,7 @@ fn main() {
                 7,
                 &ssh_config("spe", None),
                 "spe",
-                "wc_sess_windows_long_job",
+                "cg_sess_windows_long_job",
                 None,
                 &wrapped,
             )
@@ -3961,7 +3961,7 @@ fn main() {
                 7,
                 &generation_7,
                 "spe",
-                "wc_sess_UXSMUSsRdmFThnJh",
+                "cg_sess_UXSMUSsRdmFThnJh",
                 None,
                 "printf old",
             )
@@ -3974,7 +3974,7 @@ fn main() {
                 8,
                 &generation_8,
                 "spe",
-                "wc_sess_UXSMUSsRdmFThnJh",
+                "cg_sess_UXSMUSsRdmFThnJh",
                 None,
                 "printf current",
             )
@@ -4011,7 +4011,7 @@ fn main() {
             &ssh_config("spe", None),
             &RunnerPolicy::default(),
             "spe",
-            "wc_sess_WRtsefP6QPt807sz",
+            "cg_sess_WRtsefP6QPt807sz",
             None,
             &program,
             Some(caller_stdin),
@@ -4048,7 +4048,7 @@ fn main() {
             &ssh_config("fake-exit-before-program", None),
             &RunnerPolicy::default(),
             "spe",
-            "wc_sess_hcqZnCtVMXSgGkZb",
+            "cg_sess_hcqZnCtVMXSgGkZb",
             Some(&cwd),
             &command,
             None,
@@ -4088,7 +4088,7 @@ fn main() {
             &ssh_config("fake-never-read-output", None),
             &policy,
             "spe",
-            "wc_sess_MMl4tGR1ukURHhLP",
+            "cg_sess_MMl4tGR1ukURHhLP",
             None,
             &program,
             None,
@@ -4135,7 +4135,7 @@ fn main() {
             &ssh_config(&host, None),
             &RunnerPolicy::default(),
             "spe",
-            "wc_sess_NVfVMQrolEUiSzdK",
+            "cg_sess_NVfVMQrolEUiSzdK",
             None,
             &program,
             None,
@@ -4180,7 +4180,7 @@ fn main() {
             &config,
             &policy,
             "spe",
-            "wc_sess_windows_one_shot",
+            "cg_sess_windows_one_shot",
             None,
             "WC_FAKE_EXIT_0",
             None,
@@ -4200,7 +4200,7 @@ fn main() {
             &config,
             &policy,
             "spe",
-            "wc_sess_windows_one_shot",
+            "cg_sess_windows_one_shot",
             None,
             "WC_FAKE_EXIT_7",
             None,
@@ -4221,7 +4221,7 @@ fn main() {
             &config,
             &policy,
             "spe",
-            "wc_sess_windows_one_shot",
+            "cg_sess_windows_one_shot",
             None,
             "WC_FAKE_STDIN_FAILURE",
             Some(&large_stdin),
@@ -4250,7 +4250,7 @@ fn main() {
             &config,
             &policy,
             "spe",
-            "wc_sess_windows_one_shot",
+            "cg_sess_windows_one_shot",
             None,
             &format!("WC_FAKE_EXIT_255::{}", starts.display()),
             None,
@@ -4305,7 +4305,7 @@ fn main() {
             &ssh_config("spe", None),
             &RunnerPolicy::default(),
             "spe",
-            "wc_sess_WR09Os6hvbqAd452",
+            "cg_sess_WR09Os6hvbqAd452",
             None,
             &format!("WC_FAKE_WAIT_FOR_STOP::{}", started_marker.display()),
             None,
@@ -4348,7 +4348,7 @@ fn main() {
             &ssh_config("spe", None),
             &RunnerPolicy::default(),
             "spe",
-            "wc_sess_Ykq2Yg0LFhCr8PVL",
+            "cg_sess_Ykq2Yg0LFhCr8PVL",
             None,
             "printf never",
             None,
@@ -4512,7 +4512,7 @@ fn main() {
             &ssh_config("spe", None),
             &RunnerPolicy::default(),
             "spe",
-            "wc_sess_sxGTQ1FgiMdoG7Sa",
+            "cg_sess_sxGTQ1FgiMdoG7Sa",
             None,
             &format!("WC_FAKE_TREE::{}", delayed_marker.display()),
             None,
@@ -4814,7 +4814,7 @@ fn main() {
         let config = ssh_config("spe", Some("/srv/codegpt"));
         let pool = SshConnectionPool::default();
         let prepared = pool
-            .prepare_persistent_shell_command(7, &config, "spe", "wc_sess_uofM1DA_zr_u9gjR", "bash")
+            .prepare_persistent_shell_command(7, &config, "spe", "cg_sess_uofM1DA_zr_u9gjR", "bash")
             .expect("prepare Windows persistent SSH command");
 
         assert_eq!(prepared.command.get_program(), "ssh.exe");
@@ -4848,7 +4848,7 @@ fn main() {
                 &config,
                 &RunnerPolicy::default(),
                 "spe",
-                "wc_sess_windows_real_ssh",
+                "cg_sess_windows_real_ssh",
                 cwd,
                 command,
                 None,
@@ -4997,7 +4997,7 @@ fn main() {
             &config,
             &RunnerPolicy::default(),
             "spe",
-            "wc_sess_windows_real_ssh",
+            "cg_sess_windows_real_ssh",
             None,
             "cat",
             Some(caller_stdin),
@@ -5147,7 +5147,7 @@ fn main() {
             &ssh_config("spe", None),
             &RunnerPolicy::default(),
             "spe",
-            "wc_sess_j43vaC0tX6u9R6Cn",
+            "cg_sess_j43vaC0tX6u9R6Cn",
             Some("/tmp\ninvalid"),
             "printf never",
             None,

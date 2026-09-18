@@ -418,7 +418,7 @@ impl Handler for AuthMiddleware {
             Ok(None) => {
                 // Token not recognized by any verifier. When shared-key
                 // quick-start mode is enabled and the token does not look
-                // like a CodeGPT managed credential (wc_*), treat it as a
+                // like a CodeGPT managed credential (cg_*), treat it as a
                 // lightweight shared key. Managed-prefix tokens that failed
                 // verification are always rejected.
                 let trimmed = token.trim();

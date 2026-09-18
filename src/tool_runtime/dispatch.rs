@@ -3035,7 +3035,7 @@ mod structured_execution_sparse_projection_tests {
         let mut result = ToolResult::err_with_output(
             "process exited 17",
             json!({
-                "permission": {"status": "auto_approved", "request_id": "wc_perm_private"},
+                "permission": {"status": "auto_approved", "request_id": "cg_perm_private"},
                 "session_recorded": true,
                 "session_event_id": "evt_private",
                 "executor": "agent",

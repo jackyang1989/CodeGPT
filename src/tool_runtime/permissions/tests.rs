@@ -24,7 +24,7 @@ fn trusted_agent_auto_authorizes_permission_bearing_tools() {
     assert_eq!(decision.project.as_deref(), Some("agent:oe:private-drop"));
     let request_suffix = decision
         .request_id
-        .strip_prefix("wc_perm_")
+        .strip_prefix("cg_perm_")
         .expect("permission request namespace");
     assert!(codegpt_core::compact::decode::<12>(request_suffix).is_some());
     assert_eq!(decision.outcome(), Some(PermissionOutcome::AutoApproved));

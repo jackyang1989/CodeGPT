@@ -1,4 +1,9 @@
 use super::config::{SshConfig, SshResourceConfig};
+use codegpt_core::ssh_resource::{
+    normalize_ssh_resource_default_cwd, normalize_ssh_resource_target, validate_ssh_resource_name,
+    SshResourceInventoryEntry, SshResourceRequest, SshResourceResponse, SshResourceSource,
+    MANAGED_SSH_REGISTRY_MAX_BYTES, MANAGED_SSH_RESOURCE_MAX_COUNT,
+};
 use fs2::FileExt;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -6,11 +11,6 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::fs::{self, File, OpenOptions};
 use std::io::Write;
 use std::path::{Path, PathBuf};
-use codegpt_core::ssh_resource::{
-    normalize_ssh_resource_default_cwd, normalize_ssh_resource_target, validate_ssh_resource_name,
-    SshResourceInventoryEntry, SshResourceRequest, SshResourceResponse, SshResourceSource,
-    MANAGED_SSH_REGISTRY_MAX_BYTES, MANAGED_SSH_RESOURCE_MAX_COUNT,
-};
 
 const STORE_VERSION: u32 = 1;
 const STORE_DIR: &str = "runner-managed-ssh-resources-v1";

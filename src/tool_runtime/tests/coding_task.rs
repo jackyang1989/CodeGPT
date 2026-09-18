@@ -338,7 +338,7 @@ async fn coding_workflow_full_diagnostic_has_no_binding_projection() {
 
     assert!(result.success, "{:?}", result.error);
     let session_id = result.output["session"]["session_id"].as_str().unwrap();
-    assert!(session_id.starts_with("wc_sess_"));
+    assert!(session_id.starts_with("cg_sess_"));
     assert_eq!(
         result.output["session"]["explicit_resume_required_for_continuation"],
         true
@@ -926,7 +926,7 @@ fn assert_startup_nonblocking_dirty(result: &ToolResult, workspace_reason: &str)
     let session_id = result.output["session"]["session_id"]
         .as_str()
         .expect("session_id");
-    assert!(session_id.starts_with("wc_sess_"), "{session_id}");
+    assert!(session_id.starts_with("cg_sess_"), "{session_id}");
     let verdict = &result.output["startup_verdict"];
     assert_eq!(
         verdict["blocking"], false,

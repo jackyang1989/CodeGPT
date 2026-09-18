@@ -4,7 +4,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-pub const SESSION_ID_PREFIX: &str = "wc_sess_";
+pub const SESSION_ID_PREFIX: &str = "cg_sess_";
 
 pub const MAX_MODEL_VALIDATION_ASSERTION_NAME_CHARS: usize =
     crate::runner_protocol::VALIDATION_ASSERTION_NAME_MAX_CHARS;
@@ -60,13 +60,13 @@ pub fn tool_supports_model_facing_accepted_exit_codes(tool_name: &str) -> bool {
 fn model_facing_assertion_looks_secret_like(value: &str) -> bool {
     let value = value.to_ascii_lowercase();
     value.contains("bearer ")
-        || value.contains("wc_pat_")
-        || value.contains("wc_oat_")
-        || value.contains("wc_ort_")
-        || value.contains("wc_agent_")
-        || value.contains("wc_acct_")
-        || value.contains("wc_pair_")
-        || value.contains("wc_csec_")
+        || value.contains("cg_pat_")
+        || value.contains("cg_oat_")
+        || value.contains("cg_ort_")
+        || value.contains("cg_agent_")
+        || value.contains("cg_acct_")
+        || value.contains("cg_pair_")
+        || value.contains("cg_csec_")
         || value.contains("client_secret")
 }
 
@@ -206,12 +206,14 @@ fn is_session_identity_suffix(suffix: &str) -> bool {
 pub fn is_valid_session_id(value: &str) -> bool {
     value
         .strip_prefix(SESSION_ID_PREFIX)
+        .or_else(|| value.strip_prefix("wc_sess_"))
         .is_some_and(is_session_identity_suffix)
 }
 
 pub fn is_valid_session_message_id(value: &str) -> bool {
     value
-        .strip_prefix("wc_msg_")
+        .strip_prefix("cg_msg_")
+        .or_else(|| value.strip_prefix("wc_msg_"))
         .is_some_and(is_session_identity_suffix)
 }
 

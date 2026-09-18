@@ -1,7 +1,7 @@
-use serde_json::{json, Value};
 use codegpt_core::runner_job_lifecycle::RunnerJobLifecycle;
 use codegpt_core::runtime_contract::MAX_JOB_OBSERVATION_WAIT_SECS;
 use codegpt_core::workflow_session_contract::is_validation_like_execution_purpose;
+use serde_json::{json, Value};
 
 use super::helpers::{
     command_rejected_message, explicit_shell_dispatch_command, is_safe_job_id,
@@ -2055,8 +2055,8 @@ mod recovery_projection_tests {
         validation_job_projection, validation_job_projection_with_policy,
     };
     use crate::runner_protocol::{ShellJobInfo, ShellJobTestCountEvidence};
-    use serde_json::json;
     use codegpt_core::validation_evidence::CargoTestCountEvidenceStatus;
+    use serde_json::json;
 
     #[test]
     fn recovery_reason_text_recovering_explains_wait() {
@@ -2179,8 +2179,8 @@ mod recovery_projection_tests {
         let forbidden = job_stop_forbidden_result(
             "agent:special:demo",
             "job-3",
-            Some("wc_sess_request"),
-            Some("wc_sess_owner"),
+            Some("cg_sess_request"),
+            Some("cg_sess_owner"),
         );
         assert_eq!(forbidden.output["failure_kind"], "job_stop_forbidden");
         assert_eq!(forbidden.output["recovery_kind"], "fix_input");
@@ -2601,7 +2601,7 @@ mod recovery_projection_tests {
             client_id: "oe".to_string(),
             kind: "run_process".to_string(),
             project_id: Some("agent:demo".to_string()),
-            session_id: Some("wc_sess_demo".to_string()),
+            session_id: Some("cg_sess_demo".to_string()),
             ssh_resource: None,
             cwd: Some(".".to_string()),
             project_cwd: Some(".".to_string()),

@@ -278,7 +278,7 @@ pub async fn mcp_info(req: &mut Request, depot: &mut Depot, res: &mut Response) 
         "auth": {
             "type": "bearer",
             "required": auth_required,
-            "header": "Authorization: Bearer <shared_key_or_wc_pat>"
+            "header": "Authorization: Bearer <shared_key_or_cg_pat>"
         }
     })));
 }
@@ -508,8 +508,7 @@ pub async fn mcp_post(req: &mut Request, depot: &mut Depot, res: &mut Response) 
                 .error(error)
                 .summary(summary)
                 .meaningful(
-                    codegpt_tool_contracts::runtime_tool_activity_interaction(tool)
-                        .is_meaningful(),
+                    codegpt_tool_contracts::runtime_tool_activity_interaction(tool).is_meaningful(),
                 )
                 .recorder_gap(correlation.recorder_gap_session_id.clone());
             event.project = correlation

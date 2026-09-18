@@ -4,10 +4,10 @@ use super::super::*;
 use super::support::*;
 use crate::job_terminal_attention::{principal_for_auth, JobTerminalContinuationController};
 use crate::runner_protocol::{RunnerCapabilities, RunnerJobUpdateRequest, RunnerRequest};
+use codegpt_store::{JobTerminalDeliveryState, JobTerminalWaitState};
 use serde_json::json;
 use std::sync::Arc;
 use tempfile::TempDir;
-use codegpt_store::{JobTerminalDeliveryState, JobTerminalWaitState};
 
 async fn attention_runtime() -> (TempDir, ToolRuntime, Arc<crate::Database>) {
     let temp = tempfile::tempdir().unwrap();

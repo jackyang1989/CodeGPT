@@ -989,8 +989,8 @@ async fn repository_knowledge_association_revalidates_identity_availability_and_
     let instance_id = format!("inst-{client_id}");
     let target_path = "/tmp/repo-association-target";
     let source_path = "/tmp/repo-association-source";
-    let source_fingerprint = format!("wc_projroot_{}", "1".repeat(64));
-    let target_fingerprint = format!("wc_projroot_{}", "2".repeat(64));
+    let source_fingerprint = format!("cg_projroot_{}", "1".repeat(64));
+    let target_fingerprint = format!("cg_projroot_{}", "2".repeat(64));
     let base_sha = "a".repeat(40);
     let caps = RunnerCapabilities {
         shell: true,
@@ -1155,7 +1155,7 @@ async fn repository_knowledge_association_revalidates_identity_availability_and_
     ));
 
     source.disabled = false;
-    source.root_fingerprint = Some(format!("wc_projroot_{}", "3".repeat(64)));
+    source.root_fingerprint = Some(format!("cg_projroot_{}", "3".repeat(64)));
     crate::test_support::apply_project_inventory_snapshot(
         &runtime.runner_registry,
         client_id,

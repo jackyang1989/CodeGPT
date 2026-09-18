@@ -1,8 +1,5 @@
 use crate::auth::AuthContext;
 use crate::Database;
-use sha2::{Digest, Sha256};
-use std::panic::{catch_unwind, AssertUnwindSafe};
-use std::sync::{Arc, RwLock};
 use codegpt_runner_registry::{
     JobTerminalEvent, JobTerminalEventSink, JobTerminalRegistrationSnapshot, RunnerAccessGroup,
 };
@@ -10,6 +7,9 @@ use codegpt_store::{
     JobTerminalDeliveryState, JobTerminalFact, JobTerminalSourceIdentity, JobTerminalWaitPrincipal,
     JobTerminalWaitRecord, JobTerminalWaitStoreError,
 };
+use sha2::{Digest, Sha256};
+use std::panic::{catch_unwind, AssertUnwindSafe};
+use std::sync::{Arc, RwLock};
 
 pub(crate) const JOB_TERMINAL_ATTENTION_METRIC: &str = "job_terminal_attention_total";
 
@@ -316,9 +316,9 @@ pub(crate) fn metric(outcome: &'static str) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use codegpt_store::{JobTerminalWaitState, NewJobTerminalWait};
     use std::sync::atomic::{AtomicUsize, Ordering};
     use tempfile::tempdir;
-    use codegpt_store::{JobTerminalWaitState, NewJobTerminalWait};
 
     #[derive(Debug)]
     struct TestAdapter {

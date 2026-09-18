@@ -68,7 +68,7 @@ evidence.
 
 | Command | Purpose | Notes |
 | --- | --- | --- |
-| `codegpt login <server-url> --code <wc_pair_...> [--project PATH]` | Log this device into a Server with a one-time code | Normal managed enrollment entry. `--project` selects the actual project, `--allowed-root` names a parent from which more projects may be added later, and `--print-mcp-config` explicitly prints sensitive ChatGPT MCP connection values. |
+| `codegpt login <server-url> --code <cg_pair_...> [--project PATH]` | Log this device into a Server with a one-time code | Normal managed enrollment entry. `--project` selects the actual project, `--allowed-root` names a parent from which more projects may be added later, and `--print-mcp-config` explicitly prints sensitive ChatGPT MCP connection values. |
 | `codegpt project register --config PATH <PROJECT>` | Add another project to an existing Runner | Persists that Runner's project configuration without requiring the Server to be online; follow the command output if an already-running Runner needs a reload. |
 | `codegpt pairing create` | Server/admin side: create a short-lived pairing code | Needs server bootstrap/admin auth. |
 | `codegpt logout <server-url> [--user USER|--all]` | Remove this device's credentials for a Server | With one saved user, the user is selected automatically. With multiple saved users, choose one with `--user USER` or explicitly choose all with `--all`; deletion still uses the existing confirmation/`--yes` flow. |
@@ -162,11 +162,11 @@ locally and register only their hashes with the Server.
 | `codegpt auth status` | Show which servers this device is logged in to | Read-only; supports `--dir` and `--json`. |
 | `codegpt users create` | Create a user; `--issue-credential` returns a one-time account credential | Server/admin side; uses `--server-url`. |
 | `codegpt users list` | List users | |
-| `codegpt tokens create-local` | Locally generate a `wc_pat_*` personal API token and register its hash | Uses `--server-url`, `--username`, and an account credential. |
+| `codegpt tokens create-local` | Locally generate a `cg_pat_*` personal API token and register its hash | Uses `--server-url`, `--username`, and an account credential. |
 | `codegpt tokens create` | Admin: create a PAT server-side | Uses `--server-url`. |
 | `codegpt tokens generate` | Offline token material generation | Does **not** register with any Server. |
 | `codegpt tokens list` / `revoke` / `register-hash` | List or revoke PATs; register an externally computed hash | Admin side; uses `--server-url`. |
-| `codegpt runner-tokens create-local` | Locally generate a `wc_agent_*` Runner token and register its hash | Uses `--server-url` and binds to `--client-id`. |
+| `codegpt runner-tokens create-local` | Locally generate a `cg_agent_*` Runner token and register its hash | Uses `--server-url` and binds to `--client-id`. |
 | `codegpt runner-tokens create` / `list` / `revoke` / `register-hash` | Admin variants | |
 
 All Server-targeting credential commands use the canonical `--server-url` spelling.
@@ -193,7 +193,7 @@ normal entry points.
 - **Job** — a command or validation that continues after the initiating call returns.
 - **Workflow Session** — bounded coding evidence/continuity used by the runtime. Ordinary users normally do not manage its internal protocol fields.
 
-Some compatibility-facing names still contain `agent`, notably `wc_agent_*` and `agent:<client_id>:<project_id>`. They refer to Runner-era compatibility, not the separate Durable Agent domain. Other process/protocol identifiers remain internal. New prose should say **Runner** unless it is quoting one of those public names.
+Some compatibility-facing names still contain `agent`, notably `cg_agent_*` and `agent:<client_id>:<project_id>`. They refer to Runner-era compatibility, not the separate Durable Agent domain. Other process/protocol identifiers remain internal. New prose should say **Runner** unless it is quoting one of those public names.
 
 ## Credentials: which token do I need?
 
@@ -207,10 +207,10 @@ quick answer.
 | Server bootstrap token | (env `CODEGPT_TOKEN`) | `codegpt server init` | server/admin setup, user creation, pairing | GPT Actions, MCP, Runner, daily use |
 | Shared key | `wck_...` | `codegpt connect` (generated once) | hosted shared-key MCP + Runner | production IAM |
 | Project Credential | (private file) | `codegpt setup` | one ProjectGrant's ordinary runtime API/MCP access | other ProjectGrants, admin, Runner transport |
-| Account credential | `wc_acct_...` | `codegpt users create --issue-credential` | local token creation | GPT Actions, MCP, Runner |
-| Personal API token (PAT) | `wc_pat_...` | `codegpt tokens create-local` | GPT Actions, MCP, REST API | Runner connectivity |
-| Runner token | `wc_agent_...` | `codegpt runner-tokens create-local` | `codegpt-runner` transport only | MCP, REST, GPT Actions |
-| OAuth access token | `wc_oat_...` | OAuth2 authorization flow | GPT Actions / MCP when OAuth is enabled | — |
+| Account credential | `cg_acct_...` | `codegpt users create --issue-credential` | local token creation | GPT Actions, MCP, Runner |
+| Personal API token (PAT) | `cg_pat_...` | `codegpt tokens create-local` | GPT Actions, MCP, REST API | Runner connectivity |
+| Runner token | `cg_agent_...` | `codegpt runner-tokens create-local` | `codegpt-runner` transport only | MCP, REST, GPT Actions |
+| OAuth access token | `cg_oat_...` | OAuth2 authorization flow | GPT Actions / MCP when OAuth is enabled | — |
 
 ### Practical credential rules
 
@@ -218,7 +218,7 @@ quick answer.
 - Existing shared-key Server: use the operator-provided `wck_...` with `codegpt connect`.
 - Project-first/manual setup: keep the Project Credential in its protected project state; do not reuse it as a general user/admin token.
 - Keep `CODEGPT_TOKEN` on the Server. It is not an MCP or Runner credential.
-- `wc_agent_*` is a Runner transport token only; `wc_pat_*` is the normal managed user API token.
+- `cg_agent_*` is a Runner transport token only; `cg_pat_*` is the normal managed user API token.
 - Prefer `--token-file` and never paste whole configuration files into chat.
 - OAuth clients should follow the OAuth flow rather than manually copying access tokens. See [Authentication](AUTH_MODEL.md#oauth2) and [MCP](MCP.md#oauth2).
 
@@ -227,7 +227,7 @@ quick answer.
 Full everyday use: first follow the [Full Setup guide](PERSONAL_SETUP.md) to start a regular Server, then enroll the project machine and start its Runner:
 
 ```bash
-codegpt login https://your-server.example --code <wc_pair_...> \
+codegpt login https://your-server.example --code <cg_pair_...> \
   --allowed-root "$HOME/git" \
   --project "$HOME/git/my-repo" \
   --print-mcp-config
@@ -261,7 +261,7 @@ codegpt runner logs --profile <profile> --lines 100
 Managed enrollment:
 
 ```bash
-codegpt login https://your-server.example --code <wc_pair_...> \
+codegpt login https://your-server.example --code <cg_pair_...> \
   --allowed-root "$HOME/git"
 codegpt runner install --scope user --config <login-reported-runner-config>
 codegpt runner status --scope user --config <login-reported-runner-config>

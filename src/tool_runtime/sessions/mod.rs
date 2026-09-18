@@ -83,11 +83,11 @@ pub(crate) use codegpt_workflow_session::root_test_support::{
 
 #[cfg(test)]
 pub(crate) mod events {
-    use serde_json::Value;
     pub(crate) use codegpt_workflow_session::normalize_observed_project_path;
     pub(crate) use codegpt_workflow_session::root_test_support::{
         observed_paths_for_successful_result, session_input_summary_for_tool,
     };
+    use serde_json::Value;
 
     #[derive(Debug, Clone, Copy)]
     pub(crate) struct SessionToolClassification {

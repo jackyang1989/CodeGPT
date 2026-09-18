@@ -1079,7 +1079,7 @@ async fn http_mcp_initialize_success() {
         .get(crate::client_window::MCP_SESSION_HEADER)
         .and_then(|value| value.to_str().ok())
         .expect("initialize must mint an MCP session id");
-    assert!(session_id.starts_with("wc_mcp_"));
+    assert!(session_id.starts_with("cg_mcp_"));
     let body: Value = resp.take_json().await.unwrap();
     assert_eq!(body["jsonrpc"], "2.0");
     assert_eq!(body["id"], 1);
@@ -1907,7 +1907,7 @@ async fn http_mcp_2026_collaboration_completion_preserves_explicit_recorder_prov
             "answer": "Reviewed and completed under the explicit worker recorder.",
             "completion_key": "stateless-recorder-v1",
             "expected_assignment_fence": assignment_fence.clone(),
-            "author_session_id": "wc_sess_forged_should_not_win"
+            "author_session_id": "cg_sess_forged_should_not_win"
         }),
         &worker_id,
     );
@@ -1962,7 +1962,7 @@ async fn http_mcp_2026_collaboration_completion_preserves_explicit_recorder_prov
         "recording_session_id",
         "Reviewed and completed under the explicit worker recorder.",
         "stateless-recorder-v1",
-        "wc_sess_forged_should_not_win",
+        "cg_sess_forged_should_not_win",
         assignment_fence.as_str(),
     ] {
         assert!(
@@ -2108,7 +2108,7 @@ async fn http_mcp_2026_collaboration_completion_preserves_explicit_recorder_prov
             "completion_key": "unknown-recorder-must-fail",
             "expected_assignment_fence": unknown_assignment_fence
         }),
-        "wc_sess_missing_recorder",
+        "cg_sess_missing_recorder",
     );
     let (status, unknown_body) = stateless_2026_tool_call(
         &service,
@@ -2132,7 +2132,7 @@ async fn http_mcp_2026_collaboration_completion_preserves_explicit_recorder_prov
     assert_eq!(after_unknown.messages.total, before_unknown.messages.total);
     assert!(runtime
         .sessions
-        .summary("wc_sess_missing_recorder", None)
+        .summary("cg_sess_missing_recorder", None)
         .is_none());
 }
 
@@ -3330,15 +3330,15 @@ async fn http_mcp_get_discovery_returns_metadata() {
     assert_eq!(body["auth"]["required"], true);
     assert_eq!(
         body["auth"]["header"],
-        "Authorization: Bearer <shared_key_or_wc_pat>"
+        "Authorization: Bearer <shared_key_or_cg_pat>"
     );
     let auth_json = body["auth"].to_string();
     assert!(
-        auth_json.contains("shared_key_or_wc_pat"),
-        "MCP auth metadata must advertise shared key or wc_pat bearer use: {auth_json}"
+        auth_json.contains("shared_key_or_cg_pat"),
+        "MCP auth metadata must advertise shared key or cg_pat bearer use: {auth_json}"
     );
     assert!(
-        !auth_json.contains("wc_pat_user_api_token"),
+        !auth_json.contains("cg_pat_user_api_token"),
         "MCP auth metadata must not regress to PAT-only placeholder: {auth_json}"
     );
 }

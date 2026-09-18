@@ -56,7 +56,7 @@ async fn specialized_dispatch_maps_each_gateway_action_scope_without_static_poli
         ),
         (
             "plugin_tool",
-            json!({"action":"call", "binding":"wc_pbind_AAAAAAAAAAAAAAAAAAAAAA", "arguments":{}}),
+            json!({"action":"call", "binding":"cg_pbind_AAAAAAAAAAAAAAAAAAAAAA", "arguments":{}}),
             SCOPE_PLUGIN_INVOKE,
         ),
         (
@@ -148,7 +148,7 @@ async fn specialized_dispatch_preserves_recording_authority_denial_as_tool_resul
         )
         .unwrap();
     for (session_id, error_field, error_kind) in [
-        ("wc_sess_missing", "error_kind", "unknown_session_id"),
+        ("cg_sess_missing", "error_kind", "unknown_session_id"),
         (
             session.session_id.as_str(),
             "failure_kind",

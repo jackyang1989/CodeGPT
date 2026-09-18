@@ -613,13 +613,13 @@ async fn artifact_upload_tools_route_to_agent_file_ops() {
         "artifact-upload",
         &req.request_id,
         0,
-        r#"{"path":"artifacts/imports/sample.zip","upload_id":"wc_upload_test_1","received_bytes":0,"next_offset":0,"expected_bytes":5,"expected_sha256":"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd","max_bytes":268435456,"mime_type":"application/zip","committed":false}"#,
+        r#"{"path":"artifacts/imports/sample.zip","upload_id":"cg_upload_test_1","received_bytes":0,"next_offset":0,"expected_bytes":5,"expected_sha256":"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd","max_bytes":268435456,"mime_type":"application/zip","committed":false}"#,
         "",
     )
     .await;
     let result = begin_task.await.unwrap();
     assert!(result.success, "{:?}", result.error);
-    assert_eq!(result.output["upload_id"], "wc_upload_test_1");
+    assert_eq!(result.output["upload_id"], "cg_upload_test_1");
 
     let content_base64 =
         base64::Engine::encode(&base64::engine::general_purpose::STANDARD, b"hello");
@@ -633,7 +633,7 @@ async fn artifact_upload_tools_route_to_agent_file_ops() {
                 .artifact_upload_chunk(
                     project,
                     path,
-                    "wc_upload_test_1".to_string(),
+                    "cg_upload_test_1".to_string(),
                     0,
                     content_base64,
                 )
@@ -645,7 +645,7 @@ async fn artifact_upload_tools_route_to_agent_file_ops() {
     let payload: serde_json::Value =
         serde_json::from_str(req.content.as_deref().expect("artifact payload")).unwrap();
     assert_eq!(payload["path"], path);
-    assert_eq!(payload["upload_id"], "wc_upload_test_1");
+    assert_eq!(payload["upload_id"], "cg_upload_test_1");
     assert_eq!(payload["offset"], 0);
     assert_eq!(payload["content_base64"], content_base64);
     assert_eq!(
@@ -657,7 +657,7 @@ async fn artifact_upload_tools_route_to_agent_file_ops() {
         "artifact-upload",
         &req.request_id,
         0,
-        r#"{"path":"artifacts/imports/sample.zip","upload_id":"wc_upload_test_1","received_bytes":5,"next_offset":5,"expected_bytes":5,"expected_sha256":"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd","max_bytes":268435456,"mime_type":"application/zip","committed":false}"#,
+        r#"{"path":"artifacts/imports/sample.zip","upload_id":"cg_upload_test_1","received_bytes":5,"next_offset":5,"expected_bytes":5,"expected_sha256":"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd","max_bytes":268435456,"mime_type":"application/zip","committed":false}"#,
         "",
     )
     .await;
@@ -671,7 +671,7 @@ async fn artifact_upload_tools_route_to_agent_file_ops() {
         let path = path.clone();
         async move {
             runtime
-                .artifact_upload_finish(project, path, "wc_upload_test_1".to_string())
+                .artifact_upload_finish(project, path, "cg_upload_test_1".to_string())
                 .await
         }
     });
@@ -681,14 +681,14 @@ async fn artifact_upload_tools_route_to_agent_file_ops() {
         serde_json::from_str(req.content.as_deref().expect("artifact payload")).unwrap();
     assert_eq!(
         payload,
-        json!({"path": path.clone(), "upload_id": "wc_upload_test_1"})
+        json!({"path": path.clone(), "upload_id": "cg_upload_test_1"})
     );
     complete_patch_agent_request(
         &runtime,
         "artifact-upload",
         &req.request_id,
         0,
-        r#"{"path":"artifacts/imports/sample.zip","upload_id":"wc_upload_test_1","bytes":5,"received_bytes":5,"expected_bytes":5,"expected_sha256":"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd","sha256":"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd","mime_type":"application/zip","committed":true}"#,
+        r#"{"path":"artifacts/imports/sample.zip","upload_id":"cg_upload_test_1","bytes":5,"received_bytes":5,"expected_bytes":5,"expected_sha256":"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd","sha256":"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd","mime_type":"application/zip","committed":true}"#,
         "",
     )
     .await;
@@ -702,7 +702,7 @@ async fn artifact_upload_tools_route_to_agent_file_ops() {
         let path = path.clone();
         async move {
             runtime
-                .artifact_upload_abort(project, path, "wc_upload_test_2".to_string())
+                .artifact_upload_abort(project, path, "cg_upload_test_2".to_string())
                 .await
         }
     });
@@ -710,13 +710,13 @@ async fn artifact_upload_tools_route_to_agent_file_ops() {
     assert_eq!(req.kind, "file_artifact_upload_abort");
     let payload: serde_json::Value =
         serde_json::from_str(req.content.as_deref().expect("artifact payload")).unwrap();
-    assert_eq!(payload["upload_id"], "wc_upload_test_2");
+    assert_eq!(payload["upload_id"], "cg_upload_test_2");
     complete_patch_agent_request(
         &runtime,
         "artifact-upload",
         &req.request_id,
         0,
-        r#"{"path":"artifacts/imports/sample.zip","upload_id":"wc_upload_test_2","received_bytes":0,"expected_bytes":null,"expected_sha256":null,"mime_type":null,"committed":false,"aborted":true}"#,
+        r#"{"path":"artifacts/imports/sample.zip","upload_id":"cg_upload_test_2","received_bytes":0,"expected_bytes":null,"expected_sha256":null,"mime_type":null,"committed":false,"aborted":true}"#,
         "",
     )
     .await;

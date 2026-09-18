@@ -1256,12 +1256,12 @@ mod tests {
     #[test]
     fn skill_resource_validation_identity_includes_package_execution_context() {
         let base = RunnerSkillExecutionRequest {
-            skill_id: "wc_skill_aaaaaaaaaaaaaaaaaaaaaA".to_string(),
+            skill_id: "cg_skill_aaaaaaaaaaaaaaaaaaaaaA".to_string(),
             expected_source: RunnerSkillSource::Managed,
             path: "scripts/check.py".to_string(),
             expected_definition_revision: "b".repeat(64),
             expected_package_revision: Some(
-                "wc_skillpkg_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa".to_string(),
+                "cg_skillpkg_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa".to_string(),
             ),
             expected_resource_sha256: "c".repeat(64),
             args: vec!["--fast".to_string()],
@@ -1269,12 +1269,12 @@ mod tests {
         let base_identity = validation_identity(&base);
 
         let mut different_skill = base.clone();
-        different_skill.skill_id = "wc_skill_bbbbbbbbbbbbbbbbbbbbbQ".to_string();
+        different_skill.skill_id = "cg_skill_bbbbbbbbbbbbbbbbbbbbbQ".to_string();
         assert_ne!(base_identity, validation_identity(&different_skill));
 
         let mut different_package = base.clone();
         different_package.expected_package_revision =
-            Some("wc_skillpkg_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb".to_string());
+            Some("cg_skillpkg_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb".to_string());
         assert_ne!(base_identity, validation_identity(&different_package));
 
         let mut different_definition = base.clone();

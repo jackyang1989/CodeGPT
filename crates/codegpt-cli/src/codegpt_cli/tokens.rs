@@ -5,7 +5,7 @@ use crate::TokenGenerateOptions;
 
 pub(crate) fn generate_bootstrap_token() -> String {
     format!(
-        "wc_boot_{}{}{}",
+        "cg_boot_{}{}{}",
         Uuid::new_v4().simple(),
         Uuid::new_v4().simple(),
         Uuid::new_v4().simple()
@@ -14,7 +14,7 @@ pub(crate) fn generate_bootstrap_token() -> String {
 
 pub(crate) fn generate_local_api_token() -> String {
     format!(
-        "wc_pat_{}{}",
+        "cg_pat_{}{}",
         Uuid::new_v4().simple(),
         Uuid::new_v4().simple()
     )
@@ -22,7 +22,7 @@ pub(crate) fn generate_local_api_token() -> String {
 
 pub(crate) fn generate_local_runner_token() -> String {
     format!(
-        "wc_agent_{}{}",
+        "cg_agent_{}{}",
         Uuid::new_v4().simple(),
         Uuid::new_v4().simple()
     )
@@ -56,7 +56,7 @@ For the hosted shared-key flow, use `codegpt connect`.\n",
     )
 }
 
-/// Return a short non-secret prefix of a token, e.g. `wc_abcd…`. Never
+/// Return a short non-secret prefix of a token, e.g. `cg_abcd…`. Never
 /// returns enough to reconstruct the token.
 pub(crate) fn token_prefix(token: &str) -> String {
     let take = token.chars().take(8).collect::<String>();

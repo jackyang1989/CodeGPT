@@ -1,8 +1,8 @@
+use codegpt::SERVER_SYSTEMD_TIMEOUT_STOP_SECS;
+use codegpt_admin::ServerHttpOptions;
 use serde_json::{json, Value};
 use std::net::SocketAddr;
 use std::path::{Path, PathBuf};
-use codegpt::SERVER_SYSTEMD_TIMEOUT_STOP_SECS;
-use codegpt_admin::ServerHttpOptions;
 
 use crate::{
     ServerInitOptions, ServerInstallServiceOptions, ServerTunnelOptions, ServiceActionKind,

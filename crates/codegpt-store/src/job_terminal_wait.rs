@@ -5,8 +5,8 @@ use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::fmt;
 
-pub const JOB_TERMINAL_WAIT_ID_PREFIX: &str = "wc_job_wait_";
-pub const JOB_TERMINAL_DELIVERY_ATTEMPT_ID_PREFIX: &str = "wc_job_delivery_";
+pub const JOB_TERMINAL_WAIT_ID_PREFIX: &str = "cg_job_wait_";
+pub const JOB_TERMINAL_DELIVERY_ATTEMPT_ID_PREFIX: &str = "cg_job_delivery_";
 pub const MAX_JOB_TERMINAL_WAITS_PER_PRINCIPAL: i64 = 64;
 pub const MAX_JOB_TERMINAL_WAITS_PER_SOURCE: i64 = 64;
 pub const MAX_JOB_TERMINAL_WAITS_GLOBAL: i64 = 4096;
@@ -149,7 +149,7 @@ pub struct JobTerminalDeliveryPrepared {
 impl Database {
     pub(super) fn ensure_job_terminal_wait_schema(conn: &mut Connection) -> anyhow::Result<()> {
         conn.execute_batch("\
-CREATE TABLE IF NOT EXISTS wc_job_terminal_waits (\
+CREATE TABLE IF NOT EXISTS cg_job_terminal_waits (\
  wait_id TEXT PRIMARY KEY, owner_kind TEXT NOT NULL, owner_digest TEXT NOT NULL,\
  idempotency_key TEXT NOT NULL, request_digest TEXT NOT NULL,\
  job_id TEXT NOT NULL, job_client_id TEXT NOT NULL,\
@@ -165,9 +165,9 @@ CREATE TABLE IF NOT EXISTS wc_job_terminal_waits (\
        (state='triggered' AND delivery_state<>'not_ready' AND terminal_status IS NOT NULL AND terminal_outcome IS NOT NULL AND terminal_observed_at IS NOT NULL AND triggered_at IS NOT NULL)),\
  CHECK((delivery_state='prepared' AND delivery_attempt_id IS NOT NULL) OR delivery_state<>'prepared')\
 );\
-CREATE INDEX IF NOT EXISTS idx_wc_job_terminal_waits_source ON wc_job_terminal_waits(job_id,job_client_id,job_auth_kind,job_auth_value,state);\
-CREATE INDEX IF NOT EXISTS idx_wc_job_terminal_waits_owner ON wc_job_terminal_waits(owner_kind,owner_digest,state,created_at);\
-CREATE INDEX IF NOT EXISTS idx_wc_job_terminal_waits_expiry ON wc_job_terminal_waits(expires_at);" )?;
+CREATE INDEX IF NOT EXISTS idx_cg_job_terminal_waits_source ON cg_job_terminal_waits(job_id,job_client_id,job_auth_kind,job_auth_value,state);\
+CREATE INDEX IF NOT EXISTS idx_cg_job_terminal_waits_owner ON cg_job_terminal_waits(owner_kind,owner_digest,state,created_at);\
+CREATE INDEX IF NOT EXISTS idx_cg_job_terminal_waits_expiry ON cg_job_terminal_waits(expires_at);" )?;
         Ok(())
     }
 
@@ -211,7 +211,7 @@ CREATE INDEX IF NOT EXISTS idx_wc_job_terminal_waits_expiry ON wc_job_terminal_w
             .map_err(store_error)?;
         prune_expired(&tx, now).map_err(store_error)?;
         let replay: Option<(String,String)> = tx.query_row(
-            "SELECT wait_id,request_digest FROM wc_job_terminal_waits WHERE owner_kind=?1 AND owner_digest=?2 AND idempotency_key=?3",
+            "SELECT wait_id,request_digest FROM cg_job_terminal_waits WHERE owner_kind=?1 AND owner_digest=?2 AND idempotency_key=?3",
             params![principal.kind,principal.digest,key], |r| Ok((r.get(0)?,r.get(1)?))).optional().map_err(store_error)?;
         if let Some((wait_id, digest)) = replay {
             if digest != request_digest {
@@ -228,10 +228,10 @@ CREATE INDEX IF NOT EXISTS idx_wc_job_terminal_waits_expiry ON wc_job_terminal_w
                 state_changed: false,
             });
         }
-        let principal_count:i64 = tx.query_row("SELECT COUNT(*) FROM wc_job_terminal_waits WHERE owner_kind=?1 AND owner_digest=?2", params![principal.kind,principal.digest], |r| r.get(0)).map_err(store_error)?;
-        let source_count:i64 = tx.query_row("SELECT COUNT(*) FROM wc_job_terminal_waits WHERE job_id=?1 AND job_client_id=?2 AND job_auth_kind=?3 AND job_auth_value IS ?4", params![input.source.job_id,input.source.client_id,input.source.auth_kind,input.source.auth_value], |r| r.get(0)).map_err(store_error)?;
+        let principal_count:i64 = tx.query_row("SELECT COUNT(*) FROM cg_job_terminal_waits WHERE owner_kind=?1 AND owner_digest=?2", params![principal.kind,principal.digest], |r| r.get(0)).map_err(store_error)?;
+        let source_count:i64 = tx.query_row("SELECT COUNT(*) FROM cg_job_terminal_waits WHERE job_id=?1 AND job_client_id=?2 AND job_auth_kind=?3 AND job_auth_value IS ?4", params![input.source.job_id,input.source.client_id,input.source.auth_kind,input.source.auth_value], |r| r.get(0)).map_err(store_error)?;
         let global_count: i64 = tx
-            .query_row("SELECT COUNT(*) FROM wc_job_terminal_waits", [], |r| {
+            .query_row("SELECT COUNT(*) FROM cg_job_terminal_waits", [], |r| {
                 r.get(0)
             })
             .map_err(store_error)?;
@@ -267,7 +267,7 @@ CREATE INDEX IF NOT EXISTS idx_wc_job_terminal_waits_expiry ON wc_job_terminal_w
                     input.expires_at,
                 )
             };
-        tx.execute("INSERT INTO wc_job_terminal_waits (wait_id,owner_kind,owner_digest,idempotency_key,request_digest,job_id,job_client_id,job_auth_kind,job_auth_value,state,delivery_state,terminal_status,terminal_outcome,terminal_observed_at,delivery_attempt_id,created_at,updated_at,triggered_at,expires_at) VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,NULL,?15,?15,?16,?17)",
+        tx.execute("INSERT INTO cg_job_terminal_waits (wait_id,owner_kind,owner_digest,idempotency_key,request_digest,job_id,job_client_id,job_auth_kind,job_auth_value,state,delivery_state,terminal_status,terminal_outcome,terminal_observed_at,delivery_attempt_id,created_at,updated_at,triggered_at,expires_at) VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,NULL,?15,?15,?16,?17)",
             params![wait_id,principal.kind,principal.digest,key,request_digest,input.source.job_id,input.source.client_id,input.source.auth_kind,input.source.auth_value,state,delivery,status,outcome,observed,now,triggered,expires]).map_err(store_error)?;
         let wait = load_owned_wait(&tx, principal, &wait_id, now)?;
         tx.commit().map_err(store_error)?;
@@ -302,7 +302,7 @@ impl Database {
             .transaction_with_behavior(TransactionBehavior::Immediate)
             .map_err(store_error)?;
         prune_expired(&tx, now).map_err(store_error)?;
-        let mut stmt=tx.prepare("SELECT wait_id,owner_kind,owner_digest FROM wc_job_terminal_waits WHERE job_id=?1 AND job_client_id=?2 AND job_auth_kind=?3 AND job_auth_value IS ?4 AND state='waiting' ORDER BY wait_id").map_err(store_error)?;
+        let mut stmt=tx.prepare("SELECT wait_id,owner_kind,owner_digest FROM cg_job_terminal_waits WHERE job_id=?1 AND job_client_id=?2 AND job_auth_kind=?3 AND job_auth_value IS ?4 AND state='waiting' ORDER BY wait_id").map_err(store_error)?;
         let rows = stmt
             .query_map(
                 params![
@@ -326,7 +326,7 @@ impl Database {
         }
         drop(stmt);
         for (wait_id, _, _) in &newly_matched {
-            tx.execute("UPDATE wc_job_terminal_waits SET state='triggered',delivery_state='pending',terminal_status=?2,terminal_outcome=?3,terminal_observed_at=?4,triggered_at=?4,expires_at=?5,updated_at=MAX(updated_at,?4) WHERE wait_id=?1 AND state='waiting'",params![wait_id,fact.status,fact.outcome,fact.terminal_observed_at,fact.expires_at]).map_err(store_error)?;
+            tx.execute("UPDATE cg_job_terminal_waits SET state='triggered',delivery_state='pending',terminal_status=?2,terminal_outcome=?3,terminal_observed_at=?4,triggered_at=?4,expires_at=?5,updated_at=MAX(updated_at,?4) WHERE wait_id=?1 AND state='waiting'",params![wait_id,fact.status,fact.outcome,fact.terminal_observed_at,fact.expires_at]).map_err(store_error)?;
         }
         let matched_count = newly_matched.len();
 
@@ -335,7 +335,7 @@ impl Database {
         // was prepared. Re-offer exactly those safe pending deliveries when the
         // same canonical terminal fact is retried. Prepared/finished deliveries
         // stay fenced and are never silently redispatched.
-        let mut stmt=tx.prepare("SELECT wait_id,owner_kind,owner_digest FROM wc_job_terminal_waits WHERE job_id=?1 AND job_client_id=?2 AND job_auth_kind=?3 AND job_auth_value IS ?4 AND state='triggered' AND delivery_state='pending' AND terminal_status=?5 AND terminal_outcome=?6 AND terminal_observed_at=?7 ORDER BY wait_id").map_err(store_error)?;
+        let mut stmt=tx.prepare("SELECT wait_id,owner_kind,owner_digest FROM cg_job_terminal_waits WHERE job_id=?1 AND job_client_id=?2 AND job_auth_kind=?3 AND job_auth_value IS ?4 AND state='triggered' AND delivery_state='pending' AND terminal_status=?5 AND terminal_outcome=?6 AND terminal_observed_at=?7 ORDER BY wait_id").map_err(store_error)?;
         let rows = stmt
             .query_map(
                 params![
@@ -393,7 +393,7 @@ impl Database {
             JOB_TERMINAL_DELIVERY_ATTEMPT_ID_PREFIX,
             "delivery_attempt_id",
         )?;
-        let changed=tx.execute("UPDATE wc_job_terminal_waits SET delivery_state='prepared',delivery_attempt_id=?2,updated_at=?3 WHERE wait_id=?1 AND owner_kind=?4 AND owner_digest=?5 AND delivery_state='pending'",params![wait_id,attempt_id,now,principal.kind,principal.digest]).map_err(store_error)?;
+        let changed=tx.execute("UPDATE cg_job_terminal_waits SET delivery_state='prepared',delivery_attempt_id=?2,updated_at=?3 WHERE wait_id=?1 AND owner_kind=?4 AND owner_digest=?5 AND delivery_state='pending'",params![wait_id,attempt_id,now,principal.kind,principal.digest]).map_err(store_error)?;
         if changed != 1 {
             tx.commit().map_err(store_error)?;
             return Ok(None);
@@ -422,7 +422,7 @@ impl Database {
         } else {
             "delivery_unknown"
         };
-        let changed=tx.execute("UPDATE wc_job_terminal_waits SET delivery_state=?4,updated_at=?5 WHERE wait_id=?1 AND owner_kind=?2 AND owner_digest=?3 AND delivery_state='prepared' AND delivery_attempt_id=?6",params![wait_id,principal.kind,principal.digest,state,now,attempt_id]).map_err(store_error)?;
+        let changed=tx.execute("UPDATE cg_job_terminal_waits SET delivery_state=?4,updated_at=?5 WHERE wait_id=?1 AND owner_kind=?2 AND owner_digest=?3 AND delivery_state='prepared' AND delivery_attempt_id=?6",params![wait_id,principal.kind,principal.digest,state,now,attempt_id]).map_err(store_error)?;
         if changed != 1 {
             return Err(err(
                 "job_terminal_delivery_fence_mismatch",
@@ -451,7 +451,7 @@ impl Database {
             .transaction_with_behavior(TransactionBehavior::Immediate)
             .map_err(store_error)?;
         prune_expired(&tx, now).map_err(store_error)?;
-        let changed=tx.execute("UPDATE wc_job_terminal_waits SET delivery_state='delivery_unknown',updated_at=?1 WHERE delivery_state='prepared' AND expires_at>?1",[now]).map_err(store_error)?;
+        let changed=tx.execute("UPDATE cg_job_terminal_waits SET delivery_state='delivery_unknown',updated_at=?1 WHERE delivery_state='prepared' AND expires_at>?1",[now]).map_err(store_error)?;
         tx.commit().map_err(store_error)?;
         Ok(changed)
     }
@@ -463,7 +463,7 @@ fn load_owned_wait(
     wait_id: &str,
     now: i64,
 ) -> Result<JobTerminalWaitRecord, JobTerminalWaitStoreError> {
-    let row=conn.query_row("SELECT job_id,job_client_id,job_auth_kind,job_auth_value,state,delivery_state,terminal_status,terminal_outcome,terminal_observed_at,delivery_attempt_id,created_at,updated_at,triggered_at,expires_at FROM wc_job_terminal_waits WHERE wait_id=?1 AND owner_kind=?2 AND owner_digest=?3 AND expires_at>?4",params![wait_id,principal.kind,principal.digest,now],|r| Ok((r.get::<_,String>(0)?,r.get::<_,String>(1)?,r.get::<_,String>(2)?,r.get::<_,Option<String>>(3)?,r.get::<_,String>(4)?,r.get::<_,String>(5)?,r.get::<_,Option<String>>(6)?,r.get::<_,Option<String>>(7)?,r.get::<_,Option<i64>>(8)?,r.get::<_,Option<String>>(9)?,r.get::<_,i64>(10)?,r.get::<_,i64>(11)?,r.get::<_,Option<i64>>(12)?,r.get::<_,i64>(13)?))).optional().map_err(store_error)?;
+    let row=conn.query_row("SELECT job_id,job_client_id,job_auth_kind,job_auth_value,state,delivery_state,terminal_status,terminal_outcome,terminal_observed_at,delivery_attempt_id,created_at,updated_at,triggered_at,expires_at FROM cg_job_terminal_waits WHERE wait_id=?1 AND owner_kind=?2 AND owner_digest=?3 AND expires_at>?4",params![wait_id,principal.kind,principal.digest,now],|r| Ok((r.get::<_,String>(0)?,r.get::<_,String>(1)?,r.get::<_,String>(2)?,r.get::<_,Option<String>>(3)?,r.get::<_,String>(4)?,r.get::<_,String>(5)?,r.get::<_,Option<String>>(6)?,r.get::<_,Option<String>>(7)?,r.get::<_,Option<i64>>(8)?,r.get::<_,Option<String>>(9)?,r.get::<_,i64>(10)?,r.get::<_,i64>(11)?,r.get::<_,Option<i64>>(12)?,r.get::<_,i64>(13)?))).optional().map_err(store_error)?;
     let Some((
         job_id,
         client_id,
@@ -623,7 +623,7 @@ fn allocate_id(
 ) -> Result<String, JobTerminalWaitStoreError> {
     for _ in 0..16 {
         let id = format!("{prefix}{}", codegpt_core::compact::random_suffix::<12>());
-        let sql = format!("SELECT EXISTS(SELECT 1 FROM wc_job_terminal_waits WHERE {column}=?1)");
+        let sql = format!("SELECT EXISTS(SELECT 1 FROM cg_job_terminal_waits WHERE {column}=?1)");
         let occupied: bool = conn
             .query_row(&sql, [&id], |r| r.get(0))
             .map_err(store_error)?;
@@ -638,7 +638,7 @@ fn allocate_id(
 }
 fn prune_expired(conn: &Connection, now: i64) -> rusqlite::Result<usize> {
     conn.execute(
-        "DELETE FROM wc_job_terminal_waits WHERE expires_at<=?1",
+        "DELETE FROM cg_job_terminal_waits WHERE expires_at<=?1",
         [now],
     )
 }

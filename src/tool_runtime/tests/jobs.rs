@@ -1550,7 +1550,7 @@ async fn model_facing_stop_job_session_project_mismatch_beats_auto_approve() {
                 tool_name: "stop_job".to_string(),
                 arguments: json!({
                     "project": "agent:client-two:proj-two",
-                    "job_id": "wc_job_not_needed",
+                    "job_id": "cg_job_not_needed",
                     "session_id": session.session_id,
                     "confirm": true,
                 }),

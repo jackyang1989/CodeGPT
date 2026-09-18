@@ -1,8 +1,8 @@
 use crate::model::MESSAGE_ID_PREFIX;
 use crate::*;
+use codegpt_core::workflow_session_contract::{ExecutionShell, SessionMode};
 use serde_json::{json, Value};
 use std::path::PathBuf;
-use codegpt_core::workflow_session_contract::{ExecutionShell, SessionMode};
 
 fn post_message(
     store: &SessionStore,
@@ -76,7 +76,7 @@ fn input_summary_redacts_sensitive_keys() {
         "runtime_status",
         &json!({
             "token": "super-secret-token",
-            "command": "curl -H 'Authorization: Bearer wc_pat_never_store'"
+            "command": "curl -H 'Authorization: Bearer cg_pat_never_store'"
         }),
         session_tool_contract("runtime_status"),
     );
@@ -95,7 +95,7 @@ fn input_summary_redacts_sensitive_keys() {
 fn coding_instruction_redacts_reusable_credentials_without_truncating_normal_goals() {
     assert_eq!(
         super::util::redact_and_bound_instruction(
-            "continue with wc_pat_never_persist_this_value",
+            "continue with cg_pat_never_persist_this_value",
             super::model::MAX_CODING_INSTRUCTION_CHARS,
         ),
         "[redacted]"
@@ -452,7 +452,7 @@ fn update_session_execution_context_sets_clears_and_rejects_invalid_states() {
     assert_eq!(
         store
             .update_execution_context(
-                "wc_sess_missingcontext01",
+                "cg_sess_missingcontext01",
                 SessionExecutionContext::default(),
                 SessionTransport::Api,
             )
@@ -498,7 +498,7 @@ fn persistent_shell_evidence_survives_restore_without_command_or_output() {
         &json!({
             "project": "agent:oe:private-drop",
             "session_id": session.session_id.clone(),
-            "shell_id": "wc_shell_evidence",
+            "shell_id": "cg_shell_evidence",
             "command": "export PRIVATE_LEDGER_VALUE=secret",
             "command_summary": "export PRIVATE_LEDGER_VALUE=secret",
             "command_present": true
@@ -509,7 +509,7 @@ fn persistent_shell_evidence_survives_restore_without_command_or_output() {
         start,
         true,
         &json!({
-            "shell_id": "wc_shell_evidence",
+            "shell_id": "cg_shell_evidence",
             "shell_state": "running",
             "execution_state": "completed",
             "command_started": true,
@@ -531,7 +531,7 @@ fn persistent_shell_evidence_survives_restore_without_command_or_output() {
     let summary = restored.summary(&session.session_id, Some(10)).unwrap();
     let evidence = summary.events[1].persistent_shell.as_ref().unwrap();
     assert_eq!(evidence.action, "exec");
-    assert_eq!(evidence.shell_id.as_deref(), Some("wc_shell_evidence"));
+    assert_eq!(evidence.shell_id.as_deref(), Some("cg_shell_evidence"));
     assert_eq!(evidence.shell_state.as_deref(), Some("running"));
     assert_eq!(evidence.execution_state.as_deref(), Some("completed"));
     assert_eq!(evidence.command_started, Some(true));
@@ -720,7 +720,7 @@ fn tool_call_start_and_finish_share_one_call_id() {
         )
         .expect("start recorded");
     let call_id = start.call_id.clone();
-    assert!(call_id.starts_with("wc_call_"));
+    assert!(call_id.starts_with("cg_call_"));
     store.record_tool_call_finished(
         Some(start),
         true,
@@ -892,7 +892,7 @@ fn corrupted_ledger_does_not_panic() {
         .as_deref()
         .unwrap()
         .contains("restore_failed"));
-    assert!(store.summary("wc_sess_missing", None).is_none());
+    assert!(store.summary("cg_sess_missing", None).is_none());
 }
 
 #[test]
@@ -949,7 +949,7 @@ fn session_message_unknown_errors_are_explicit() {
     let store = SessionStore::default();
     let session = store.start_session(None, None);
     let unknown_session = store.post_message(PostSessionMessageInput {
-        session_id: "wc_sess_missing".to_string(),
+        session_id: "cg_sess_missing".to_string(),
         kind: SessionMessageKind::Note,
         message: "hello".to_string(),
         tags: Vec::new(),
@@ -961,7 +961,7 @@ fn session_message_unknown_errors_are_explicit() {
         Err(SessionMessageError::UnknownSession)
     ));
 
-    let unknown_message = store.resolve_message(&session.session_id, "wc_msg_missing", None);
+    let unknown_message = store.resolve_message(&session.session_id, "cg_msg_missing", None);
     assert!(matches!(
         unknown_message,
         Err(SessionMessageError::UnknownMessage)
@@ -1030,7 +1030,7 @@ fn start_session_wrappers_funnel_to_single_create_entry() {
     );
 
     for summary in [&via_start, &via_guards, &via_options, &via_read_only] {
-        assert!(summary.session_id.starts_with("wc_sess_"));
+        assert!(summary.session_id.starts_with("cg_sess_"));
         assert!(store.contains_session(&summary.session_id));
         assert_eq!(summary.project.as_deref(), Some("proj-a"));
     }
@@ -1059,7 +1059,7 @@ fn start_session_wrappers_funnel_to_single_create_entry() {
 #[test]
 fn unknown_session_mutations_do_not_recreate_session() {
     let store = SessionStore::default();
-    let missing = "wc_sess_does_not_exist";
+    let missing = "cg_sess_does_not_exist";
 
     assert!(!store.contains_session(missing));
     assert!(store.summary(missing, None).is_none());
@@ -1085,7 +1085,7 @@ fn unknown_session_mutations_do_not_recreate_session() {
     assert!(matches!(post, Err(SessionMessageError::UnknownSession)));
     assert!(!store.contains_session(missing));
 
-    let resolve = store.resolve_message(missing, "wc_msg_x", None);
+    let resolve = store.resolve_message(missing, "cg_msg_x", None);
     assert!(matches!(resolve, Err(SessionMessageError::UnknownSession)));
 }
 

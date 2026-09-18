@@ -183,7 +183,7 @@ test("renderWindowActivityRows renders activity cards with facts and trace copy"
         next_call_gap_ms: 12,
         cycle_ms: 57,
         workflow_sessions: [
-          { workflow_session_id: "wc_sess_1", relation: "direct" },
+          { workflow_session_id: "cg_sess_1", relation: "direct" },
         ],
         server_trace_id: "trace-xyz-123",
       },
@@ -191,7 +191,7 @@ test("renderWindowActivityRows renders activity cards with facts and trace copy"
         method: "unknown_method",
         status: "failed",
         activity_presentation: "transport",
-        recorder_gap_session_id: "wc_sess_gap",
+        recorder_gap_session_id: "cg_sess_gap",
         response_streaming: true,
         window_transition_kind: "overlap",
       },

@@ -9,16 +9,6 @@ use super::config::{
     load_config, PluginConfig, PluginProviderConfig, RunnerConfig, ShellConfig, ShellDialect,
 };
 use super::shell::{PreparedExecutionEnvironment, PreparedShellProfileCache};
-use serde::Deserialize;
-use serde_json::{json, Value};
-use sha2::{Digest, Sha256};
-use std::collections::{BTreeMap, BTreeSet, VecDeque};
-use std::io::{BufRead, BufReader, Read, Write};
-use std::path::{Path, PathBuf};
-use std::process::{ChildStdin, Stdio};
-use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
-use std::sync::{mpsc, Arc, Mutex, OnceLock, TryLockError};
-use std::time::{Duration, Instant};
 use codegpt_core::plugin::{
     diagnose_invalid_tools, validate_plugin_input_arguments, validate_plugin_structured_output,
     validate_request, validate_tool_result, validate_tools, PluginCatalog, PluginCheckDiagnostic,
@@ -30,6 +20,16 @@ use codegpt_core::plugin::{
     PLUGIN_PROTOCOL_VERSION,
 };
 use codegpt_process::ManagedChild;
+use serde::Deserialize;
+use serde_json::{json, Value};
+use sha2::{Digest, Sha256};
+use std::collections::{BTreeMap, BTreeSet, VecDeque};
+use std::io::{BufRead, BufReader, Read, Write};
+use std::path::{Path, PathBuf};
+use std::process::{ChildStdin, Stdio};
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+use std::sync::{mpsc, Arc, Mutex, OnceLock, TryLockError};
+use std::time::{Duration, Instant};
 
 const PLUGIN_READER_QUEUE: usize = 16;
 const PLUGIN_WRITER_QUEUE: usize = 1;

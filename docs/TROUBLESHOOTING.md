@@ -58,9 +58,9 @@ is pruned after 24 hours. Managed Runner Tokens are not charged against those
 shared-key count or retention limits. All Runner registrations have a
 64-project input safety limit.
 
-### `connect` rejects a `wc_*` value
+### `connect` rejects a `cg_*` value
 
-This is deliberate. `wc_pat_*`, `wc_agent_*`, `wc_acct_*`, and other `wc_*`
+This is deliberate. `cg_pat_*`, `cg_agent_*`, `cg_acct_*`, and other `cg_*`
 values are managed credentials and never fall back to shared-key auth. Use a
 different random key for the hosted shared-key flow, or use `codegpt login`
 for managed identity.
@@ -145,9 +145,9 @@ Use the actual install path for your host.
 
 ### Client accidentally runs `pairing create` and `/etc/codegpt/codegpt.env` is missing
 
-`codegpt pairing create` is server/admin-side and uses the server bootstrap env file. A friend/client machine should run `codegpt login <server-url> --code <wc_pair_...>` with the short-lived `wc_pair_*` code from the server owner.
+`codegpt pairing create` is server/admin-side and uses the server bootstrap env file. A friend/client machine should run `codegpt login <server-url> --code <cg_pair_...>` with the short-lived `cg_pair_*` code from the server owner.
 
-Copy only the `wc_pair_*` code between machines. Do not copy `CODEGPT_TOKEN`, user API tokens, Runner tokens, env files, or complete `runner.toml` files.
+Copy only the `cg_pair_*` code between machines. Do not copy `CODEGPT_TOKEN`, user API tokens, Runner tokens, env files, or complete `runner.toml` files.
 
 ### Doctor warns `binary codegpt not found in PATH` on a client
 
@@ -208,11 +208,11 @@ Confirm the Runner server URL, token file, service user, and `allowed_roots`.
 
 ### Wrong token type
 
-In the hosted quick-start, MCP and Runner use the same non-`wc_` shared key.
+In the hosted quick-start, MCP and Runner use the same non-`cg_` shared key.
 In managed mode, GPT Actions, MCP, and ordinary REST/project APIs use
-`codegpt-user-token` (`wc_pat_*`), while the Runner token (`wc_agent_*`) is
+`codegpt-user-token` (`cg_pat_*`), while the Runner token (`cg_agent_*`) is
 only for Runner transport — after `codegpt login` it lives inline in
-`runner.toml`, with no separate `codegpt-runner-token` file. A 403 after putting a `wc_agent_*`
+`runner.toml`, with no separate `codegpt-runner-token` file. A 403 after putting a `cg_agent_*`
 value in `--token` or `--token-file` is the expected security boundary: select
 the generated `codegpt-user-token` instead. Recent CLI commands also diagnose
 this mismatch without printing the complete token. `CODEGPT_TOKEN` is

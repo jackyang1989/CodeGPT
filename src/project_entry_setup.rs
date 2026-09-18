@@ -245,7 +245,7 @@ pub(crate) fn setup(options: &ProjectCommandOptions) -> Result<SetupReport, Prod
     }
     if !paths.bootstrap_key.is_file() {
         let value = format!(
-            "wc_bootstrap_{}{}",
+            "cg_bootstrap_{}{}",
             Uuid::new_v4().simple(),
             Uuid::new_v4().simple()
         );
@@ -608,9 +608,7 @@ pub(super) fn validate_existing_runner(
             return Err(ProductError::new(
                 "project_registration_invalid",
                 format!("existing Runner configuration conflicts in field '{field}'"),
-                Some(
-                    "Resolve the existing configuration conflict; CodeGPT will not overwrite it.",
-                ),
+                Some("Resolve the existing configuration conflict; CodeGPT will not overwrite it."),
             ));
         }
     }
@@ -808,7 +806,7 @@ fn project_grant_identity(root: &Path, profile: &str, state: &Path) -> String {
     hasher.update(b"\0");
     hasher.update(state.to_string_lossy().as_bytes());
     let digest = format!("{:x}", hasher.finalize());
-    format!("wc_pgrant_{}", &digest[..24])
+    format!("cg_pgrant_{}", &digest[..24])
 }
 
 fn safe_slug(root: &Path) -> String {

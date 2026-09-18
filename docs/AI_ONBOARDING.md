@@ -81,7 +81,7 @@ token. Create a short-lived pairing code on the Server, then redeem it as the
 ordinary user that will run project commands:
 
 ```bash
-codegpt login https://codegpt.example --code <wc_pair_...> \
+codegpt login https://codegpt.example --code <cg_pair_...> \
   --allowed-root "$HOME/git" \
   --project "$HOME/git/my-repo"
 codegpt runner install --scope user \
@@ -127,7 +127,7 @@ Do **not** read back, print, log, commit, or echo into chat:
 
 When a credential must be entered into ChatGPT/Claude, identify the source precisely and ask the **human** to copy it. Prefer connection details explicitly produced by the current flow, such as `login --print-mcp-config` for full setup or the successful disclosure from a temporary `share` / existing-Server `connect`. If a stored value must be recovered, point the user to the exact protected file/field without echoing it yourself. Status/log commands intentionally do not reveal secrets.
 
-Never substitute a `wc_agent_*` Runner token for an MCP token, never use a
+Never substitute a `cg_agent_*` Runner token for an MCP token, never use a
 bootstrap `CODEGPT_TOKEN` as an MCP credential, and never assume offline
 `codegpt tokens generate` material is registered on a remote Server.
 

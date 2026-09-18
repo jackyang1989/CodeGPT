@@ -12,13 +12,13 @@ use crate::tool_runtime::metadata::{
 };
 use crate::tool_runtime::tool_definition::{lookup_tool_definition, RunnerCapabilityRequirement};
 use crate::tool_runtime::{RuntimeInfo, ToolCall, ToolRuntime};
-use serde_json::json;
-use std::sync::Arc;
 use codegpt_core::coding_agent::{
     CodingAgentExecutionState, CodingAgentProvider, CodingAgentRequest, CodingAgentResponse,
     CodingAgentResponsePayload, CodingAgentRunInventory, CodingAgentRunSnapshot,
     CodingAgentRunState, CodingAgentTerminal,
 };
+use serde_json::json;
+use std::sync::Arc;
 
 fn runtime_with_db() -> (tempfile::TempDir, Arc<crate::db::Database>, ToolRuntime) {
     let temp = tempfile::tempdir().unwrap();
@@ -389,10 +389,10 @@ fn tool_call_parser_keeps_agent_task_and_connector_task_identities_distinct() {
     .unwrap();
     assert_eq!(call.tool_name(), "create_agent_task");
 
-    let task_id = "wc_agent_task_ERERERERERERERER".to_string();
-    let attempt_id = "wc_agent_task_attempt_IiIiIiIiIiIiIiIi".to_string();
-    let fence = "wc_agent_task_fence_MzMzMzMzMzMzMzMzMzMzMw".to_string();
-    let assignee = "wc_dagent_RERERERERERERERE".to_string();
+    let task_id = "cg_agent_task_ERERERERERERERER".to_string();
+    let attempt_id = "cg_agent_task_attempt_IiIiIiIiIiIiIiIi".to_string();
+    let fence = "cg_agent_task_fence_MzMzMzMzMzMzMzMzMzMzMw".to_string();
+    let assignee = "cg_dagent_RERERERERERERERE".to_string();
     let heartbeat = ToolCall::from_tool_name(
         "heartbeat_agent_task_attempt",
         json!({
@@ -430,8 +430,8 @@ fn tool_call_parser_keeps_agent_task_and_connector_task_identities_distinct() {
     assert!(ToolCall::from_tool_name(
         "start_agent_task_attempt",
         json!({
-            "task_id": "wc_task_connector_identity",
-            "assignee_agent_id": "wc_dagent_VVVVVVVVVVVVVVVV".to_string(),
+            "task_id": "cg_task_connector_identity",
+            "assignee_agent_id": "cg_dagent_VVVVVVVVVVVVVVVV".to_string(),
             "idempotency_key": "wrong-domain"
         })
     )
@@ -490,7 +490,7 @@ fn runtime_surface_exposes_fence_only_for_exact_start_and_never_requires_endpoin
         .as_str()
         .unwrap()
         .to_string();
-    assert!(fence.starts_with("wc_agent_task_fence_"));
+    assert!(fence.starts_with("cg_agent_task_fence_"));
     assert_eq!(
         started.output["attempt"]["attempt_controller_generation"],
         1
@@ -559,7 +559,7 @@ fn runtime_surface_exposes_fence_only_for_exact_start_and_never_requires_endpoin
     assert_eq!(
         _db.conn_for_tests()
             .query_row(
-                "SELECT COUNT(*) FROM wc_agent_task_coding_runs",
+                "SELECT COUNT(*) FROM cg_agent_task_coding_runs",
                 [],
                 |row| { row.get::<_, i64>(0) }
             )
@@ -722,7 +722,7 @@ async fn coding_run_executes_then_reconciles_from_reopened_db_and_fresh_runtime(
     assert_eq!(start.provider_id, "codex");
     assert_eq!(start.provider_instance_id, "codex-instance-a4a");
     assert_eq!(start.instruction, instruction);
-    assert!(start.run_id.starts_with("wc_agent_run_"));
+    assert!(start.run_id.starts_with("cg_agent_run_"));
     let run_now = chrono::Utc::now().timestamp();
     let running = CodingAgentRunSnapshot {
         run_id: start.run_id.clone(),
@@ -771,7 +771,7 @@ async fn coding_run_executes_then_reconciles_from_reopened_db_and_fresh_runtime(
     assert_eq!(
         db.conn_for_tests()
             .query_row(
-                "SELECT COUNT(*) FROM wc_agent_task_coding_runs",
+                "SELECT COUNT(*) FROM cg_agent_task_coding_runs",
                 [],
                 |row| { row.get::<_, i64>(0) }
             )
@@ -853,7 +853,7 @@ async fn coding_run_executes_then_reconciles_from_reopened_db_and_fresh_runtime(
 #[test]
 fn agent_task_audit_projection_never_records_instruction_fence_keys_or_terminal_text() {
     const INSTRUCTION: &str = "PRIVATE_AGENT_TASK_INSTRUCTION_DO_NOT_LOG";
-    const FENCE: &str = "wc_agent_task_fence_EREREREREREREREREREREQ";
+    const FENCE: &str = "cg_agent_task_fence_EREREREREREREREREREREQ";
     const START_KEY: &str = "PRIVATE_START_REPLAY_KEY_DO_NOT_LOG";
     const COMPLETION_KEY: &str = "PRIVATE_COMPLETION_KEY_DO_NOT_LOG";
     const RESULT: &str = "PRIVATE_TERMINAL_RESULT_DO_NOT_LOG";
@@ -864,7 +864,7 @@ fn agent_task_audit_projection_never_records_instruction_fence_keys_or_terminal_
         &json!({
             "title": "private title",
             "instruction": INSTRUCTION,
-            "assignee_agent_id": "wc_dagent_qqqqqqqqqqqqqqqq".to_string(),
+            "assignee_agent_id": "cg_dagent_qqqqqqqqqqqqqqqq".to_string(),
             "referenced_project_id": "agent:special:reference-only",
             "idempotency_key": START_KEY,
         }),
@@ -879,9 +879,9 @@ fn agent_task_audit_projection_never_records_instruction_fence_keys_or_terminal_
     let complete_summary = crate::tool_runtime::tool_audit::session_log_arguments_for_tool_request(
         "complete_agent_task_attempt",
         &json!({
-            "task_id": "wc_agent_task_ERERERERERERERER".to_string(),
-            "attempt_id": "wc_agent_task_attempt_IiIiIiIiIiIiIiIi".to_string(),
-            "assignee_agent_id": "wc_dagent_qqqqqqqqqqqqqqqq".to_string(),
+            "task_id": "cg_agent_task_ERERERERERERERER".to_string(),
+            "attempt_id": "cg_agent_task_attempt_IiIiIiIiIiIiIiIi".to_string(),
+            "assignee_agent_id": "cg_dagent_qqqqqqqqqqqqqqqq".to_string(),
             "attempt_fence": FENCE,
             "attempt_controller_generation": 3,
             "outcome": "succeeded",
@@ -899,11 +899,11 @@ fn agent_task_audit_projection_never_records_instruction_fence_keys_or_terminal_
         "start_agent_task_attempt",
         &json!({
             "task": {
-                "task_id": "wc_agent_task_ERERERERERERERER".to_string(),
+                "task_id": "cg_agent_task_ERERERERERERERER".to_string(),
                 "state": "active"
             },
             "attempt": {
-                "attempt_id": "wc_agent_task_attempt_IiIiIiIiIiIiIiIi".to_string(),
+                "attempt_id": "cg_agent_task_attempt_IiIiIiIiIiIiIiIi".to_string(),
                 "attempt_number": 1,
                 "state": "active",
                 "attempt_controller_generation": 1,
@@ -967,7 +967,7 @@ fn foreign_runtime_task_ids_are_existence_hidden_and_project_reference_grants_no
         .as_str()
         .unwrap()
         .to_string();
-    let missing_id = "wc_agent_task_________________".to_string();
+    let missing_id = "cg_agent_task_________________".to_string();
 
     let foreign = runtime.read_agent_task(Some(&alice), task_id);
     let missing = runtime.read_agent_task(Some(&alice), missing_id);

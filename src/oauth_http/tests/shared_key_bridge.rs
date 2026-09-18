@@ -493,7 +493,7 @@ async fn shared_key_client_provision_is_group_bound_and_preserves_narrow_scope_o
     assert!(created["client_secret"]
         .as_str()
         .unwrap()
-        .starts_with("wc_csec_"));
+        .starts_with("cg_csec_"));
     let expected_scopes = bridge_oauth_scopes()
         .iter()
         .map(|scope| serde_json::Value::String((*scope).to_string()))
@@ -592,7 +592,7 @@ async fn shared_key_client_provision_is_group_bound_and_preserves_narrow_scope_o
         .add_header("authorization", format!("Bearer {shared_key}"), true)
         .json(&serde_json::json!({
             "redirect_uri": "https://chatgpt.example/callback",
-            "client_id": "wc_client_missing_narrow_computer",
+            "client_id": "cg_client_missing_narrow_computer",
             "previous_allowed_scopes": [
                 "runtime:read",
                 "project:read",
@@ -704,7 +704,7 @@ async fn shared_key_client_provision_fails_closed_on_client_lookup_error() {
         .add_header("authorization", format!("Bearer {shared_key}"), true)
         .json(&serde_json::json!({
             "redirect_uri": "https://chatgpt.example/callback",
-            "client_id": "wc_client_existing",
+            "client_id": "cg_client_existing",
             "previous_allowed_scopes": ["runtime:read"]
         }))
         .send(&service)
@@ -857,7 +857,7 @@ async fn bridge_authorize_get_invalid_client_or_redirect_creates_no_code() {
     let invalid_client_url = authorize_url(&[
         ("bridge", "shared_key"),
         ("response_type", "code"),
-        ("client_id", "wc_client_missing"),
+        ("client_id", "cg_client_missing"),
         ("redirect_uri", "https://example.com/callback"),
         ("scope", "runtime:read"),
         ("code_challenge", "challenge-1"),
@@ -938,7 +938,7 @@ async fn bridge_authorize_get_renders_form_and_creates_no_code() {
     let text = resp.take_string().await.unwrap_or_default();
     assert!(text.contains("/oauth/authorize/bridge"));
     assert!(text.contains("name=\"shared_key\""));
-    assert!(!text.contains("wc_oac_"));
+    assert!(!text.contains("cg_oac_"));
 }
 
 #[tokio::test]
@@ -1484,7 +1484,7 @@ async fn bridge_authorize_post_rejects_empty_or_managed_key_without_code() {
     );
     let service = Service::new(build_router(config, db.clone()));
 
-    for submitted in ["   ", "wc_pat_not_a_shared_key"] {
+    for submitted in ["   ", "cg_pat_not_a_shared_key"] {
         let body = bridge_form_body(
             &client,
             "https://example.com/callback",
@@ -1565,7 +1565,7 @@ async fn bridge_authorize_post_revalidates_hidden_fields_without_code() {
             form_body(&[
                 ("bridge", "shared_key"),
                 ("response_type", "code"),
-                ("client_id", "wc_client_missing"),
+                ("client_id", "cg_client_missing"),
                 ("redirect_uri", "https://example.com/callback"),
                 ("scope", "runtime:read"),
                 ("state", "state-1"),

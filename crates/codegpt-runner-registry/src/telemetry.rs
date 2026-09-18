@@ -1,6 +1,6 @@
-use std::fmt::Debug;
 use codegpt_core::runner_operation::RunnerOperation;
 use codegpt_core::runner_protocol::{RunnerJobUpdateRequest, RunnerRequest, RunnerResultPayload};
+use std::fmt::Debug;
 
 /// Fail-open telemetry callbacks invoked only from authoritative registry
 /// lifecycle points. Implementations must not re-enter the registry. Callback

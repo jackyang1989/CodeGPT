@@ -1,6 +1,4 @@
 use super::*;
-use serde::Serialize;
-use serde_json::{json, Value};
 use codegpt_core::lsp_bridge::{
     CallHierarchyDirection, CallHierarchyResult, DocumentDiagnosticsResult,
     DocumentDiagnosticsStatus, DocumentSymbolsResult, HoverResult, LocationsResult,
@@ -13,6 +11,8 @@ use codegpt_core::runner_protocol::{
     RunnerConfigAction, RunnerConfigErrorCode, RunnerConfigErrorField, RunnerConfigErrorReason,
     RunnerConfigExecutionState, RunnerConfigOperationResponse,
 };
+use serde::Serialize;
+use serde_json::{json, Value};
 
 fn tool_result_instance<T: Serialize>(success: bool, payload: &T) -> Value {
     let mut instance = json!({

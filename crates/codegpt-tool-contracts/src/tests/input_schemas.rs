@@ -836,11 +836,11 @@ fn heartbeat_agent_task_attempt_active_turn_proof_is_paired_and_server_timed() {
     }
     assert_eq!(
         heartbeat.input_schema["properties"]["active_turn_wake_id"]["pattern"],
-        "^wc_wake_[A-Za-z0-9_-]{16}$"
+        "^cg_wake_[A-Za-z0-9_-]{16}$"
     );
     assert_eq!(
         heartbeat.input_schema["properties"]["active_turn_consume_token"]["pattern"],
-        "^wc_wake_consume_[A-Za-z0-9_-]{21}[AQgw]$"
+        "^cg_wake_consume_[A-Za-z0-9_-]{21}[AQgw]$"
     );
     let properties = heartbeat.input_schema["properties"].as_object().unwrap();
     for forbidden in [
@@ -858,27 +858,27 @@ fn heartbeat_agent_task_attempt_active_turn_proof_is_paired_and_server_timed() {
     }
 
     let base = json!({
-        "task_id": "wc_agent_task_ERERERERERERERER".to_string(),
-        "attempt_id": "wc_agent_task_attempt_IiIiIiIiIiIiIiIi".to_string(),
-        "assignee_agent_id": "wc_dagent_MzMzMzMzMzMzMzMz".to_string(),
-        "attempt_fence": "wc_agent_task_fence_RERERERERERERERERERERA".to_string(),
+        "task_id": "cg_agent_task_ERERERERERERERER".to_string(),
+        "attempt_id": "cg_agent_task_attempt_IiIiIiIiIiIiIiIi".to_string(),
+        "assignee_agent_id": "cg_dagent_MzMzMzMzMzMzMzMz".to_string(),
+        "attempt_fence": "cg_agent_task_fence_RERERERERERERERERERERA".to_string(),
         "attempt_controller_generation": 7,
     });
     assert!(test_support::validate_schema_instance(&base, &heartbeat.input_schema).is_ok());
 
     let mut wake_only = base.clone();
-    wake_only["active_turn_wake_id"] = json!("wc_wake_VVVVVVVVVVVVVVVV".to_string());
+    wake_only["active_turn_wake_id"] = json!("cg_wake_VVVVVVVVVVVVVVVV".to_string());
     assert!(test_support::validate_schema_instance(&wake_only, &heartbeat.input_schema).is_ok());
 
     let mut token_only = base.clone();
     token_only["active_turn_consume_token"] =
-        json!("wc_wake_consume_ZmZmZmZmZmZmZmZmZmZmZg".to_string());
+        json!("cg_wake_consume_ZmZmZmZmZmZmZmZmZmZmZg".to_string());
     assert!(test_support::validate_schema_instance(&token_only, &heartbeat.input_schema).is_ok());
 
     let mut paired = base.clone();
-    paired["active_turn_wake_id"] = json!("wc_wake_VVVVVVVVVVVVVVVV".to_string());
+    paired["active_turn_wake_id"] = json!("cg_wake_VVVVVVVVVVVVVVVV".to_string());
     paired["active_turn_consume_token"] =
-        json!("wc_wake_consume_ZmZmZmZmZmZmZmZmZmZmZg".to_string());
+        json!("cg_wake_consume_ZmZmZmZmZmZmZmZmZmZmZg".to_string());
     assert!(test_support::validate_schema_instance(&paired, &heartbeat.input_schema).is_ok());
 
     for forbidden in ["lease_ms", "duration_ms", "expires_at_unix_ms"] {
@@ -913,13 +913,13 @@ fn code_mode_exec_schema_keeps_authority_outer_bound_and_source_bounded() {
     assert_eq!(properties["source"]["maxLength"], 65_536);
     let valid = json!({
         "project": "agent:special:demo",
-        "session_id": format!("wc_sess_{}", "1".repeat(32)),
+        "session_id": format!("cg_sess_{}", "1".repeat(32)),
         "source": "text({hello: 'world'});",
         "timeout_ms": 5_000,
     });
     assert!(test_support::validate_schema_instance(&valid, &spec.input_schema).is_ok());
     let mut override_attempt = valid.clone();
-    override_attempt["recording_session_id"] = json!(format!("wc_sess_{}", "2".repeat(32)));
+    override_attempt["recording_session_id"] = json!(format!("cg_sess_{}", "2".repeat(32)));
     assert!(test_support::validate_schema_instance(&override_attempt, &spec.input_schema).is_err());
 }
 
@@ -996,7 +996,7 @@ fn coding_agent_start_keeps_recorder_provenance_out_of_business_input() {
             "provider_id": "codex",
             "idempotency_key": "start-1",
             "instruction": "inspect",
-            "recording_session_id": "wc_sess_0123456789abcdef0123456789abcdef"
+            "recording_session_id": "cg_sess_0123456789abcdef0123456789abcdef"
         }),
     )
     .is_err());
@@ -1011,21 +1011,21 @@ fn agent_continuation_bind_requires_canonical_view_fence_without_model_exposure(
         .unwrap();
     assert_eq!(
         bind.input_schema["properties"]["binding_id"]["pattern"],
-        "^wc_host_binding_[A-Za-z0-9_-]{21}[AQgw]$"
+        "^cg_host_binding_[A-Za-z0-9_-]{21}[AQgw]$"
     );
     let mut args = json!({
-        "agent_id": "wc_dagent_qqqqqqqqqqqqqqqq".to_string(),
-        "endpoint_id": "wc_endpoint_u7u7u7u7u7u7u7u7".to_string(),
+        "agent_id": "cg_dagent_qqqqqqqqqqqqqqqq".to_string(),
+        "endpoint_id": "cg_endpoint_u7u7u7u7u7u7u7u7".to_string(),
         "expected_controller_generation": 1,
-        "binding_id": format!("wc_host_binding_{}", codegpt_core::compact::encode([0xa0; 16])),
+        "binding_id": format!("cg_host_binding_{}", codegpt_core::compact::encode([0xa0; 16])),
     });
     assert!(test_support::validate_schema_instance(&args, &bind.input_schema).is_ok());
     for invalid in [
         String::new(),
-        format!("wc_binding_{}", "a".repeat(32)),
-        format!("wc_host_binding_{}", "A".repeat(32)),
-        format!("wc_host_binding_{}", "a".repeat(31)),
-        format!("wc_host_binding_{}", "a".repeat(33)),
+        format!("cg_binding_{}", "a".repeat(32)),
+        format!("cg_host_binding_{}", "A".repeat(32)),
+        format!("cg_host_binding_{}", "a".repeat(31)),
+        format!("cg_host_binding_{}", "a".repeat(33)),
     ] {
         args["binding_id"] = json!(invalid);
         assert!(test_support::validate_schema_instance(&args, &bind.input_schema).is_err());
@@ -1059,14 +1059,14 @@ fn skill_runtime_and_management_schemas_preserve_typed_bounds() {
     assert_eq!(list["properties"]["limit"]["maximum"], 64);
     assert_eq!(
         list["properties"]["expected_catalog_revision"]["pattern"],
-        "^wc_skillcat_[A-Za-z0-9_-]{43}$"
+        "^cg_skillcat_[A-Za-z0-9_-]{43}$"
     );
 
     let read = input_schema_for_tool("skill_read_file");
     assert_eq!(read["properties"]["project"]["minLength"], 1);
     assert_eq!(
         read["properties"]["skill_id"]["pattern"],
-        "^wc_skill_[A-Za-z0-9_-]{21}[AQgw]$"
+        "^cg_skill_[A-Za-z0-9_-]{21}[AQgw]$"
     );
     assert_eq!(read["properties"]["path"]["maxLength"], 512);
     assert_eq!(read["properties"]["start_line"]["minimum"], 1);
@@ -1097,12 +1097,12 @@ fn skill_runtime_and_management_schemas_preserve_typed_bounds() {
         let schema = input_schema_for_tool(name);
         assert_eq!(schema["properties"]["skill_key"]["maxLength"], 96, "{name}");
         assert_eq!(
-            schema["properties"]["package_revision"]["pattern"], "^wc_skillpkg_[A-Za-z0-9_-]{43}$",
+            schema["properties"]["package_revision"]["pattern"], "^cg_skillpkg_[A-Za-z0-9_-]{43}$",
             "{name}"
         );
         assert_eq!(
             schema["properties"]["expected_state_revision"]["pattern"],
-            "^wc_skillstate_[A-Za-z0-9_-]{43}$",
+            "^cg_skillstate_[A-Za-z0-9_-]{43}$",
             "{name}"
         );
         assert_eq!(

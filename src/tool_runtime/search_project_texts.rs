@@ -4,12 +4,12 @@ use super::files::{SearchOptions, SearchRequest};
 use super::project_resolution::ResolvedProject;
 use super::{SearchProjectTextsQuery, SuggestedToolCall, ToolResult, ToolRuntime};
 use crate::json_measurement::serialized_json_len;
+use codegpt_core::runtime_contract::MODEL_INSPECTION_MAX_RESULT_BYTES as MAX_SERIALIZED_OUTPUT_BYTES;
+use codegpt_workspace::file_read_normalize::MODEL_RESULT_ENVELOPE_RESERVE_BYTES;
 use futures_util::{stream, StreamExt};
 use serde_json::{json, Value};
 use std::time::Duration;
 use tokio::time::Instant;
-use codegpt_core::runtime_contract::MODEL_INSPECTION_MAX_RESULT_BYTES as MAX_SERIALIZED_OUTPUT_BYTES;
-use codegpt_workspace::file_read_normalize::MODEL_RESULT_ENVELOPE_RESERVE_BYTES;
 
 pub(crate) const MAX_SEARCH_PROJECT_TEXTS_QUERIES: usize = 8;
 // Keep search fanout below the query cap: each rg process can independently
@@ -1107,14 +1107,14 @@ mod tests {
             &mut soft,
             "agent:resolved:demo",
             std::slice::from_ref(&query),
-            Some("wc_sess_demo"),
+            Some("cg_sess_demo"),
             None,
         );
         assert!(soft.output.get("next_index").is_none());
         let suggested = &soft.output["suggested_call"];
         assert_eq!(suggested["tool"], "search_project_texts");
         assert_eq!(suggested["arguments"]["project"], "agent:resolved:demo");
-        assert_eq!(suggested["arguments"]["session_id"], "wc_sess_demo");
+        assert_eq!(suggested["arguments"]["session_id"], "cg_sess_demo");
         assert_eq!(
             suggested["arguments"]["max_result_bytes"],
             MAX_SERIALIZED_OUTPUT_BYTES

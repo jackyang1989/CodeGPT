@@ -12,11 +12,11 @@ use crate::runner_protocol::RunnerProjectSummary;
 use crate::runner_protocol::RunnerRequest;
 use crate::CommandResult;
 #[cfg(test)]
-use std::path::Path;
-#[cfg(test)]
 use codegpt_core::runner_operation::RunnerOperation;
 #[cfg(test)]
 use codegpt_core::runner_operation::RunnerProjectOperation;
+#[cfg(test)]
+use std::path::Path;
 
 mod catalog;
 mod lifecycle;

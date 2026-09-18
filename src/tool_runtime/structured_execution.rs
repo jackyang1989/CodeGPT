@@ -5,10 +5,10 @@ use crate::runner_protocol::{
     ShellJobInfo, STRUCTURED_EXECUTION_TIMEOUT_DEFAULT_SECS, STRUCTURED_EXECUTION_TIMEOUT_MAX_SECS,
     STRUCTURED_EXECUTION_TIMEOUT_MIN_SECS,
 };
-use std::sync::Arc;
-use std::time::Duration;
 use codegpt_core::runner_job_lifecycle::RunnerJobLifecycle;
 use codegpt_runner_registry::RunnerAccess;
+use std::sync::Arc;
+use std::time::Duration;
 
 pub(crate) const STRUCTURED_EXECUTION_SYNC_WAIT_SECS: u64 = 10;
 pub(crate) const INITIAL_JOB_HANDOFF_TAIL_LINES: usize = 40;

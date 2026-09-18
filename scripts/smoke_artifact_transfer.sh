@@ -10,7 +10,7 @@ set -euo pipefail
 # Active mode:
 #   CODEGPT_SMOKE_RUN=1 \
 #   CODEGPT_PUBLIC_URL="https://codegpt.example.com" \
-#   CODEGPT_TOKEN="<wc_pat_or_allowed_shared_key>" \
+#   CODEGPT_TOKEN="<cg_pat_or_allowed_shared_key>" \
 #   CODEGPT_SMOKE_PROJECT_ID="agent:<client_id>:<smoke-project>" \
 #   bash scripts/smoke_artifact_transfer.sh
 #
@@ -34,7 +34,7 @@ To run the HTTP smoke explicitly:
 
   CODEGPT_SMOKE_RUN=1 \\
   CODEGPT_PUBLIC_URL="https://codegpt.example.com" \\
-  CODEGPT_TOKEN="<wc_pat_or_allowed_shared_key>" \\
+  CODEGPT_TOKEN="<cg_pat_or_allowed_shared_key>" \\
   CODEGPT_SMOKE_PROJECT_ID="agent:<client_id>:<smoke-project>" \\
   bash scripts/smoke_artifact_transfer.sh
 
@@ -51,8 +51,8 @@ Optional environment:
 Preconditions:
 
   1. The public CodeGPT URL is reachable.
-  2. The token is a managed wc_pat_* token or a deployment-allowed shared key.
-     Do not use wc_agent_*; that token type is only for codegpt-runner.
+  2. The token is a managed cg_pat_* token or a deployment-allowed shared key.
+     Do not use cg_agent_*; that token type is only for codegpt-runner.
   3. The smoke project is registered, Runner-backed, online, and a git repo.
   4. The smoke project is disposable and clean before the run.
 

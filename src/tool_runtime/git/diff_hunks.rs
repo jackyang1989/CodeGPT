@@ -1,12 +1,12 @@
 use base64::{engine::general_purpose, Engine as _};
-use serde_json::{json, Value};
-use sha2::{Digest, Sha256};
 pub(crate) use codegpt_core::runtime_contract::GIT_DIFF_HUNKS_CONTINUATION_MAX_BYTES;
 use codegpt_core::runtime_contract::{
     DEFAULT_GIT_DIFF_HUNKS_PAGE_BYTES, MAX_GIT_DIFF_HUNKS_PAGE_BYTES,
     MIN_GIT_DIFF_HUNKS_PAGE_BYTES, MODEL_INSPECTION_MAX_RESULT_BYTES,
 };
 use codegpt_workspace::file_read_normalize::MODEL_RESULT_ENVELOPE_RESERVE_BYTES;
+use serde_json::{json, Value};
+use sha2::{Digest, Sha256};
 
 use super::super::git_committed::{
     committed_git_discovery_prefix, committed_git_isolated_view_setup, normalize_exact_commit_id,

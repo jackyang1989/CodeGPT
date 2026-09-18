@@ -1,6 +1,6 @@
+use codegpt_admin::{build_server_http_client, ServerHttpOptions};
 use reqwest::header::CONTENT_TYPE;
 use serde_json::{json, Value};
-use codegpt_admin::{build_server_http_client, ServerHttpOptions};
 
 /// A single authenticated JSON POST against the server. Reuses
 /// `build_admin_request` to construct the path/body for known admin commands,

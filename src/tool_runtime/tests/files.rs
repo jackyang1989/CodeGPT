@@ -897,7 +897,7 @@ async fn artifact_upload_chunk_session_log_arguments_do_not_store_base64() {
                     ToolCall::ArtifactUploadChunk {
                         project,
                         path: "artifacts/imports/chunk.txt".to_string(),
-                        upload_id: "wc_upload_test_1".to_string(),
+                        upload_id: "cg_upload_test_1".to_string(),
                         offset: 7,
                         content_base64,
                         session_id: Some(session_id),
@@ -917,7 +917,7 @@ async fn artifact_upload_chunk_session_log_arguments_do_not_store_base64() {
         "telemetry-artifact-chunk",
         &req.request_id,
         0,
-        r#"{"path":"artifacts/imports/chunk.txt","upload_id":"wc_upload_test_1","received_bytes":12,"next_offset":12,"expected_bytes":null,"expected_sha256":null,"max_bytes":268435456,"mime_type":null,"committed":false}"#,
+        r#"{"path":"artifacts/imports/chunk.txt","upload_id":"cg_upload_test_1","received_bytes":12,"next_offset":12,"expected_bytes":null,"expected_sha256":null,"max_bytes":268435456,"mime_type":null,"committed":false}"#,
         "",
     )
     .await;
@@ -941,7 +941,7 @@ async fn artifact_upload_chunk_session_log_arguments_do_not_store_base64() {
         .as_ref()
         .expect("input_summary present on started event");
     assert_eq!(input_summary["path"], "artifacts/imports/chunk.txt");
-    assert_eq!(input_summary["upload_id"], "wc_upload_test_1");
+    assert_eq!(input_summary["upload_id"], "cg_upload_test_1");
     assert_eq!(input_summary["offset"], 7);
     assert_eq!(input_summary["content_base64_present"], true);
     assert!(input_summary.get("content_base64").is_none());
@@ -5006,7 +5006,7 @@ async fn artifact_upload_chunk_rejects_invalid_inputs_before_resolving_project()
         .artifact_upload_chunk(
             missing_project.clone(),
             path.clone(),
-            "wc_upload_test_1".to_string(),
+            "cg_upload_test_1".to_string(),
             0,
             "not valid base64!".to_string(),
         )
@@ -5018,7 +5018,7 @@ async fn artifact_upload_chunk_rejects_invalid_inputs_before_resolving_project()
         .artifact_upload_chunk(
             missing_project.clone(),
             path.clone(),
-            "wc_upload_test_1".to_string(),
+            "cg_upload_test_1".to_string(),
             0,
             "".to_string(),
         )
@@ -5037,7 +5037,7 @@ async fn artifact_upload_chunk_rejects_invalid_inputs_before_resolving_project()
         .artifact_upload_chunk(
             missing_project,
             path,
-            "wc_upload_test_1".to_string(),
+            "cg_upload_test_1".to_string(),
             0,
             oversized,
         )

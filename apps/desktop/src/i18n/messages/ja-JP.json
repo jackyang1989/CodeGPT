@@ -335,7 +335,7 @@
   "error.projectTitle": "プロジェクトの準備ができていません",
   "error.projectAction": "プロジェクトを再有効化してください。Desktop が正確なアクセス権を再適用し、現在の Runner で利用可能にします。",
   "error.pairingTitle": "ワンタイムログインコードが無効です",
-  "error.pairingAction": "既存の Server が発行した wc_pair_… コードを入力してください。",
+  "error.pairingAction": "既存の Server が発行した cg_pair_… コードを入力してください。",
   "error.enrollmentTitle": "登録が完了しませんでした",
   "error.enrollmentAction": "Server と登録情報を確認して再試行してください。",
   "error.tunnelTitle": "安全なトンネルを利用できません",

@@ -2,8 +2,6 @@
 pub(super) use super::audit::context_result_summary_for_tool_result;
 use super::audit::execution_policy_for_tool;
 pub use super::audit::session_input_summary_for_tool;
-use serde_json::{json, Value};
-use std::collections::HashMap;
 use codegpt_core::lsp_bridge::{
     CallHierarchyResult, DocumentDiagnosticsResult, DocumentSymbolsResult, HoverResult,
     LocationsResult, WorkspaceSymbolsResult,
@@ -18,6 +16,8 @@ use codegpt_tool_contracts::{
     runtime_tool_session_evidence_policy, ToolChangedPathEvidence, ToolDiffReviewEvidence,
     ToolExplorationEvidence, ToolNavigationEvidenceKind,
 };
+use serde_json::{json, Value};
+use std::collections::HashMap;
 
 use super::model::{
     PersistentShellEventEvidence, SessionEvent, SessionSummary, ToolCallExpectation,
@@ -746,7 +746,7 @@ pub fn sanitize_persistent_shell_event_evidence(
         .as_str()
         .to_string();
     evidence.shell_id = evidence.shell_id.filter(|value| {
-        value.starts_with("wc_shell_")
+        (value.starts_with("cg_shell_") || value.starts_with("wc_shell_"))
             && value.len() <= 96
             && value
                 .bytes()
@@ -1051,8 +1051,7 @@ pub fn validation_output_summary_for_tool_result(tool_name: &str, output: &Value
             summary["zero_tests_run"] = cargo_test_zero_tests_run(output);
         }
     }
-    if execution_policy.detail == codegpt_tool_contracts::ToolAuditExecutionDetail::TestAssertions
-    {
+    if execution_policy.detail == codegpt_tool_contracts::ToolAuditExecutionDetail::TestAssertions {
         if let Some(require_tests) = output.get("require_tests").and_then(Value::as_bool) {
             summary["require_tests"] = json!(require_tests);
         }
@@ -1132,8 +1131,7 @@ pub(super) fn sanitize_persisted_validation_output_summary(
             summary["zero_tests_run"] = persisted_cargo_test_zero_tests_run(object);
         }
     }
-    if execution_policy.detail == codegpt_tool_contracts::ToolAuditExecutionDetail::TestAssertions
-    {
+    if execution_policy.detail == codegpt_tool_contracts::ToolAuditExecutionDetail::TestAssertions {
         if let Some(require_tests) = object.get("require_tests").and_then(Value::as_bool) {
             summary["require_tests"] = json!(require_tests);
         }
@@ -1258,7 +1256,7 @@ mod result_expectation_tests {
 
     #[test]
     fn persistent_shell_evidence_accepts_compact_base64url_shell_id() {
-        let shell_id = "wc_shell_AAAAAAAA-AAAAAA_";
+        let shell_id = "cg_shell_AAAAAAAA-AAAAAA_";
         let evidence = persistent_shell_event_evidence_for_tool_result(
             "session_shell_exec",
             &json!({

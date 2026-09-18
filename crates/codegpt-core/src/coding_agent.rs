@@ -407,8 +407,8 @@ pub fn validate_provider_instance_id(value: &str) -> Result<(), String> {
 }
 
 pub fn validate_run_id(value: &str) -> Result<(), String> {
-    if !value.starts_with("wc_agent_run_") {
-        return Err("run_id must use the wc_agent_run_ namespace".to_string());
+    if !value.starts_with("cg_agent_run_") && !value.starts_with("wc_agent_run_") {
+        return Err("run_id must use the cg_agent_run_ namespace".to_string());
     }
     validate_identifier(value, "run_id", CODING_AGENT_MAX_RUN_ID_BYTES, false)
 }
@@ -929,7 +929,7 @@ mod tests {
 
     fn test_request() -> CodingAgentRequest {
         CodingAgentRequest::Start(CodingAgentStartRequest {
-            run_id: "wc_agent_run_0123456789abcdef".to_string(),
+            run_id: "cg_agent_run_0123456789abcdef".to_string(),
             intent_fingerprint: "cafebabe".to_string(),
             authority_fingerprint: "auth_0123456789abcdef".to_string(),
             runtime_project_id: "agent:test:demo".to_string(),
@@ -1066,7 +1066,7 @@ mod tests {
         error_code: Option<&str>,
     ) -> CodingAgentRunSnapshot {
         CodingAgentRunSnapshot {
-            run_id: "wc_agent_run_semantic_matrix".to_string(),
+            run_id: "cg_agent_run_semantic_matrix".to_string(),
             intent_fingerprint: "cafebabe".to_string(),
             authority_fingerprint: "auth_0123456789abcdef".to_string(),
             runtime_project_id: "agent:test:demo".to_string(),
@@ -1395,7 +1395,7 @@ mod tests {
     #[test]
     fn request_round_trip_is_closed_and_bounded() {
         let request = CodingAgentRequest::Start(CodingAgentStartRequest {
-            run_id: "wc_agent_run_0123456789abcdef".to_string(),
+            run_id: "cg_agent_run_0123456789abcdef".to_string(),
             intent_fingerprint: "cafebabe".to_string(),
             authority_fingerprint: "auth_0123456789abcdef".to_string(),
             runtime_project_id: "agent:test:demo".to_string(),

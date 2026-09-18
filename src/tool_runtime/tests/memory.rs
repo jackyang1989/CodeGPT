@@ -183,7 +183,7 @@ fn memory_runtime_search_read_cas_pagination_and_project_scope_are_explicit() {
     assert!(first.success);
     let revision = first.output["revision"].as_str().unwrap().to_string();
     let memory_id = first.output["memory_id"].as_str().unwrap().to_string();
-    assert!(memory_id.starts_with("wc_mem_"));
+    assert!(memory_id.starts_with("cg_mem_"));
     assert!(!memory_id.contains("registered"));
     assert!(!memory_id.contains("runner"));
 
@@ -290,7 +290,7 @@ fn memory_runtime_search_read_cas_pagination_and_project_scope_are_explicit() {
         &project_a,
         "architecture-decisions".to_string(),
         Some(format!(
-            "wc_memrev_{}",
+            "cg_memrev_{}",
             codegpt_core::compact::encode([0_u8; 32])
         )),
     );
@@ -1667,7 +1667,7 @@ fn memory_provenance_digest_is_stable_private_and_updates_only_on_real_content_c
         creator.principal_kind()
     );
     let read_text = read.output.to_string();
-    assert!(!read_text.contains("wc_memprincipal_"));
+    assert!(!read_text.contains("cg_memprincipal_"));
     assert!(!read_text.contains("key-alice"));
     let search_text = runtime
         .memory_search(&project, None, None, None, None, None)
@@ -1677,8 +1677,8 @@ fn memory_provenance_digest_is_stable_private_and_updates_only_on_real_content_c
         .memory_bootstrap_context_projection(&project)
         .unwrap()
         .to_string();
-    assert!(!search_text.contains("wc_memprincipal_"));
-    assert!(!bootstrap_text.contains("wc_memprincipal_"));
+    assert!(!search_text.contains("cg_memprincipal_"));
+    assert!(!bootstrap_text.contains("cg_memprincipal_"));
 
     let no_op_other = runtime.memory_set(
         &project,
@@ -2043,38 +2043,38 @@ fn memory_catalog_revision_depends_only_on_key_revision_pairs() {
     let tags = vec!["tag".to_string()];
     let records = [
         crate::db::ProjectMemoryRecord {
-            memory_id: "wc_mem_qqqqqqqqqqqqqqqq".to_string(),
+            memory_id: "cg_mem_qqqqqqqqqqqqqqqq".to_string(),
             memory_key: "b".to_string(),
             summary: "summary".to_string(),
             body: "body".to_string(),
             priority: MemoryPriority::Normal,
             bootstrap: false,
             tags: tags.clone(),
-            definition_hash: format!("wc_memdef_{}", "b".repeat(64)),
+            definition_hash: format!("cg_memdef_{}", "b".repeat(64)),
             created_by_kind: "test".to_string(),
-            created_by_principal_digest: Some(format!("wc_memprincipal_{}", "1".repeat(64))),
+            created_by_principal_digest: Some(format!("cg_memprincipal_{}", "1".repeat(64))),
             updated_by_kind: "test".to_string(),
-            updated_by_principal_digest: Some(format!("wc_memprincipal_{}", "1".repeat(64))),
+            updated_by_principal_digest: Some(format!("cg_memprincipal_{}", "1".repeat(64))),
             generation: 1,
-            revision: format!("wc_memrev_{}", codegpt_core::compact::encode([0xbb; 32])),
+            revision: format!("cg_memrev_{}", codegpt_core::compact::encode([0xbb; 32])),
             created_at_unix_ms: 1,
             updated_at_unix_ms: 99,
         },
         crate::db::ProjectMemoryRecord {
-            memory_id: "wc_mem_u7u7u7u7u7u7u7u7".to_string(),
+            memory_id: "cg_mem_u7u7u7u7u7u7u7u7".to_string(),
             memory_key: "a".to_string(),
             summary: "other".to_string(),
             body: "different".to_string(),
             priority: MemoryPriority::High,
             bootstrap: true,
             tags,
-            definition_hash: format!("wc_memdef_{}", "a".repeat(64)),
+            definition_hash: format!("cg_memdef_{}", "a".repeat(64)),
             created_by_kind: "test".to_string(),
-            created_by_principal_digest: Some(format!("wc_memprincipal_{}", "2".repeat(64))),
+            created_by_principal_digest: Some(format!("cg_memprincipal_{}", "2".repeat(64))),
             updated_by_kind: "test".to_string(),
-            updated_by_principal_digest: Some(format!("wc_memprincipal_{}", "2".repeat(64))),
+            updated_by_principal_digest: Some(format!("cg_memprincipal_{}", "2".repeat(64))),
             generation: 1,
-            revision: format!("wc_memrev_{}", codegpt_core::compact::encode([0xaa; 32])),
+            revision: format!("cg_memrev_{}", codegpt_core::compact::encode([0xaa; 32])),
             created_at_unix_ms: 2,
             updated_at_unix_ms: 3,
         },

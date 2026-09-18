@@ -12,19 +12,19 @@ use super::communication::{
     CONVERSATION_MESSAGE_ID_PREFIX, DURABLE_AGENT_ID_PREFIX,
 };
 use super::Database;
+use codegpt_core::coding_agent::{
+    merge_coding_agent_run_snapshot, validate_coding_agent_run_snapshot, CodingAgentExecutionState,
+    CodingAgentObservationMerge, CodingAgentRunSnapshot, CodingAgentRunState, CodingAgentTerminal,
+};
 use rusqlite::{
     params, types::Type, Connection, OptionalExtension, Transaction, TransactionBehavior,
 };
 use serde::Serialize;
 use serde_json::json;
-use codegpt_core::coding_agent::{
-    merge_coding_agent_run_snapshot, validate_coding_agent_run_snapshot, CodingAgentExecutionState,
-    CodingAgentObservationMerge, CodingAgentRunSnapshot, CodingAgentRunState, CodingAgentTerminal,
-};
 
-pub(crate) const AGENT_TASK_ID_PREFIX: &str = "wc_agent_task_";
-pub(crate) const AGENT_TASK_ATTEMPT_ID_PREFIX: &str = "wc_agent_task_attempt_";
-pub(crate) const AGENT_TASK_ATTEMPT_FENCE_PREFIX: &str = "wc_agent_task_fence_";
+pub(crate) const AGENT_TASK_ID_PREFIX: &str = "cg_agent_task_";
+pub(crate) const AGENT_TASK_ATTEMPT_ID_PREFIX: &str = "cg_agent_task_attempt_";
+pub(crate) const AGENT_TASK_ATTEMPT_FENCE_PREFIX: &str = "cg_agent_task_fence_";
 
 pub(crate) const MAX_AGENT_TASK_TITLE_CHARS: usize = 200;
 pub(crate) const MAX_AGENT_TASK_INSTRUCTION_BYTES: usize = 8_192;
@@ -581,7 +581,7 @@ impl Database {
     pub(crate) fn ensure_agent_task_schema(conn: &mut Connection) -> anyhow::Result<()> {
         conn.execute_batch(
             "
-            CREATE TABLE IF NOT EXISTS wc_agent_tasks (
+            CREATE TABLE IF NOT EXISTS cg_agent_tasks (
                 task_id TEXT PRIMARY KEY,
                 owner_principal_kind TEXT NOT NULL,
                 owner_principal_digest TEXT NOT NULL,
@@ -601,16 +601,16 @@ impl Database {
                     (state IN ('ready', 'active') AND terminal_attempt_id IS NULL AND terminal_at_unix_ms IS NULL)
                     OR (state IN ('succeeded', 'failed') AND terminal_attempt_id IS NOT NULL AND terminal_at_unix_ms IS NOT NULL)
                 ),
-                FOREIGN KEY(assignee_agent_id) REFERENCES wc_agent_identities(agent_id),
-                FOREIGN KEY(source_conversation_id) REFERENCES wc_conversations(conversation_id),
-                FOREIGN KEY(source_message_id) REFERENCES wc_conversation_messages(message_id)
+                FOREIGN KEY(assignee_agent_id) REFERENCES cg_agent_identities(agent_id),
+                FOREIGN KEY(source_conversation_id) REFERENCES cg_conversations(conversation_id),
+                FOREIGN KEY(source_message_id) REFERENCES cg_conversation_messages(message_id)
             );
-            CREATE INDEX IF NOT EXISTS idx_wc_agent_tasks_owner_updated
-                ON wc_agent_tasks(owner_principal_digest, updated_at_unix_ms DESC, task_id);
-            CREATE INDEX IF NOT EXISTS idx_wc_agent_tasks_assignee
-                ON wc_agent_tasks(owner_principal_digest, assignee_agent_id, updated_at_unix_ms DESC);
+            CREATE INDEX IF NOT EXISTS idx_cg_agent_tasks_owner_updated
+                ON cg_agent_tasks(owner_principal_digest, updated_at_unix_ms DESC, task_id);
+            CREATE INDEX IF NOT EXISTS idx_cg_agent_tasks_assignee
+                ON cg_agent_tasks(owner_principal_digest, assignee_agent_id, updated_at_unix_ms DESC);
 
-            CREATE TABLE IF NOT EXISTS wc_agent_task_attempts (
+            CREATE TABLE IF NOT EXISTS cg_agent_task_attempts (
                 attempt_id TEXT PRIMARY KEY,
                 task_id TEXT NOT NULL,
                 attempt_number INTEGER NOT NULL CHECK(attempt_number >= 1),
@@ -629,10 +629,10 @@ impl Database {
                     OR (state != 'active' AND terminal_at_unix_ms IS NOT NULL)
                 ),
                 UNIQUE(task_id, attempt_number),
-                FOREIGN KEY(task_id) REFERENCES wc_agent_tasks(task_id),
-                FOREIGN KEY(assignee_agent_id) REFERENCES wc_agent_identities(agent_id)
+                FOREIGN KEY(task_id) REFERENCES cg_agent_tasks(task_id),
+                FOREIGN KEY(assignee_agent_id) REFERENCES cg_agent_identities(agent_id)
             );
-            CREATE TABLE IF NOT EXISTS wc_agent_task_coding_runs (
+            CREATE TABLE IF NOT EXISTS cg_agent_task_coding_runs (
                 task_id TEXT NOT NULL,
                 attempt_id TEXT NOT NULL UNIQUE,
                 run_id TEXT NOT NULL UNIQUE,
@@ -653,13 +653,13 @@ impl Database {
                 created_at_unix_ms INTEGER NOT NULL,
                 updated_at_unix_ms INTEGER NOT NULL,
                 terminal_at_unix_ms INTEGER,
-                FOREIGN KEY(task_id) REFERENCES wc_agent_tasks(task_id),
-                FOREIGN KEY(attempt_id) REFERENCES wc_agent_task_attempts(attempt_id)
+                FOREIGN KEY(task_id) REFERENCES cg_agent_tasks(task_id),
+                FOREIGN KEY(attempt_id) REFERENCES cg_agent_task_attempts(attempt_id)
             );
-            CREATE INDEX IF NOT EXISTS idx_wc_agent_task_coding_runs_task
-                ON wc_agent_task_coding_runs(task_id, updated_at_unix_ms DESC);
+            CREATE INDEX IF NOT EXISTS idx_cg_agent_task_coding_runs_task
+                ON cg_agent_task_coding_runs(task_id, updated_at_unix_ms DESC);
 
-            CREATE TABLE IF NOT EXISTS wc_agent_task_endpoint_executions (
+            CREATE TABLE IF NOT EXISTS cg_agent_task_endpoint_executions (
                 task_id TEXT NOT NULL,
                 attempt_id TEXT NOT NULL UNIQUE,
                 wake_id TEXT NOT NULL UNIQUE,
@@ -673,20 +673,20 @@ impl Database {
                     (endpoint_id IS NULL AND endpoint_controller_generation IS NULL)
                     OR (endpoint_id IS NOT NULL AND endpoint_controller_generation >= 1)
                 ),
-                FOREIGN KEY(task_id) REFERENCES wc_agent_tasks(task_id),
-                FOREIGN KEY(attempt_id) REFERENCES wc_agent_task_attempts(attempt_id),
-                FOREIGN KEY(wake_id) REFERENCES wc_agent_wakes(wake_id),
-                FOREIGN KEY(endpoint_id) REFERENCES wc_agent_endpoints(endpoint_id)
+                FOREIGN KEY(task_id) REFERENCES cg_agent_tasks(task_id),
+                FOREIGN KEY(attempt_id) REFERENCES cg_agent_task_attempts(attempt_id),
+                FOREIGN KEY(wake_id) REFERENCES cg_agent_wakes(wake_id),
+                FOREIGN KEY(endpoint_id) REFERENCES cg_agent_endpoints(endpoint_id)
             );
-            CREATE INDEX IF NOT EXISTS idx_wc_agent_task_endpoint_executions_task
-                ON wc_agent_task_endpoint_executions(task_id, updated_at_unix_ms DESC);
+            CREATE INDEX IF NOT EXISTS idx_cg_agent_task_endpoint_executions_task
+                ON cg_agent_task_endpoint_executions(task_id, updated_at_unix_ms DESC);
 
-            CREATE UNIQUE INDEX IF NOT EXISTS idx_wc_agent_task_attempts_one_active
-                ON wc_agent_task_attempts(task_id) WHERE state = 'active';
-            CREATE INDEX IF NOT EXISTS idx_wc_agent_task_attempts_task_number
-                ON wc_agent_task_attempts(task_id, attempt_number DESC);
-            CREATE INDEX IF NOT EXISTS idx_wc_agent_task_attempts_assignee
-                ON wc_agent_task_attempts(assignee_agent_id, state, lease_expires_at_unix_ms);
+            CREATE UNIQUE INDEX IF NOT EXISTS idx_cg_agent_task_attempts_one_active
+                ON cg_agent_task_attempts(task_id) WHERE state = 'active';
+            CREATE INDEX IF NOT EXISTS idx_cg_agent_task_attempts_task_number
+                ON cg_agent_task_attempts(task_id, attempt_number DESC);
+            CREATE INDEX IF NOT EXISTS idx_cg_agent_task_attempts_assignee
+                ON cg_agent_task_attempts(assignee_agent_id, state, lease_expires_at_unix_ms);
             ",
         )?;
         Ok(())
@@ -777,11 +777,11 @@ impl Database {
         let task_id = allocate_identity(
             &transaction,
             AGENT_TASK_ID_PREFIX,
-            "SELECT EXISTS(SELECT 1 FROM wc_agent_tasks WHERE task_id = ?1)",
+            "SELECT EXISTS(SELECT 1 FROM cg_agent_tasks WHERE task_id = ?1)",
         )?;
         transaction
             .execute(
-                "INSERT INTO wc_agent_tasks (
+                "INSERT INTO cg_agent_tasks (
                     task_id, owner_principal_kind, owner_principal_digest,
                     assignee_agent_id, title, instruction, source_conversation_id,
                     source_message_id, referenced_project_id, state, latest_attempt_id,
@@ -845,7 +845,7 @@ impl Database {
         let (total_count, task_ids) = if let Some(agent_id) = assignee_agent_id.as_deref() {
             let total_count = conn
                 .query_row(
-                    "SELECT COUNT(*) FROM wc_agent_tasks
+                    "SELECT COUNT(*) FROM cg_agent_tasks
                      WHERE owner_principal_kind = ?1 AND owner_principal_digest = ?2
                        AND assignee_agent_id = ?3",
                     params![principal.kind, principal.digest, agent_id],
@@ -854,7 +854,7 @@ impl Database {
                 .map_err(store_error)?;
             let mut statement = conn
                 .prepare(
-                    "SELECT task_id FROM wc_agent_tasks
+                    "SELECT task_id FROM cg_agent_tasks
                      WHERE owner_principal_kind = ?1 AND owner_principal_digest = ?2
                        AND assignee_agent_id = ?3
                      ORDER BY updated_at_unix_ms DESC, task_id
@@ -879,7 +879,7 @@ impl Database {
         } else {
             let total_count = conn
                 .query_row(
-                    "SELECT COUNT(*) FROM wc_agent_tasks
+                    "SELECT COUNT(*) FROM cg_agent_tasks
                      WHERE owner_principal_kind = ?1 AND owner_principal_digest = ?2",
                     params![principal.kind, principal.digest],
                     |row| row.get::<_, i64>(0),
@@ -887,7 +887,7 @@ impl Database {
                 .map_err(store_error)?;
             let mut statement = conn
                 .prepare(
-                    "SELECT task_id FROM wc_agent_tasks
+                    "SELECT task_id FROM cg_agent_tasks
                      WHERE owner_principal_kind = ?1 AND owner_principal_digest = ?2
                      ORDER BY updated_at_unix_ms DESC, task_id
                      LIMIT ?3 OFFSET ?4",
@@ -1028,7 +1028,7 @@ impl Database {
         }
         transaction
             .execute(
-                "UPDATE wc_agent_tasks
+                "UPDATE cg_agent_tasks
                  SET assignee_agent_id = ?2, state = 'ready', updated_at_unix_ms = ?3
                  WHERE task_id = ?1",
                 params![task_id, assignee_agent_id, now.max(task.updated_at_unix_ms)],
@@ -1170,13 +1170,13 @@ impl Database {
         let attempt_id = allocate_identity(
             &transaction,
             AGENT_TASK_ATTEMPT_ID_PREFIX,
-            "SELECT EXISTS(SELECT 1 FROM wc_agent_task_attempts WHERE attempt_id = ?1)",
+            "SELECT EXISTS(SELECT 1 FROM cg_agent_task_attempts WHERE attempt_id = ?1)",
         )?;
         let attempt_fence = new_proof(AGENT_TASK_ATTEMPT_FENCE_PREFIX);
         let lease_expires_at = now.saturating_add(DEFAULT_AGENT_TASK_ATTEMPT_LEASE_MS);
         transaction
             .execute(
-                "INSERT INTO wc_agent_task_attempts (
+                "INSERT INTO cg_agent_task_attempts (
                     attempt_id, task_id, attempt_number, assignee_agent_id, state,
                     lease_expires_at_unix_ms, attempt_fence, attempt_controller_generation,
                     created_at_unix_ms, started_at_unix_ms, terminal_at_unix_ms,
@@ -1195,7 +1195,7 @@ impl Database {
             .map_err(store_error)?;
         transaction
             .execute(
-                "UPDATE wc_agent_tasks
+                "UPDATE cg_agent_tasks
                  SET state = 'active', latest_attempt_id = ?2, updated_at_unix_ms = ?3
                  WHERE task_id = ?1",
                 params![task_id, attempt_id, now.max(task.updated_at_unix_ms)],
@@ -1313,7 +1313,7 @@ impl Database {
         if let Some(existing_fingerprint) = transaction
             .query_row(
                 "SELECT start_identity_fingerprint
-                 FROM wc_agent_task_endpoint_executions
+                 FROM cg_agent_task_endpoint_executions
                  WHERE task_id = ?1 AND attempt_id = ?2",
                 params![task_id, attempt_id],
                 |row| row.get::<_, String>(0),
@@ -1361,11 +1361,11 @@ impl Database {
         let wake_id = allocate_identity(
             &transaction,
             AGENT_WAKE_ID_PREFIX,
-            "SELECT EXISTS(SELECT 1 FROM wc_agent_wakes WHERE wake_id = ?1)",
+            "SELECT EXISTS(SELECT 1 FROM cg_agent_wakes WHERE wake_id = ?1)",
         )?;
         transaction
             .execute(
-                "INSERT INTO wc_agent_wakes (
+                "INSERT INTO cg_agent_wakes (
                     wake_id, target_agent_id, trigger_kind,
                     first_triggering_delivery_id, latest_triggering_delivery_id,
                     latest_conversation_id, latest_message_id,
@@ -1390,7 +1390,7 @@ impl Database {
             .map_err(store_error)?;
         transaction
             .execute(
-                "INSERT INTO wc_agent_task_endpoint_executions (
+                "INSERT INTO cg_agent_task_endpoint_executions (
                     task_id, attempt_id, wake_id, start_identity_fingerprint,
                     endpoint_id, endpoint_controller_generation,
                     created_at_unix_ms, updated_at_unix_ms
@@ -1585,11 +1585,11 @@ impl Database {
                 .query_row(
                     "SELECT EXISTS(
                          SELECT 1
-                         FROM wc_agent_wakes w
-                         JOIN wc_agent_wake_attempts wa
+                         FROM cg_agent_wakes w
+                         JOIN cg_agent_wake_attempts wa
                            ON wa.attempt_id = w.claimed_attempt_id
                           AND wa.wake_id = w.wake_id
-                         JOIN wc_agent_task_endpoint_executions e
+                         JOIN cg_agent_task_endpoint_executions e
                            ON e.wake_id = w.wake_id
                           AND e.task_id = w.source_task_id
                           AND e.attempt_id = w.source_task_attempt_id
@@ -1637,7 +1637,7 @@ impl Database {
         if state_changed {
             transaction
                 .execute(
-                    "UPDATE wc_agent_task_attempts
+                    "UPDATE cg_agent_task_attempts
                      SET lease_expires_at_unix_ms = ?2
                      WHERE attempt_id = ?1",
                     params![attempt_id, new_lease_expires_at],
@@ -1645,7 +1645,7 @@ impl Database {
                 .map_err(store_error)?;
             transaction
                 .execute(
-                    "UPDATE wc_agent_tasks SET updated_at_unix_ms = MAX(updated_at_unix_ms, ?2)
+                    "UPDATE cg_agent_tasks SET updated_at_unix_ms = MAX(updated_at_unix_ms, ?2)
                      WHERE task_id = ?1",
                     params![task_id, now],
                 )
@@ -1867,7 +1867,7 @@ impl Database {
         };
         transaction
             .execute(
-                "UPDATE wc_agent_task_attempts
+                "UPDATE cg_agent_task_attempts
                  SET state = ?2, terminal_at_unix_ms = ?3,
                      terminal_result = ?4, terminal_reason = ?5
                  WHERE attempt_id = ?1",
@@ -1882,7 +1882,7 @@ impl Database {
             .map_err(store_error)?;
         transaction
             .execute(
-                "UPDATE wc_agent_tasks
+                "UPDATE cg_agent_tasks
                  SET state = ?2, terminal_attempt_id = ?3, terminal_at_unix_ms = ?4,
                      updated_at_unix_ms = MAX(updated_at_unix_ms, ?4)
                  WHERE task_id = ?1",
@@ -2168,7 +2168,7 @@ impl Database {
                 ) {
                     transaction
                         .execute(
-                            "UPDATE wc_agent_task_coding_runs
+                            "UPDATE cg_agent_task_coding_runs
                              SET provider_instance_id = ?3, updated_at_unix_ms = MAX(updated_at_unix_ms, ?4)
                              WHERE task_id = ?1 AND attempt_id = ?2",
                             params![task_id, attempt_id, intent.provider_instance_id, now],
@@ -2197,7 +2197,7 @@ impl Database {
         }
         let conflicting_attempt = transaction
             .query_row(
-                "SELECT attempt_id FROM wc_agent_task_coding_runs WHERE run_id = ?1",
+                "SELECT attempt_id FROM cg_agent_task_coding_runs WHERE run_id = ?1",
                 [intent.run_id.as_str()],
                 |row| row.get::<_, String>(0),
             )
@@ -2211,7 +2211,7 @@ impl Database {
         }
         transaction
             .execute(
-                "INSERT INTO wc_agent_task_coding_runs (
+                "INSERT INTO cg_agent_task_coding_runs (
                     task_id, attempt_id, run_id, runtime_project_id, provider_id,
                     provider_instance_id, authority_fingerprint, coding_agent_intent_fingerprint,
                     binding_intent_fingerprint, dispatch_state, created_at_unix_ms,
@@ -2328,7 +2328,7 @@ impl Database {
         if may_dispatch {
             transaction
                 .execute(
-                    "UPDATE wc_agent_task_coding_runs
+                    "UPDATE cg_agent_task_coding_runs
                      SET dispatch_state = 'outcome_unknown', updated_at_unix_ms = MAX(updated_at_unix_ms, ?3)
                      WHERE task_id = ?1 AND attempt_id = ?2
                        AND dispatch_state IN ('prepared', 'not_started')",
@@ -2379,7 +2379,7 @@ impl Database {
         if binding.dispatch_state == AgentTaskCodingRunDispatchState::OutcomeUnknown {
             transaction
                 .execute(
-                    "UPDATE wc_agent_task_coding_runs
+                    "UPDATE cg_agent_task_coding_runs
                      SET dispatch_state = 'not_started', updated_at_unix_ms = MAX(updated_at_unix_ms, ?3)
                      WHERE task_id = ?1 AND attempt_id = ?2 AND dispatch_state = 'outcome_unknown'",
                     params![task_id, attempt_id, now],
@@ -2445,7 +2445,7 @@ impl Database {
         if binding.dispatch_state == AgentTaskCodingRunDispatchState::Bound {
             transaction
                 .execute(
-                    "UPDATE wc_agent_task_coding_runs
+                    "UPDATE cg_agent_task_coding_runs
                      SET dispatch_state = 'outcome_unknown', updated_at_unix_ms = MAX(updated_at_unix_ms, ?3)
                      WHERE task_id = ?1 AND attempt_id = ?2 AND dispatch_state = 'bound'",
                     params![task_id, attempt_id, now],
@@ -2535,7 +2535,7 @@ impl Database {
         if task.stored_state.terminal() {
             let terminal_attempt_id = transaction
                 .query_row(
-                    "SELECT terminal_attempt_id FROM wc_agent_tasks WHERE task_id = ?1",
+                    "SELECT terminal_attempt_id FROM cg_agent_tasks WHERE task_id = ?1",
                     [task_id],
                     |row| row.get::<_, Option<String>>(0),
                 )
@@ -2565,7 +2565,7 @@ impl Database {
         };
         transaction
             .execute(
-                "UPDATE wc_agent_task_attempts
+                "UPDATE cg_agent_task_attempts
                  SET state = ?2, terminal_at_unix_ms = ?3,
                      terminal_result = ?4, terminal_reason = ?5
                  WHERE attempt_id = ?1",
@@ -2580,7 +2580,7 @@ impl Database {
             .map_err(store_error)?;
         transaction
             .execute(
-                "UPDATE wc_agent_tasks
+                "UPDATE cg_agent_tasks
                  SET state = ?2, terminal_attempt_id = ?3, terminal_at_unix_ms = ?4,
                      updated_at_unix_ms = MAX(updated_at_unix_ms, ?4)
                  WHERE task_id = ?1",
@@ -2589,7 +2589,7 @@ impl Database {
             .map_err(store_error)?;
         let binding_updated = transaction
             .execute(
-                "UPDATE wc_agent_task_coding_runs
+                "UPDATE cg_agent_task_coding_runs
                  SET dispatch_state = 'terminal',
                      terminal_at_unix_ms = ?4,
                      updated_at_unix_ms = MAX(updated_at_unix_ms, ?4)
@@ -2827,7 +2827,7 @@ fn merge_agent_task_coding_run_observation(
     let updated = if let Some(expected_revision) = binding.last_observation_revision {
         transaction
             .execute(
-                "UPDATE wc_agent_task_coding_runs
+                "UPDATE cg_agent_task_coding_runs
                  SET dispatch_state = ?3,
                      last_observed_run_state = ?4,
                      last_observed_execution_state = ?5,
@@ -2857,7 +2857,7 @@ fn merge_agent_task_coding_run_observation(
     } else {
         transaction
             .execute(
-                "UPDATE wc_agent_task_coding_runs
+                "UPDATE cg_agent_task_coding_runs
                  SET dispatch_state = ?3,
                      last_observed_run_state = ?4,
                      last_observed_execution_state = ?5,
@@ -2988,7 +2988,7 @@ fn require_owned_agent(
     let owned = conn
         .query_row(
             "SELECT EXISTS(
-                SELECT 1 FROM wc_agent_identities
+                SELECT 1 FROM cg_agent_identities
                 WHERE agent_id = ?1 AND owner_principal_kind = ?2 AND owner_principal_digest = ?3
              )",
             params![agent_id, principal.kind, principal.digest],
@@ -3018,7 +3018,7 @@ fn validate_source_references(
         let exists = conn
             .query_row(
                 "SELECT EXISTS(
-                    SELECT 1 FROM wc_conversation_messages
+                    SELECT 1 FROM cg_conversation_messages
                     WHERE conversation_id = ?1 AND message_id = ?2
                  )",
                 params![conversation_id, message_id],
@@ -3048,7 +3048,7 @@ fn load_owned_task(
                     source_conversation_id, source_message_id, referenced_project_id,
                     state, latest_attempt_id, created_at_unix_ms, updated_at_unix_ms,
                     terminal_at_unix_ms
-             FROM wc_agent_tasks
+             FROM cg_agent_tasks
              WHERE task_id = ?1 AND owner_principal_kind = ?2 AND owner_principal_digest = ?3",
             params![task_id, principal.kind, principal.digest],
             |row| {
@@ -3139,7 +3139,7 @@ fn load_attempt_for_task(
                 lease_expires_at_unix_ms, attempt_fence, attempt_controller_generation,
                 created_at_unix_ms, started_at_unix_ms, terminal_at_unix_ms,
                 terminal_result, terminal_reason
-         FROM wc_agent_task_attempts
+         FROM cg_agent_task_attempts
          WHERE attempt_id = ?1 AND task_id = ?2",
         params![attempt_id, task_id],
         |row| {
@@ -3173,8 +3173,8 @@ fn load_endpoint_execution_for_attempt(
         "SELECT e.task_id, e.attempt_id, e.wake_id, w.state,
                 e.endpoint_id, e.endpoint_controller_generation,
                 e.created_at_unix_ms, e.updated_at_unix_ms
-         FROM wc_agent_task_endpoint_executions e
-         JOIN wc_agent_wakes w ON w.wake_id = e.wake_id
+         FROM cg_agent_task_endpoint_executions e
+         JOIN cg_agent_wakes w ON w.wake_id = e.wake_id
          WHERE e.task_id = ?1 AND e.attempt_id = ?2",
         params![task_id, attempt_id],
         |row| {
@@ -3207,7 +3207,7 @@ fn load_coding_run_binding_for_attempt(
                 last_observed_execution_state, last_observation_revision,
                 terminal_stop_reason, terminal_error_code, terminal_message,
                 completed_at_unix, created_at_unix_ms, updated_at_unix_ms, terminal_at_unix_ms
-         FROM wc_agent_task_coding_runs
+         FROM cg_agent_task_coding_runs
          WHERE task_id = ?1 AND attempt_id = ?2",
         params![task_id, attempt_id],
         |row| {
@@ -3304,7 +3304,7 @@ fn materialize_expired_latest_attempt(
     }
     transaction
         .execute(
-            "UPDATE wc_agent_task_attempts
+            "UPDATE cg_agent_task_attempts
              SET state = 'expired', terminal_at_unix_ms = ?2
              WHERE attempt_id = ?1 AND state = 'active'",
             params![attempt.attempt_id, now],
@@ -3317,7 +3317,7 @@ fn materialize_expired_latest_attempt(
     if !execution_blocks_replacement {
         transaction
             .execute(
-                "UPDATE wc_agent_tasks
+                "UPDATE cg_agent_tasks
                  SET state = 'ready', updated_at_unix_ms = MAX(updated_at_unix_ms, ?2)
                  WHERE task_id = ?1 AND state = 'active'",
                 params![task.task_id, now],
@@ -3339,13 +3339,13 @@ fn retire_pre_dispatch_endpoint_execution_for_attempt(
 ) -> Result<(), CommunicationStoreError> {
     transaction
         .execute(
-            "UPDATE wc_agent_wake_attempts
+            "UPDATE cg_agent_wake_attempts
              SET state = 'revoked', revoked_at_unix_ms = COALESCE(revoked_at_unix_ms, ?2)
              WHERE state = 'claimed'
                AND wake_id IN (
                    SELECT w.wake_id
-                   FROM wc_agent_wakes w
-                   JOIN wc_agent_task_endpoint_executions e ON e.wake_id = w.wake_id
+                   FROM cg_agent_wakes w
+                   JOIN cg_agent_task_endpoint_executions e ON e.wake_id = w.wake_id
                    WHERE e.attempt_id = ?1
                      AND w.trigger_kind = 'agent_task_attempt'
                      AND w.state = 'claimed'
@@ -3355,12 +3355,12 @@ fn retire_pre_dispatch_endpoint_execution_for_attempt(
         .map_err(store_error)?;
     transaction
         .execute(
-            "UPDATE wc_agent_task_endpoint_executions
+            "UPDATE cg_agent_task_endpoint_executions
              SET endpoint_id = NULL, endpoint_controller_generation = NULL,
                  updated_at_unix_ms = MAX(updated_at_unix_ms, ?2)
              WHERE attempt_id = ?1
                AND wake_id IN (
-                   SELECT wake_id FROM wc_agent_wakes
+                   SELECT wake_id FROM cg_agent_wakes
                    WHERE trigger_kind = 'agent_task_attempt'
                      AND state IN ('pending', 'claimed')
                )",
@@ -3369,7 +3369,7 @@ fn retire_pre_dispatch_endpoint_execution_for_attempt(
         .map_err(store_error)?;
     transaction
         .execute(
-            "UPDATE wc_agent_wakes
+            "UPDATE cg_agent_wakes
              SET state = 'retired', revision = revision + 1,
                  updated_at_unix_ms = MAX(updated_at_unix_ms, ?2),
                  claimed_attempt_id = NULL, claimed_endpoint_id = NULL,
@@ -3499,7 +3499,7 @@ pub(crate) fn replace_agent_task_attempt_controller_in_transaction(
     let next_generation = attempt.attempt_controller_generation.saturating_add(1);
     transaction
         .execute(
-            "UPDATE wc_agent_task_attempts
+            "UPDATE cg_agent_task_attempts
              SET attempt_controller_generation = ?2
              WHERE attempt_id = ?1",
             params![attempt_id, next_generation],
@@ -3507,7 +3507,7 @@ pub(crate) fn replace_agent_task_attempt_controller_in_transaction(
         .map_err(store_error)?;
     transaction
         .execute(
-            "UPDATE wc_agent_tasks SET updated_at_unix_ms = MAX(updated_at_unix_ms, ?2)
+            "UPDATE cg_agent_tasks SET updated_at_unix_ms = MAX(updated_at_unix_ms, ?2)
              WHERE task_id = ?1",
             params![task_id, now],
         )

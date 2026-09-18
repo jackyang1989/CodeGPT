@@ -17,13 +17,13 @@ CodeGPT 之所以有多种认证方式，是因为 Server 管理、模型/API �
 | 凭据 | 常见形式 | 用途 |
 | --- | --- | --- |
 | Server bootstrap token | Server env 中的 `CODEGPT_TOKEN` | 初始管理与紧急恢复 |
-| Pairing code | `wc_pair_...` | 一次性设备/用户接入 |
-| 个人 API 令牌（PAT） | `wc_pat_...` | managed user 的 MCP、GPT Actions 与 runtime API |
-| Runner token | `wc_agent_...` | 仅 `codegpt-runner` 传输 |
+| Pairing code | `cg_pair_...` | 一次性设备/用户接入 |
+| 个人 API 令牌（PAT） | `cg_pat_...` | managed user 的 MCP、GPT Actions 与 runtime API |
+| Runner token | `cg_agent_...` | 仅 `codegpt-runner` 传输 |
 | Shared key | `wck_...` | hosted shared-key MCP/runtime 与对应 Runner group |
 | Project Credential | 受保护的项目私有文件 | 一个 ProjectGrant 的普通 runtime API/MCP 访问 |
-| OAuth access token | `wc_oat_...` | 启用 OAuth 后的委派 MCP/GPT 访问 |
-| Account credential | `wc_acct_...` | 高级 managed-account 本地令牌创建 |
+| OAuth access token | `cg_oat_...` | 启用 OAuth 后的委派 MCP/GPT 访问 |
+| Account credential | `cg_acct_...` | 高级 managed-account 本地令牌创建 |
 
 这些前缀有助于诊断“把哪类凭据放错地方”的问题，但不意味着用户需要学习所有内部 ID。
 
@@ -53,21 +53,21 @@ CodeGPT 内部还有一些非 secret 的 ID 与 opaque tool state。普通用户
 
 ## Pairing 与 managed login
 
-`codegpt pairing create` 会生成短期 `wc_pair_*` code。仓库机器通过 `codegpt login <server-url> --code <code>` 兑换它，随后 CLI 会创建普通用户/API 访问和 Runner 连接所需的本地文件。
+`codegpt pairing create` 会生成短期 `cg_pair_*` code。仓库机器通过 `codegpt login <server-url> --code <code>` 兑换它，随后 CLI 会创建普通用户/API 访问和 Runner 连接所需的本地文件。
 
 Pairing code 是一次性的，不是长期 API 凭据。
 
-## 个人 API 令牌（`wc_pat_*`）
+## 个人 API 令牌（`cg_pat_*`）
 
 PAT 在 MCP、GPT Actions 与 runtime API 上代表一个 managed user。Server 只保存其 hash。`codegpt login` 通常会把用户 token 写到该 Server/user 本地配置目录中的 `codegpt-user-token`。
 
 按工作流只授予需要的最小 scopes。普通 MCP coding client 只需要与其实际读写/执行能力对应的 runtime/project 权限；account-management authority 与普通 coding client 分开。
 
-## Runner token（`wc_agent_*`）
+## Runner token（`cg_agent_*`）
 
 Runner token 用于认证 `codegpt-runner`，并绑定到配置的 Runner `client_id`。它会被 MCP/runtime/account surface 拒绝。
 
-`wc_agent_*` 是兼容性保留的历史前缀。当前产品术语中它是 **Runner token**，不是 Durable Agent identity。其它保留的 `agent_*` wire/storage 名称也遵循同样原则：不要从兼容名称推导 Durable Agent 语义。
+`cg_agent_*` 是兼容性保留的历史前缀。当前产品术语中它是 **Runner token**，不是 Durable Agent identity。其它保留的 `agent_*` wire/storage 名称也遵循同样原则：不要从兼容名称推导 Durable Agent 语义。
 
 ## Shared key（`wck_...`）
 
@@ -119,7 +119,7 @@ OAuth client 只有通过明确的 operator/user opt-in 才会得到这些 optio
 
 有些 compatibility-facing 名称为了配置/存储/wire 兼容仍然存在：
 
-- `wc_agent_*` —— Runner token；
+- `cg_agent_*` —— Runner token；
 - `agent:<client_id>:<project_id>` —— runtime Project address；
 
 它们都**不是** CodeGPT 独立的 Durable Agent / Conversation / Agent Task domain。其它 process/protocol compatibility field 继续留在 implementation detail 中；新文档除引用上面的公开兼容名称外应统一使用 **Runner**。

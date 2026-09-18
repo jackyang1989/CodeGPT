@@ -4,9 +4,9 @@ use crate::{
     SessionLifecycle, SessionMessageError, SessionMessageKind, SessionMessagePriority,
     SessionPathHint, SessionStore, SessionToolContract, SessionTransport, ToolCallRecorderMetadata,
 };
+use codegpt_core::workflow_session_contract::SessionMode;
 use serde_json::{json, Value};
 use std::path::PathBuf;
-use codegpt_core::workflow_session_contract::SessionMode;
 
 fn persistent_store(path: PathBuf) -> SessionStore {
     SessionStore::with_persistence(path, 10, 10)
@@ -551,7 +551,7 @@ fn close_cleanup_evidence_rewrites_cold_payload_without_reheating() {
 
     store.record_session_close_persistent_shell_evidence(
         &session.session_id,
-        "wc_shell_cold_close",
+        "cg_shell_cold_close",
         "closed",
         "completed",
         None,
@@ -573,7 +573,7 @@ fn close_cleanup_evidence_rewrites_cold_payload_without_reheating() {
         .find(|event| event.kind == "session_closed")
         .and_then(|event| event.persistent_shell.as_ref())
         .expect("close cleanup evidence must survive cold persistence");
-    assert_eq!(evidence.shell_id.as_deref(), Some("wc_shell_cold_close"));
+    assert_eq!(evidence.shell_id.as_deref(), Some("cg_shell_cold_close"));
     assert_eq!(evidence.shell_state.as_deref(), Some("closed"));
     assert_eq!(evidence.execution_state.as_deref(), Some("completed"));
 }
@@ -857,7 +857,7 @@ fn repeated_close_is_idempotent_without_duplicate_events() {
 #[test]
 fn unknown_session_close_fails_without_create() {
     let store = SessionStore::default();
-    let missing = "wc_sess_missingclose01";
+    let missing = "cg_sess_missingclose01";
     let err = store.close_session(missing).unwrap_err();
     assert_eq!(err, SessionCloseError::UnknownSession);
     assert!(!store.contains_session(missing));

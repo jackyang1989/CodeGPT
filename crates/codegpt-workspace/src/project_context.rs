@@ -4,6 +4,10 @@
 //! contents. They are suitable for durable continuity records and let callers
 //! report exactly which context slices changed between chat turns.
 
+pub use codegpt_core::project_context_contract::{
+    ContextFileFingerprint, FingerprintCompleteness, GitContextFingerprint,
+    ProjectContextFingerprint,
+};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::collections::{BTreeMap, BTreeSet};
@@ -15,10 +19,6 @@ use std::process::{Command, ExitStatus, Stdio};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::time::{Duration, Instant, UNIX_EPOCH};
-pub use codegpt_core::project_context_contract::{
-    ContextFileFingerprint, FingerprintCompleteness, GitContextFingerprint,
-    ProjectContextFingerprint,
-};
 
 const FINGERPRINT_SCHEMA_VERSION: u32 = 2;
 pub const MAX_UNTRACKED_FILE_COUNT: usize = 512;

@@ -29,7 +29,7 @@ Runner 是最接近你仓库的信任边界。请用窄的 allowed roots 与显�
 | **client_id** | 一个 Runner/设备的稳定逻辑名称。 |
 | **Project** | 由该 Runner 注册的一个仓库/工作区。 |
 
-部分 compatibility-facing value 仍使用历史 `agent` 名称，例如 Runner token 的 `wc_agent_*` 前缀与 `agent:<client_id>:<project_id>` runtime Project address。它们不属于 CodeGPT 独立的 Durable Agent domain；普通用户也不需要理解 Runner recovery 背后的进程级 lease identifier。
+部分 compatibility-facing value 仍使用历史 `agent` 名称，例如 Runner token 的 `cg_agent_*` 前缀与 `agent:<client_id>:<project_id>` runtime Project address。它们不属于 CodeGPT 独立的 Durable Agent domain；普通用户也不需要理解 Runner recovery 背后的进程级 lease identifier。
 
 ### Runner 配置文件名兼容
 
@@ -47,7 +47,7 @@ Runner 主动向外连接 Server，使用四种传输之一，由 `runner.toml` 
 | WebSocket | `websocket` | 无 UDP 场景的稳定 fallback。 |
 | Polling | `polling` | 受限网络的最后手段。 |
 
-Runner 使用 Runner token（兼容前缀 `wc_agent_*`）认证；hosted shared-key 模式则使用对应 shared key。这个 credential 只用于 Runner transport，不用于 MCP、REST 或 GPT Actions。
+Runner 使用 Runner token（兼容前缀 `cg_agent_*`）认证；hosted shared-key 模式则使用对应 shared key。这个 credential 只用于 Runner transport，不用于 MCP、REST 或 GPT Actions。
 
 WebSocket 与 polling 都使用 `Authorization: Bearer <token>` 认证 first-party
 Runner；Runner query-string credential 不再接受。QUIC 把凭据限制在

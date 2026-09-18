@@ -853,7 +853,7 @@ fn extract_tool_call_plugin_tool_preserves_provider_local_tool_inside_params() {
             "plugin": "repo-tools",
             "tool": "safe_delete"
         },
-        TOOL_CALL_RECORDING_SESSION_ID_FIELD: "wc_sess_plugin_record"
+        TOOL_CALL_RECORDING_SESSION_ID_FIELD: "cg_sess_plugin_record"
     });
     let (tool, params) = extract_tool_call(&body).unwrap();
     assert_eq!(tool, "plugin_tool");
@@ -864,14 +864,14 @@ fn extract_tool_call_plugin_tool_preserves_provider_local_tool_inside_params() {
     assert!(matches!(parsed, ToolCall::PluginTool(_)));
     assert_eq!(
         extract_recording_session_id(&body),
-        Some("wc_sess_plugin_record".to_string())
+        Some("cg_sess_plugin_record".to_string())
     );
 
     let (tool, params) = extract_tool_call(&json!({
         "tool": "plugin_tool",
         "params": {
             "action": "call",
-            "binding": "wc_pbind_AAAAAAAAAAAAAAAAAAAAAA",
+            "binding": "cg_pbind_AAAAAAAAAAAAAAAAAAAAAA",
             "arguments": {"path": "build/old.bin"}
         }
     }))
@@ -888,14 +888,14 @@ fn plugin_tool_api_trace_projection_hides_binding_and_raw_arguments() {
         "tool": "plugin_tool",
         "params": {
             "action": "call",
-            "binding": "wc_pbind_ASNFZ4mrze8BI0VniavN7w",
+            "binding": "cg_pbind_ASNFZ4mrze8BI0VniavN7w",
             "arguments": {"path": "private/target.txt", "secret": "must-not-leak"}
         },
-        TOOL_CALL_RECORDING_SESSION_ID_FIELD: "wc_sess_plugin_record"
+        TOOL_CALL_RECORDING_SESSION_ID_FIELD: "cg_sess_plugin_record"
     });
     let raw = tool_call_trace_raw_body(&body);
     let encoded = serde_json::to_string(&raw).unwrap();
-    assert!(!encoded.contains("wc_pbind_"));
+    assert!(!encoded.contains("cg_pbind_"));
     assert!(!encoded.contains("private/target.txt"));
     assert!(!encoded.contains("must-not-leak"));
     assert_eq!(raw["tool"], "plugin_tool");
@@ -905,7 +905,7 @@ fn plugin_tool_api_trace_projection_hides_binding_and_raw_arguments() {
 
     let effective = tool_call_trace_effective_arguments("plugin_tool", &body["params"]);
     let encoded = serde_json::to_string(&effective).unwrap();
-    assert!(!encoded.contains("wc_pbind_"));
+    assert!(!encoded.contains("cg_pbind_"));
     assert!(!encoded.contains("private/target.txt"));
     assert!(!encoded.contains("must-not-leak"));
     assert_eq!(effective["binding_present"], true);
@@ -932,21 +932,21 @@ fn extract_tool_call_collects_flattened_top_level_fields() {
     let (tool, params) = extract_tool_call(&json!({
         "tool": "git_status",
         "project": "agent:oe:codegpt",
-        "session_id": "wc_sess_tool_arg",
-        TOOL_CALL_RECORDING_SESSION_ID_FIELD: "wc_sess_recorder",
+        "session_id": "cg_sess_tool_arg",
+        TOOL_CALL_RECORDING_SESSION_ID_FIELD: "cg_sess_recorder",
     }))
     .unwrap();
 
     assert_eq!(tool, "git_status");
     assert_eq!(
         params,
-        json!({"project": "agent:oe:codegpt", "session_id": "wc_sess_tool_arg"})
+        json!({"project": "agent:oe:codegpt", "session_id": "cg_sess_tool_arg"})
     );
     assert_eq!(
         extract_recording_session_id(
-            &json!({TOOL_CALL_RECORDING_SESSION_ID_FIELD: "wc_sess_recorder"})
+            &json!({TOOL_CALL_RECORDING_SESSION_ID_FIELD: "cg_sess_recorder"})
         ),
-        Some("wc_sess_recorder".to_string())
+        Some("cg_sess_recorder".to_string())
     );
 }
 
@@ -955,12 +955,12 @@ fn extract_tool_call_collects_flattened_session_handoff_flags() {
     let body = json!({
         "tool": "session_handoff_summary",
         "project": "agent:special:test-mcp",
-        "session_id": "wc_sess_test",
+        "session_id": "cg_sess_test",
         "include_validation": true,
         "include_workspace": true,
         "include_checkpoints": true,
         "limit": 20,
-        TOOL_CALL_RECORDING_SESSION_ID_FIELD: "wc_sess_recorder"
+        TOOL_CALL_RECORDING_SESSION_ID_FIELD: "cg_sess_recorder"
     });
     let (tool, params) = extract_tool_call(&body).unwrap();
 
@@ -969,7 +969,7 @@ fn extract_tool_call_collects_flattened_session_handoff_flags() {
         params,
         json!({
             "project": "agent:special:test-mcp",
-            "session_id": "wc_sess_test",
+            "session_id": "cg_sess_test",
             "include_validation": true,
             "include_workspace": true,
             "include_checkpoints": true,
@@ -984,7 +984,7 @@ fn extract_tool_call_collects_flattened_session_handoff_flags() {
     );
     assert_eq!(
         extract_recording_session_id(&body),
-        Some("wc_sess_recorder".to_string())
+        Some("cg_sess_recorder".to_string())
     );
 }
 
@@ -1016,15 +1016,15 @@ fn extract_tool_call_collects_flattened_checkpoint_restore_fields() {
     let body = json!({
         "tool": "workspace_checkpoint_restore",
         "project": "agent:special:test",
-        "checkpoint_id": "wc_ckpt_abc",
+        "checkpoint_id": "cg_ckpt_abc",
         "confirm": true,
-        TOOL_CALL_RECORDING_SESSION_ID_FIELD: "wc_sess_record"
+        TOOL_CALL_RECORDING_SESSION_ID_FIELD: "cg_sess_record"
     });
     let (tool, params) = extract_tool_call(&body).unwrap();
 
     assert_eq!(tool, "workspace_checkpoint_restore");
     assert_eq!(params["project"], "agent:special:test");
-    assert_eq!(params["checkpoint_id"], "wc_ckpt_abc");
+    assert_eq!(params["checkpoint_id"], "cg_ckpt_abc");
     assert_eq!(params["confirm"], true);
     assert!(
         params
@@ -1034,7 +1034,7 @@ fn extract_tool_call_collects_flattened_checkpoint_restore_fields() {
     );
     assert_eq!(
         extract_recording_session_id(&body),
-        Some("wc_sess_record".to_string()),
+        Some("cg_sess_record".to_string()),
         "recording_session_id must remain available as wrapper recorder metadata"
     );
 }
@@ -1268,7 +1268,7 @@ async fn start_session_returns_session_id() {
     assert_eq!(body["output"]["success"], true);
     assert!(body["output"]["session_id"]
         .as_str()
-        .is_some_and(|id| id.starts_with("wc_sess_")));
+        .is_some_and(|id| id.starts_with("cg_sess_")));
     assert_eq!(body["output"]["project"], "agent:importer:demo");
     assert_eq!(body["output"]["project_input"], "demo");
     assert_eq!(body["output"]["resolved_project"], "agent:importer:demo");
@@ -1528,7 +1528,7 @@ async fn api_tools_call_message_tool_keeps_business_session_id_with_recording_se
     assert_eq!(body["output"]["session_id"], business_session_id);
     assert!(body["output"]["message_id"]
         .as_str()
-        .is_some_and(|id| id.starts_with("wc_msg_")));
+        .is_some_and(|id| id.starts_with("cg_msg_")));
     assert!(body["output"].get("session_recorded").is_none());
     assert!(body["output"].get("session_event_id").is_none());
 
@@ -1685,7 +1685,7 @@ async fn http_tools_call_rejects_app_only_work_result_state() {
             "tool": "work_result_state",
             "params": {
                 "project": "agent:canonical:p",
-                "session_id": format!("wc_sess_{}", "1".repeat(32))
+                "session_id": format!("cg_sess_{}", "1".repeat(32))
             }
         }),
     )
@@ -1937,7 +1937,7 @@ async fn oauth2_tools_call_scope_matrix() {
         ),
         (
             "show_changes",
-            json!({"project": "agent:nope:nope", "session_id": "wc_sess_missing"}),
+            json!({"project": "agent:nope:nope", "session_id": "cg_sess_missing"}),
             project_read,
             runtime_read,
             crate::auth::SCOPE_PROJECT_READ,
@@ -2073,7 +2073,7 @@ async fn session_tools_oauth_scope_policy() {
         &service,
         runtime_read,
         "post_session_message",
-        json!({"session_id": "wc_sess_missing", "kind": "note", "message": "denied"}),
+        json!({"session_id": "cg_sess_missing", "kind": "note", "message": "denied"}),
     )
     .await;
     assert_oauth_scope_rejected(

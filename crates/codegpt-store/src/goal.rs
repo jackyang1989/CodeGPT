@@ -10,13 +10,13 @@ use rusqlite::{
 use serde::Serialize;
 use serde_json::json;
 
-pub const GOAL_ID_PREFIX: &str = "wc_goal_";
+pub const GOAL_ID_PREFIX: &str = "cg_goal_";
 pub const MAX_GOAL_TITLE_CHARS: usize = 200;
 pub const MAX_GOAL_OBJECTIVE_BYTES: usize = 8_192;
 pub const MAX_GOAL_TERMINAL_REASON_BYTES: usize = 4_096;
 pub const MAX_GOAL_LIST_LIMIT: usize = 100;
 pub const MAX_GOAL_CORRELATIONS: i64 = 64;
-pub const WORKFLOW_SESSION_ID_PREFIX: &str = "wc_sess_";
+pub const WORKFLOW_SESSION_ID_PREFIX: &str = "cg_sess_";
 const MAX_GOAL_IDEMPOTENCY_KEY_CHARS: usize = 128;
 
 const OP_CREATE_GOAL: &str = "create_goal";
@@ -216,7 +216,7 @@ impl Database {
     pub(super) fn ensure_goal_schema(conn: &mut Connection) -> anyhow::Result<()> {
         conn.execute_batch(
             "
-            CREATE TABLE IF NOT EXISTS wc_goals (
+            CREATE TABLE IF NOT EXISTS cg_goals (
                 goal_id TEXT PRIMARY KEY,
                 owner_principal_kind TEXT NOT NULL,
                 owner_principal_digest TEXT NOT NULL,
@@ -233,23 +233,23 @@ impl Database {
                     OR (lifecycle IN ('completed', 'cancelled') AND terminal_at_unix_ms IS NOT NULL)
                 )
             );
-            CREATE INDEX IF NOT EXISTS idx_wc_goals_owner_updated
-                ON wc_goals(owner_principal_digest, updated_at_unix_ms DESC, goal_id);
-            CREATE INDEX IF NOT EXISTS idx_wc_goals_owner_lifecycle
-                ON wc_goals(owner_principal_digest, lifecycle, updated_at_unix_ms DESC, goal_id);
+            CREATE INDEX IF NOT EXISTS idx_cg_goals_owner_updated
+                ON cg_goals(owner_principal_digest, updated_at_unix_ms DESC, goal_id);
+            CREATE INDEX IF NOT EXISTS idx_cg_goals_owner_lifecycle
+                ON cg_goals(owner_principal_digest, lifecycle, updated_at_unix_ms DESC, goal_id);
 
-            CREATE TABLE IF NOT EXISTS wc_goal_correlations (
+            CREATE TABLE IF NOT EXISTS cg_goal_correlations (
                 goal_id TEXT NOT NULL,
                 kind TEXT NOT NULL CHECK(kind IN ('agent_task', 'workflow_session')),
                 reference_id TEXT NOT NULL,
                 created_at_unix_ms INTEGER NOT NULL,
                 PRIMARY KEY(goal_id, kind, reference_id),
-                FOREIGN KEY(goal_id) REFERENCES wc_goals(goal_id)
+                FOREIGN KEY(goal_id) REFERENCES cg_goals(goal_id)
             );
-            CREATE INDEX IF NOT EXISTS idx_wc_goal_correlations_reference
-                ON wc_goal_correlations(kind, reference_id, goal_id);
+            CREATE INDEX IF NOT EXISTS idx_cg_goal_correlations_reference
+                ON cg_goal_correlations(kind, reference_id, goal_id);
 
-            CREATE TABLE IF NOT EXISTS wc_goal_idempotency (
+            CREATE TABLE IF NOT EXISTS cg_goal_idempotency (
                 principal_digest TEXT NOT NULL,
                 operation TEXT NOT NULL,
                 key_hash TEXT NOT NULL,
@@ -258,8 +258,8 @@ impl Database {
                 created_at_unix_ms INTEGER NOT NULL,
                 PRIMARY KEY(principal_digest, operation, key_hash)
             );
-            CREATE INDEX IF NOT EXISTS idx_wc_goal_idempotency_created
-                ON wc_goal_idempotency(created_at_unix_ms DESC);
+            CREATE INDEX IF NOT EXISTS idx_cg_goal_idempotency_created
+                ON cg_goal_idempotency(created_at_unix_ms DESC);
             ",
         )?;
         Ok(())
@@ -312,12 +312,12 @@ impl Database {
         let goal_id = allocate_identity(
             &transaction,
             GOAL_ID_PREFIX,
-            "SELECT EXISTS(SELECT 1 FROM wc_goals WHERE goal_id = ?1)",
+            "SELECT EXISTS(SELECT 1 FROM cg_goals WHERE goal_id = ?1)",
         )
         .map_err(map_communication_validation_error)?;
         transaction
             .execute(
-                "INSERT INTO wc_goals (
+                "INSERT INTO cg_goals (
                     goal_id, owner_principal_kind, owner_principal_digest,
                     title, objective, lifecycle, revision, created_at_unix_ms,
                     updated_at_unix_ms, terminal_at_unix_ms, terminal_reason
@@ -387,7 +387,7 @@ impl Database {
             Some(lifecycle) => {
                 let total_count = conn
                     .query_row(
-                        "SELECT COUNT(*) FROM wc_goals
+                        "SELECT COUNT(*) FROM cg_goals
                          WHERE owner_principal_kind = ?1 AND owner_principal_digest = ?2
                            AND lifecycle = ?3",
                         params![principal.kind, principal.digest, lifecycle.as_str()],
@@ -396,7 +396,7 @@ impl Database {
                     .map_err(goal_store_error)?;
                 let mut statement = conn
                     .prepare(
-                        "SELECT goal_id FROM wc_goals
+                        "SELECT goal_id FROM cg_goals
                          WHERE owner_principal_kind = ?1 AND owner_principal_digest = ?2
                            AND lifecycle = ?3
                          ORDER BY updated_at_unix_ms DESC, goal_id
@@ -422,7 +422,7 @@ impl Database {
             None => {
                 let total_count = conn
                     .query_row(
-                        "SELECT COUNT(*) FROM wc_goals
+                        "SELECT COUNT(*) FROM cg_goals
                          WHERE owner_principal_kind = ?1 AND owner_principal_digest = ?2",
                         params![principal.kind, principal.digest],
                         |row| row.get::<_, i64>(0),
@@ -430,7 +430,7 @@ impl Database {
                     .map_err(goal_store_error)?;
                 let mut statement = conn
                     .prepare(
-                        "SELECT goal_id FROM wc_goals
+                        "SELECT goal_id FROM cg_goals
                          WHERE owner_principal_kind = ?1 AND owner_principal_digest = ?2
                          ORDER BY updated_at_unix_ms DESC, goal_id
                          LIMIT ?3 OFFSET ?4",
@@ -590,7 +590,7 @@ impl Database {
             };
             transaction
                 .execute(
-                    "UPDATE wc_goals
+                    "UPDATE cg_goals
                      SET title = ?2, objective = ?3, lifecycle = ?4,
                          revision = revision + 1, updated_at_unix_ms = ?5,
                          terminal_at_unix_ms = ?6, terminal_reason = ?7
@@ -741,7 +741,7 @@ impl Database {
         let exists = transaction
             .query_row(
                 "SELECT EXISTS(
-                    SELECT 1 FROM wc_goal_correlations
+                    SELECT 1 FROM cg_goal_correlations
                     WHERE goal_id = ?1 AND kind = ?2 AND reference_id = ?3
                  )",
                 params![goal_id, kind.as_str(), reference_id],
@@ -753,7 +753,7 @@ impl Database {
         } else {
             let count = transaction
                 .query_row(
-                    "SELECT COUNT(*) FROM wc_goal_correlations WHERE goal_id = ?1",
+                    "SELECT COUNT(*) FROM cg_goal_correlations WHERE goal_id = ?1",
                     [goal_id],
                     |row| row.get::<_, i64>(0),
                 )
@@ -768,8 +768,8 @@ impl Database {
                 let active_goal_fanout = transaction
                     .query_row(
                         "SELECT COUNT(*)
-                         FROM wc_goal_correlations c
-                         JOIN wc_goals g ON g.goal_id = c.goal_id
+                         FROM cg_goal_correlations c
+                         JOIN cg_goals g ON g.goal_id = c.goal_id
                          WHERE c.kind = 'agent_task' AND c.reference_id = ?1
                            AND g.lifecycle = 'active'
                            AND g.owner_principal_kind = ?2
@@ -789,7 +789,7 @@ impl Database {
             }
             transaction
                 .execute(
-                    "INSERT INTO wc_goal_correlations (
+                    "INSERT INTO cg_goal_correlations (
                         goal_id, kind, reference_id, created_at_unix_ms
                      ) VALUES (?1, ?2, ?3, ?4)",
                     params![goal_id, kind.as_str(), reference_id, now],
@@ -797,7 +797,7 @@ impl Database {
                 .map_err(goal_store_error)?;
             transaction
                 .execute(
-                    "UPDATE wc_goals
+                    "UPDATE cg_goals
                      SET revision = revision + 1, updated_at_unix_ms = ?2
                      WHERE goal_id = ?1",
                     params![goal_id, now],
@@ -900,7 +900,7 @@ fn lookup_idempotent_goal(
     let key_hash = digest_text("codegpt.goal.idempotency-key.v1", idempotency_key);
     let existing: Option<(String, String)> = transaction
         .query_row(
-            "SELECT request_hash, goal_id FROM wc_goal_idempotency
+            "SELECT request_hash, goal_id FROM cg_goal_idempotency
              WHERE principal_digest = ?1 AND operation = ?2 AND key_hash = ?3",
             params![principal.digest, operation, key_hash],
             |row| Ok((row.get(0)?, row.get(1)?)),
@@ -931,7 +931,7 @@ fn record_idempotent_goal(
     let key_hash = digest_text("codegpt.goal.idempotency-key.v1", idempotency_key);
     transaction
         .execute(
-            "INSERT INTO wc_goal_idempotency (
+            "INSERT INTO cg_goal_idempotency (
                 principal_digest, operation, key_hash, request_hash, goal_id, created_at_unix_ms
              ) VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
             params![
@@ -1021,11 +1021,11 @@ fn load_owned_goal_summary(
         .query_row(
             "SELECT goal_id, title, lifecycle, revision, created_at_unix_ms,
                     updated_at_unix_ms, terminal_at_unix_ms,
-                    (SELECT COUNT(*) FROM wc_goal_correlations c
+                    (SELECT COUNT(*) FROM cg_goal_correlations c
                      WHERE c.goal_id = g.goal_id AND c.kind = 'agent_task'),
-                    (SELECT COUNT(*) FROM wc_goal_correlations c
+                    (SELECT COUNT(*) FROM cg_goal_correlations c
                      WHERE c.goal_id = g.goal_id AND c.kind = 'workflow_session')
-             FROM wc_goals g
+             FROM cg_goals g
              WHERE goal_id = ?1 AND owner_principal_kind = ?2 AND owner_principal_digest = ?3",
             params![goal_id, principal.kind, principal.digest],
             |row| {
@@ -1060,11 +1060,11 @@ fn load_owned_goal(
             "SELECT goal_id, title, objective, lifecycle, revision,
                     created_at_unix_ms, updated_at_unix_ms, terminal_at_unix_ms,
                     terminal_reason,
-                    (SELECT COUNT(*) FROM wc_goal_correlations c
+                    (SELECT COUNT(*) FROM cg_goal_correlations c
                      WHERE c.goal_id = g.goal_id AND c.kind = 'agent_task'),
-                    (SELECT COUNT(*) FROM wc_goal_correlations c
+                    (SELECT COUNT(*) FROM cg_goal_correlations c
                      WHERE c.goal_id = g.goal_id AND c.kind = 'workflow_session')
-             FROM wc_goals g
+             FROM cg_goals g
              WHERE goal_id = ?1 AND owner_principal_kind = ?2 AND owner_principal_digest = ?3",
             params![goal_id, principal.kind, principal.digest],
             |row| {
@@ -1092,7 +1092,7 @@ fn load_owned_goal(
     let mut statement = conn
         .prepare(
             "SELECT kind, reference_id, created_at_unix_ms
-             FROM wc_goal_correlations
+             FROM cg_goal_correlations
              WHERE goal_id = ?1
              ORDER BY created_at_unix_ms, kind, reference_id
              LIMIT ?2",

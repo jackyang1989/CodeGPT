@@ -207,7 +207,7 @@ fn startup_extensions_schema() -> Value {
     let skill_entry = json!({
         "type": "object",
         "properties": {
-            "skill_id": {"type": "string", "pattern": "^wc_skill_[A-Za-z0-9_-]{21}[AQgw]$"},
+            "skill_id": {"type": "string", "pattern": "^cg_skill_[A-Za-z0-9_-]{21}[AQgw]$"},
             "name": {"type": "string"},
             "description": {"type": "string"},
             "source_scope": {"type": "string"},
@@ -251,8 +251,8 @@ fn startup_extensions_schema() -> Value {
         "type": "object",
         "description": "Bounded selection-only extension metadata. It grants zero additional authority and contains no Skill body, Plugin schema, binding, provider path, process, or execution data.",
         "properties": {
-            "skills": family(skill_entry, "^wc_skillcat_[A-Za-z0-9_-]{43}$"),
-            "plugins": family(plugin_entry, "^wc_plugcat_[A-Za-z0-9_-]{43}$")
+            "skills": family(skill_entry, "^cg_skillcat_[A-Za-z0-9_-]{43}$"),
+            "plugins": family(plugin_entry, "^cg_plugcat_[A-Za-z0-9_-]{43}$")
         },
         "required": ["skills", "plugins"],
         "additionalProperties": false
@@ -406,7 +406,7 @@ fn startup_session_schema() -> Value {
     json!({
         "type": "object",
         "properties": {
-            "session_id": {"type": "string", "pattern": "^wc_sess_([A-Za-z0-9_-]{16}|[0-9a-f]{32})$"},
+            "session_id": {"type": "string", "pattern": "^cg_sess_([A-Za-z0-9_-]{16}|[0-9a-f]{32})$"},
             "mode": {"type": "string", "enum": ["normal", "read_only"]},
             "execution_context": session_execution_context_schema(
                 "Persistent execution defaults currently stored for this Workflow Session."

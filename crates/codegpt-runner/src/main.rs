@@ -1,3 +1,5 @@
+use codegpt_process::{GracefulTermination, ManagedChild};
+use codegpt_runner::shutdown::{lock_unpoison, ActivityTracker, BackgroundThreads};
 use reqwest::blocking::Client;
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::error::Error as StdError;
@@ -8,17 +10,12 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{mpsc, Arc, Condvar, Mutex, Weak};
 use std::time::{Duration, Instant};
 use tracing_subscriber::EnvFilter;
-use codegpt_process::{GracefulTermination, ManagedChild};
-use codegpt_runner::shutdown::{lock_unpoison, ActivityTracker, BackgroundThreads};
 
+mod codegpt_runner;
 #[cfg(test)]
 #[path = "codegpt_runner/job_manager_tests.rs"]
 mod job_manager_tests;
-mod codegpt_runner;
 
-#[cfg(test)]
-use runner_operation::RunnerOperation;
-use runner_operation::{RunnerFileOperation, RunnerInvocationMetadata, RunnerJobOperation};
 use codegpt_core::runner_job_lifecycle::RunnerJobLifecycle;
 use codegpt_core::{
     apply_edits_shared, apply_patch_shared, artifact_policy, build_info, lsp_bridge, mcp_gateway,
@@ -28,6 +25,9 @@ use codegpt_runner_config as runner_config;
 use codegpt_workspace::project_overview;
 #[cfg(feature = "workspace-checkpoints")]
 use codegpt_workspace::workspace_checkpoint;
+#[cfg(test)]
+use runner_operation::RunnerOperation;
+use runner_operation::{RunnerFileOperation, RunnerInvocationMetadata, RunnerJobOperation};
 
 use runner_protocol::{
     validation_infrastructure_failure_code, RunnerCapabilities, RunnerJobUpdateRequest,
@@ -44,14 +44,6 @@ use runner_protocol::{
     VALIDATION_STEP_WAIT_FAILED_CODE, VALIDATION_TOOL_UNAVAILABLE_CODE,
 };
 
-#[cfg(test)]
-use runner_config::{TRANSPORT_AUTO, TRANSPORT_POLLING, TRANSPORT_QUIC, TRANSPORT_WEBSOCKET};
-#[cfg(test)]
-use runner_protocol::{RunnerEnvelope, RUNNER_PROTOCOL_GENERATION_V2_BASELINE_CAPABILITY_NAMES};
-#[cfg(test)]
-use std::collections::BTreeMap;
-#[cfg(test)]
-use std::net::SocketAddr;
 use codegpt_runner::contains_any;
 use codegpt_runner::detached_job::{
     handoff_detached_job, snapshot_from_detached_record, DetachedHandoffOutcome, DetachedJobStore,
@@ -90,6 +82,14 @@ use codegpt_runner::{
     dispatch_request, is_artifact_request_kind, is_basic_file_request_kind,
     is_structured_edit_request_kind,
 };
+#[cfg(test)]
+use runner_config::{TRANSPORT_AUTO, TRANSPORT_POLLING, TRANSPORT_QUIC, TRANSPORT_WEBSOCKET};
+#[cfg(test)]
+use runner_protocol::{RunnerEnvelope, RUNNER_PROTOCOL_GENERATION_V2_BASELINE_CAPABILITY_NAMES};
+#[cfg(test)]
+use std::collections::BTreeMap;
+#[cfg(test)]
+use std::net::SocketAddr;
 
 #[cfg(feature = "workspace-checkpoints")]
 use codegpt_runner::handle_checkpoint_file_request;

@@ -1083,7 +1083,7 @@ case "$js_type" in
         fail "GET /console/app.js content-type '$js_type' is not a JS type"
         ;;
 esac
-if echo "$console_js" | grep -qi "CODEGPT_TOKEN\|wc_agent_secret"; then
+if echo "$console_js" | grep -qi "CODEGPT_TOKEN\|cg_agent_secret"; then
     console_js_ok=0
     fail "GET /console/app.js contains token or credential material"
 fi
@@ -1244,8 +1244,8 @@ session_id = output.get("session_id")
 
 if data.get("success") is not True:
     errors.append("success must be true")
-if not isinstance(session_id, str) or not session_id.startswith("wc_sess_"):
-    errors.append("output.session_id must start with wc_sess_")
+if not isinstance(session_id, str) or not session_id.startswith("cg_sess_"):
+    errors.append("output.session_id must start with cg_sess_")
 if output.get("continuation") != "created":
     errors.append("output.continuation must be created")
 for field in ["workspace", "workflow", "instructions", "semantic_navigation"]:

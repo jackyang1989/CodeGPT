@@ -50,8 +50,8 @@ h1 { margin: 0; font-size: 15px; font-weight: 650; }
 (() => {
   "use strict";
   const APP_PROTOCOL = "2026-01-26";
-  const SESSION_ID = /^wc_sess_([A-Za-z0-9_-]{16}|[0-9a-f]{32})$/;
-  const SNAPSHOT_ID = /^wc_changes_snapshot_[0-9a-f]{32}$/;
+  const SESSION_ID = /^cg_sess_([A-Za-z0-9_-]{16}|[0-9a-f]{32})$/;
+  const SNAPSHOT_ID = /^cg_changes_snapshot_[0-9a-f]{32}$/;
   const CALL_TIMEOUT_MS = 10000;
   const MAX_PROJECT = 512;
   const MAX_PATH = 1024;

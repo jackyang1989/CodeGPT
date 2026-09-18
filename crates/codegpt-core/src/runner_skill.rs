@@ -431,7 +431,8 @@ impl RunnerSkillReadResponse {
 
 pub fn valid_runner_skill_id(value: &str) -> bool {
     value
-        .strip_prefix("wc_skill_")
+        .strip_prefix("cg_skill_")
+        .or_else(|| value.strip_prefix("wc_skill_"))
         .is_some_and(|suffix| crate::compact::decode::<16>(suffix).is_some())
 }
 
@@ -477,7 +478,7 @@ mod tests {
 
     fn configured() -> RunnerSkillDescriptor {
         RunnerSkillDescriptor::Configured {
-            skill_id: "wc_skill_qqqqqqqqqqqqqqqqqqqqqg".to_string(),
+            skill_id: "cg_skill_qqqqqqqqqqqqqqqqqqqqqg".to_string(),
             name: "configured".to_string(),
             description: "configured guidance".to_string(),
             definition_revision: "b".repeat(64),
@@ -486,11 +487,11 @@ mod tests {
 
     fn managed() -> RunnerSkillDescriptor {
         RunnerSkillDescriptor::Managed {
-            skill_id: "wc_skill_zMzMzMzMzMzMzMzMzMzMzA".to_string(),
+            skill_id: "cg_skill_zMzMzMzMzMzMzMzMzMzMzA".to_string(),
             skill_key: "managed".to_string(),
             name: "managed".to_string(),
             description: "managed guidance".to_string(),
-            package_revision: "wc_skillpkg_3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d0".to_string(),
+            package_revision: "cg_skillpkg_3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d0".to_string(),
             definition_revision: "e".repeat(64),
         }
     }
@@ -500,9 +501,9 @@ mod tests {
         let configured_id = configured().skill_id().to_string();
         let managed_id = managed().skill_id().to_string();
         let package_revision =
-            "wc_skillpkg___________________________________________8".to_string();
+            "cg_skillpkg___________________________________________8".to_string();
         let state_revision =
-            "wc_skillstate_qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqo".to_string();
+            "cg_skillstate_qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqo".to_string();
         let requests = vec![
             RunnerSkillRequest::List,
             RunnerSkillRequest::Resolve {
@@ -591,7 +592,7 @@ mod tests {
             start_line: 1,
             limit: 1,
             expected_package_revision: Some(
-                "wc_skillpkg___________________________________________8".to_string(),
+                "cg_skillpkg___________________________________________8".to_string(),
             ),
             expected_definition_revision: None,
         };

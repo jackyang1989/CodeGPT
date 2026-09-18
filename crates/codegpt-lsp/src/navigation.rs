@@ -13,12 +13,6 @@ use super::supervisor::{
     classify_uri_against_project_root, LspError, LspServerStatus, LspSupervisor, PositionEncoding,
     ProjectUriClassification,
 };
-use serde_json::{json, Value};
-use std::collections::{HashMap, HashSet, VecDeque};
-use std::fs;
-use std::path::{Path, PathBuf};
-use std::time::{Duration, Instant};
-use url::Url;
 use codegpt_core::lsp_bridge::{
     bound_error_message, error_codes, redact_absolute_paths, validate_call_hierarchy_bounds,
     CallHierarchyDirection, CallHierarchyEdgeDirection, CallHierarchyResult,
@@ -36,6 +30,12 @@ use codegpt_core::lsp_bridge::{
     MAX_PUBLIC_HOVER_VALUE_CHARS, MAX_PUBLIC_SYMBOL_DETAIL_CHARS, MAX_PUBLIC_SYMBOL_NAME_CHARS,
     MAX_PUBLIC_WORKSPACE_SYMBOL_FIELD_CHARS,
 };
+use serde_json::{json, Value};
+use std::collections::{HashMap, HashSet, VecDeque};
+use std::fs;
+use std::path::{Path, PathBuf};
+use std::time::{Duration, Instant};
+use url::Url;
 
 const DIAGNOSTICS_WAIT_TIMEOUT: Duration = Duration::from_secs(2);
 pub fn execute_lsp_operation(

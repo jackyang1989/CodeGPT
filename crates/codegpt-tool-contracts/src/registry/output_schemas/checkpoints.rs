@@ -10,7 +10,7 @@ pub(super) fn output_schema_for_tool(name: &str) -> Option<Value> {
         "workspace_checkpoint_create" => Some(wrapped_output_schema(vec![
             (
                 "checkpoint_id",
-                schema_type("string", "Created wc_ckpt_* id."),
+                schema_type("string", "Created cg_ckpt_* id."),
             ),
             ("project", schema_type("string", "Project input.")),
             (

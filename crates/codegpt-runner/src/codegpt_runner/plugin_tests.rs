@@ -1,16 +1,16 @@
 use super::*;
-use std::env;
-use std::fs;
-use std::path::{Path, PathBuf};
-use std::process::Command;
-use std::sync::{mpsc, Arc, Mutex, OnceLock, Weak};
-use tempfile::TempDir;
 #[cfg(feature = "runner-real-process-tests")]
 use codegpt_core::plugin::PLUGIN_MAX_ARGUMENT_BYTES;
 use codegpt_core::plugin::{
     PluginContent, PluginGatewayResponsePayload, PluginProviderView, PluginSchemaObservation,
     PLUGIN_MAX_MESSAGE_BYTES, PLUGIN_MAX_RESULT_BYTES,
 };
+use std::env;
+use std::fs;
+use std::path::{Path, PathBuf};
+use std::process::Command;
+use std::sync::{mpsc, Arc, Mutex, OnceLock, Weak};
+use tempfile::TempDir;
 
 static FAKE_PLUGIN: OnceLock<Mutex<Weak<FakeBinary>>> = OnceLock::new();
 
@@ -289,7 +289,7 @@ fn project_affine_catalog_uses_exact_committed_cwd_without_process_side_effects(
     assert_eq!(entry.annotations.destructive_hint, Some(false));
     assert_eq!(entry.annotations.idempotent_hint, Some(true));
     assert_eq!(entry.annotations.open_world_hint, Some(false));
-    assert!(catalog.catalog_revision.starts_with("wc_plugcat_"));
+    assert!(catalog.catalog_revision.starts_with("cg_plugcat_"));
 
     let serialized = serde_json::to_string(&catalog).unwrap();
     for forbidden in [
@@ -326,7 +326,7 @@ fn project_catalog_bounds_aggregate_wire_response_without_losing_total() {
             annotations: PluginSelectionAnnotations::default(),
         })
         .collect();
-    let revision = format!("wc_plugcat_{}", codegpt_core::compact::encode([0xaa; 32]));
+    let revision = format!("cg_plugcat_{}", codegpt_core::compact::encode([0xaa; 32]));
     let full = ProjectPluginCatalog {
         catalog_revision: revision.clone(),
         total_count: entries.len(),

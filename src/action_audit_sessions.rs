@@ -649,7 +649,7 @@ mod tests {
         let value = json!({
             "outer": [
                 "ok",
-                {"message": "pairing failed for wc_pair_SECRET"},
+                {"message": "pairing failed for cg_pair_SECRET"},
                 ["agent token WC_AGENT_SECRET"]
             ]
         });

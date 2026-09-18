@@ -1,14 +1,14 @@
 //! Runtime audit integration tests that combine canonical requests with audit projections.
 
 use crate::ToolCallAuditProjection;
-use serde_json::json;
 use codegpt_tool_contracts::{ObserveJobsWakeOn, ToolCall};
+use serde_json::json;
 
 #[cfg(feature = "experimental-code-mode")]
 #[test]
 fn code_mode_exec_parses_outer_authority_and_omits_source_from_audit() {
     const PRIVATE_SOURCE: &str = "const secret = 'NEVER_PERSIST_CODE_MODE_SOURCE'; text(secret);";
-    let session_id = format!("wc_sess_{}", "1".repeat(32));
+    let session_id = format!("cg_sess_{}", "1".repeat(32));
     let call = ToolCall::from_tool_name(
         "code_mode_exec",
         json!({
@@ -59,7 +59,7 @@ fn code_mode_exec_parses_outer_authority_and_omits_source_from_audit() {
 fn code_mode_exec_effectful_parses_outer_authority_and_omits_source_from_audit() {
     const PRIVATE_SOURCE: &str =
         "const secret = 'NEVER_PERSIST_EFFECTFUL_CODE_MODE_SOURCE'; text(secret);";
-    let session_id = format!("wc_sess_{}", "2".repeat(32));
+    let session_id = format!("cg_sess_{}", "2".repeat(32));
     let call = ToolCall::from_tool_name(
         "code_mode_exec_effectful",
         json!({
@@ -116,7 +116,7 @@ fn observe_session_messages_tool_call_and_audit_are_bounded() {
     let call = ToolCall::from_tool_name(
         "observe_session_messages",
         json!({
-            "session_id": "wc_sess_demo",
+            "session_id": "cg_sess_demo",
             "after_observation_token": raw_token,
             "wait_secs": 7,
             "limit": 25
@@ -130,7 +130,7 @@ fn observe_session_messages_tool_call_and_audit_are_bounded() {
             wait_secs,
             limit,
         } => {
-            assert_eq!(session_id, "wc_sess_demo");
+            assert_eq!(session_id, "cg_sess_demo");
             assert_eq!(after_observation_token.as_deref(), Some(raw_token));
             assert_eq!(*wait_secs, Some(7));
             assert_eq!(*limit, Some(25));
@@ -141,7 +141,7 @@ fn observe_session_messages_tool_call_and_audit_are_bounded() {
     assert_eq!(
         call.session_log_arguments(),
         json!({
-            "session_id": "wc_sess_demo",
+            "session_id": "cg_sess_demo",
             "wait_secs": 7,
             "limit": 25,
             "token_present": true
@@ -151,7 +151,7 @@ fn observe_session_messages_tool_call_and_audit_are_bounded() {
         "observe_session_messages",
         &json!({
             "success": true,
-            "session_id": "wc_sess_demo",
+            "session_id": "cg_sess_demo",
             "messages": [{"message": "secret body"}],
             "observation_token": raw_token,
             "changed": true,
@@ -171,7 +171,7 @@ fn observe_session_messages_tool_call_and_audit_are_bounded() {
     let oversized = ToolCall::from_tool_name(
         "observe_session_messages",
         json!({
-            "session_id": "wc_sess_demo",
+            "session_id": "cg_sess_demo",
             "after_observation_token": "x".repeat(codegpt_core::job_observation::MAX_JOB_OBSERVATION_TOKEN_LEN + 1)
         }),
     );
@@ -201,10 +201,10 @@ fn start_coding_task_uses_generic_unknown_tool_and_privacy_paths() {
 
 #[test]
 fn agent_continuation_bind_parses_required_view_fence_and_omits_it_from_audit() {
-    let binding_id = format!("wc_host_binding_{}", "a0".repeat(16));
+    let binding_id = format!("cg_host_binding_{}", "a0".repeat(16));
     let mut args = json!({
-        "agent_id": "wc_dagent_qqqqqqqqqqqqqqqq".to_string(),
-        "endpoint_id": "wc_endpoint_u7u7u7u7u7u7u7u7".to_string(),
+        "agent_id": "cg_dagent_qqqqqqqqqqqqqqqq".to_string(),
+        "endpoint_id": "cg_endpoint_u7u7u7u7u7u7u7u7".to_string(),
         "expected_controller_generation": 1,
         "binding_id": binding_id,
     });
@@ -223,13 +223,13 @@ fn agent_continuation_bind_parses_required_view_fence_and_omits_it_from_audit() 
 
 #[test]
 fn agent_wait_calls_parse_closed_selectors_and_keep_audit_payload_free() {
-    const PRIVATE_TASK: &str = "wc_agent_task_ze-rze-rze-rze-r";
+    const PRIVATE_TASK: &str = "cg_agent_task_ze-rze-rze-rze-r";
     const PRIVATE_KEY: &str = "PRIVATE_WAIT_KEY_MUST_NOT_PERSIST";
     let call = ToolCall::from_tool_name(
         "wait_for_agent_events",
         json!({
-            "agent_id": "wc_dagent_iavN7wEjRWeJq83v",
-            "endpoint_id": "wc_endpoint_iavN7wEjRWeJq83v",
+            "agent_id": "cg_dagent_iavN7wEjRWeJq83v",
+            "endpoint_id": "cg_endpoint_iavN7wEjRWeJq83v",
             "expected_controller_generation": 4,
             "events": [{"kind":"agent_task_terminal","task_id":PRIVATE_TASK}],
             "idempotency_key": PRIVATE_KEY,
@@ -253,13 +253,13 @@ fn agent_wait_calls_parse_closed_selectors_and_keep_audit_payload_free() {
 
     let read = ToolCall::from_tool_name(
         "read_agent_wait",
-        json!({"wait_id": "wc_agent_wait_ZmZmZmZmZmZmZmZm".to_string()}),
+        json!({"wait_id": "cg_agent_wait_ZmZmZmZmZmZmZmZm".to_string()}),
     )
     .unwrap();
     assert!(matches!(read, ToolCall::ReadAgentWait { .. }));
     let state = ToolCall::from_tool_name(
         "agent_wait_state",
-        json!({"wait_id": "wc_agent_wait_ZmZmZmZmZmZmZmZm".to_string()}),
+        json!({"wait_id": "cg_agent_wait_ZmZmZmZmZmZmZmZm".to_string()}),
     )
     .unwrap();
     assert!(matches!(state, ToolCall::AgentWaitState { .. }));

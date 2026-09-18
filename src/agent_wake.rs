@@ -93,7 +93,7 @@ pub(crate) struct AgentHostBindingStatus {
 }
 
 pub(crate) const MCP_APP_CONTINUATION_ADAPTER_KIND: &str = "mcp_app";
-const MCP_APP_BINDING_ID_PREFIX: &str = "wc_host_binding_";
+const MCP_APP_BINDING_ID_PREFIX: &str = "cg_host_binding_";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum McpAppDispatchPhase {
@@ -132,7 +132,7 @@ fn validate_mcp_app_binding_id(binding_id: &str) -> Result<(), CommunicationStor
     {
         return Err(CommunicationStoreError::new(
             "invalid_host_binding_id",
-            "binding_id must be wc_host_binding_ followed by canonical base64url of 16 random bytes",
+            "binding_id must be cg_host_binding_ followed by canonical base64url of 16 random bytes",
         ));
     }
     Ok(())

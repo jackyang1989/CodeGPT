@@ -46,14 +46,14 @@ async fn unknown_session_id_fails_before_execution_or_mutation() {
                 limit: None,
                 expected_read_revision: None,
             }],
-            session_id: Some("wc_sess_missing".to_string()),
+            session_id: Some("cg_sess_missing".to_string()),
             with_line_numbers: None,
             max_result_bytes: None,
         })
         .await;
     assert!(!read.success);
     assert_eq!(read.output["error_kind"], "unknown_session_id");
-    assert_eq!(read.output["session_id"], "wc_sess_missing");
+    assert_eq!(read.output["session_id"], "cg_sess_missing");
     assert!(read.output.get("permission").is_none());
     assert!(read
         .error
@@ -66,7 +66,7 @@ async fn unknown_session_id_fails_before_execution_or_mutation() {
             project: "demo".to_string(),
             path: "should-not-exist.txt".to_string(),
             content: "nope".to_string(),
-            session_id: Some("wc_sess_missing".to_string()),
+            session_id: Some("cg_sess_missing".to_string()),
             overwrite: None,
             expected_read_revision: None,
         })
@@ -682,7 +682,7 @@ async fn read_only_session_rejects_all_artifact_upload_tools_without_base64_leak
         ToolCall::ArtifactUploadChunk {
             project: project.clone(),
             path: "artifacts/imports/blocked.txt".to_string(),
-            upload_id: "wc_upload_test_1".to_string(),
+            upload_id: "cg_upload_test_1".to_string(),
             offset: 0,
             content_base64: content_base64.clone(),
             session_id: Some(session.session_id.clone()),
@@ -690,13 +690,13 @@ async fn read_only_session_rejects_all_artifact_upload_tools_without_base64_leak
         ToolCall::ArtifactUploadFinish {
             project: project.clone(),
             path: "artifacts/imports/blocked.txt".to_string(),
-            upload_id: "wc_upload_test_1".to_string(),
+            upload_id: "cg_upload_test_1".to_string(),
             session_id: Some(session.session_id.clone()),
         },
         ToolCall::ArtifactUploadAbort {
             project,
             path: "artifacts/imports/blocked.txt".to_string(),
-            upload_id: "wc_upload_test_1".to_string(),
+            upload_id: "cg_upload_test_1".to_string(),
             session_id: Some(session.session_id.clone()),
         },
     ];
@@ -759,7 +759,7 @@ async fn read_only_session_rejects_all_artifact_upload_tools_without_base64_leak
         .expect("started event for artifact_upload_chunk");
     let input_summary = started.input_summary.as_ref().unwrap();
     assert_eq!(input_summary["path"], "artifacts/imports/blocked.txt");
-    assert_eq!(input_summary["upload_id"], "wc_upload_test_1");
+    assert_eq!(input_summary["upload_id"], "cg_upload_test_1");
     assert_eq!(input_summary["offset"], 0);
     assert_eq!(input_summary["content_base64_present"], true);
     assert!(input_summary.get("content_base64").is_none());

@@ -20,7 +20,7 @@ struct Fixture {
 fn principal(hex: char) -> CommunicationPrincipal {
     CommunicationPrincipal {
         kind: "user".to_string(),
-        digest: format!("wc_commprincipal_{}", hex.to_string().repeat(64)),
+        digest: format!("cg_commprincipal_{}", hex.to_string().repeat(64)),
     }
 }
 
@@ -117,7 +117,7 @@ fn attach_wake_endpoint(
 fn wake_id_for(db: &Database, agent_id: &str) -> String {
     db.conn_for_tests()
         .query_row(
-            "SELECT wake_id FROM wc_agent_wakes
+            "SELECT wake_id FROM cg_agent_wakes
              WHERE target_agent_id = ?1
              ORDER BY created_at_unix_ms, wake_id LIMIT 1",
             [agent_id],
@@ -130,7 +130,7 @@ fn queued_delivery_ids(db: &Database, agent_id: &str) -> Vec<String> {
     let conn = db.conn_for_tests();
     let mut statement = conn
         .prepare(
-            "SELECT delivery_id FROM wc_agent_deliveries
+            "SELECT delivery_id FROM cg_agent_deliveries
              WHERE recipient_agent_id = ?1 AND state = 'queued'
              ORDER BY delivery_order",
         )
@@ -393,7 +393,7 @@ fn dispatch_uncertainty_blocks_duplicate_and_preserves_successor_across_restart(
         let conn = db.conn_for_tests();
         let mut statement = conn
             .prepare(
-                "SELECT wake_id, state FROM wc_agent_wakes
+                "SELECT wake_id, state FROM cg_agent_wakes
                  WHERE target_agent_id = ?1 ORDER BY created_at_unix_ms, wake_id",
             )
             .unwrap();

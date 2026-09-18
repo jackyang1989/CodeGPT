@@ -36,7 +36,7 @@ fn memory_scope_id_from_parts(project_runtime_id: &str, client_id: &str, root: &
         memory_hash_field(&mut hasher, value);
     }
     format!(
-        "wc_memscope_{}",
+        "cg_memscope_{}",
         codegpt_core::compact::encode(hasher.finalize())
     )
 }
@@ -54,7 +54,7 @@ pub(crate) fn memory_root_fingerprint(root: &str) -> String {
     hasher.update(b"codegpt-project-memory-root-v1\0");
     memory_hash_field(&mut hasher, root.as_bytes());
     format!(
-        "wc_memroot_{}",
+        "cg_memroot_{}",
         codegpt_core::compact::encode(hasher.finalize())
     )
 }
@@ -78,7 +78,7 @@ pub(crate) fn memory_principal_attribution(
     memory_hash_field(&mut hasher, stable_principal_id.as_bytes());
     Ok(MemoryPrincipalAttribution {
         kind,
-        principal_digest: format!("wc_memprincipal_{:x}", hasher.finalize()),
+        principal_digest: format!("cg_memprincipal_{:x}", hasher.finalize()),
     })
 }
 
@@ -779,7 +779,7 @@ mod tests {
         let c = memory_scope_id(&resolved("other", "/registered/a"));
         assert_ne!(a, b);
         assert_ne!(a, c);
-        assert!(a.starts_with("wc_memscope_"));
+        assert!(a.starts_with("cg_memscope_"));
         assert!(!a.contains("registered"));
         assert!(!a.contains("runner"));
     }
@@ -787,12 +787,12 @@ mod tests {
     #[test]
     fn incomplete_bounded_inventory_never_proves_not_current() {
         let attributed = ProjectMemoryScopeRecord {
-            memory_scope_id: format!("wc_memscope_{}", codegpt_core::compact::encode([0xaa; 32])),
+            memory_scope_id: format!("cg_memscope_{}", codegpt_core::compact::encode([0xaa; 32])),
             identity_state: "attributed".to_string(),
             project_runtime_id: Some("agent:runner:demo".to_string()),
             runner_client_id: Some("runner".to_string()),
             root_fingerprint: Some(format!(
-                "wc_memroot_{}",
+                "cg_memroot_{}",
                 codegpt_core::compact::encode([0xbb; 32])
             )),
             created_at_unix_ms: 1,
@@ -808,20 +808,20 @@ mod tests {
     #[test]
     fn body_match_is_discoverable_without_body_projection() {
         let record = ProjectMemoryRecord {
-            memory_id: "wc_mem_iavN7wEjRWeJq83v".to_string(),
+            memory_id: "cg_mem_iavN7wEjRWeJq83v".to_string(),
             memory_key: "policy".to_string(),
             summary: "release guidance".to_string(),
             body: "Use hidden canary phrase".to_string(),
             priority: MemoryPriority::Normal,
             bootstrap: false,
             tags: Vec::new(),
-            definition_hash: format!("wc_memdef_{}", "a".repeat(64)),
+            definition_hash: format!("cg_memdef_{}", "a".repeat(64)),
             created_by_kind: "test".to_string(),
-            created_by_principal_digest: Some(format!("wc_memprincipal_{}", "1".repeat(64))),
+            created_by_principal_digest: Some(format!("cg_memprincipal_{}", "1".repeat(64))),
             updated_by_kind: "test".to_string(),
-            updated_by_principal_digest: Some(format!("wc_memprincipal_{}", "1".repeat(64))),
+            updated_by_principal_digest: Some(format!("cg_memprincipal_{}", "1".repeat(64))),
             generation: 1,
-            revision: format!("wc_memrev_{}", codegpt_core::compact::encode([0xaa; 32])),
+            revision: format!("cg_memrev_{}", codegpt_core::compact::encode([0xaa; 32])),
             created_at_unix_ms: 1,
             updated_at_unix_ms: 1,
         };

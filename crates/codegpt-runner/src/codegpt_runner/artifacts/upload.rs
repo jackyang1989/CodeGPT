@@ -5,9 +5,9 @@ use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 use base64::{engine::general_purpose, Engine as _};
+use codegpt_core::runner_operation::RunnerFilePayload;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
-use codegpt_core::runner_operation::RunnerFilePayload;
 
 use super::super::output::{line_edit_stdout, CommandResult};
 use super::inspection::{artifact_mime_from_file, verify_upload_file};
@@ -53,8 +53,8 @@ pub(super) fn commit_artifact_upload_part(
 }
 
 fn validate_upload_id(upload_id: &str) -> Result<(), String> {
-    if !upload_id.starts_with("wc_upload_") {
-        return Err("upload_id must start with wc_upload_".to_string());
+    if !upload_id.starts_with("cg_upload_") && !upload_id.starts_with("wc_upload_") {
+        return Err("upload_id must start with cg_upload_".to_string());
     }
     if upload_id.len() > 96 {
         return Err("upload_id too long".to_string());
@@ -90,7 +90,7 @@ fn new_upload_id(attempt: usize) -> String {
         .duration_since(UNIX_EPOCH)
         .map(|duration| duration.as_nanos())
         .unwrap_or_default();
-    format!("wc_upload_{}_{}_{}", std::process::id(), nanos, attempt)
+    format!("cg_upload_{}_{}_{}", std::process::id(), nanos, attempt)
 }
 
 pub(super) fn write_upload_state(

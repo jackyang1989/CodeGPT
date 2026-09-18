@@ -4,9 +4,6 @@ use crate::artifact_policy::MAX_MCP_IMAGE_BYTES;
 use crate::runner_protocol::shell_computer_request_payload_max_bytes;
 #[cfg(test)]
 use crate::runner_protocol::RunnerRequest;
-use serde_json::Value;
-use std::sync::OnceLock;
-use std::time::Instant;
 use codegpt_computer::{
     ComputerAction, ComputerConfig, ComputerRuntime, PointerAction, SnapshotRegion,
     DEFAULT_ACCESSIBILITY_DEPTH, DEFAULT_ACCESSIBILITY_NODES, MAX_APPLICATIONS, MAX_DISPLAYS,
@@ -15,6 +12,9 @@ use codegpt_computer::{
 #[cfg(test)]
 use codegpt_core::runner_operation::RunnerOperation;
 use codegpt_core::runner_operation::{RunnerComputerOperation, RunnerComputerOperationKind};
+use serde_json::Value;
+use std::sync::OnceLock;
+use std::time::Instant;
 
 fn computer_runtime() -> &'static ComputerRuntime {
     static COMPUTER: OnceLock<ComputerRuntime> = OnceLock::new();

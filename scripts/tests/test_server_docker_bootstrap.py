@@ -89,7 +89,7 @@ class BootstrapTests(unittest.TestCase):
             '  *" exec -T codegpt curl "*) exit "${FAKE_OPENAPI_EXIT:-0}" ;;\n'
             '  *" exec -T codegpt sh -lc "*)\n'
             '    if [ "${FAKE_PAIRING_EXIT:-0}" != 0 ]; then exit "$FAKE_PAIRING_EXIT"; fi\n'
-            '    printf "wc_pair_test_123\\n"; exit 0 ;;\n'
+            '    printf "cg_pair_test_123\\n"; exit 0 ;;\n'
             '  *" down"*) rm -f "$FAKE_CONTAINER_STATE"; exit "${FAKE_DOWN_EXIT:-0}" ;;\n'
             'esac\n'
             "exit 0\n",
@@ -222,7 +222,7 @@ class BootstrapTests(unittest.TestCase):
         self.assertNotEqual(receipt["env_sha256"], "-")
         self.assertEqual(stat.S_IMODE((root / RECEIPT).stat().st_mode), 0o600)
 
-        self.assertIn("wc_pair_test_123", result.stdout)
+        self.assertIn("cg_pair_test_123", result.stdout)
         self.assertIn("CodeGPT server is healthy", result.stdout)
         self.assertNotIn("server container started", result.stdout.lower())
         self.assertIn("codegpt login", result.stdout)

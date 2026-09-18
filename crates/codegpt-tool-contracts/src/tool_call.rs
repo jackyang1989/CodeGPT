@@ -11,10 +11,6 @@ use super::tool_inputs::{
     SessionMode, WorkOnProjectMode,
 };
 use crate::{lookup_tool_definition, model_visible_tool_names_csv};
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
-use serde_json::Value;
-use std::collections::{BTreeMap, HashSet};
 use codegpt_core::apply_patch_shared::ApplyPatchMatchingMode;
 use codegpt_core::job_observation::MAX_JOB_OBSERVATION_TOKEN_LEN;
 use codegpt_core::lsp_bridge::{
@@ -35,6 +31,10 @@ use codegpt_core::workflow_session_contract::{
     validate_model_facing_result_expectation, SessionExecutionContext, SessionMessageKind,
     SessionMessagePriority, SessionMessageStatus,
 };
+use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
+use serde_json::Value;
+use std::collections::{BTreeMap, HashSet};
 
 pub const TOOL_CALL_TOOL_FIELD: &str = "tool";
 pub const TOOL_CALL_PARAMS_FIELD: &str = "params";
@@ -85,7 +85,7 @@ pub struct PluginToolCall {
     /// Opaque exact Runner/provider/tool/schema binding returned by describe. It is observation
     /// identity, not authority.
     #[schemars(length(min = 1, max = 128))]
-    #[schemars(regex(pattern = "^wc_pbind_[A-Za-z0-9_-]{21}[AQgw]$"))]
+    #[schemars(regex(pattern = "^cg_pbind_[A-Za-z0-9_-]{21}[AQgw]$"))]
     #[serde(default)]
     pub binding: Option<String>,
     /// Plugin tool arguments matching the schema observed by describe; encoded payload is bounded to
@@ -117,7 +117,10 @@ impl PluginToolCall {
                 .map_err(|_| "tool must be a valid bounded provider-local tool name".to_string())?;
         }
         if let Some(binding) = self.binding.as_deref() {
-            let Some(random) = binding.strip_prefix("wc_pbind_") else {
+            let Some(random) = binding
+                .strip_prefix("cg_pbind_")
+                .or_else(|| binding.strip_prefix("wc_pbind_"))
+            else {
                 return Err("binding must be a valid opaque Plugin binding".to_string());
             };
             if codegpt_core::compact::decode::<16>(random).is_none() {
@@ -200,7 +203,7 @@ pub struct SshResourceToolCall {
     pub runner: Option<String>,
     /// Opaque exact Runner + registry revision observation returned by list. Required for
     /// register/remove; never grants authority by itself.
-    #[schemars(regex(pattern = "^wc_sbind_[A-Za-z0-9_-]{21}[AQgw]$"))]
+    #[schemars(regex(pattern = "^cg_sbind_[A-Za-z0-9_-]{21}[AQgw]$"))]
     #[serde(default)]
     pub binding: Option<String>,
     /// Logical Runner-local SSH resource name. Required for register/remove.
@@ -992,7 +995,7 @@ pub struct AgentWaitEventSelectorCall {
     pub kind: String,
     /// Exact independently authorized AgentTask source. This reference grants no Task, Project, Goal,
     /// Session, or execution authority.
-    #[schemars(regex(pattern = "^wc_agent_task_[A-Za-z0-9_-]{16}$"))]
+    #[schemars(regex(pattern = "^cg_agent_task_[A-Za-z0-9_-]{16}$"))]
     pub task_id: String,
 }
 
@@ -1146,7 +1149,7 @@ pub enum ToolCall {
         /// model context still retains project instructions, workflow guidance, or extension metadata; a
         /// fresh model context should keep the include_* defaults true. This business input is distinct
         /// from wrapper recording_session_id.
-        #[schemars(regex(pattern = "^wc_sess_([A-Za-z0-9_-]{16}|[0-9a-f]{32})$"))]
+        #[schemars(regex(pattern = "^cg_sess_([A-Za-z0-9_-]{16}|[0-9a-f]{32})$"))]
         #[serde(default)]
         session_id: Option<String>,
     },
@@ -1157,7 +1160,7 @@ pub enum ToolCall {
     FinishCodingTask {
         /// Required runtime project id. Use the same project used to start the task.
         project: String,
-        /// Required explicit wc_sess_* business Session id for the current coding task, obtained from its
+        /// Required explicit cg_sess_* business Session id for the current coding task, obtained from its
         /// compatible Session bootstrap.
         session_id: String,
         /// When true, return the minimal decision-complete closeout only: workspace cleanliness/conflicts,
@@ -1196,7 +1199,7 @@ pub enum ToolCall {
         project: String,
         /// Required exact project-scoped Workflow Session id. Identity is never inferred from
         /// current/recent Session, Window, transport, or credential context.
-        #[schemars(regex(pattern = "^wc_sess_([A-Za-z0-9_-]{16}|[0-9a-f]{32})$"))]
+        #[schemars(regex(pattern = "^cg_sess_([A-Za-z0-9_-]{16}|[0-9a-f]{32})$"))]
         session_id: String,
     },
 
@@ -1213,7 +1216,7 @@ pub enum ToolCall {
         project: String,
         /// Required exact project-scoped Workflow Session id. Identity is never inferred from
         /// current/recent Session, Window, transport, or credential context.
-        #[schemars(regex(pattern = "^wc_sess_([A-Za-z0-9_-]{16}|[0-9a-f]{32})$"))]
+        #[schemars(regex(pattern = "^cg_sess_([A-Za-z0-9_-]{16}|[0-9a-f]{32})$"))]
         session_id: String,
     },
 
@@ -1230,7 +1233,7 @@ pub enum ToolCall {
     /// Return a bounded structured summary of recorded session ledger data for
     /// an explicit session id.
     SessionSummary {
-        /// Required explicit wc_sess_* Workflow Session id from a compatible Session bootstrap.
+        /// Required explicit cg_sess_* Workflow Session id from a compatible Session bootstrap.
         session_id: String,
         /// Maximum recent events to return, capped by the runtime.
         #[serde(default)]
@@ -1247,7 +1250,7 @@ pub enum ToolCall {
         project: String,
         /// Required explicit active, project-scoped Workflow Session id. Unknown ids fail without creating
         /// a Session.
-        #[schemars(regex(pattern = "^wc_sess_([A-Za-z0-9_-]{16}|[0-9a-f]{32})$"))]
+        #[schemars(regex(pattern = "^cg_sess_([A-Za-z0-9_-]{16}|[0-9a-f]{32})$"))]
         session_id: String,
         /// Complete replacement execution context. `{}` clears all defaults. The context cannot store
         /// environment variables, credentials, SSH host/configuration, keys, passwords, connections, or
@@ -1259,7 +1262,7 @@ pub enum ToolCall {
     /// explicit `session_id`. Idempotent when already closed. Does not archive
     /// or evict the Session.
     CloseSession {
-        /// Required explicit wc_sess_* id to close. Unknown ids fail without creating a Session. Idempotent
+        /// Required explicit cg_sess_* id to close. Unknown ids fail without creating a Session. Idempotent
         /// when already closed. finish_coding_task does not close.
         session_id: String,
     },
@@ -1272,7 +1275,7 @@ pub enum ToolCall {
         /// session_id.
         #[schemars(length(min = 1))]
         project: String,
-        /// Required explicit wc_sess_* business Session id.
+        /// Required explicit cg_sess_* business Session id.
         #[schemars(length(min = 1))]
         session_id: String,
         #[schemars(extend("default" = 20))]
@@ -1286,7 +1289,7 @@ pub enum ToolCall {
     /// Post a bounded session-local ledger message for collaboration, progress,
     /// guidance, or design discussion. This is session metadata only.
     PostSessionMessage {
-        /// Required wc_sess_* id whose session-local message board receives this message. This is business
+        /// Required cg_sess_* id whose session-local message board receives this message. This is business
         /// input, not recorder metadata.
         session_id: String,
         /// Message kind.
@@ -1318,7 +1321,7 @@ pub enum ToolCall {
     /// recipient's current Project, Workflow Session, files, or task authority.
     PostPeerMessage {
         /// Opaque principal-scoped peer identity discovered through peer_awareness.
-        #[schemars(regex(pattern = "^wc_peer_[0-9a-f]{32}$"))]
+        #[schemars(regex(pattern = "^cg_peer_[0-9a-f]{32}$"))]
         peer_id: String,
         /// Communication kind. A peer todo is only a request message; it does not create a fenced
         /// Workflow Session assignment.
@@ -1344,7 +1347,7 @@ pub enum ToolCall {
 
     /// List session-local ledger messages in stable newest-first order.
     ListSessionMessages {
-        /// Required wc_sess_* id whose session-local message board is listed.
+        /// Required cg_sess_* id whose session-local message board is listed.
         session_id: String,
         /// Optional kind filter.
         #[serde(default)]
@@ -1352,11 +1355,11 @@ pub enum ToolCall {
         /// Optional status filter.
         #[serde(default)]
         status: Option<SessionMessageStatus>,
-        /// Optional exact wc_msg_* filter. Combined with kind/status/reply_to using deterministic AND
+        /// Optional exact cg_msg_* filter. Combined with kind/status/reply_to using deterministic AND
         /// semantics; returns exact 0/1 when this filter is supplied.
         #[serde(default)]
         message_id: Option<String>,
-        /// Optional exact reply_to wc_msg_* filter, useful for finding replies to one todo. Combined with
+        /// Optional exact reply_to cg_msg_* filter, useful for finding replies to one todo. Combined with
         /// all other filters using AND semantics.
         #[serde(default)]
         reply_to: Option<String>,
@@ -1370,10 +1373,10 @@ pub enum ToolCall {
     /// Session-store snapshot and return an opaque assignment fence.
     GetSessionAssignment {
         /// Required coordinator/business Workflow Session containing the exact todo.
-        #[schemars(regex(pattern = "^wc_sess_([A-Za-z0-9_-]{16}|[0-9a-f]{32})$"))]
+        #[schemars(regex(pattern = "^cg_sess_([A-Za-z0-9_-]{16}|[0-9a-f]{32})$"))]
         session_id: String,
         /// Required exact open todo id. No implicit or recent-message inference is used.
-        #[schemars(regex(pattern = "^wc_msg_([A-Za-z0-9_-]{16}|[0-9a-f]{32})$"))]
+        #[schemars(regex(pattern = "^cg_msg_([A-Za-z0-9_-]{16}|[0-9a-f]{32})$"))]
         message_id: String,
     },
 
@@ -1382,7 +1385,7 @@ pub enum ToolCall {
     /// no history. Optional waiting is one bounded wait, never a subscription.
     ObserveSessionMessages {
         /// Required explicit Workflow Session whose message-state delta is observed.
-        #[schemars(regex(pattern = "^wc_sess_([A-Za-z0-9_-]{16}|[0-9a-f]{32})$"))]
+        #[schemars(regex(pattern = "^cg_sess_([A-Za-z0-9_-]{16}|[0-9a-f]{32})$"))]
         session_id: String,
         /// Optional opaque Session-bound durable observation token returned by an earlier
         /// observe_session_messages call.
@@ -1404,9 +1407,9 @@ pub enum ToolCall {
     /// Mark a session-local message resolved. Idempotent for already resolved
     /// messages.
     ResolveSessionMessage {
-        /// Required wc_sess_* id containing the message.
+        /// Required cg_sess_* id containing the message.
         session_id: String,
-        /// wc_msg_* id returned by post_session_message.
+        /// cg_msg_* id returned by post_session_message.
         message_id: String,
         /// Optional resolution note.
         #[schemars(length(max = 8000))]
@@ -1417,9 +1420,9 @@ pub enum ToolCall {
     /// Atomically answer and resolve one exact open todo. A bounded caller key
     /// makes uncertain-result retries return the original completion.
     CompleteSessionMessage {
-        /// Required coordinator/business wc_sess_* id containing the exact open todo.
+        /// Required coordinator/business cg_sess_* id containing the exact open todo.
         session_id: String,
-        /// Exact open todo wc_msg_* id to answer and resolve atomically.
+        /// Exact open todo cg_msg_* id to answer and resolve atomically.
         message_id: String,
         /// Bounded answer body stored once as a kind=answer message replying to the todo.
         #[schemars(length(min = 1, max = 8000))]
@@ -1448,7 +1451,7 @@ pub enum ToolCall {
 
     /// Return a bounded structured aggregate of session-local ledger discussion.
     SessionDiscussionSummary {
-        /// Required wc_sess_* id whose message board should be summarized.
+        /// Required cg_sess_* id whose message board should be summarized.
         session_id: String,
         /// Maximum recent progress/decision messages to return. Defaults to 50; values above 100 are
         /// accepted and clamped to 100.
@@ -1463,7 +1466,7 @@ pub enum ToolCall {
     /// Read-only; never calls an LLM or generates natural-language summaries.
     /// Model/API exposure is derived from the canonical ToolDefinition surface.
     SessionHandoffSummary {
-        /// Required explicit wc_sess_* business Session id to summarize.
+        /// Required explicit cg_sess_* business Session id to summarize.
         session_id: String,
         /// Optional runtime project id. When provided, the handoff includes a bounded workspace summary.
         #[serde(default)]
@@ -1566,7 +1569,7 @@ pub enum ToolCall {
         /// Required Project target. Nested JavaScript tool calls cannot select or override Project authority.
         project: String,
         /// Required exact Workflow Session. Nested JavaScript tool calls remain bound to this Session and record canonical evidence there.
-        #[schemars(regex(pattern = "^wc_sess_([A-Za-z0-9_-]{16}|[0-9a-f]{32})$"))]
+        #[schemars(regex(pattern = "^cg_sess_([A-Za-z0-9_-]{16}|[0-9a-f]{32})$"))]
         session_id: String,
         /// Bounded JavaScript orchestration source. tools.<name>(args) returns a Promise for admitted read-only tools; use Promise.all only for independent observations, keep result-dependent/adaptive calls sequential, and call text(value) for final bounded output. Project/Session are outer-bound. No shell, filesystem, network, Node, Deno, WebAssembly, mutation, validation, Jobs, plugins, or MCP are exposed.
         #[schemars(length(max = 65536))]
@@ -1585,7 +1588,7 @@ pub enum ToolCall {
         /// Required Project target. Nested JavaScript tool calls cannot select or override Project authority.
         project: String,
         /// Required exact Workflow Session. Every nested child remains a canonical ToolRuntime invocation in this same Session.
-        #[schemars(regex(pattern = "^wc_sess_([A-Za-z0-9_-]{16}|[0-9a-f]{32})$"))]
+        #[schemars(regex(pattern = "^cg_sess_([A-Za-z0-9_-]{16}|[0-9a-f]{32})$"))]
         session_id: String,
         /// Experimental E2a JavaScript orchestration source. Admitted tools are the E1 read-only set plus cargo_check and cargo_test. Structured validators may hand off the same execution as ordinary Jobs; no mutation, shell, generic process, Job observation, plugins/MCP, or recursive Code Mode is exposed.
         #[schemars(length(max = 65536))]
@@ -1603,7 +1606,7 @@ pub enum ToolCall {
         /// Required Project target. Nested JavaScript tool calls cannot select or override Project authority.
         project: String,
         /// Required exact Workflow Session. Every nested child remains a canonical ToolRuntime invocation in this same Session.
-        #[schemars(regex(pattern = "^wc_sess_([A-Za-z0-9_-]{16}|[0-9a-f]{32})$"))]
+        #[schemars(regex(pattern = "^cg_sess_([A-Za-z0-9_-]{16}|[0-9a-f]{32})$"))]
         session_id: String,
         /// Experimental E2b JavaScript orchestration source. Admitted tools are the E1 read set plus one canonical apply_text_edits mutation attempt. Validation, shell/process, Jobs, other mutations, gateways, and recursive Code Mode are not exposed. Use read_files read_revision for guarded adaptive edits and inspect after mutation.
         #[schemars(length(max = 65536))]
@@ -1639,7 +1642,7 @@ pub enum ToolCall {
         #[schemars(schema_with = "nullable_stdin_schema")]
         #[serde(default)]
         stdin: Option<String>,
-        /// Optional explicit wc_sess_* Workflow Session id from a prior compatible bootstrap. When
+        /// Optional explicit cg_sess_* Workflow Session id from a prior compatible bootstrap. When
         /// provided, this tool call is recorded in that exact Session ledger; omission leaves the call
         /// unlinked to Workflow Session state.
         #[serde(default)]
@@ -1703,7 +1706,7 @@ pub enum ToolCall {
         #[schemars(schema_with = "nullable_stdin_schema")]
         #[serde(default)]
         stdin: Option<String>,
-        /// Optional explicit wc_sess_* Workflow Session id from a prior compatible bootstrap. When
+        /// Optional explicit cg_sess_* Workflow Session id from a prior compatible bootstrap. When
         /// provided, this tool call is recorded in that exact Session ledger; omission leaves the call
         /// unlinked to Workflow Session state.
         #[serde(default)]
@@ -1763,7 +1766,7 @@ pub enum ToolCall {
     CodingAgentObserve {
         /// Opaque CodingAgentRun id returned by coding_agent_start. Knowing the id alone grants no
         /// authority.
-        #[schemars(regex(pattern = "^wc_agent_run_[A-Za-z0-9_.-]+$"))]
+        #[schemars(regex(pattern = "^cg_agent_run_[A-Za-z0-9_.-]+$"))]
         run_id: String,
         /// Opaque exact-Run-bound observation token returned by the previous observation. A Server restart
         /// may reset it while preserving the Run.
@@ -1780,7 +1783,7 @@ pub enum ToolCall {
     CodingAgentCancel {
         /// Opaque CodingAgentRun id to cancel. Cancellation never starts or retries work and must be
         /// followed by observation for authoritative terminal state.
-        #[schemars(regex(pattern = "^wc_agent_run_[A-Za-z0-9_.-]+$"))]
+        #[schemars(regex(pattern = "^cg_agent_run_[A-Za-z0-9_.-]+$"))]
         run_id: String,
     },
 
@@ -1812,7 +1815,7 @@ pub enum ToolCall {
         #[schemars(schema_with = "nullable_stdin_schema")]
         #[serde(default)]
         stdin: Option<String>,
-        /// Optional explicit wc_sess_* Workflow Session id from a prior compatible bootstrap. When
+        /// Optional explicit cg_sess_* Workflow Session id from a prior compatible bootstrap. When
         /// provided, this tool call is recorded in that exact Session ledger; omission leaves the call
         /// unlinked to Workflow Session state.
         #[serde(default)]
@@ -1852,7 +1855,7 @@ pub enum ToolCall {
         /// stdin/files/artifacts for large data.
         #[schemars(length(max = 16000))]
         command: String,
-        /// Optional explicit wc_sess_* Workflow Session id from a prior compatible bootstrap. When
+        /// Optional explicit cg_sess_* Workflow Session id from a prior compatible bootstrap. When
         /// provided, this tool call is recorded in that exact Session ledger; omission leaves the call
         /// unlinked to Workflow Session state.
         #[serde(default)]
@@ -1970,7 +1973,7 @@ pub enum ToolCall {
         /// selects the first eligible candidate in the highest-priority tier.
         #[serde(default)]
         matching_mode: Option<ApplyPatchMatchingMode>,
-        /// Optional explicit wc_sess_* Workflow Session id from a prior compatible bootstrap. When
+        /// Optional explicit cg_sess_* Workflow Session id from a prior compatible bootstrap. When
         /// provided, this tool call is recorded in that exact Session ledger; omission leaves the call
         /// unlinked to Workflow Session state.
         #[serde(default)]
@@ -1986,7 +1989,7 @@ pub enum ToolCall {
         /// should be diff --git ..., --- ..., or another git-apply-compatible unified diff header.
         #[schemars(length(max = 262144))]
         diff: String,
-        /// Optional explicit wc_sess_* Workflow Session id from a prior compatible bootstrap. When
+        /// Optional explicit cg_sess_* Workflow Session id from a prior compatible bootstrap. When
         /// provided, this tool call is recorded in that exact Session ledger; omission leaves the call
         /// unlinked to Workflow Session state.
         #[serde(default)]
@@ -2004,7 +2007,7 @@ pub enum ToolCall {
         project: String,
         /// Project-relative file paths to delete.
         paths: Vec<String>,
-        /// Optional explicit wc_sess_* Workflow Session id from a prior compatible bootstrap. When
+        /// Optional explicit cg_sess_* Workflow Session id from a prior compatible bootstrap. When
         /// provided, this tool call is recorded in that exact Session ledger; omission leaves the call
         /// unlinked to Workflow Session state.
         #[serde(default)]
@@ -2017,7 +2020,7 @@ pub enum ToolCall {
         project: String,
         /// Project-relative tracked paths to restore.
         paths: Vec<String>,
-        /// Optional explicit wc_sess_* Workflow Session id from a prior compatible bootstrap. When
+        /// Optional explicit cg_sess_* Workflow Session id from a prior compatible bootstrap. When
         /// provided, this tool call is recorded in that exact Session ledger; omission leaves the call
         /// unlinked to Workflow Session state.
         #[serde(default)]
@@ -2030,7 +2033,7 @@ pub enum ToolCall {
         project: String,
         /// Project-relative untracked paths to remove.
         paths: Vec<String>,
-        /// Optional explicit wc_sess_* Workflow Session id from a prior compatible bootstrap. When
+        /// Optional explicit cg_sess_* Workflow Session id from a prior compatible bootstrap. When
         /// provided, this tool call is recorded in that exact Session ledger; omission leaves the call
         /// unlinked to Workflow Session state.
         #[serde(default)]
@@ -2054,7 +2057,7 @@ pub enum ToolCall {
         /// Commit message. Bounded and never persisted in model-facing audit previews.
         #[schemars(length(min = 1, max = 1000))]
         message: String,
-        /// Optional explicit wc_sess_* Workflow Session id from a prior compatible bootstrap. When
+        /// Optional explicit cg_sess_* Workflow Session id from a prior compatible bootstrap. When
         /// provided, this tool call is recorded in that exact Session ledger; omission leaves the call
         /// unlinked to Workflow Session state.
         #[serde(default)]
@@ -2065,7 +2068,7 @@ pub enum ToolCall {
     GitStatus {
         /// Configured project id.
         project: String,
-        /// Optional explicit wc_sess_* Workflow Session id from a prior compatible bootstrap. When
+        /// Optional explicit cg_sess_* Workflow Session id from a prior compatible bootstrap. When
         /// provided, this tool call is recorded in that exact Session ledger; omission leaves the call
         /// unlinked to Workflow Session state.
         #[serde(default)]
@@ -2088,7 +2091,7 @@ pub enum ToolCall {
         /// Number of recent commits to skip (default 0, clamped to 0..10000).
         #[serde(default)]
         skip: Option<usize>,
-        /// Optional explicit wc_sess_* Workflow Session id from a prior compatible bootstrap. When
+        /// Optional explicit cg_sess_* Workflow Session id from a prior compatible bootstrap. When
         /// provided, this tool call is recorded in that exact Session ledger; omission leaves the call
         /// unlinked to Workflow Session state.
         #[serde(default)]
@@ -2099,7 +2102,7 @@ pub enum ToolCall {
     GitDiffHunks {
         /// Runner-registered project id.
         project: String,
-        /// Optional explicit wc_sess_* Workflow Session id from a prior compatible bootstrap. When
+        /// Optional explicit cg_sess_* Workflow Session id from a prior compatible bootstrap. When
         /// provided, this tool call is recorded in that exact Session ledger; omission leaves the call
         /// unlinked to Workflow Session state.
         #[serde(default)]
@@ -2162,7 +2165,7 @@ pub enum ToolCall {
         #[schemars(length(min = 40, max = 40))]
         #[schemars(regex(pattern = "^[0-9A-Fa-f]{40}$"))]
         head_commit: String,
-        /// Optional explicit wc_sess_* Workflow Session id from a prior compatible bootstrap. When
+        /// Optional explicit cg_sess_* Workflow Session id from a prior compatible bootstrap. When
         /// provided, this tool call is recorded in that exact Session ledger; omission leaves the call
         /// unlinked to Workflow Session state.
         #[serde(default)]
@@ -2173,7 +2176,7 @@ pub enum ToolCall {
     CargoFmt {
         /// Runner-registered project id.
         project: String,
-        /// Optional explicit wc_sess_* Workflow Session id from a prior compatible bootstrap. When
+        /// Optional explicit cg_sess_* Workflow Session id from a prior compatible bootstrap. When
         /// provided, this tool call is recorded in that exact Session ledger; omission leaves the call
         /// unlinked to Workflow Session state.
         #[serde(default)]
@@ -2208,7 +2211,7 @@ pub enum ToolCall {
     CargoCheck {
         /// Runner-registered project id.
         project: String,
-        /// Optional explicit wc_sess_* Workflow Session id from a prior compatible bootstrap. When
+        /// Optional explicit cg_sess_* Workflow Session id from a prior compatible bootstrap. When
         /// provided, this tool call is recorded in that exact Session ledger; omission leaves the call
         /// unlinked to Workflow Session state.
         #[serde(default)]
@@ -2252,7 +2255,7 @@ pub enum ToolCall {
     CargoTest {
         /// Runner-registered project id.
         project: String,
-        /// Optional explicit wc_sess_* Workflow Session id from a prior compatible bootstrap. When
+        /// Optional explicit cg_sess_* Workflow Session id from a prior compatible bootstrap. When
         /// provided, this tool call is recorded in that exact Session ledger; omission leaves the call
         /// unlinked to Workflow Session state.
         #[serde(default)]
@@ -2321,7 +2324,7 @@ pub enum ToolCall {
     GoTest {
         /// Runner-registered project id.
         project: String,
-        /// Optional explicit wc_sess_* Workflow Session id from a prior compatible bootstrap. When
+        /// Optional explicit cg_sess_* Workflow Session id from a prior compatible bootstrap. When
         /// provided, this tool call is recorded in that exact Session ledger; omission leaves the call
         /// unlinked to Workflow Session state.
         #[serde(default)]
@@ -2359,7 +2362,7 @@ pub enum ToolCall {
         #[schemars(length(min = 1, max = 8))]
         #[serde(deserialize_with = "deserialize_read_files_items")]
         items: Vec<ReadFilesItem>,
-        /// Optional explicit wc_sess_* Workflow Session id from a prior compatible bootstrap. When
+        /// Optional explicit cg_sess_* Workflow Session id from a prior compatible bootstrap. When
         /// provided, this tool call is recorded in that exact Session ledger; omission leaves the call
         /// unlinked to Workflow Session state.
         #[serde(default)]
@@ -2404,7 +2407,7 @@ pub enum ToolCall {
         /// Configured project id.
         project: String,
         /// Opaque Runner Skill identity returned by skill_load or skill_list.
-        #[schemars(regex(pattern = "^wc_skill_[A-Za-z0-9_-]{21}[AQgw]$"))]
+        #[schemars(regex(pattern = "^cg_skill_[A-Za-z0-9_-]{21}[AQgw]$"))]
         skill_id: String,
         /// Skill-package-relative script path under scripts/. Absolute paths and traversal are rejected.
         #[schemars(length(min = 9, max = 512))]
@@ -2417,7 +2420,7 @@ pub enum ToolCall {
         expected_definition_revision: String,
         /// Required for operator-installed Skills and forbidden for configured live Skills. Pins the
         /// immutable installed package revision.
-        #[schemars(regex(pattern = "^wc_skillpkg_[A-Za-z0-9_-]{43}$"))]
+        #[schemars(regex(pattern = "^cg_skillpkg_[A-Za-z0-9_-]{43}$"))]
         #[serde(default)]
         expected_package_revision: Option<String>,
         /// Ordered literal script arguments. CodeGPT selects the interpreter from the trusted Skill
@@ -2428,7 +2431,7 @@ pub enum ToolCall {
         #[schemars(inner(length(max = 8192)))]
         #[serde(default)]
         args: Vec<String>,
-        /// Optional explicit wc_sess_* Workflow Session id from a prior compatible bootstrap. When
+        /// Optional explicit cg_sess_* Workflow Session id from a prior compatible bootstrap. When
         /// provided, this tool call is recorded in that exact Session ledger; omission leaves the call
         /// unlinked to Workflow Session state.
         #[serde(default)]
@@ -2478,7 +2481,7 @@ pub enum ToolCall {
         #[serde(default)]
         limit: Option<usize>,
         /// Optional catalog revision guard. If current discovery differs, fail instead of continuing an old offset.
-        #[schemars(regex(pattern = "^wc_skillcat_[A-Za-z0-9_-]{43}$"))]
+        #[schemars(regex(pattern = "^cg_skillcat_[A-Za-z0-9_-]{43}$"))]
         #[serde(default)]
         expected_catalog_revision: Option<String>,
         #[serde(default)]
@@ -2489,7 +2492,7 @@ pub enum ToolCall {
     SkillReadFile {
         #[schemars(length(min = 1))]
         project: String,
-        #[schemars(regex(pattern = "^wc_skill_[A-Za-z0-9_-]{21}[AQgw]$"))]
+        #[schemars(regex(pattern = "^cg_skill_[A-Za-z0-9_-]{21}[AQgw]$"))]
         skill_id: String,
         #[schemars(length(min = 1, max = 512))]
         #[serde(default)]
@@ -2503,7 +2506,7 @@ pub enum ToolCall {
         #[schemars(regex(pattern = "^[0-9a-f]{64}$"))]
         #[serde(default)]
         expected_definition_revision: Option<String>,
-        #[schemars(regex(pattern = "^wc_skillpkg_[A-Za-z0-9_-]{43}$"))]
+        #[schemars(regex(pattern = "^cg_skillpkg_[A-Za-z0-9_-]{43}$"))]
         #[serde(default)]
         expected_package_revision: Option<String>,
         #[serde(default)]
@@ -2541,7 +2544,7 @@ pub enum ToolCall {
         #[schemars(extend("default" = false))]
         #[serde(default)]
         activate: Option<bool>,
-        #[schemars(regex(pattern = "^wc_skillstate_[A-Za-z0-9_-]{43}$"))]
+        #[schemars(regex(pattern = "^cg_skillstate_[A-Za-z0-9_-]{43}$"))]
         #[serde(default)]
         expected_state_revision: Option<String>,
         #[serde(default)]
@@ -2554,9 +2557,9 @@ pub enum ToolCall {
         #[schemars(length(min = 1, max = 96))]
         #[schemars(regex(pattern = "^[A-Za-z0-9._-]+$"))]
         skill_key: String,
-        #[schemars(regex(pattern = "^wc_skillpkg_[A-Za-z0-9_-]{43}$"))]
+        #[schemars(regex(pattern = "^cg_skillpkg_[A-Za-z0-9_-]{43}$"))]
         package_revision: String,
-        #[schemars(regex(pattern = "^wc_skillstate_[A-Za-z0-9_-]{43}$"))]
+        #[schemars(regex(pattern = "^cg_skillstate_[A-Za-z0-9_-]{43}$"))]
         expected_state_revision: String,
         #[schemars(length(min = 1, max = 128))]
         idempotency_key: String,
@@ -2570,9 +2573,9 @@ pub enum ToolCall {
         #[schemars(length(min = 1, max = 96))]
         #[schemars(regex(pattern = "^[A-Za-z0-9._-]+$"))]
         skill_key: String,
-        #[schemars(regex(pattern = "^wc_skillpkg_[A-Za-z0-9_-]{43}$"))]
+        #[schemars(regex(pattern = "^cg_skillpkg_[A-Za-z0-9_-]{43}$"))]
         package_revision: String,
-        #[schemars(regex(pattern = "^wc_skillstate_[A-Za-z0-9_-]{43}$"))]
+        #[schemars(regex(pattern = "^cg_skillstate_[A-Za-z0-9_-]{43}$"))]
         expected_state_revision: String,
         #[schemars(length(min = 1, max = 128))]
         idempotency_key: String,
@@ -2599,7 +2602,7 @@ pub enum ToolCall {
     GetGoal {
         /// Canonical durable Goal id. It is exact identity only and is never a bearer credential or
         /// execution selector.
-        #[schemars(regex(pattern = "^wc_goal_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_goal_[A-Za-z0-9_-]{16}$"))]
         goal_id: String,
     },
 
@@ -2607,7 +2610,7 @@ pub enum ToolCall {
     PresentGoalPlan {
         /// Canonical durable Goal id. It is exact identity only and is never a bearer credential or
         /// execution selector.
-        #[schemars(regex(pattern = "^wc_goal_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_goal_[A-Za-z0-9_-]{16}$"))]
         goal_id: String,
     },
 
@@ -2636,7 +2639,7 @@ pub enum ToolCall {
     UpdateGoal {
         /// Canonical durable Goal id. It is exact identity only and is never a bearer credential or
         /// execution selector.
-        #[schemars(regex(pattern = "^wc_goal_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_goal_[A-Za-z0-9_-]{16}$"))]
         goal_id: String,
         /// Exact observed Goal revision. Stale mutation fails closed and returns the current revision only.
         #[schemars(range(min = 1))]
@@ -2666,11 +2669,11 @@ pub enum ToolCall {
     AssociateGoalAgentTask {
         /// Canonical durable Goal id. It is exact identity only and is never a bearer credential or
         /// execution selector.
-        #[schemars(regex(pattern = "^wc_goal_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_goal_[A-Za-z0-9_-]{16}$"))]
         goal_id: String,
         /// Exact durable AgentTask id. Association is correlation only and never grants TaskAttempt,
         /// Project, Runner, or execution authority.
-        #[schemars(regex(pattern = "^wc_agent_task_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_agent_task_[A-Za-z0-9_-]{16}$"))]
         task_id: String,
         /// Caller-generated Goal-to-AgentTask association key. Exact retry replays; changed reuse fails
         /// closed.
@@ -2682,11 +2685,11 @@ pub enum ToolCall {
     AssociateGoalWorkflowSession {
         /// Canonical durable Goal id. It is exact identity only and is never a bearer credential or
         /// execution selector.
-        #[schemars(regex(pattern = "^wc_goal_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_goal_[A-Za-z0-9_-]{16}$"))]
         goal_id: String,
         /// Exact Workflow Session id. The target Session is independently re-authorized before association;
         /// the correlation never grants Session or Project authority.
-        #[schemars(regex(pattern = "^wc_sess_([A-Za-z0-9_-]{16}|[0-9a-f]{32})$"))]
+        #[schemars(regex(pattern = "^cg_sess_([A-Za-z0-9_-]{16}|[0-9a-f]{32})$"))]
         session_id: String,
         /// Caller-generated Goal-to-Workflow-Session association key. Exact retry replays; changed reuse
         /// fails closed.
@@ -2698,11 +2701,11 @@ pub enum ToolCall {
     WaitForAgentEvents {
         /// Exact caller-owned durable Agent that will resume when this one-shot Wait triggers. Agent
         /// identity grants no source-domain authority.
-        #[schemars(regex(pattern = "^wc_dagent_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_dagent_[A-Za-z0-9_-]{16}$"))]
         agent_id: String,
         /// Exact current Agent Endpoint used only as the Host presentation/carrier selector at Wait
         /// creation time; it is not persisted as Wait execution ownership.
-        #[schemars(regex(pattern = "^wc_endpoint_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_endpoint_[A-Za-z0-9_-]{16}$"))]
         endpoint_id: String,
         /// Exact current Endpoint controller generation. Stale generations fail closed.
         #[schemars(range(min = 1))]
@@ -2720,14 +2723,14 @@ pub enum ToolCall {
     ReadAgentWait {
         /// Exact caller-owned durable AgentWait id. Identity alone grants no authority over its source
         /// Tasks.
-        #[schemars(regex(pattern = "^wc_agent_wait_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_agent_wait_[A-Za-z0-9_-]{16}$"))]
         wait_id: String,
     },
 
     /// Cancel one exact AgentWait before the durable Host-dispatch fence.
     CancelAgentWait {
         /// Exact caller-owned durable AgentWait to cancel before Host dispatch preparation.
-        #[schemars(regex(pattern = "^wc_agent_wait_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_agent_wait_[A-Za-z0-9_-]{16}$"))]
         wait_id: String,
         /// Caller-generated cancellation key. Exact retry replays; changed reuse conflicts.
         #[schemars(length(min = 1, max = 128))]
@@ -2748,17 +2751,17 @@ pub enum ToolCall {
         instruction: String,
         /// Optional explicit current assignee. Omit to create an unassigned Task; an unassigned Task cannot
         /// start an Attempt.
-        #[schemars(regex(pattern = "^wc_dagent_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_dagent_[A-Za-z0-9_-]{16}$"))]
         #[serde(default)]
         assignee_agent_id: Option<String>,
         /// Optional authorized Conversation correlation only. Conversation participation does not grant
         /// AgentTask execution authority.
-        #[schemars(regex(pattern = "^wc_conv_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_conv_[A-Za-z0-9_-]{16}$"))]
         #[serde(default)]
         source_conversation_id: Option<String>,
         /// Optional exact Message correlation inside source_conversation_id. The Message does not become or
         /// control the Task.
-        #[schemars(regex(pattern = "^wc_cmsg_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_cmsg_[A-Za-z0-9_-]{16}$"))]
         #[serde(default)]
         source_message_id: Option<String>,
         /// Optional intended Project correlation only. AgentTask authorization never grants Project,
@@ -2775,7 +2778,7 @@ pub enum ToolCall {
     /// List durable AgentTasks owned by the current communication principal.
     ListAgentTasks {
         /// Optional assignee filter within Tasks visible to the current owner principal.
-        #[schemars(regex(pattern = "^wc_dagent_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_dagent_[A-Za-z0-9_-]{16}$"))]
         #[serde(default)]
         assignee_agent_id: Option<String>,
         #[schemars(extend("default" = 0))]
@@ -2792,29 +2795,29 @@ pub enum ToolCall {
     /// Read one exact owned durable AgentTask and latest Attempt metadata.
     ReadAgentTask {
         /// Canonical durable AgentTask id. It is not a credential or Connector Task id.
-        #[schemars(regex(pattern = "^wc_agent_task_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_agent_task_[A-Za-z0-9_-]{16}$"))]
         task_id: String,
     },
 
     /// Explicitly assign or reassign an AgentTask to an owned durable Agent.
     AssignAgentTask {
         /// Canonical durable AgentTask id. It is not a credential or Connector Task id.
-        #[schemars(regex(pattern = "^wc_agent_task_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_agent_task_[A-Za-z0-9_-]{16}$"))]
         task_id: String,
         /// Explicit current durable Agent assignee. Agent identity does not grant Project or executor
         /// authority.
-        #[schemars(regex(pattern = "^wc_dagent_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_dagent_[A-Za-z0-9_-]{16}$"))]
         assignee_agent_id: String,
     },
 
     /// Atomically create one fenced leased Attempt for the current assignee.
     StartAgentTaskAttempt {
         /// Canonical durable AgentTask id. It is not a credential or Connector Task id.
-        #[schemars(regex(pattern = "^wc_agent_task_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_agent_task_[A-Za-z0-9_-]{16}$"))]
         task_id: String,
         /// Explicit current durable Agent assignee. Agent identity does not grant Project or executor
         /// authority.
-        #[schemars(regex(pattern = "^wc_dagent_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_dagent_[A-Za-z0-9_-]{16}$"))]
         assignee_agent_id: String,
         /// Caller-generated Attempt-start key. Exact retry returns the same attempt_id and attempt_fence,
         /// even if that Attempt later becomes stale.
@@ -2825,18 +2828,18 @@ pub enum ToolCall {
     /// Select the concrete Agent Endpoint continuation backend for one exact live Attempt.
     StartAgentTaskEndpointContinuation {
         /// Canonical durable AgentTask id. It is not a credential or Connector Task id.
-        #[schemars(regex(pattern = "^wc_agent_task_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_agent_task_[A-Za-z0-9_-]{16}$"))]
         task_id: String,
         /// Exact durable AgentTaskAttempt id.
-        #[schemars(regex(pattern = "^wc_agent_task_attempt_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_agent_task_attempt_[A-Za-z0-9_-]{16}$"))]
         attempt_id: String,
         /// Explicit current durable Agent assignee. Agent identity does not grant Project or executor
         /// authority.
-        #[schemars(regex(pattern = "^wc_dagent_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_dagent_[A-Za-z0-9_-]{16}$"))]
         assignee_agent_id: String,
         /// Opaque exact-Attempt freshness fence returned by start_agent_task_attempt. It is not a bearer
         /// credential or idempotency key.
-        #[schemars(regex(pattern = "^wc_agent_task_fence_[A-Za-z0-9_-]{21}[AQgw]$"))]
+        #[schemars(regex(pattern = "^cg_agent_task_fence_[A-Za-z0-9_-]{21}[AQgw]$"))]
         attempt_fence: String,
         /// Exact current Attempt-local controller generation. Carrier replacement increments it without
         /// creating a new Attempt.
@@ -2852,18 +2855,18 @@ pub enum ToolCall {
         #[schemars(length(min = 1))]
         project: String,
         /// Canonical durable AgentTask id. It is not a credential or Connector Task id.
-        #[schemars(regex(pattern = "^wc_agent_task_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_agent_task_[A-Za-z0-9_-]{16}$"))]
         task_id: String,
         /// Exact durable AgentTaskAttempt id.
-        #[schemars(regex(pattern = "^wc_agent_task_attempt_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_agent_task_attempt_[A-Za-z0-9_-]{16}$"))]
         attempt_id: String,
         /// Explicit current durable Agent assignee. Agent identity does not grant Project or executor
         /// authority.
-        #[schemars(regex(pattern = "^wc_dagent_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_dagent_[A-Za-z0-9_-]{16}$"))]
         assignee_agent_id: String,
         /// Opaque exact-Attempt freshness fence returned by start_agent_task_attempt. It is not a bearer
         /// credential or idempotency key.
-        #[schemars(regex(pattern = "^wc_agent_task_fence_[A-Za-z0-9_-]{21}[AQgw]$"))]
+        #[schemars(regex(pattern = "^cg_agent_task_fence_[A-Za-z0-9_-]{21}[AQgw]$"))]
         attempt_fence: String,
         /// Exact current Attempt-local controller generation. Carrier replacement increments it without
         /// creating a new Attempt.
@@ -2887,29 +2890,29 @@ pub enum ToolCall {
     /// Reconcile the exact durable CodingAgentRun already bound to one AgentTaskAttempt.
     ReconcileAgentTaskCodingRun {
         /// Canonical durable AgentTask id. It is not a credential or Connector Task id.
-        #[schemars(regex(pattern = "^wc_agent_task_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_agent_task_[A-Za-z0-9_-]{16}$"))]
         task_id: String,
         /// Exact durable AgentTaskAttempt whose already-bound CodingAgentRun must be reconciled. No old
         /// attempt fence is required because this operation can only consume authoritative backend truth.
-        #[schemars(regex(pattern = "^wc_agent_task_attempt_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_agent_task_attempt_[A-Za-z0-9_-]{16}$"))]
         attempt_id: String,
     },
 
     /// Renew only the exact latest unexpired fenced AgentTaskAttempt.
     HeartbeatAgentTaskAttempt {
         /// Canonical durable AgentTask id. It is not a credential or Connector Task id.
-        #[schemars(regex(pattern = "^wc_agent_task_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_agent_task_[A-Za-z0-9_-]{16}$"))]
         task_id: String,
         /// Exact durable AgentTaskAttempt id.
-        #[schemars(regex(pattern = "^wc_agent_task_attempt_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_agent_task_attempt_[A-Za-z0-9_-]{16}$"))]
         attempt_id: String,
         /// Explicit current durable Agent assignee. Agent identity does not grant Project or executor
         /// authority.
-        #[schemars(regex(pattern = "^wc_dagent_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_dagent_[A-Za-z0-9_-]{16}$"))]
         assignee_agent_id: String,
         /// Opaque exact-Attempt freshness fence returned by start_agent_task_attempt. It is not a bearer
         /// credential or idempotency key.
-        #[schemars(regex(pattern = "^wc_agent_task_fence_[A-Za-z0-9_-]{21}[AQgw]$"))]
+        #[schemars(regex(pattern = "^cg_agent_task_fence_[A-Za-z0-9_-]{21}[AQgw]$"))]
         attempt_fence: String,
         /// Exact current Attempt-local controller generation. Carrier replacement increments it without
         /// creating a new Attempt.
@@ -2918,13 +2921,13 @@ pub enum ToolCall {
         /// Optional exact consumed A4b agent_task_attempt Wake proving this model-turn lineage. It grants
         /// no Task, Project, Runner, Goal, Session, or Endpoint authority and must be paired with
         /// active_turn_consume_token.
-        #[schemars(regex(pattern = "^wc_wake_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_wake_[A-Za-z0-9_-]{16}$"))]
         #[serde(default)]
         active_turn_wake_id: Option<String>,
         /// Optional opaque consume token for active_turn_wake_id. The Server verifies its durable hash
         /// together with normal Task authority and exact Attempt fences; it is never a standalone
         /// credential.
-        #[schemars(regex(pattern = "^wc_wake_consume_[A-Za-z0-9_-]{21}[AQgw]$"))]
+        #[schemars(regex(pattern = "^cg_wake_consume_[A-Za-z0-9_-]{21}[AQgw]$"))]
         #[serde(default)]
         active_turn_consume_token: Option<String>,
     },
@@ -2932,18 +2935,18 @@ pub enum ToolCall {
     /// Commit exact fenced terminal AgentTaskAttempt truth with independent keyed replay.
     CompleteAgentTaskAttempt {
         /// Canonical durable AgentTask id. It is not a credential or Connector Task id.
-        #[schemars(regex(pattern = "^wc_agent_task_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_agent_task_[A-Za-z0-9_-]{16}$"))]
         task_id: String,
         /// Exact durable AgentTaskAttempt id.
-        #[schemars(regex(pattern = "^wc_agent_task_attempt_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_agent_task_attempt_[A-Za-z0-9_-]{16}$"))]
         attempt_id: String,
         /// Explicit current durable Agent assignee. Agent identity does not grant Project or executor
         /// authority.
-        #[schemars(regex(pattern = "^wc_dagent_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_dagent_[A-Za-z0-9_-]{16}$"))]
         assignee_agent_id: String,
         /// Opaque exact-Attempt freshness fence returned by start_agent_task_attempt. It is not a bearer
         /// credential or idempotency key.
-        #[schemars(regex(pattern = "^wc_agent_task_fence_[A-Za-z0-9_-]{21}[AQgw]$"))]
+        #[schemars(regex(pattern = "^cg_agent_task_fence_[A-Za-z0-9_-]{21}[AQgw]$"))]
         attempt_fence: String,
         /// Exact current Attempt-local controller generation. Carrier replacement increments it without
         /// creating a new Attempt.
@@ -2996,7 +2999,7 @@ pub enum ToolCall {
     /// List Agent identities owned by the current communication principal.
     ListAgentIdentities {
         /// Optional exact canonical Agent id owned by the current communication principal.
-        #[schemars(regex(pattern = "^wc_dagent_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_dagent_[A-Za-z0-9_-]{16}$"))]
         #[serde(default)]
         agent_id: Option<String>,
         #[schemars(extend("default" = 0))]
@@ -3014,7 +3017,7 @@ pub enum ToolCall {
     /// CAS-update mutable Agent Card metadata without changing canonical identity.
     UpdateAgentIdentity {
         /// Canonical durable Agent id to update.
-        #[schemars(regex(pattern = "^wc_dagent_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_dagent_[A-Za-z0-9_-]{16}$"))]
         agent_id: String,
         /// Exact profile revision fence. A stale value is rejected without mutation.
         #[schemars(range(min = 1))]
@@ -3041,7 +3044,7 @@ pub enum ToolCall {
     /// Rotate the server-local continuation Endpoint/controller generation for a durable Agent.
     RotateAgentContinuationEndpoint {
         /// Canonical durable Agent id owned by the current communication principal.
-        #[schemars(regex(pattern = "^wc_dagent_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_dagent_[A-Za-z0-9_-]{16}$"))]
         agent_id: String,
         /// Server-local continuation adapter label, for example ChatGPT. This is recorded metadata only: it
         /// does not initiate, configure, or authorize an external connection.
@@ -3062,7 +3065,7 @@ pub enum ToolCall {
     /// Attach a current Host/Client Endpoint to a durable Agent.
     AttachAgentEndpoint {
         /// Canonical durable Agent id owned by the current communication principal.
-        #[schemars(regex(pattern = "^wc_dagent_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_dagent_[A-Za-z0-9_-]{16}$"))]
         agent_id: String,
         /// Server-local continuation adapter label, for example ChatGPT. This is recorded metadata only: it
         /// does not initiate, configure, or authorize an external connection.
@@ -3082,10 +3085,10 @@ pub enum ToolCall {
     /// Present one exact Agent/Endpoint continuation controller card. Never infers a target.
     PresentAgentContinuation {
         /// Exact durable Agent id; no current/recent Agent fallback is permitted.
-        #[schemars(regex(pattern = "^wc_dagent_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_dagent_[A-Za-z0-9_-]{16}$"))]
         agent_id: String,
         /// Exact current Agent Endpoint id.
-        #[schemars(regex(pattern = "^wc_endpoint_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_endpoint_[A-Za-z0-9_-]{16}$"))]
         endpoint_id: String,
         /// Exact Server-assigned current Endpoint generation. Stale generations fail closed.
         #[schemars(range(min = 1))]
@@ -3094,101 +3097,101 @@ pub enum ToolCall {
 
     /// App-only bind of one live Host View to an exact freshly attached Endpoint generation.
     AgentContinuationBind {
-        #[schemars(regex(pattern = "^wc_dagent_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_dagent_[A-Za-z0-9_-]{16}$"))]
         agent_id: String,
-        #[schemars(regex(pattern = "^wc_endpoint_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_endpoint_[A-Za-z0-9_-]{16}$"))]
         endpoint_id: String,
         #[schemars(range(min = 1))]
         expected_controller_generation: i64,
-        #[schemars(regex(pattern = "^wc_host_binding_[A-Za-z0-9_-]{21}[AQgw]$"))]
+        #[schemars(regex(pattern = "^cg_host_binding_[A-Za-z0-9_-]{21}[AQgw]$"))]
         binding_id: String,
     },
 
     /// App-only same-Window recovery for one exact naturally expired Endpoint.
     AgentContinuationRecoverEndpoint {
-        #[schemars(regex(pattern = "^wc_dagent_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_dagent_[A-Za-z0-9_-]{16}$"))]
         agent_id: String,
-        #[schemars(regex(pattern = "^wc_endpoint_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_endpoint_[A-Za-z0-9_-]{16}$"))]
         endpoint_id: String,
         #[schemars(range(min = 1))]
         expected_controller_generation: i64,
-        #[schemars(regex(pattern = "^wc_host_binding_[A-Za-z0-9_-]{21}[AQgw]$"))]
+        #[schemars(regex(pattern = "^cg_host_binding_[A-Za-z0-9_-]{21}[AQgw]$"))]
         binding_id: String,
     },
 
     /// App-only exact Host heartbeat plus bounded authoritative state refresh.
     AgentContinuationState {
-        #[schemars(regex(pattern = "^wc_dagent_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_dagent_[A-Za-z0-9_-]{16}$"))]
         agent_id: String,
-        #[schemars(regex(pattern = "^wc_endpoint_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_endpoint_[A-Za-z0-9_-]{16}$"))]
         endpoint_id: String,
         #[schemars(range(min = 1))]
         expected_controller_generation: i64,
-        #[schemars(regex(pattern = "^wc_host_binding_[A-Za-z0-9_-]{21}[AQgw]$"))]
+        #[schemars(regex(pattern = "^cg_host_binding_[A-Za-z0-9_-]{21}[AQgw]$"))]
         binding_id: String,
     },
 
     /// App-only pre-fence acquire through the durable Wake claim state machine.
     AgentContinuationWakeAcquire {
-        #[schemars(regex(pattern = "^wc_dagent_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_dagent_[A-Za-z0-9_-]{16}$"))]
         agent_id: String,
-        #[schemars(regex(pattern = "^wc_endpoint_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_endpoint_[A-Za-z0-9_-]{16}$"))]
         endpoint_id: String,
         #[schemars(range(min = 1))]
         expected_controller_generation: i64,
-        #[schemars(regex(pattern = "^wc_host_binding_[A-Za-z0-9_-]{21}[AQgw]$"))]
+        #[schemars(regex(pattern = "^cg_host_binding_[A-Za-z0-9_-]{21}[AQgw]$"))]
         binding_id: String,
     },
 
     /// App-only crossing of the existing durable dispatch fence immediately before ui/message.
     AgentContinuationWakePrepare {
-        #[schemars(regex(pattern = "^wc_dagent_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_dagent_[A-Za-z0-9_-]{16}$"))]
         agent_id: String,
-        #[schemars(regex(pattern = "^wc_endpoint_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_endpoint_[A-Za-z0-9_-]{16}$"))]
         endpoint_id: String,
         #[schemars(range(min = 1))]
         expected_controller_generation: i64,
-        #[schemars(regex(pattern = "^wc_host_binding_[A-Za-z0-9_-]{21}[AQgw]$"))]
+        #[schemars(regex(pattern = "^cg_host_binding_[A-Za-z0-9_-]{21}[AQgw]$"))]
         binding_id: String,
-        #[schemars(regex(pattern = "^wc_wake_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_wake_[A-Za-z0-9_-]{16}$"))]
         wake_id: String,
-        #[schemars(regex(pattern = "^wc_wake_attempt_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_wake_attempt_[A-Za-z0-9_-]{16}$"))]
         attempt_id: String,
     },
 
     /// App-only record of Host dispatch acceptance or conservative post-fence uncertainty.
     AgentContinuationWakeFinish {
-        #[schemars(regex(pattern = "^wc_dagent_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_dagent_[A-Za-z0-9_-]{16}$"))]
         agent_id: String,
-        #[schemars(regex(pattern = "^wc_endpoint_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_endpoint_[A-Za-z0-9_-]{16}$"))]
         endpoint_id: String,
         #[schemars(range(min = 1))]
         expected_controller_generation: i64,
-        #[schemars(regex(pattern = "^wc_host_binding_[A-Za-z0-9_-]{21}[AQgw]$"))]
+        #[schemars(regex(pattern = "^cg_host_binding_[A-Za-z0-9_-]{21}[AQgw]$"))]
         binding_id: String,
-        #[schemars(regex(pattern = "^wc_wake_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_wake_[A-Za-z0-9_-]{16}$"))]
         wake_id: String,
-        #[schemars(regex(pattern = "^wc_wake_attempt_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_wake_attempt_[A-Za-z0-9_-]{16}$"))]
         attempt_id: String,
         outcome: String,
     },
 
     /// App-only best-effort withdrawal of one exact process-local Host View binding.
     AgentContinuationUnbind {
-        #[schemars(regex(pattern = "^wc_dagent_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_dagent_[A-Za-z0-9_-]{16}$"))]
         agent_id: String,
-        #[schemars(regex(pattern = "^wc_endpoint_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_endpoint_[A-Za-z0-9_-]{16}$"))]
         endpoint_id: String,
         #[schemars(range(min = 1))]
         expected_controller_generation: i64,
-        #[schemars(regex(pattern = "^wc_host_binding_[A-Za-z0-9_-]{21}[AQgw]$"))]
+        #[schemars(regex(pattern = "^cg_host_binding_[A-Za-z0-9_-]{21}[AQgw]$"))]
         binding_id: String,
     },
 
     /// Detach an Endpoint while preserving the durable Agent.
     DetachAgentEndpoint {
         /// Canonical Agent Endpoint id attached by the current communication principal.
-        #[schemars(regex(pattern = "^wc_endpoint_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_endpoint_[A-Za-z0-9_-]{16}$"))]
         endpoint_id: String,
     },
 
@@ -3200,7 +3203,7 @@ pub enum ToolCall {
         title: Option<String>,
         /// Owned Agent participants to add with the current Human principal.
         #[schemars(length(min = 1, max = 16))]
-        #[schemars(inner(regex(pattern = "^wc_dagent_[A-Za-z0-9_-]{16}$")))]
+        #[schemars(inner(regex(pattern = "^cg_dagent_[A-Za-z0-9_-]{16}$")))]
         agent_ids: Vec<String>,
         /// Caller-generated operation key. Exact replay under the same communication principal returns the
         /// original durable resource; reuse with changed input is rejected.
@@ -3212,11 +3215,11 @@ pub enum ToolCall {
     ListConversations {
         /// Optional Agent view. Must be paired with exact Endpoint fencing; omit all three fields for the
         /// current Human principal.
-        #[schemars(regex(pattern = "^wc_dagent_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_dagent_[A-Za-z0-9_-]{16}$"))]
         #[serde(default)]
         agent_id: Option<String>,
         /// Active Endpoint proving the optional Agent view.
-        #[schemars(regex(pattern = "^wc_endpoint_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_endpoint_[A-Za-z0-9_-]{16}$"))]
         #[serde(default)]
         endpoint_id: Option<String>,
         /// Exact Server-assigned current Endpoint generation. Stale generations fail closed.
@@ -3238,15 +3241,15 @@ pub enum ToolCall {
     /// Read an ordered append-only Conversation transcript page.
     ReadConversation {
         /// Canonical Conversation id.
-        #[schemars(regex(pattern = "^wc_conv_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_conv_[A-Za-z0-9_-]{16}$"))]
         conversation_id: String,
         /// Optional Agent view. Must be paired with exact Endpoint fencing; omit all three fields for the
         /// current Human principal.
-        #[schemars(regex(pattern = "^wc_dagent_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_dagent_[A-Za-z0-9_-]{16}$"))]
         #[serde(default)]
         agent_id: Option<String>,
         /// Active Endpoint proving the optional Agent view.
-        #[schemars(regex(pattern = "^wc_endpoint_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_endpoint_[A-Za-z0-9_-]{16}$"))]
         #[serde(default)]
         endpoint_id: Option<String>,
         /// Exact Server-assigned current Endpoint generation. Stale generations fail closed.
@@ -3268,18 +3271,18 @@ pub enum ToolCall {
     /// Atomically append a Message and recipient-specific Agent deliveries.
     PostConversationMessage {
         /// Canonical Conversation id.
-        #[schemars(regex(pattern = "^wc_conv_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_conv_[A-Za-z0-9_-]{16}$"))]
         conversation_id: String,
         /// Append-only message body, bounded by 4096 UTF-8 bytes server-side.
         #[schemars(length(min = 1, max = 4096))]
         body: String,
         /// Agent author provenance. Omit for the current Human principal; Agent authors require
         /// endpoint_id.
-        #[schemars(regex(pattern = "^wc_dagent_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_dagent_[A-Za-z0-9_-]{16}$"))]
         #[serde(default)]
         author_agent_id: Option<String>,
         /// Active Endpoint proving an Agent-authored message. Omit for Human authors.
-        #[schemars(regex(pattern = "^wc_endpoint_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_endpoint_[A-Za-z0-9_-]{16}$"))]
         #[serde(default)]
         endpoint_id: Option<String>,
         /// Exact Server-assigned current Endpoint generation. Stale generations fail closed.
@@ -3289,11 +3292,11 @@ pub enum ToolCall {
         /// Optional explicit Agent Inbox recipients. Omit to deliver to every Agent participant except the
         /// author; an explicit empty array posts to the transcript/room without Agent deliveries.
         #[schemars(length(min = 0, max = 16))]
-        #[schemars(inner(regex(pattern = "^wc_dagent_[A-Za-z0-9_-]{16}$")))]
+        #[schemars(inner(regex(pattern = "^cg_dagent_[A-Za-z0-9_-]{16}$")))]
         #[serde(default)]
         recipient_agent_ids: Option<Vec<String>>,
         /// Optional parent Message in the same Conversation.
-        #[schemars(regex(pattern = "^wc_cmsg_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_cmsg_[A-Za-z0-9_-]{16}$"))]
         #[serde(default)]
         reply_to: Option<String>,
         /// Caller-generated operation key. Exact replay under the same communication principal returns the
@@ -3304,7 +3307,7 @@ pub enum ToolCall {
         /// Exact durable Wake that already crossed a Host dispatch or explicit-activation fence and
         /// provides stable resumed-turn reply replay identity. Use with reply_operation_index instead of
         /// idempotency_key.
-        #[schemars(regex(pattern = "^wc_wake_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_wake_[A-Za-z0-9_-]{16}$"))]
         #[serde(default)]
         wake_reply_id: Option<String>,
         /// Stable per-send index within one Wake. Reuse the same index only for an exact uncertain retry;
@@ -3317,10 +3320,10 @@ pub enum ToolCall {
     /// List queued deliveries for an Agent proven by an active Endpoint.
     ListAgentInbox {
         /// Canonical recipient Agent id.
-        #[schemars(regex(pattern = "^wc_dagent_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_dagent_[A-Za-z0-9_-]{16}$"))]
         agent_id: String,
         /// Active Endpoint proving access to this Agent Inbox.
-        #[schemars(regex(pattern = "^wc_endpoint_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_endpoint_[A-Za-z0-9_-]{16}$"))]
         endpoint_id: String,
         /// Exact Server-assigned current Endpoint generation. Stale generations fail closed.
         #[schemars(range(min = 1))]
@@ -3340,17 +3343,17 @@ pub enum ToolCall {
     /// Mark exact recipient-specific Agent deliveries consumed.
     ConsumeAgentDeliveries {
         /// Canonical recipient Agent id.
-        #[schemars(regex(pattern = "^wc_dagent_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_dagent_[A-Za-z0-9_-]{16}$"))]
         agent_id: String,
         /// Active Endpoint proving access to this Agent Inbox.
-        #[schemars(regex(pattern = "^wc_endpoint_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_endpoint_[A-Za-z0-9_-]{16}$"))]
         endpoint_id: String,
         /// Exact Server-assigned current Endpoint generation. Stale generations fail closed.
         #[schemars(range(min = 1))]
         expected_controller_generation: i64,
         /// Deliveries to mark consumed. Repeating already-consumed ids is a safe desired-state retry.
         #[schemars(length(min = 1, max = 100))]
-        #[schemars(inner(regex(pattern = "^wc_delivery_[A-Za-z0-9_-]{16}$")))]
+        #[schemars(inner(regex(pattern = "^cg_delivery_[A-Za-z0-9_-]{16}$")))]
         delivery_ids: Vec<String>,
     },
 
@@ -3358,21 +3361,21 @@ pub enum ToolCall {
     /// Conversation, Inbox, Wake, Host-binding, and reply-replay context.
     BootstrapAgentConversation {
         /// Exact durable Agent this active turn acts for.
-        #[schemars(regex(pattern = "^wc_dagent_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_dagent_[A-Za-z0-9_-]{16}$"))]
         agent_id: String,
         /// Exact current Host Endpoint carrying this activation.
-        #[schemars(regex(pattern = "^wc_endpoint_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_endpoint_[A-Za-z0-9_-]{16}$"))]
         endpoint_id: String,
         /// Exact Server-assigned current Endpoint generation. Stale generations fail closed.
         #[schemars(range(min = 1))]
         expected_controller_generation: i64,
         /// Optional explicit current Conversation. When omitted, an exact Wake may select its latest
         /// Conversation; no hidden Host selection is inferred.
-        #[schemars(regex(pattern = "^wc_conv_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_conv_[A-Za-z0-9_-]{16}$"))]
         #[serde(default)]
         conversation_id: Option<String>,
         /// Optional exact Wake identity from a continuation envelope or explicit pending-work activation.
-        #[schemars(regex(pattern = "^wc_wake_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_wake_[A-Za-z0-9_-]{16}$"))]
         #[serde(default)]
         wake_id: Option<String>,
         /// Caller-generated key used only to accept/replay an eligible pending Inbox-style Wake through
@@ -3387,22 +3390,22 @@ pub enum ToolCall {
     /// Consume one exact durable Agent Wake continuation without consuming Inbox deliveries.
     ConsumeAgentWake {
         /// Exact target Agent named by the durable Wake Intent.
-        #[schemars(regex(pattern = "^wc_dagent_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_dagent_[A-Za-z0-9_-]{16}$"))]
         agent_id: String,
         /// Exact current Endpoint bound to this continuation. Host-adapter continuations require it to
         /// remain wake-capable; explicit_activation continuations do not.
-        #[schemars(regex(pattern = "^wc_endpoint_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_endpoint_[A-Za-z0-9_-]{16}$"))]
         endpoint_id: String,
         /// Server-assigned Endpoint generation carried by this exact continuation. Stale generations fail
         /// closed.
         #[schemars(range(min = 1))]
         expected_controller_generation: i64,
         /// Exact durable Wake Intent to consume. This is not a caller-generated retry key.
-        #[schemars(regex(pattern = "^wc_wake_[A-Za-z0-9_-]{16}$"))]
+        #[schemars(regex(pattern = "^cg_wake_[A-Za-z0-9_-]{16}$"))]
         wake_id: String,
         /// Opaque exact-continuation token delivered by the Host adapter. It is bound to wake_id, target
         /// Agent, Endpoint, and generation; never substitute a new token or retry key.
-        #[schemars(regex(pattern = "^wc_wake_consume_[A-Za-z0-9_-]{21}[AQgw]$"))]
+        #[schemars(regex(pattern = "^cg_wake_consume_[A-Za-z0-9_-]{21}[AQgw]$"))]
         consume_token: String,
     },
 
@@ -3486,7 +3489,7 @@ pub enum ToolCall {
         /// program text and stdin/files/artifacts for large data.
         #[schemars(length(max = 16000))]
         command: String,
-        /// Optional explicit wc_sess_* Workflow Session id from a prior compatible bootstrap. When
+        /// Optional explicit cg_sess_* Workflow Session id from a prior compatible bootstrap. When
         /// provided, this tool call is recorded in that exact Session ledger; omission leaves the call
         /// unlinked to Workflow Session state.
         #[serde(default)]
@@ -3518,7 +3521,7 @@ pub enum ToolCall {
         project: String,
         /// Existing runtime Job id to stop.
         job_id: String,
-        /// Optional explicit wc_sess_* Workflow Session id from a prior compatible bootstrap. When
+        /// Optional explicit cg_sess_* Workflow Session id from a prior compatible bootstrap. When
         /// provided, this tool call is recorded in that exact Session ledger; omission leaves the call
         /// unlinked to Workflow Session state.
         #[serde(default)]
@@ -3587,7 +3590,7 @@ pub enum ToolCall {
     ListProjectFiles {
         /// Runner-registered project id.
         project: String,
-        /// Optional explicit wc_sess_* Workflow Session id from a prior compatible bootstrap. When
+        /// Optional explicit cg_sess_* Workflow Session id from a prior compatible bootstrap. When
         /// provided, this tool call is recorded in that exact Session ledger; omission leaves the call
         /// unlinked to Workflow Session state.
         #[serde(default)]
@@ -3614,7 +3617,7 @@ pub enum ToolCall {
     ListProjectTrackedFiles {
         /// Runner-registered project id.
         project: String,
-        /// Optional explicit wc_sess_* Workflow Session id from a prior compatible bootstrap. When
+        /// Optional explicit cg_sess_* Workflow Session id from a prior compatible bootstrap. When
         /// provided, this tool call is recorded in that exact Session ledger; omission leaves the call
         /// unlinked to Workflow Session state.
         #[serde(default)]
@@ -3648,7 +3651,7 @@ pub enum ToolCall {
     ProjectOverview {
         /// Full Runner runtime project id (legacy agent:<client_id>:<project_id> identity).
         project: String,
-        /// Optional explicit wc_sess_* Workflow Session id from a prior compatible bootstrap. When
+        /// Optional explicit cg_sess_* Workflow Session id from a prior compatible bootstrap. When
         /// provided, this tool call is recorded in that exact Session ledger; omission leaves the call
         /// unlinked to Workflow Session state.
         #[serde(default)]
@@ -3675,7 +3678,7 @@ pub enum ToolCall {
         #[schemars(length(min = 1, max = 8))]
         #[serde(deserialize_with = "deserialize_search_project_texts_queries")]
         queries: Vec<SearchProjectTextsQuery>,
-        /// Optional explicit wc_sess_* Workflow Session id from a prior compatible bootstrap. When
+        /// Optional explicit cg_sess_* Workflow Session id from a prior compatible bootstrap. When
         /// provided, this tool call is recorded in that exact Session ledger; omission leaves the call
         /// unlinked to Workflow Session state.
         #[serde(default)]
@@ -3700,7 +3703,7 @@ pub enum ToolCall {
     ShowChanges {
         /// Runner-registered project id.
         project: String,
-        /// Optional explicit wc_sess_* Workflow Session id from a prior compatible bootstrap. When
+        /// Optional explicit cg_sess_* Workflow Session id from a prior compatible bootstrap. When
         /// provided, this tool call is recorded in that exact Session ledger; omission leaves the call
         /// unlinked to Workflow Session state.
         #[serde(default)]
@@ -3770,7 +3773,7 @@ pub enum ToolCall {
         path: String,
         /// UTF-8 file content (no NUL).
         content: String,
-        /// Optional explicit wc_sess_* Workflow Session id from a prior compatible bootstrap. When
+        /// Optional explicit cg_sess_* Workflow Session id from a prior compatible bootstrap. When
         /// provided, this tool call is recorded in that exact Session ledger; omission leaves the call
         /// unlinked to Workflow Session state.
         #[serde(default)]
@@ -3796,7 +3799,7 @@ pub enum ToolCall {
         path: String,
         /// Base64-encoded binary content.
         content_base64: String,
-        /// Optional explicit wc_sess_* Workflow Session id from a prior compatible bootstrap. When
+        /// Optional explicit cg_sess_* Workflow Session id from a prior compatible bootstrap. When
         /// provided, this tool call is recorded in that exact Session ledger; omission leaves the call
         /// unlinked to Workflow Session state.
         #[serde(default)]
@@ -3826,7 +3829,7 @@ pub enum ToolCall {
         /// Allow overwriting existing files (default false).
         #[serde(default)]
         overwrite: Option<bool>,
-        /// Optional explicit wc_sess_* Workflow Session id from a prior compatible bootstrap. When
+        /// Optional explicit cg_sess_* Workflow Session id from a prior compatible bootstrap. When
         /// provided, this tool call is recorded in that exact Session ledger; omission leaves the call
         /// unlinked to Workflow Session state.
         #[serde(default)]
@@ -3848,7 +3851,7 @@ pub enum ToolCall {
         path: String,
         /// metadata, inspect, image, or export.
         action: ProjectArtifactAction,
-        /// Optional compatible wc_sess_* Workflow Session id.
+        /// Optional compatible cg_sess_* Workflow Session id.
         #[serde(default)]
         session_id: Option<String>,
         /// metadata only; missing => exists=false.
@@ -3875,7 +3878,7 @@ pub enum ToolCall {
         project: String,
         /// Project-relative artifact path.
         path: String,
-        /// Optional explicit wc_sess_* Workflow Session id from a prior compatible bootstrap. When
+        /// Optional explicit cg_sess_* Workflow Session id from a prior compatible bootstrap. When
         /// provided, this tool call is recorded in that exact Session ledger; omission leaves the call
         /// unlinked to Workflow Session state.
         #[serde(default)]
@@ -3889,7 +3892,7 @@ pub enum ToolCall {
         project: String,
         /// Project-relative artifact path.
         path: String,
-        /// Optional explicit wc_sess_* Workflow Session id from a prior compatible bootstrap. When
+        /// Optional explicit cg_sess_* Workflow Session id from a prior compatible bootstrap. When
         /// provided, this tool call is recorded in that exact Session ledger; omission leaves the call
         /// unlinked to Workflow Session state.
         #[serde(default)]
@@ -3909,7 +3912,7 @@ pub enum ToolCall {
         project: String,
         /// Project-relative artifact path.
         path: String,
-        /// Optional explicit wc_sess_* Workflow Session id from a prior compatible bootstrap. When
+        /// Optional explicit cg_sess_* Workflow Session id from a prior compatible bootstrap. When
         /// provided, this tool call is recorded in that exact Session ledger; omission leaves the call
         /// unlinked to Workflow Session state.
         #[serde(default)]
@@ -3942,7 +3945,7 @@ pub enum ToolCall {
         project: String,
         /// Project-relative output path.
         path: String,
-        /// Optional explicit wc_sess_* Workflow Session id from a prior compatible bootstrap. When
+        /// Optional explicit cg_sess_* Workflow Session id from a prior compatible bootstrap. When
         /// provided, this tool call is recorded in that exact Session ledger; omission leaves the call
         /// unlinked to Workflow Session state.
         #[serde(default)]
@@ -3968,13 +3971,13 @@ pub enum ToolCall {
         /// Required project-relative path; must exactly match the path used in artifact_upload_begin to
         /// bind upload_id to the target.
         path: String,
-        /// Opaque wc_upload_* id from artifact_upload_begin.
+        /// Opaque cg_upload_* id from artifact_upload_begin.
         upload_id: String,
         /// Expected current upload byte offset.
         offset: usize,
         /// Base64-encoded chunk; decoded chunk max is 1048576 bytes (1 MiB).
         content_base64: String,
-        /// Optional explicit wc_sess_* Workflow Session id from a prior compatible bootstrap. When
+        /// Optional explicit cg_sess_* Workflow Session id from a prior compatible bootstrap. When
         /// provided, this tool call is recorded in that exact Session ledger; omission leaves the call
         /// unlinked to Workflow Session state.
         #[serde(default)]
@@ -3988,9 +3991,9 @@ pub enum ToolCall {
         /// Required project-relative path; must exactly match the path used in artifact_upload_begin to
         /// bind upload_id to the target.
         path: String,
-        /// Opaque wc_upload_* id from artifact_upload_begin.
+        /// Opaque cg_upload_* id from artifact_upload_begin.
         upload_id: String,
-        /// Optional explicit wc_sess_* Workflow Session id from a prior compatible bootstrap. When
+        /// Optional explicit cg_sess_* Workflow Session id from a prior compatible bootstrap. When
         /// provided, this tool call is recorded in that exact Session ledger; omission leaves the call
         /// unlinked to Workflow Session state.
         #[serde(default)]
@@ -4004,9 +4007,9 @@ pub enum ToolCall {
         /// Required project-relative path; must exactly match the path used in artifact_upload_begin to
         /// bind upload_id to the target.
         path: String,
-        /// Opaque wc_upload_* id from artifact_upload_begin.
+        /// Opaque cg_upload_* id from artifact_upload_begin.
         upload_id: String,
-        /// Optional explicit wc_sess_* Workflow Session id from a prior compatible bootstrap. When
+        /// Optional explicit cg_sess_* Workflow Session id from a prior compatible bootstrap. When
         /// provided, this tool call is recorded in that exact Session ledger; omission leaves the call
         /// unlinked to Workflow Session state.
         #[serde(default)]
@@ -4028,7 +4031,7 @@ pub enum ToolCall {
         /// If true, compute the plan without writing.
         #[serde(default)]
         dry_run: Option<bool>,
-        /// Optional explicit wc_sess_* Workflow Session id from a prior compatible bootstrap. When
+        /// Optional explicit cg_sess_* Workflow Session id from a prior compatible bootstrap. When
         /// provided, this tool call is recorded in that exact Session ledger; omission leaves the call
         /// unlinked to Workflow Session state.
         #[serde(default)]
@@ -4054,7 +4057,7 @@ pub enum ToolCall {
         /// and the dirty-worktree summary are reported. Never reads file contents.
         #[serde(default)]
         include_tracked: Option<bool>,
-        /// Optional explicit wc_sess_* Workflow Session id from a prior compatible bootstrap. When
+        /// Optional explicit cg_sess_* Workflow Session id from a prior compatible bootstrap. When
         /// provided, this tool call is recorded in that exact Session ledger; omission leaves the call
         /// unlinked to Workflow Session state.
         #[serde(default)]
@@ -4067,7 +4070,7 @@ pub enum ToolCall {
     LspStatus {
         /// Full Runner runtime project id (legacy wire form agent:<client_id>:<project_id>).
         project: String,
-        /// Optional explicit wc_sess_* Workflow Session id from a prior compatible bootstrap. When
+        /// Optional explicit cg_sess_* Workflow Session id from a prior compatible bootstrap. When
         /// provided, this tool call is recorded in that exact Session ledger; omission leaves the call
         /// unlinked to Workflow Session state.
         #[serde(default)]
@@ -4085,7 +4088,7 @@ pub enum ToolCall {
         #[schemars(range(min = 1))]
         #[serde(default)]
         limit: Option<usize>,
-        /// Optional explicit wc_sess_* Workflow Session id from a prior compatible bootstrap. When
+        /// Optional explicit cg_sess_* Workflow Session id from a prior compatible bootstrap. When
         /// provided, this tool call is recorded in that exact Session ledger; omission leaves the call
         /// unlinked to Workflow Session state.
         #[serde(default)]
@@ -4103,7 +4106,7 @@ pub enum ToolCall {
         #[schemars(range(min = 1))]
         #[serde(default)]
         limit: Option<usize>,
-        /// Optional explicit wc_sess_* Workflow Session id from a prior compatible bootstrap. When
+        /// Optional explicit cg_sess_* Workflow Session id from a prior compatible bootstrap. When
         /// provided, this tool call is recorded in that exact Session ledger; omission leaves the call
         /// unlinked to Workflow Session state.
         #[serde(default)]
@@ -4122,7 +4125,7 @@ pub enum ToolCall {
         /// 1-based Unicode scalar column (end-of-line caret allowed at length+1).
         #[schemars(range(min = 1))]
         column: usize,
-        /// Optional explicit wc_sess_* Workflow Session id from a prior compatible bootstrap. When
+        /// Optional explicit cg_sess_* Workflow Session id from a prior compatible bootstrap. When
         /// provided, this tool call is recorded in that exact Session ledger; omission leaves the call
         /// unlinked to Workflow Session state.
         #[serde(default)]
@@ -4141,7 +4144,7 @@ pub enum ToolCall {
         #[schemars(range(min = 1))]
         #[serde(default)]
         limit: Option<usize>,
-        /// Optional explicit wc_sess_* Workflow Session id from a prior compatible bootstrap. When
+        /// Optional explicit cg_sess_* Workflow Session id from a prior compatible bootstrap. When
         /// provided, this tool call is recorded in that exact Session ledger; omission leaves the call
         /// unlinked to Workflow Session state.
         #[serde(default)]
@@ -4165,7 +4168,7 @@ pub enum ToolCall {
         #[schemars(range(min = 1))]
         #[serde(default)]
         limit: Option<usize>,
-        /// Optional explicit wc_sess_* Workflow Session id from a prior compatible bootstrap. When
+        /// Optional explicit cg_sess_* Workflow Session id from a prior compatible bootstrap. When
         /// provided, this tool call is recorded in that exact Session ledger; omission leaves the call
         /// unlinked to Workflow Session state.
         #[serde(default)]
@@ -4193,7 +4196,7 @@ pub enum ToolCall {
         #[schemars(range(min = 1))]
         #[serde(default)]
         limit: Option<usize>,
-        /// Optional explicit wc_sess_* Workflow Session id from a prior compatible bootstrap. When
+        /// Optional explicit cg_sess_* Workflow Session id from a prior compatible bootstrap. When
         /// provided, this tool call is recorded in that exact Session ledger; omission leaves the call
         /// unlinked to Workflow Session state.
         #[serde(default)]
@@ -4227,7 +4230,7 @@ pub enum ToolCall {
         #[schemars(range(min = 1))]
         #[serde(default = "default_call_hierarchy_limit")]
         limit: usize,
-        /// Optional explicit wc_sess_* Workflow Session id from a prior compatible bootstrap. When
+        /// Optional explicit cg_sess_* Workflow Session id from a prior compatible bootstrap. When
         /// provided, this tool call is recorded in that exact Session ledger; omission leaves the call
         /// unlinked to Workflow Session state.
         #[serde(default)]
@@ -4275,7 +4278,7 @@ pub enum ToolCall {
         #[schemars(range(min = 1))]
         #[serde(default)]
         max_height: Option<u32>,
-        /// Optional explicit wc_sess_* Workflow Session id from a prior compatible bootstrap. When
+        /// Optional explicit cg_sess_* Workflow Session id from a prior compatible bootstrap. When
         /// provided, this tool call is recorded in that exact Session ledger; omission leaves the call
         /// unlinked to Workflow Session state.
         #[schemars(length(min = 1))]

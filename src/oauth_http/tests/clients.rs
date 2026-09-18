@@ -41,11 +41,11 @@ async fn oauth_client_create_returns_client_secret_once() {
     let secret = body["client_secret"]
         .as_str()
         .expect("client_secret returned");
-    assert!(secret.starts_with("wc_csec_"));
+    assert!(secret.starts_with("cg_csec_"));
     assert!(body["client"]["client_id"]
         .as_str()
         .unwrap()
-        .starts_with("wc_client_"));
+        .starts_with("cg_client_"));
 
     // list must NOT return the secret.
     let mut resp = authorized_post_json(

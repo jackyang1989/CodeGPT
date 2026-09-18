@@ -25,8 +25,7 @@ fn validate_oauth_client_owner(record: &OAuthClientRecord) -> anyhow::Result<()>
     ) {
         (Some(user_id), None, None) if !user_id.trim().is_empty() => Ok(()),
         (None, Some(grant_id), None) => {
-            codegpt_core::authority::validate_project_grant_id(grant_id)
-                .map_err(anyhow::Error::msg)
+            codegpt_core::authority::validate_project_grant_id(grant_id).map_err(anyhow::Error::msg)
         }
         (None, None, Some(shared_key_hash)) => validate_shared_key_owner_hash(shared_key_hash),
         _ => anyhow::bail!(
@@ -275,7 +274,7 @@ impl Database {
         )))
     }
 
-    /// Revoke an OAuth client by its public `client_id` (e.g. `wc_client_*`).
+    /// Revoke an OAuth client by its public `client_id` (e.g. `cg_client_*`).
     /// Idempotent: already-revoked clients are left untouched and still count
     /// as success. Returns `true` when a row matched the `client_id`.
     pub fn revoke_oauth_client_by_client_id(

@@ -6,8 +6,6 @@ use super::{
     now_ts, RunnerFeature, LIVE_JOB_STREAM_RETENTION_BYTES, MAX_QUEUED_REQUESTS_PER_RUNNER,
     ORDINARY_RESULT_STREAM_RETENTION_BYTES, RUNNER_ONLINE_WINDOW_SECS,
 };
-use std::collections::VecDeque;
-use std::fmt;
 pub use codegpt_core::audit_preview::{
     command_preview, process_preview, COMMAND_PREVIEW_MAX_CHARS,
 };
@@ -15,6 +13,8 @@ use codegpt_core::runner_protocol::{
     RunnerJobResult, RunnerRequest, RunnerShellJobResult, ShellCommandExecutionState, ShellJobInfo,
     ShellJobStreamSnapshot,
 };
+use std::collections::VecDeque;
+use std::fmt;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) enum PendingRequestEnqueueError {

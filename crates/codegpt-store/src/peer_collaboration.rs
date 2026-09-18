@@ -112,7 +112,7 @@ impl Database {
         let mut conn = self.lock_connection(crate::StoreDomain::Communication);
         let tx = conn.transaction()?;
         let message_id = loop {
-            let candidate = format!("wc_msg_{}", codegpt_core::compact::random_suffix::<12>());
+            let candidate = format!("cg_msg_{}", codegpt_core::compact::random_suffix::<12>());
             let exists = tx
                 .query_row(
                     "SELECT 1 FROM window_peer_messages WHERE message_id = ?1",

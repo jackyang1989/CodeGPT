@@ -1,8 +1,8 @@
-use serde_json::Value;
 use codegpt_core::lsp_bridge::{
     CallHierarchyResult, DocumentDiagnosticsResult, DocumentSymbolsResult, HoverResult,
     LocationsResult, LspStatusResult, WorkspaceSymbolsResult,
 };
+use serde_json::Value;
 
 use super::common::{array_schema, open_object_schema, wrapped_typed_output_schema};
 

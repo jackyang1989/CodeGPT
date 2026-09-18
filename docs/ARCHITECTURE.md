@@ -84,7 +84,7 @@ Stateless MCP 2026 can optionally present one exact Goal through the sparse Goal
 
 ## Goal, Job, and Workflow Session continuity
 
-- **Goal** — high-level durable intent/control state (`wc_goal_*`). It can correlate multiple work/execution records, but it does not run them and is never inferred from the current Project, window, credential, or Workflow Session.
+- **Goal** — high-level durable intent/control state (`cg_goal_*`). It can correlate multiple work/execution records, but it does not run them and is never inferred from the current Project, window, credential, or Workflow Session.
 - **Job** — a long-running command or validation that continues after the initiating call returns. Observe the same Job instead of starting another copy.
 - **Workflow Session** — bounded coding evidence/continuity used by the runtime for review, validation, collaboration, and closeout. It is not a credential.
 

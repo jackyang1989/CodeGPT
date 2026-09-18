@@ -686,7 +686,7 @@ async fn close_session_tool_active_to_closed_and_query_still_works() {
 #[tokio::test]
 async fn close_session_unknown_id_fails_without_create() {
     let runtime = test_runtime();
-    let missing = "wc_sess_toolmissingclose01";
+    let missing = "cg_sess_toolmissingclose01";
     let result = runtime
         .dispatch(ToolCall::CloseSession {
             session_id: missing.to_string(),

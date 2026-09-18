@@ -329,7 +329,7 @@ impl CodeGPTAdapter {
         args.push("--no-system-proxy".into());
         let output: PairingCreateOutput =
             run_json(&codegpt, &args, None, true, cancellation).await?;
-        if !output.pairing_code.starts_with("wc_pair_") {
+        if !output.pairing_code.starts_with("cg_pair_") {
             return Err(invalid_contract("pairing create"));
         }
         Ok(output.pairing_code)
@@ -348,7 +348,7 @@ impl CodeGPTAdapter {
             return Err(DesktopError::new(
                 "pairing_code_invalid",
                 "One-time login code is empty",
-                "Enter the wc_pair_… code issued by the Server.",
+                "Enter the cg_pair_… code issued by the Server.",
             ));
         }
         let codegpt = self.ensure_binaries(cancellation).await?.codegpt.clone();

@@ -55,7 +55,7 @@ Runner 因此从面向用户的资源 scope 降为 **placement / provider host**
 | Runner configured Skill | 产品上逐步解释为 scope=`user`、source=`configured`、placement=`runner`；当前 wire / descriptor 名称暂不要求兼容性重写 | 同一 Skill 发现入口，Runner 解析 opaque id | 活目录；不等于已安装不可变包 |
 | Runner managed Skill | 产品上逐步解释为 scope=`user`、source=`managed`、placement=`runner` | 同一发现入口；安装/版本/激活/删除由管理操作负责 | 包 revision、active pointer、state revision、幂等记录 |
 | Native Plugin | scope=`user`、placement=`runner` 的 executable provider；当前 Project applicability 由 provider cwd 与 exact Project root 匹配产生 | plugin_tool list / describe / call；binding 固定 exact Runner/provider instance 与 schema | 进程实例、冻结 catalog、check/reload、结果不确定性；现有 execution authority 不由资源目录替代 |
-| User-private ACL / sharing namespace | 当前无真实产品需求，近期不实现 | 不新增 `wc_userns_*`、resource ACL、share grant 或跨用户枚举 | 若未来出现真实多用户/SaaS需求，再以独立产品问题重新设计 |
+| User-private ACL / sharing namespace | 当前无真实产品需求，近期不实现 | 不新增 `cg_userns_*`、resource ACL、share grant 或跨用户枚举 | 若未来出现真实多用户/SaaS需求，再以独立产品问题重新设计 |
 
 证据：[Memory scope](../../src/tool_runtime/memory.rs)，38–56；[Skill descriptor/locator](../../src/tool_runtime/skills.rs)，61–94、562–638；[Skill store](../../crates/codegpt-core/src/skill_store.rs)，35–103；[Plugin project catalog](../../crates/codegpt-runner/src/codegpt_runner/plugin.rs)，392–490。
 
@@ -142,7 +142,7 @@ canonical Runtime surface是 `List / Resolve / Read`，Management surface是 `Ve
 
 Stage 4A1 把关联的 authoritative owner 放在 Runner project registry，而不是 Server DB。原因是 managed-worktree 的 `managed_source`、`managed_base_sha`、managed lifecycle 与 Project root canonicalization 本来就由 owning Runner 创建并持久化；Runner 也是唯一能在创建时用自己的 canonical registry 精确回答“这个 source root 当前对应哪个 Runner Project”的组件。Server 只消费 `RunnerProjectSummary.lineage` 的 typed projection，不再建立第二份 lineage truth，也没有新增 SQLite table、migration、background reconciler 或 cache。
 
-canonical lineage 是 closed `RunnerProjectLineage::ManagedWorktreeSource`。新 managed record 除原有 `managed_source` 与 `managed_base_sha` 外，还持久化 `managed_source_project_id` 与 `managed_source_root_fingerprint`；只有这两个新字段同时存在时才产生 knowledge association。source Project identity 是 **exact Runner Project id + independent root fingerprint** 的组合：project id 防止 path-only 猜测，root fingerprint 防止 project id 被 unregister 后重新注册到另一个 root 时 silent retarget。fingerprint 使用独立 domain `codegpt-project-root-identity-v1` 与 `wc_projroot_` 前缀，并复用 Runner config 已有 `normalize_path_identity` 的平台 path semantics；它不是 Memory scope fingerprint 类型，也不会进入 model-facing metadata。
+canonical lineage 是 closed `RunnerProjectLineage::ManagedWorktreeSource`。新 managed record 除原有 `managed_source` 与 `managed_base_sha` 外，还持久化 `managed_source_project_id` 与 `managed_source_root_fingerprint`；只有这两个新字段同时存在时才产生 knowledge association。source Project identity 是 **exact Runner Project id + independent root fingerprint** 的组合：project id 防止 path-only 猜测，root fingerprint 防止 project id 被 unregister 后重新注册到另一个 root 时 silent retarget。fingerprint 使用独立 domain `codegpt-project-root-identity-v1` 与 `cg_projroot_` 前缀，并复用 Runner config 已有 `normalize_path_identity` 的平台 path semantics；它不是 Memory scope fingerprint 类型，也不会进入 model-facing metadata。
 
 新 managed worktree 创建要求 source checkout 已经在同一 Runner registry 中以唯一、enabled Project 存在；Git remote、仓库名、basename、Git config、`registration_source` 或“看起来像 worktree”的路径都不会建立 association。带显式 lineage 的 resume 重新解析同一 source root，并验证 persisted source Project id 与 root fingerprint 都仍相同；任一变化都 fail closed。旧 managed record若只有 `managed_source` 而没有新 authoritative pair，仍可按原 execution 语义存在/恢复，但 `lineage=None`，不会通过 heuristic 自动升级。
 

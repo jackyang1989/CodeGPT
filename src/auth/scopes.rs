@@ -792,7 +792,7 @@ mod tests {
         );
         assert!(!crate::auth::open_anonymous_context().has_scope(SCOPE_RUNNER_MANAGE));
         assert!(
-            !crate::auth::shared_key::project_credential_context("wc_pgrant_runnermanage")
+            !crate::auth::shared_key::project_credential_context("cg_pgrant_runnermanage")
                 .has_scope(SCOPE_RUNNER_MANAGE)
         );
         assert_ne!(SCOPE_RUNNER_MANAGE, SCOPE_PLUGIN_MANAGE);
@@ -809,7 +809,7 @@ mod tests {
             ("open", crate::auth::open_anonymous_context()),
             (
                 "project-credential",
-                crate::auth::shared_key::project_credential_context("wc_pgrant_detachedscope"),
+                crate::auth::shared_key::project_credential_context("cg_pgrant_detachedscope"),
             ),
         ] {
             assert!(
@@ -833,7 +833,7 @@ mod tests {
             ("open", crate::auth::open_anonymous_context()),
             (
                 "project-credential",
-                crate::auth::shared_key::project_credential_context("wc_pgrant_codingagentscope"),
+                crate::auth::shared_key::project_credential_context("cg_pgrant_codingagentscope"),
             ),
         ] {
             assert!(
@@ -883,7 +883,7 @@ mod tests {
             ("open", crate::auth::open_anonymous_context()),
             (
                 "project-credential",
-                crate::auth::shared_key::project_credential_context("wc_pgrant_memoryscope"),
+                crate::auth::shared_key::project_credential_context("cg_pgrant_memoryscope"),
             ),
         ] {
             assert!(!auth.has_scope(SCOPE_MEMORY_READ), "{label}");

@@ -1,6 +1,6 @@
+use codegpt_admin::{build_server_http_client, ServerHttpOptions};
 use serde_json::{json, Value};
 use std::path::{Path, PathBuf};
-use codegpt_admin::{build_server_http_client, ServerHttpOptions};
 
 use super::super::connections::{canonical_server_url, ensure_real_directory_tree};
 use super::super::http::{post_json_authed, ApiCall};
@@ -776,14 +776,14 @@ mod tests {
         let (profile_dir, _) = write_profile(&config, &state, "oauth", &project, "repo");
         std::fs::write(
             profile_dir.join("runner.toml"),
-            "server_url = \"https://example.test\"\ntoken = \"wc_agent_runner-only\"\nclient_id = \"client\"\n",
+            "server_url = \"https://example.test\"\ntoken = \"cg_agent_runner-only\"\nclient_id = \"client\"\n",
         )
         .unwrap();
         // Deliberately name a managed login that does not exist. Offline
         // disconnect must not consult it because no remote unregister occurs.
         std::fs::write(
             profile_dir.join("oauth-connect.toml"),
-            "version = 1\nserver_url = \"https://example.test\"\nusername = \"missing-user\"\noauth_client_id = \"wc_client_existing\"\noauth_client_secret = \"wc_csec_existing\"\noauth_redirect_uri = \"https://client.example/callback\"\nallowed_scopes = [\"runtime:read\"]\nagent_token_id = \"token-id\"\n",
+            "version = 1\nserver_url = \"https://example.test\"\nusername = \"missing-user\"\noauth_client_id = \"cg_client_existing\"\noauth_client_secret = \"cg_csec_existing\"\noauth_redirect_uri = \"https://client.example/callback\"\nallowed_scopes = [\"runtime:read\"]\nagent_token_id = \"token-id\"\n",
         )
         .unwrap();
 

@@ -1,10 +1,10 @@
 use super::*;
 use crate::runner_protocol::RunnerResultPayload;
-use std::sync::Arc;
 use codegpt_core::plugin::{
     PluginCheckDiagnostic, PluginCheckPhase, PluginCheckReport, PluginCheckToolSummary,
     PluginGatewayRequest, PluginGatewayResponse, PluginGatewayResponsePayload,
 };
+use std::sync::Arc;
 
 fn plugin_auth(include_scope: bool) -> crate::auth::AuthContext {
     let mut auth = mcp_export_api_auth("plugin-check-test-pat", "alice");
@@ -167,7 +167,7 @@ async fn plugin_check_tool_spec_and_argument_contract_fail_closed_before_dispatc
     let auth = plugin_auth(true);
     for extra in [
         json!({"tool":"search_symbol"}),
-        json!({"binding":"wc_pbind_ASNFZ4mrze8BI0VniavN7w"}),
+        json!({"binding":"cg_pbind_ASNFZ4mrze8BI0VniavN7w"}),
         json!({"arguments":{}}),
     ] {
         let outcome =

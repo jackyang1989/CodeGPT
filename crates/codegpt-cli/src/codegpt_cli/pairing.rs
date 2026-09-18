@@ -36,9 +36,7 @@ pub(crate) fn resolve_pairing_create_token(opts: &PairingCreateOptions) -> Resul
         return Ok(token);
     }
     let token = std::env::var("CODEGPT_TOKEN")
-        .map_err(|_| {
-            "--env-file, --token-file, --token, or CODEGPT_TOKEN is required".to_string()
-        })?
+        .map_err(|_| "--env-file, --token-file, --token, or CODEGPT_TOKEN is required".to_string())?
         .trim()
         .to_string();
     if token.is_empty() {
@@ -151,7 +149,7 @@ mod tests {
 
     fn response(client_id: &str) -> Value {
         serde_json::json!({
-            "pairing_code": "wc_pair_example",
+            "pairing_code": "cg_pair_example",
             "expires_at": 1234,
             "username": "alice",
             "client_id": client_id,
@@ -162,14 +160,14 @@ mod tests {
     fn unbound_pairing_output_uses_login_without_device() {
         let output = render_pairing_create_result(&opts("", false), &response("")).unwrap();
         assert!(output.contains("One-time login code created"), "{output}");
-        assert!(output.contains("Code:\n  wc_pair_example"), "{output}");
+        assert!(output.contains("Code:\n  cg_pair_example"), "{output}");
         assert!(output.contains("Expires in:\n  10 minutes"), "{output}");
         assert!(
             output.contains("Use this code once on the machine that holds your project."),
             "{output}"
         );
         assert!(
-            output.contains("codegpt login https://example.test --code wc_pair_example"),
+            output.contains("codegpt login https://example.test --code cg_pair_example"),
             "{output}"
         );
         assert!(
@@ -177,8 +175,8 @@ mod tests {
             "{output}"
         );
         assert!(!output.contains("--device"), "{output}");
-        assert!(!output.contains("wc_pat_"), "{output}");
-        assert!(!output.contains("wc_agent_"), "{output}");
+        assert!(!output.contains("cg_pat_"), "{output}");
+        assert!(!output.contains("cg_agent_"), "{output}");
     }
 
     #[test]
@@ -188,7 +186,7 @@ mod tests {
                 .unwrap();
         assert!(
             output.contains(
-                "codegpt login https://example.test --code wc_pair_example --device alice-laptop"
+                "codegpt login https://example.test --code cg_pair_example --device alice-laptop"
             ),
             "{output}"
         );
@@ -199,7 +197,7 @@ mod tests {
         let mut opts = opts("alice-laptop", false);
         opts.server_url = "https://example.test/path with space;$value".to_string();
         let value = serde_json::json!({
-            "pairing_code": "wc_pair_a'b`c;d",
+            "pairing_code": "cg_pair_a'b`c;d",
             "expires_at": 1234,
             "username": "alice",
             "client_id": "alice-laptop",
@@ -208,7 +206,7 @@ mod tests {
         let output = render_pairing_create_result(&opts, &value).unwrap();
         assert!(output.contains(&shell_command(&argv)), "{output}");
         assert!(output.contains("'https://example.test/path with space;$value'"));
-        assert!(output.contains("'wc_pair_a'\\''b`c;d'"));
+        assert!(output.contains("'cg_pair_a'\\''b`c;d'"));
     }
 
     #[test]
@@ -224,7 +222,7 @@ mod tests {
                 "login",
                 "https://example.test",
                 "--code",
-                "wc_pair_example",
+                "cg_pair_example",
                 "--device",
                 "alice-laptop"
             ])

@@ -681,11 +681,11 @@ fn mcp_artifact_export_oauth_binding_survives_access_token_refresh() {
         auth
     };
     let first =
-        mcp_artifact_export_caller_binding(Some(&oauth("wc_oat_record_1", "client-a"))).unwrap();
+        mcp_artifact_export_caller_binding(Some(&oauth("cg_oat_record_1", "client-a"))).unwrap();
     let refreshed =
-        mcp_artifact_export_caller_binding(Some(&oauth("wc_oat_record_2", "client-a"))).unwrap();
+        mcp_artifact_export_caller_binding(Some(&oauth("cg_oat_record_2", "client-a"))).unwrap();
     let other_client =
-        mcp_artifact_export_caller_binding(Some(&oauth("wc_oat_record_3", "client-b"))).unwrap();
+        mcp_artifact_export_caller_binding(Some(&oauth("cg_oat_record_3", "client-b"))).unwrap();
     assert_eq!(
         first, refreshed,
         "access-token refresh must retain export identity"
@@ -712,7 +712,7 @@ async fn mcp_artifact_export_oauth_resource_read_uses_project_read_and_stable_id
         auth
     };
     let creator = oauth(
-        "wc_oat_record_1",
+        "cg_oat_record_1",
         vec![crate::auth::SCOPE_PROJECT_READ.to_string()],
     );
     let bytes = b"%PDF-1.7\noauth export\n%%EOF\n".to_vec();
@@ -732,7 +732,7 @@ async fn mcp_artifact_export_oauth_resource_read_uses_project_read_and_stable_id
         .to_string();
 
     let refreshed = oauth(
-        "wc_oat_record_2",
+        "cg_oat_record_2",
         vec![crate::auth::SCOPE_PROJECT_READ.to_string()],
     );
     let read = tokio::spawn({
@@ -773,7 +773,7 @@ async fn mcp_artifact_export_oauth_resource_read_uses_project_read_and_stable_id
         runtime.clone(),
         registry.clone(),
         oauth(
-            "wc_oat_record_3",
+            "cg_oat_record_3",
             vec![crate::auth::SCOPE_PROJECT_READ.to_string()],
         ),
         "paper/oauth.pdf",
@@ -785,7 +785,7 @@ async fn mcp_artifact_export_oauth_resource_read_uses_project_read_and_stable_id
         .as_str()
         .unwrap()
         .to_string();
-    let missing_scope = oauth("wc_oat_record_4", vec![]);
+    let missing_scope = oauth("cg_oat_record_4", vec![]);
     let denied = handle_mcp_request(
         &runtime,
         rpc(
@@ -1765,7 +1765,7 @@ async fn mcp_artifact_export_unknown_expired_and_changed_snapshots_fail_closed()
             "resources/read",
             Some(json!(3106)),
             mcp_2026_params(json!({
-                "uri": "codegpt-artifact://export/wc_export_0123456789abcdef0123456789abcdef"
+                "uri": "codegpt-artifact://export/cg_export_0123456789abcdef0123456789abcdef"
             })),
         ),
         Some(&auth),
@@ -2156,7 +2156,7 @@ async fn mcp_artifact_export_action_audit_does_not_persist_handle_or_blob() {
     assert_eq!(operation, "export_project_artifact");
     for durable in [&summary, &error] {
         assert!(!durable.contains(MCP_ARTIFACT_EXPORT_URI_PREFIX));
-        assert!(!durable.contains("wc_export_"));
+        assert!(!durable.contains("cg_export_"));
         assert!(!durable.contains("content_base64"));
         assert!(!durable.contains("\"blob\""));
     }

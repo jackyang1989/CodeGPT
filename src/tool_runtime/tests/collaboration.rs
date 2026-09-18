@@ -302,7 +302,7 @@ async fn request_scoped_ack_suppresses_only_current_response_and_records_first_o
         ToolInvocationMetadata {
             ack_session_message_ids: vec![
                 foreign_guidance.message_id.clone(),
-                "wc_msg_unknown".to_string(),
+                "cg_msg_unknown".to_string(),
             ],
             ..Default::default()
         },
@@ -897,7 +897,7 @@ async fn collaboration_two_sessions_keep_execution_history_and_explicit_provenan
             "expected_assignment_fence": assignment_fence.clone(),
             "tags": ["review", "done"],
             "priority": "normal",
-            "author_session_id": "wc_sess_forged_should_be_ignored"
+            "author_session_id": "cg_sess_forged_should_be_ignored"
         }),
     )
     .expect_err("caller-controlled completion author must fail closed");
@@ -1031,7 +1031,7 @@ async fn collaboration_two_sessions_keep_execution_history_and_explicit_provenan
         "Independent review this exact synthetic change; report findings.",
         "No findings. Revalidated the authoritative synthetic source after review.",
         "worker-review-v1",
-        "wc_sess_forged_should_be_ignored",
+        "cg_sess_forged_should_be_ignored",
         "collaboration-worker-window",
         assignment_fence.as_str(),
     ] {

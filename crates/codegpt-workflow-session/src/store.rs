@@ -2,12 +2,6 @@
 //!
 //! All durable session-map mutations flow through `SessionStoreInner` helpers.
 //! Callers outside this module use `SessionStore` methods only.
-use serde_json::Value;
-use std::collections::{HashMap, VecDeque};
-use std::io;
-use std::path::PathBuf;
-use std::sync::{Arc, Condvar, Mutex};
-use std::time::Instant;
 use codegpt_core::runner_job_lifecycle::RunnerJobLifecycle;
 use codegpt_core::validation_identity::{
     assertion_validation_identity, is_validation_execution_identity,
@@ -17,6 +11,12 @@ use codegpt_tool_contracts::{
     runtime_tool_activity_semantics, runtime_tool_session_evidence_policy, ToolActivityKind,
     ToolSessionLifecycleEffect,
 };
+use serde_json::Value;
+use std::collections::{HashMap, VecDeque};
+use std::io;
+use std::path::PathBuf;
+use std::sync::{Arc, Condvar, Mutex};
+use std::time::Instant;
 
 use super::assignment::{
     assignment_fence_fingerprint, assignment_fence_from_state, current_assignment_state,

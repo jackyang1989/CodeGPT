@@ -4,9 +4,9 @@ use super::project_inventory::reconcile_dynamic_projection;
 use super::validation::validate_id;
 use super::validation::validate_project_summary;
 use super::{RunnerFeatureSet, RunnerRegistry};
+use codegpt_core::runner_protocol::RunnerProjectSummary;
 #[cfg(test)]
 use std::fmt;
-use codegpt_core::runner_protocol::RunnerProjectSummary;
 
 #[cfg(test)]
 #[derive(Debug, Clone, PartialEq, Eq)]

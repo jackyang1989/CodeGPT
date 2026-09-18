@@ -477,7 +477,7 @@ mod tests {
     fn init_opts(output: PathBuf) -> RunnerInitOptions {
         RunnerInitOptions {
             server_url: "https://v4.example.test/".to_string(),
-            token: Some("wc_agent_fake_test_token".to_string()),
+            token: Some("cg_agent_fake_test_token".to_string()),
             token_file: None,
             client_id: "alice-laptop".to_string(),
             owner: "alice".to_string(),

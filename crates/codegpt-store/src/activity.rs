@@ -4,9 +4,9 @@
 //! grow without bound.
 
 use super::Database;
+use codegpt_core::activity_contract::{ActivityRecord, ActivityVisibility};
 use rusqlite::params;
 use serde::Serialize;
-use codegpt_core::activity_contract::{ActivityRecord, ActivityVisibility};
 
 /// Persisted error summaries stay one short line.
 const ERROR_SUMMARY_MAX_CHARS: usize = 200;
@@ -210,8 +210,8 @@ mod tests {
         }
     }
 
-    const GRANT_A: &str = "wc_pgrant_aaaaaaaaaaaaaaaa";
-    const GRANT_B: &str = "wc_pgrant_bbbbbbbbbbbbbbbb";
+    const GRANT_A: &str = "cg_pgrant_aaaaaaaaaaaaaaaa";
+    const GRANT_B: &str = "cg_pgrant_bbbbbbbbbbbbbbbb";
 
     /// Record attributed to `grant` and `client`.
     fn scoped<'a>(client: Option<&'a str>, grant: &str) -> ActivityRecord<'a> {

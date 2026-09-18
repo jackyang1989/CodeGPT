@@ -1,10 +1,6 @@
 use super::{RunnerFeature, RunnerFeatureSet, RunnerTransport};
 use crate::protocol::AcceptedRunnerProtocol;
 use crate::RunnerAccessGroup;
-use std::collections::{HashMap, HashSet, VecDeque};
-use std::sync::atomic::AtomicU64;
-use std::sync::Arc;
-use tokio::sync::{oneshot, watch, Notify};
 use codegpt_core::coding_agent::{
     CodingAgentProvider, CodingAgentResponse, CodingAgentRunInventory,
 };
@@ -19,6 +15,10 @@ use codegpt_core::runner_protocol::{
     ShellJobValidationProgress, ShellProcessArgv, ShellProjectInventoryStatus, ShellRunResponse,
     JOB_INVENTORY_MAX_TERMINAL_JOBS, JOB_TERMINAL_RETENTION_SECS,
 };
+use std::collections::{HashMap, HashSet, VecDeque};
+use std::sync::atomic::AtomicU64;
+use std::sync::Arc;
+use tokio::sync::{oneshot, watch, Notify};
 
 #[derive(Debug, Clone)]
 pub(super) struct ProjectInventoryStaging {

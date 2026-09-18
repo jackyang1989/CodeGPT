@@ -16,6 +16,7 @@ use crate::mcp_gateway::{
     McpGatewayResponse, McpGatewayResponsePayload, McpGatewayTool, McpGatewayToolResult,
     MCP_GATEWAY_MAX_MESSAGE_BYTES,
 };
+use codegpt_process::ManagedChild;
 use serde_json::{json, Value};
 use std::collections::BTreeMap;
 use std::io::{BufRead, BufReader, Read, Write};
@@ -23,7 +24,6 @@ use std::process::{ChildStdin, Command, Stdio};
 use std::sync::atomic::{AtomicBool, AtomicU8, Ordering};
 use std::sync::{mpsc, Arc, Mutex, RwLock, TryLockError};
 use std::time::{Duration, Instant};
-use codegpt_process::ManagedChild;
 
 const MCP_PROTOCOL_VERSION: &str = "2025-06-18";
 const MCP_GATEWAY_MAX_IGNORED_NOTIFICATIONS: usize = 32;

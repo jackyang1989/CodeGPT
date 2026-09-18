@@ -3,8 +3,8 @@ use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
-use serde::Serialize;
 use codegpt_core::plugin::validate_provider_id;
+use serde::Serialize;
 
 pub(crate) const PLUGIN_INIT_SDK_VERSION: &str = "0.1.0";
 

@@ -19,7 +19,7 @@ struct Fixture {
 fn principal(hex: char) -> CommunicationPrincipal {
     CommunicationPrincipal {
         kind: "user".to_string(),
-        digest: format!("wc_commprincipal_{}", hex.to_string().repeat(64)),
+        digest: format!("cg_commprincipal_{}", hex.to_string().repeat(64)),
     }
 }
 
@@ -116,7 +116,7 @@ fn attach_wake_endpoint(
 fn wake_id_for(db: &Database, agent_id: &str) -> String {
     db.conn_for_tests()
         .query_row(
-            "SELECT wake_id FROM wc_agent_wakes
+            "SELECT wake_id FROM cg_agent_wakes
              WHERE target_agent_id = ?1
              ORDER BY created_at_unix_ms, wake_id LIMIT 1",
             [agent_id],
@@ -129,7 +129,7 @@ fn queued_delivery_ids(db: &Database, agent_id: &str) -> Vec<String> {
     let conn = db.conn_for_tests();
     let mut statement = conn
         .prepare(
-            "SELECT delivery_id FROM wc_agent_deliveries
+            "SELECT delivery_id FROM cg_agent_deliveries
              WHERE recipient_agent_id = ?1 AND state = 'queued'
              ORDER BY delivery_order",
         )
@@ -342,15 +342,15 @@ fn offline_fifty_message_burst_preserves_facts_and_coalesces_wake() {
     let (message_count, delivery_count, wake_count): (i64, i64, i64) = {
         let conn = db.conn_for_tests();
         (
-            conn.query_row("SELECT COUNT(*) FROM wc_conversation_messages", [], |row| {
+            conn.query_row("SELECT COUNT(*) FROM cg_conversation_messages", [], |row| {
                 row.get(0)
             })
             .unwrap(),
-            conn.query_row("SELECT COUNT(*) FROM wc_agent_deliveries", [], |row| {
+            conn.query_row("SELECT COUNT(*) FROM cg_agent_deliveries", [], |row| {
                 row.get(0)
             })
             .unwrap(),
-            conn.query_row("SELECT COUNT(*) FROM wc_agent_wakes", [], |row| row.get(0))
+            conn.query_row("SELECT COUNT(*) FROM cg_agent_wakes", [], |row| row.get(0))
                 .unwrap(),
         )
     };
@@ -452,7 +452,7 @@ fn replacement_generation_fences_old_claim_dispatch_wake_consume_and_inbox_consu
     let lifecycle: String = db
         .conn_for_tests()
         .query_row(
-            "SELECT lifecycle FROM wc_agent_endpoints WHERE endpoint_id = ?1",
+            "SELECT lifecycle FROM cg_agent_endpoints WHERE endpoint_id = ?1",
             [&generation_one.endpoint_id],
             |row| row.get(0),
         )
@@ -690,7 +690,7 @@ fn wake_storage_keeps_stable_refs_and_hashes_without_communication_payload() {
 
     let columns: Vec<String> = {
         let conn = db.conn_for_tests();
-        let mut statement = conn.prepare("PRAGMA table_info(wc_agent_wakes)").unwrap();
+        let mut statement = conn.prepare("PRAGMA table_info(cg_agent_wakes)").unwrap();
         statement
             .query_map([], |row| row.get(1))
             .unwrap()
@@ -713,7 +713,7 @@ fn wake_storage_keeps_stable_refs_and_hashes_without_communication_payload() {
         .conn_for_tests()
         .query_row(
             "SELECT claim_fence_hash, consume_token_hash
-             FROM wc_agent_wake_attempts WHERE attempt_id = ?1",
+             FROM cg_agent_wake_attempts WHERE attempt_id = ?1",
             params![claim.attempt.attempt_id],
             |row| Ok((row.get(0)?, row.get(1)?)),
         )
@@ -746,17 +746,17 @@ fn a4b_wake_schema_migration_preserves_inbox_wake_and_rebuilds_indexes() {
         conn.execute_batch(
             "
             PRAGMA foreign_keys = OFF;
-            DROP TABLE wc_agent_task_endpoint_executions;
-            DROP INDEX IF EXISTS idx_wc_agent_wakes_target_state;
-            DROP INDEX IF EXISTS idx_wc_agent_wakes_one_queueable_inbox;
-            DROP INDEX IF EXISTS idx_wc_agent_wakes_task_attempt;
-            DROP INDEX IF EXISTS idx_wc_agent_wakes_one_dispatched;
-            DROP INDEX IF EXISTS idx_wc_agent_wake_attempts_wake;
-            DROP INDEX IF EXISTS idx_wc_agent_wake_attempts_endpoint;
-            ALTER TABLE wc_agent_wake_attempts RENAME TO wc_agent_wake_attempts_current;
-            ALTER TABLE wc_agent_wakes RENAME TO wc_agent_wakes_current;
+            DROP TABLE cg_agent_task_endpoint_executions;
+            DROP INDEX IF EXISTS idx_cg_agent_wakes_target_state;
+            DROP INDEX IF EXISTS idx_cg_agent_wakes_one_queueable_inbox;
+            DROP INDEX IF EXISTS idx_cg_agent_wakes_task_attempt;
+            DROP INDEX IF EXISTS idx_cg_agent_wakes_one_dispatched;
+            DROP INDEX IF EXISTS idx_cg_agent_wake_attempts_wake;
+            DROP INDEX IF EXISTS idx_cg_agent_wake_attempts_endpoint;
+            ALTER TABLE cg_agent_wake_attempts RENAME TO cg_agent_wake_attempts_current;
+            ALTER TABLE cg_agent_wakes RENAME TO cg_agent_wakes_current;
 
-            CREATE TABLE wc_agent_wakes (
+            CREATE TABLE cg_agent_wakes (
                 wake_id TEXT PRIMARY KEY,
                 target_agent_id TEXT NOT NULL,
                 trigger_kind TEXT NOT NULL,
@@ -778,7 +778,7 @@ fn a4b_wake_schema_migration_preserves_inbox_wake_and_rebuilds_indexes() {
                 consumed_by_endpoint_id TEXT,
                 consumed_controller_generation INTEGER
             );
-            INSERT INTO wc_agent_wakes (
+            INSERT INTO cg_agent_wakes (
                 wake_id, target_agent_id, trigger_kind,
                 first_triggering_delivery_id, latest_triggering_delivery_id,
                 latest_conversation_id, latest_message_id,
@@ -798,9 +798,9 @@ fn a4b_wake_schema_migration_preserves_inbox_wake_and_rebuilds_indexes() {
                    claimed_controller_generation, claim_lease_expires_at_unix_ms,
                    consumed_at_unix_ms, consumed_by_endpoint_id,
                    consumed_controller_generation
-            FROM wc_agent_wakes_current;
+            FROM cg_agent_wakes_current;
 
-            CREATE TABLE wc_agent_wake_attempts (
+            CREATE TABLE cg_agent_wake_attempts (
                 attempt_id TEXT PRIMARY KEY,
                 wake_id TEXT NOT NULL,
                 endpoint_id TEXT NOT NULL,
@@ -817,23 +817,23 @@ fn a4b_wake_schema_migration_preserves_inbox_wake_and_rebuilds_indexes() {
                 revoked_at_unix_ms INTEGER,
                 consumed_at_unix_ms INTEGER
             );
-            INSERT INTO wc_agent_wake_attempts
-                SELECT * FROM wc_agent_wake_attempts_current;
-            DROP TABLE wc_agent_wake_attempts_current;
-            DROP TABLE wc_agent_wakes_current;
+            INSERT INTO cg_agent_wake_attempts
+                SELECT * FROM cg_agent_wake_attempts_current;
+            DROP TABLE cg_agent_wake_attempts_current;
+            DROP TABLE cg_agent_wakes_current;
 
-            CREATE INDEX idx_wc_agent_wakes_target_state
-                ON wc_agent_wakes(target_agent_id, state, created_at_unix_ms, wake_id);
-            CREATE UNIQUE INDEX idx_wc_agent_wakes_one_queueable
-                ON wc_agent_wakes(target_agent_id)
+            CREATE INDEX idx_cg_agent_wakes_target_state
+                ON cg_agent_wakes(target_agent_id, state, created_at_unix_ms, wake_id);
+            CREATE UNIQUE INDEX idx_cg_agent_wakes_one_queueable
+                ON cg_agent_wakes(target_agent_id)
                 WHERE state IN ('pending', 'claimed');
-            CREATE UNIQUE INDEX idx_wc_agent_wakes_one_dispatched
-                ON wc_agent_wakes(target_agent_id)
+            CREATE UNIQUE INDEX idx_cg_agent_wakes_one_dispatched
+                ON cg_agent_wakes(target_agent_id)
                 WHERE state IN ('prepared', 'delivered', 'delivery_unknown');
-            CREATE INDEX idx_wc_agent_wake_attempts_wake
-                ON wc_agent_wake_attempts(wake_id, claimed_at_unix_ms, attempt_id);
-            CREATE INDEX idx_wc_agent_wake_attempts_endpoint
-                ON wc_agent_wake_attempts(endpoint_id, controller_generation, state);
+            CREATE INDEX idx_cg_agent_wake_attempts_wake
+                ON cg_agent_wake_attempts(wake_id, claimed_at_unix_ms, attempt_id);
+            CREATE INDEX idx_cg_agent_wake_attempts_endpoint
+                ON cg_agent_wake_attempts(endpoint_id, controller_generation, state);
             PRAGMA foreign_keys = ON;
             ",
         )
@@ -858,7 +858,7 @@ fn a4b_wake_schema_migration_preserves_inbox_wake_and_rebuilds_indexes() {
             .prepare(
                 "SELECT name FROM sqlite_master
                  WHERE type = 'index'
-                   AND tbl_name IN ('wc_agent_wakes', 'wc_agent_wake_attempts')
+                   AND tbl_name IN ('cg_agent_wakes', 'cg_agent_wake_attempts')
                  ORDER BY name",
             )
             .unwrap();
@@ -869,12 +869,12 @@ fn a4b_wake_schema_migration_preserves_inbox_wake_and_rebuilds_indexes() {
             .unwrap()
     };
     for expected in [
-        "idx_wc_agent_wakes_target_state",
-        "idx_wc_agent_wakes_one_queueable_inbox",
-        "idx_wc_agent_wakes_task_attempt",
-        "idx_wc_agent_wakes_one_dispatched",
-        "idx_wc_agent_wake_attempts_wake",
-        "idx_wc_agent_wake_attempts_endpoint",
+        "idx_cg_agent_wakes_target_state",
+        "idx_cg_agent_wakes_one_queueable_inbox",
+        "idx_cg_agent_wakes_task_attempt",
+        "idx_cg_agent_wakes_one_dispatched",
+        "idx_cg_agent_wake_attempts_wake",
+        "idx_cg_agent_wake_attempts_endpoint",
     ] {
         assert!(
             indexes.iter().any(|name| name == expected),
@@ -884,7 +884,7 @@ fn a4b_wake_schema_migration_preserves_inbox_wake_and_rebuilds_indexes() {
     assert!(
         !indexes
             .iter()
-            .any(|name| name == "idx_wc_agent_wakes_one_queueable"),
+            .any(|name| name == "idx_cg_agent_wakes_one_queueable"),
         "legacy queueable index must be replaced by the inbox-only index"
     );
 
@@ -924,7 +924,7 @@ fn explicit_activation_random_proof_replays_after_database_reopen() {
     assert!(codegpt_core::compact::decode::<16>(
         first
             .consume_token
-            .strip_prefix("wc_wake_consume_")
+            .strip_prefix("cg_wake_consume_")
             .unwrap()
     )
     .is_some());
@@ -934,7 +934,7 @@ fn explicit_activation_random_proof_replays_after_database_reopen() {
     assert!(replay.replayed);
     assert_eq!(first.attempt_id, replay.attempt_id);
     assert_eq!(first.consume_token, replay.consume_token);
-    db.conn_for_tests().execute("UPDATE wc_agent_wake_attempts SET consume_token_hash = 'corrupt' WHERE attempt_id = ?1", [&first.attempt_id]).unwrap();
+    db.conn_for_tests().execute("UPDATE cg_agent_wake_attempts SET consume_token_hash = 'corrupt' WHERE attempt_id = ?1", [&first.attempt_id]).unwrap();
     assert_eq!(
         activate(&db).unwrap_err().code(),
         "invalid_activation_receipt"

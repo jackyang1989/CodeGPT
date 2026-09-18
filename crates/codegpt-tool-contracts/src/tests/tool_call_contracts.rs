@@ -2,8 +2,8 @@
 
 use super::tool_call_test_support::*;
 use crate::*;
-use serde_json::{json, Value};
 use codegpt_core::workflow_session_contract as sessions;
+use serde_json::{json, Value};
 
 #[test]
 fn from_tool_name_parses_unit_tools_without_arguments() {
@@ -41,7 +41,7 @@ fn code_mode_exec_is_not_a_tool_call_without_feature() {
         "code_mode_exec",
         json!({
             "project": "agent:special:demo",
-            "session_id": format!("wc_sess_{}", "1".repeat(32)),
+            "session_id": format!("cg_sess_{}", "1".repeat(32)),
             "source": "text('x')",
         }),
     )
@@ -61,7 +61,7 @@ fn code_mode_exec_effectful_is_not_a_tool_call_without_feature() {
         "code_mode_exec_effectful",
         json!({
             "project": "agent:special:demo",
-            "session_id": format!("wc_sess_{}", "2".repeat(32)),
+            "session_id": format!("cg_sess_{}", "2".repeat(32)),
             "source": "text('x')",
         }),
     )
@@ -84,7 +84,7 @@ fn code_mode_exec_mutating_is_not_a_tool_call_without_feature() {
         "code_mode_exec_mutating",
         json!({
             "project": "agent:special:demo",
-            "session_id": format!("wc_sess_{}", "3".repeat(32)),
+            "session_id": format!("cg_sess_{}", "3".repeat(32)),
             "source": "text('x')",
         }),
     )
@@ -169,10 +169,10 @@ fn apply_text_edits_shorthand_normalizes_once_to_canonical_call() {
 #[test]
 fn heartbeat_agent_task_attempt_parses_optional_active_turn_proof() {
     let base = json!({
-        "task_id": "wc_agent_task_ERERERERERERERER".to_string(),
-        "attempt_id": "wc_agent_task_attempt_IiIiIiIiIiIiIiIi".to_string(),
-        "assignee_agent_id": "wc_dagent_MzMzMzMzMzMzMzMz".to_string(),
-        "attempt_fence": "wc_agent_task_fence_RERERERERERERERERERERA".to_string(),
+        "task_id": "cg_agent_task_ERERERERERERERER".to_string(),
+        "attempt_id": "cg_agent_task_attempt_IiIiIiIiIiIiIiIi".to_string(),
+        "assignee_agent_id": "cg_dagent_MzMzMzMzMzMzMzMz".to_string(),
+        "attempt_fence": "cg_agent_task_fence_RERERERERERERERERERERA".to_string(),
         "attempt_controller_generation": 7,
     });
     let ordinary = ToolCall::from_tool_name("heartbeat_agent_task_attempt", base.clone()).unwrap();
@@ -186,9 +186,9 @@ fn heartbeat_agent_task_attempt_parses_optional_active_turn_proof() {
     ));
 
     let mut with_proof = base;
-    with_proof["active_turn_wake_id"] = json!("wc_wake_VVVVVVVVVVVVVVVV".to_string());
+    with_proof["active_turn_wake_id"] = json!("cg_wake_VVVVVVVVVVVVVVVV".to_string());
     with_proof["active_turn_consume_token"] =
-        json!("wc_wake_consume_ZmZmZmZmZmZmZmZmZmZmZg".to_string());
+        json!("cg_wake_consume_ZmZmZmZmZmZmZmZmZmZmZg".to_string());
     let renewed = ToolCall::from_tool_name("heartbeat_agent_task_attempt", with_proof).unwrap();
     assert!(matches!(
         renewed,
@@ -196,19 +196,19 @@ fn heartbeat_agent_task_attempt_parses_optional_active_turn_proof() {
             active_turn_wake_id: Some(ref wake_id),
             active_turn_consume_token: Some(ref consume_token),
             ..
-        } if wake_id.starts_with("wc_wake_") && consume_token.starts_with("wc_wake_consume_")
+        } if wake_id.starts_with("cg_wake_") && consume_token.starts_with("cg_wake_consume_")
     ));
 }
 
 #[test]
 fn agent_wait_calls_parse_closed_selectors() {
-    const PRIVATE_TASK: &str = "wc_agent_task_ze-rze-rze-rze-r";
+    const PRIVATE_TASK: &str = "cg_agent_task_ze-rze-rze-rze-r";
     const PRIVATE_KEY: &str = "PRIVATE_WAIT_KEY_MUST_NOT_PERSIST";
     let call = ToolCall::from_tool_name(
         "wait_for_agent_events",
         json!({
-            "agent_id": "wc_dagent_iavN7wEjRWeJq83v",
-            "endpoint_id": "wc_endpoint_iavN7wEjRWeJq83v",
+            "agent_id": "cg_dagent_iavN7wEjRWeJq83v",
+            "endpoint_id": "cg_endpoint_iavN7wEjRWeJq83v",
             "expected_controller_generation": 4,
             "events": [{"kind":"agent_task_terminal","task_id":PRIVATE_TASK}],
             "idempotency_key": PRIVATE_KEY,
@@ -225,13 +225,13 @@ fn agent_wait_calls_parse_closed_selectors() {
     ));
     let read = ToolCall::from_tool_name(
         "read_agent_wait",
-        json!({"wait_id": "wc_agent_wait_ZmZmZmZmZmZmZmZm".to_string()}),
+        json!({"wait_id": "cg_agent_wait_ZmZmZmZmZmZmZmZm".to_string()}),
     )
     .unwrap();
     assert!(matches!(read, ToolCall::ReadAgentWait { .. }));
     let state = ToolCall::from_tool_name(
         "agent_wait_state",
-        json!({"wait_id": "wc_agent_wait_ZmZmZmZmZmZmZmZm".to_string()}),
+        json!({"wait_id": "cg_agent_wait_ZmZmZmZmZmZmZmZm".to_string()}),
     )
     .unwrap();
     assert!(matches!(state, ToolCall::AgentWaitState { .. }));
@@ -340,7 +340,7 @@ fn ssh_resource_parses_as_canonical_gateway_with_closed_action_vocabulary() {
         "ssh_resource",
         json!({
             "action": "register",
-            "binding": "wc_sbind_ASNFZ4mrze8BI0VniavN7w",
+            "binding": "cg_sbind_ASNFZ4mrze8BI0VniavN7w",
             "name": "spe",
             "target": "root@spe",
             "default_cwd": "/root/git"
@@ -533,7 +533,7 @@ fn artifact_upload_followup_tools_missing_path_error_is_actionable() {
         "artifact_upload_abort",
     ] {
         let err =
-            ToolCall::from_tool_name(name, json!({"upload_id": "wc_upload_test_1"})).unwrap_err();
+            ToolCall::from_tool_name(name, json!({"upload_id": "cg_upload_test_1"})).unwrap_err();
         assert!(
             err.contains("path is required")
                 && err.contains("artifact_upload_begin")
@@ -720,7 +720,7 @@ fn from_tool_name_parses_structured_run_process_boundaries() {
             "timeout_secs": 60,
             "sync_wait_secs": 45,
             "purpose": "diagnostic",
-            "session_id": "wc_sess_process"
+            "session_id": "cg_sess_process"
         }),
     )
     .unwrap();
@@ -747,7 +747,7 @@ fn from_tool_name_parses_structured_run_process_boundaries() {
             assert_eq!(timeout_secs, Some(60));
             assert_eq!(sync_wait_secs, Some(45));
             assert_eq!(purpose, Some(ExecutionPurpose::Diagnostic));
-            assert_eq!(session_id.as_deref(), Some("wc_sess_process"));
+            assert_eq!(session_id.as_deref(), Some("cg_sess_process"));
         }
         other => panic!("expected RunProcess, got {other:?}"),
     }
@@ -802,7 +802,7 @@ fn from_tool_name_parses_stop_job_with_default_confirmation_false() {
 
     let call = ToolCall::from_tool_name(
         "stop_job",
-        json!({"project": "demo", "job_id": "abc", "session_id": "wc_sess_x", "confirm": true}),
+        json!({"project": "demo", "job_id": "abc", "session_id": "cg_sess_x", "confirm": true}),
     )
     .unwrap();
     assert!(matches!(
@@ -812,7 +812,7 @@ fn from_tool_name_parses_stop_job_with_default_confirmation_false() {
             ref job_id,
             ref session_id,
             confirm: true,
-        } if project == "demo" && job_id == "abc" && session_id.as_deref() == Some("wc_sess_x")
+        } if project == "demo" && job_id == "abc" && session_id.as_deref() == Some("cg_sess_x")
     ));
 }
 
@@ -846,7 +846,7 @@ fn from_tool_name_rejects_retired_inspection_tools_and_parses_retained_git_tools
 #[test]
 fn continuation_endpoint_rotation_has_canonical_and_legacy_tool_names() {
     let args = json!({
-        "agent_id": "wc_dagent_qqqqqqqqqqqqqqqq".to_string(),
+        "agent_id": "cg_dagent_qqqqqqqqqqqqqqqq".to_string(),
         "host": "ChatGPT",
         "client_attachment_id": "window-a",
         "idempotency_key": "rotate-endpoint-1"
@@ -940,7 +940,7 @@ fn tool_call_project_accessor_covers_project_tool_specs() {
     // git inspection path.
     let handoff = ToolCall::from_tool_name(
         "session_handoff_summary",
-        json!({"session_id": "wc_sess_x", "project": "agent:oe:private-drop"}),
+        json!({"session_id": "cg_sess_x", "project": "agent:oe:private-drop"}),
     )
     .unwrap();
     assert_eq!(handoff.project(), Some("agent:oe:private-drop"));
@@ -969,7 +969,7 @@ fn tool_call_session_id_accessor_covers_session_tool_specs() {
             // foreign or missing filter value into an existence oracle.
             None
         } else {
-            Some("wc_sess_accessor")
+            Some("cg_sess_accessor")
         };
         assert_eq!(
             call.session_id(),
@@ -1165,7 +1165,7 @@ fn session_execution_context_parses_as_strongly_typed_replacement() {
         "update_session_context",
         json!({
             "project": "agent:oe:demo",
-            "session_id": "wc_sess_context01",
+            "session_id": "cg_sess_context01",
             "execution_context": {
                 "default_cwd": "/opt/codegpt-edge",
                 "resource": "tmp"
@@ -1189,7 +1189,7 @@ fn session_execution_context_parses_as_strongly_typed_replacement() {
         "update_session_context",
         json!({
             "project": "agent:oe:demo",
-            "session_id": "wc_sess_context01",
+            "session_id": "cg_sess_context01",
             "execution_context": {}
         }),
     )
@@ -1204,18 +1204,18 @@ fn session_execution_context_parses_as_strongly_typed_replacement() {
                 default_shell: None,
                 ..
             },
-        } if project == "agent:oe:demo" && session_id == "wc_sess_context01"
+        } if project == "agent:oe:demo" && session_id == "cg_sess_context01"
     ));
 
     for invalid in [
         json!({
             "project": "agent:oe:demo",
-            "session_id": "wc_sess_context01",
+            "session_id": "cg_sess_context01",
             "execution_context": {"env": {"TOKEN": "secret"}}
         }),
         json!({
             "project": "agent:oe:demo",
-            "session_id": "wc_sess_context01",
+            "session_id": "cg_sess_context01",
             "execution_context": {"default_shell": "zsh"}
         }),
     ] {
@@ -1230,7 +1230,7 @@ fn from_tool_name_parses_finish_coding_task_workspace_projection_flag() {
         "finish_coding_task",
         json!({
             "project": "agent:client:demo",
-            "session_id": "wc_sess_demo",
+            "session_id": "cg_sess_demo",
             "summary_only": true,
             "include_workspace": true,
             "include_validation_summary": true,
@@ -1253,7 +1253,7 @@ fn from_tool_name_parses_finish_coding_task_workspace_projection_flag() {
             include_validation_summary,
         } => {
             assert_eq!(project, "agent:client:demo");
-            assert_eq!(session_id, "wc_sess_demo");
+            assert_eq!(session_id, "cg_sess_demo");
             assert!(summary_only);
             assert_eq!(include_diff, Some(false));
             assert_eq!(include_workspace, Some(true));
@@ -1668,7 +1668,7 @@ fn observe_jobs_wake_policy_defaults_and_validates() {
 #[test]
 fn code_mode_exec_parses_outer_authority() {
     const PRIVATE_SOURCE: &str = "const secret = 'NEVER_PERSIST_CODE_MODE_SOURCE'; text(secret);";
-    let session_id = format!("wc_sess_{}", "1".repeat(32));
+    let session_id = format!("cg_sess_{}", "1".repeat(32));
     let call = ToolCall::from_tool_name(
         "code_mode_exec",
         json!({
@@ -1689,7 +1689,7 @@ fn code_mode_exec_parses_outer_authority() {
 fn code_mode_exec_effectful_parses_outer_authority() {
     const PRIVATE_SOURCE: &str =
         "const secret = 'NEVER_PERSIST_EFFECTFUL_CODE_MODE_SOURCE'; text(secret);";
-    let session_id = format!("wc_sess_{}", "2".repeat(32));
+    let session_id = format!("cg_sess_{}", "2".repeat(32));
     let call = ToolCall::from_tool_name(
         "code_mode_exec_effectful",
         json!({
@@ -1711,7 +1711,7 @@ fn observe_session_messages_tool_call_is_bounded() {
     let call = ToolCall::from_tool_name(
         "observe_session_messages",
         json!({
-            "session_id": "wc_sess_demo",
+            "session_id": "cg_sess_demo",
             "after_observation_token": raw_token,
             "wait_secs": 7,
             "limit": 25
@@ -1722,7 +1722,7 @@ fn observe_session_messages_tool_call_is_bounded() {
     let oversized = ToolCall::from_tool_name(
         "observe_session_messages",
         json!({
-            "session_id": "wc_sess_demo",
+            "session_id": "cg_sess_demo",
             "after_observation_token": "x".repeat(codegpt_core::job_observation::MAX_JOB_OBSERVATION_TOKEN_LEN + 1)
         }),
     );
@@ -1741,10 +1741,10 @@ fn retired_start_coding_task_is_a_canonical_unknown_tool() {
 
 #[test]
 fn agent_continuation_bind_requires_view_fence() {
-    let binding_id = format!("wc_host_binding_{}", "a0".repeat(16));
+    let binding_id = format!("cg_host_binding_{}", "a0".repeat(16));
     let mut args = json!({
-        "agent_id": "wc_dagent_qqqqqqqqqqqqqqqq".to_string(),
-        "endpoint_id": "wc_endpoint_u7u7u7u7u7u7u7u7".to_string(),
+        "agent_id": "cg_dagent_qqqqqqqqqqqqqqqq".to_string(),
+        "endpoint_id": "cg_endpoint_u7u7u7u7u7u7u7u7".to_string(),
         "expected_controller_generation": 1,
         "binding_id": binding_id,
     });

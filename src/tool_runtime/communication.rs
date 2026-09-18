@@ -1547,7 +1547,7 @@ mod tests {
             .as_str()
             .unwrap()
             .to_string();
-        let missing_agent = "wc_dagent_mZmZmZmZmZmZmZmZ".to_string();
+        let missing_agent = "cg_dagent_mZmZmZmZmZmZmZmZ".to_string();
 
         let foreign_agent = runtime.update_agent_identity(
             Some(&alice),
@@ -1585,7 +1585,7 @@ mod tests {
             .as_str()
             .unwrap()
             .to_string();
-        let missing_conversation = "wc_conv_iIiIiIiIiIiIiIiI".to_string();
+        let missing_conversation = "cg_conv_iIiIiIiIiIiIiIiI".to_string();
         let foreign_conversation = runtime.read_conversation(
             Some(&alice),
             bob_conversation_id,

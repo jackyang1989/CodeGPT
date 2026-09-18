@@ -722,7 +722,7 @@ fn read_continuation_output_schemas_accept_one_action_and_snapshot_truth() {
                 "read_revision": 3817291045227_u64, "start_line": 1, "limit": 100, "total_lines": 200,
                 "returned_lines": 50, "end_line": 50, "has_more": true, "budget_truncated": true}}],
         "output_truncated": true, "truncation_reason": "batch_response_budget",
-        "suggested_call": {"tool": "read_files", "arguments": {"project": "agent:oe:demo", "session_id": "wc_sess_abcdefghijklmnop",
+        "suggested_call": {"tool": "read_files", "arguments": {"project": "agent:oe:demo", "session_id": "cg_sess_abcdefghijklmnop",
             "items": [{"path": "src/0.rs", "start_line": 51, "limit": 50, "expected_read_revision": 3817291045227_u64}, {"path": "src/1.rs"}, {"path": "src/2.rs", "start_line": 4, "limit": 20}]}}
     }});
     test_support::validate_schema_instance(&result, &schema).unwrap();
@@ -2172,7 +2172,7 @@ fn skill_recovery_output_schema_accepts_canonical_shapes_and_declares_legacy_rej
 
     let mut guessed_extra = actionable;
     guessed_extra["output"]["suggested_call"]["arguments"]["package_revision"] =
-        json!("wc_skillpkg_deadbeef");
+        json!("cg_skillpkg_deadbeef");
     assert!(test_support::validate_schema_instance(&guessed_extra, &schema).is_err());
 }
 
@@ -2675,10 +2675,10 @@ fn assert_outcome_model_schema_fields(output_props: &serde_json::Map<String, Val
 #[test]
 fn agent_wait_model_schema_separates_matches_from_durable_bookkeeping() {
     let specs = registered_tool_specs();
-    let wait_id = "wc_agent_wait_ERERERERERERERER".to_string();
+    let wait_id = "cg_agent_wait_ERERERERERERERER".to_string();
     let matched = serde_json::json!({
-        "task_id": "wc_agent_task_IiIiIiIiIiIiIiIi".to_string(),
-        "task_attempt_id": "wc_agent_task_attempt_MzMzMzMzMzMzMzMz".to_string(),
+        "task_id": "cg_agent_task_IiIiIiIiIiIiIiIi".to_string(),
+        "task_attempt_id": "cg_agent_task_attempt_MzMzMzMzMzMzMzMz".to_string(),
         "terminal_task_state": "succeeded"
     });
     for tool in [
@@ -2728,7 +2728,7 @@ fn run_skill_resource_success_requires_provenance_and_keeps_lifecycle_constraint
     let complete = json!({
         "success": true,
         "output": {
-            "skill_id": "wc_skill_ExExExExExExExExExExEA",
+            "skill_id": "cg_skill_ExExExExExExExExExExEA",
             "skill_path": "scripts/probe.py",
             "skill_sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
             "skill_trust": "operator_configured_guidance",

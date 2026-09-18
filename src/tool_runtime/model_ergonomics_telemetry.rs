@@ -703,7 +703,7 @@ mod tests {
         let record = work_on_project_record(json!({
             "project": "agent:private:project",
             "instruction": "private instruction",
-            "session_id": "wc_sess_private",
+            "session_id": "cg_sess_private",
             "include_project_instructions": false,
             "include_workflow_guidance": false,
             "include_extension_catalog": false
@@ -1072,7 +1072,7 @@ mod tests {
         )
         .unwrap()
         .finish_after(Duration::ZERO)
-        .record_for_tool_result(&ToolResult::ok(json!({"session_continuity": {"status": "unacknowledged", "suggested_call": {"tool": "session_handoff_summary", "arguments": {"session_id": "wc_sess_test"}}}})))
+        .record_for_tool_result(&ToolResult::ok(json!({"session_continuity": {"status": "unacknowledged", "suggested_call": {"tool": "session_handoff_summary", "arguments": {"session_id": "cg_sess_test"}}}})))
         .unwrap();
         assert!(missing.context_continuity_eligible);
         assert_eq!(missing.context_ack_present, Some(false));
@@ -1130,7 +1130,7 @@ mod tests {
                 "status": "invalid",
                 "suggested_call": {
                     "tool": "session_handoff_summary",
-                    "arguments": {"session_id": "wc_sess_invalid"}
+                    "arguments": {"session_id": "cg_sess_invalid"}
                 }
             }
         })))
@@ -1148,7 +1148,7 @@ mod tests {
         assert_eq!(invalid.session_history_lost, Some(false));
         assert!(!serde_json::to_string(&invalid)
             .unwrap()
-            .contains("wc_sess_invalid"));
+            .contains("cg_sess_invalid"));
     }
 
     #[test]

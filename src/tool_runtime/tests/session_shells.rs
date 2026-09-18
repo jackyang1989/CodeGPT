@@ -402,7 +402,7 @@ async fn server_lifecycle_uses_distinct_ids_and_never_routes_through_run_shell()
     let open_request = next_persistent_request(&runtime).await;
     let open = open_request.persistent_shell.as_ref().unwrap();
     assert_eq!(open.action, "open");
-    assert!(open.shell_id.starts_with("wc_shell_"));
+    assert!(open.shell_id.starts_with("cg_shell_"));
     assert_eq!(open.workflow_session_id, session.session_id);
     assert_eq!(open.runtime_project_id, project);
     assert_eq!(

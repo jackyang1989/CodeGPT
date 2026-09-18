@@ -630,7 +630,7 @@ async fn pat_verifier_rejects_unknown_token_without_db() {
     };
     let verifier = PatVerifier;
     let result = verifier
-        .verify(&config, None, "wc_pat_bogus")
+        .verify(&config, None, "cg_pat_bogus")
         .await
         .unwrap();
     assert!(
@@ -640,7 +640,7 @@ async fn pat_verifier_rejects_unknown_token_without_db() {
 }
 
 #[tokio::test]
-async fn oauth2_verifier_ignores_non_wc_oat_tokens() {
+async fn oauth2_verifier_ignores_non_cg_oat_tokens() {
     let config = crate::Config {
         addr: "127.0.0.1:0".to_string(),
         data_dir: PathBuf::from("./data"),
@@ -652,21 +652,21 @@ async fn oauth2_verifier_ignores_non_wc_oat_tokens() {
         },
     };
     let verifier = OAuth2Verifier;
-    // Non-wc_oat_ tokens should return Ok(None) (not recognized).
+    // Non-cg_oat_ tokens should return Ok(None) (not recognized).
     for token in &[
         "some-oauth2-jwt",
-        "wc_pat_abc123",
-        "wc_agent_abc123",
-        "wc_acct_abc123",
-        "wc_ort_abc123",
-        "wc_oac_abc123",
-        "wc_csec_abc123",
-        "wc_client_abc123",
+        "cg_pat_abc123",
+        "cg_agent_abc123",
+        "cg_acct_abc123",
+        "cg_ort_abc123",
+        "cg_oac_abc123",
+        "cg_csec_abc123",
+        "cg_client_abc123",
     ] {
         let result = verifier.verify(&config, None, token).await.unwrap();
         assert!(
             result.is_none(),
-            "non-wc_oat_ token '{}' should return None",
+            "non-cg_oat_ token '{}' should return None",
             token
         );
     }
@@ -683,12 +683,12 @@ async fn oauth2_verifier_returns_none_when_oauth2_disabled() {
     };
     let verifier = OAuth2Verifier;
     let result = verifier
-        .verify(&config, None, "wc_oat_sometoken")
+        .verify(&config, None, "cg_oat_sometoken")
         .await
         .unwrap();
     assert!(
         result.is_none(),
-        "OAuth2 disabled should return None for wc_oat_* tokens"
+        "OAuth2 disabled should return None for cg_oat_* tokens"
     );
 }
 
@@ -916,7 +916,7 @@ async fn oauth2_verifier_rejects_invalid_access_token_state_matrix() {
         let config = gate_test_config_oauth2(Some("secret"));
         let (_tmp, db) = gate_test_db();
         let plaintext = match case {
-            InvalidAccessToken::Unknown => "wc_oat_nonexistenttoken".to_string(),
+            InvalidAccessToken::Unknown => "cg_oat_nonexistenttoken".to_string(),
             InvalidAccessToken::Expired => {
                 let user = gate_seed_user(&db, "alice");
                 let (client, _secret) = gate_seed_oauth_client(&db, &user, "Test App");
@@ -1001,8 +1001,8 @@ async fn oauth2_verifier_ignores_non_access_oauth_credential_kinds() {
 
     for (label, token) in [
         ("refresh token", refresh.as_str()),
-        ("authorization code", "wc_oac_sometoken"),
-        ("client secret", "wc_csec_sometoken"),
+        ("authorization code", "cg_oac_sometoken"),
+        ("client secret", "cg_csec_sometoken"),
     ] {
         let result = OAuth2Verifier
             .verify(&config, Some(&db), token)
@@ -1073,9 +1073,9 @@ async fn oauth2_verifier_does_not_update_last_used_on_failure() {
 #[tokio::test]
 async fn oauth2_verifier_accepts_current_project_share_and_preserves_project_identity() {
     let mut config = (*gate_test_config_oauth2(Some("secret"))).clone();
-    config.oauth2.project_share_grant_id = Some("wc_pgrant_111111111111111111111111".to_string());
+    config.oauth2.project_share_grant_id = Some("cg_pgrant_111111111111111111111111".to_string());
     config.oauth2.project_share_session_id = Some(
-        "wc_share_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa".to_string(),
+        "cg_share_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa".to_string(),
     );
     let config = Arc::new(config);
     let (_tmp, db) = gate_test_db();
@@ -1086,7 +1086,7 @@ async fn oauth2_verifier_accepts_current_project_share_and_preserves_project_ide
         client_secret_hash: hash_token(&secret),
         name: "project-share".to_string(),
         owner_user_id: None,
-        owner_project_grant_id: Some("wc_pgrant_111111111111111111111111".to_string()),
+        owner_project_grant_id: Some("cg_pgrant_111111111111111111111111".to_string()),
         owner_shared_key_hash: None,
         redirect_uris: "https://client.example/callback".to_string(),
         allowed_scopes: "runtime:read project:read project:write job:run".to_string(),
@@ -1101,7 +1101,7 @@ async fn oauth2_verifier_accepts_current_project_share_and_preserves_project_ide
         token_hash: hash_token(&plaintext),
         client_id: client.client_id.clone(),
         subject_kind: PROJECT_SHARE_OAUTH_SUBJECT_KIND.to_string(),
-        subject_id: "wc_pgrant_111111111111111111111111|wc_share_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa".to_string(),
+        subject_id: "cg_pgrant_111111111111111111111111|cg_share_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa".to_string(),
         user_id: None,
         scopes: "runtime:read project:read project:write job:run".to_string(),
         resource: Some("https://share.example/mcp".to_string()),
@@ -1121,7 +1121,7 @@ async fn oauth2_verifier_accepts_current_project_share_and_preserves_project_ide
     assert!(ctx.is_oauth_project_subject());
     assert_eq!(
         ctx.project_grant_id.as_deref(),
-        Some("wc_pgrant_111111111111111111111111")
+        Some("cg_pgrant_111111111111111111111111")
     );
     assert_eq!(
         ctx.token_kind.as_deref(),
@@ -1139,9 +1139,9 @@ async fn oauth2_verifier_accepts_current_project_share_and_preserves_project_ide
 #[tokio::test]
 async fn oauth2_verifier_rejects_stale_project_share_session() {
     let mut config = (*gate_test_config_oauth2(Some("secret"))).clone();
-    config.oauth2.project_share_grant_id = Some("wc_pgrant_111111111111111111111111".to_string());
+    config.oauth2.project_share_grant_id = Some("cg_pgrant_111111111111111111111111".to_string());
     config.oauth2.project_share_session_id = Some(
-        "wc_share_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb".to_string(),
+        "cg_share_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb".to_string(),
     );
     let config = Arc::new(config);
     let (_tmp, db) = gate_test_db();
@@ -1151,7 +1151,7 @@ async fn oauth2_verifier_rejects_stale_project_share_session() {
         client_secret_hash: hash_token(&generate_oauth_client_secret()),
         name: "project-share".to_string(),
         owner_user_id: None,
-        owner_project_grant_id: Some("wc_pgrant_111111111111111111111111".to_string()),
+        owner_project_grant_id: Some("cg_pgrant_111111111111111111111111".to_string()),
         owner_shared_key_hash: None,
         redirect_uris: "https://client.example/callback".to_string(),
         allowed_scopes: "runtime:read project:read project:write job:run".to_string(),
@@ -1166,7 +1166,7 @@ async fn oauth2_verifier_rejects_stale_project_share_session() {
         token_hash: hash_token(&plaintext),
         client_id: client.client_id,
         subject_kind: PROJECT_SHARE_OAUTH_SUBJECT_KIND.to_string(),
-        subject_id: "wc_pgrant_111111111111111111111111|wc_share_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa".to_string(),
+        subject_id: "cg_pgrant_111111111111111111111111|cg_share_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa".to_string(),
         user_id: None,
         scopes: "runtime:read".to_string(),
         resource: Some("https://share.example/mcp".to_string()),
@@ -1412,7 +1412,7 @@ fn lightweight_contexts_have_no_admin_scope() {
         .scopes
         .contains(&SCOPE_COMPUTER_CLIPBOARD_WRITE.to_string()));
 
-    let project = crate::auth::shared_key::project_credential_context("wc_pgrant_1111111111111111");
+    let project = crate::auth::shared_key::project_credential_context("cg_pgrant_1111111111111111");
     assert!(project.is_project_credential());
     assert!(!project.is_lightweight());
     assert!(!project.scopes.contains(&SCOPE_COMPUTER_READ.to_string()));
@@ -1435,11 +1435,11 @@ fn lightweight_contexts_have_no_admin_scope() {
 
 #[test]
 fn managed_token_prefix_detected() {
-    assert!(is_managed_token_prefix("wc_boot_abc"));
-    assert!(is_managed_token_prefix("wc_pat_xyz"));
-    assert!(is_managed_token_prefix("wc_agent_123"));
-    assert!(is_managed_token_prefix("wc_oat_def"));
-    assert!(is_managed_token_prefix("wc_ort_refresh"));
+    assert!(is_managed_token_prefix("cg_boot_abc"));
+    assert!(is_managed_token_prefix("cg_pat_xyz"));
+    assert!(is_managed_token_prefix("cg_agent_123"));
+    assert!(is_managed_token_prefix("cg_oat_def"));
+    assert!(is_managed_token_prefix("cg_ort_refresh"));
     assert!(!is_managed_token_prefix("abc123"));
     assert!(!is_managed_token_prefix("my-shared-key"));
     assert!(!is_managed_token_prefix("wrong-token"));
@@ -1472,13 +1472,13 @@ async fn shared_key_fallback_gated_by_env_and_prefix() {
     assert!(ctx.is_shared_key());
     assert!(!ctx.is_admin());
 
-    // Shared-key enabled but any wc_-prefixed invalid managed credential →
+    // Shared-key enabled but any cg_-prefixed invalid managed credential →
     // None (reject), never a shared-key downgrade.
     for token in [
-        "wc_pat_invalid",
-        "wc_agent_invalid",
-        "wc_acct_invalid",
-        "wc_oat_invalid",
+        "cg_pat_invalid",
+        "cg_agent_invalid",
+        "cg_acct_invalid",
+        "cg_oat_invalid",
     ] {
         let r = authenticate_bearer(&config, None, Some(token)).await;
         assert!(r.is_none(), "{token} must not fall back to shared-key");
@@ -1540,7 +1540,7 @@ async fn authenticate_returns_none_for_unknown_token_with_db() {
         oauth2: crate::OAuth2Config::default(),
     };
     let (_tmp, db) = gate_test_db();
-    let result = authenticate(&config, Some(&db), "wc_pat_bogus")
+    let result = authenticate(&config, Some(&db), "cg_pat_bogus")
         .await
         .unwrap();
     assert!(result.is_none(), "unknown token should return None");
@@ -2262,7 +2262,7 @@ async fn auth_middleware_lightweight_empty_and_open_paths() {
         .await;
     assert_eq!(resp.status_code, Some(StatusCode::UNAUTHORIZED));
 
-    let (status, body) = gate_send(&service, "/api/runtime/status", Some("wc_pat_invalid")).await;
+    let (status, body) = gate_send(&service, "/api/runtime/status", Some("cg_pat_invalid")).await;
     assert_eq!(
         status,
         StatusCode::UNAUTHORIZED,

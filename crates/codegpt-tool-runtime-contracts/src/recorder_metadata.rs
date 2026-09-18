@@ -1,8 +1,8 @@
 //! Recorder-only metadata extraction around canonical tool request parsing.
 
-use serde_json::Value;
 use codegpt_tool_contracts::ToolCall;
 use codegpt_workflow_session::ToolCallRecorderMetadata;
+use serde_json::Value;
 
 /// Parse one public/model request while retaining recorder-only expectation metadata.
 /// Business arguments are parsed by the canonical ToolCall contract; wrapper metadata never becomes

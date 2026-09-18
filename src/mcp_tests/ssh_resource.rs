@@ -1,8 +1,8 @@
 use super::*;
-use std::sync::Arc;
 use codegpt_core::ssh_resource::{
     SshResourceInventoryEntry, SshResourceResponse, SshResourceSource,
 };
+use std::sync::Arc;
 
 fn ssh_auth() -> crate::auth::AuthContext {
     let mut auth = mcp_export_api_auth("ssh-resource-test-pat", "alice");
@@ -497,7 +497,7 @@ async fn ssh_resource_accepts_collaboration_ack_but_rejects_other_stateless_wrap
                         json!({
                             "action":"list",
                             "runner":"runner-a",
-                            crate::tool_runtime::sessions::TOOL_CALL_ACK_SESSION_MESSAGE_IDS_FIELD: ["wc_msg_0123456789abcdef"]
+                            crate::tool_runtime::sessions::TOOL_CALL_ACK_SESSION_MESSAGE_IDS_FIELD: ["cg_msg_0123456789abcdef"]
                         }),
                     )),
                 ),
@@ -555,7 +555,7 @@ async fn ssh_resource_accepts_collaboration_ack_but_rejects_other_stateless_wrap
                 "action":"list",
                 "runner":"runner-a",
                 crate::tool_runtime::sessions::TOOL_CALL_SESSION_MESSAGE_RESOLUTION_FIELD: {
-                    "message_id": "wc_msg_cached",
+                    "message_id": "cg_msg_cached",
                     "resolution": "handled"
                 }
             }),
@@ -611,7 +611,7 @@ async fn restricted_permission_denies_ssh_management_before_runner_dispatch() {
                 crate::ssh_resource_gateway::SSH_RESOURCE_TOOL_NAME,
                 json!({
                     "action":"register",
-                    "binding":"wc_sshbind_0123456789abcdef0123456789abcdef",
+                    "binding":"cg_sshbind_0123456789abcdef0123456789abcdef",
                     "name":"w10",
                     "target":"private-user@private-host"
                 }),

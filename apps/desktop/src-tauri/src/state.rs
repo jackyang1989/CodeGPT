@@ -1672,11 +1672,11 @@ impl DesktopCore {
         ) {
             (Some(identity), Some(observation)) => (identity, false, observation.client_id),
             _ => {
-                if !pairing_code.starts_with("wc_pair_") {
+                if !pairing_code.starts_with("cg_pair_") {
                     return Err(DesktopError::new(
                             "pairing_code_invalid",
                             "The saved Runner identity is not reusable and no new CodeGPT pairing code was provided",
-                            "Refresh this Runner connection with a new wc_pair_… code.",
+                            "Refresh this Runner connection with a new cg_pair_… code.",
                         ));
                 }
                 let identity = self
@@ -3817,8 +3817,8 @@ mod tests {
             runtime_project_id: Some("agent:desktop:project".to_string()),
         };
         let json = serde_json::to_string(&runtime).unwrap();
-        assert!(!json.contains("wc_pat_"));
-        assert!(!json.contains("wc_agent_"));
+        assert!(!json.contains("cg_pat_"));
+        assert!(!json.contains("cg_agent_"));
         assert!(!json.contains("CONTROL_PLANE_API_KEY"));
     }
 

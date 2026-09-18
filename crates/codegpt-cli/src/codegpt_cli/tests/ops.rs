@@ -300,7 +300,7 @@ fn ops_parser_errors_do_not_leak_token_value() {
 async fn ops_rejects_agent_token_from_env_file_without_leaking_it() {
     let tmp = tempfile::tempdir().unwrap();
     let env_file = tmp.path().join("codegpt.env");
-    let secret = "wc_agent_do_not_echo_ops_env_file_0123456789";
+    let secret = "cg_agent_do_not_echo_ops_env_file_0123456789";
     std::fs::write(&env_file, format!("CODEGPT_TOKEN={secret}\n")).unwrap();
     let mut opts = ops_common_opts("http://127.0.0.1:1".to_string());
     opts.env_file = Some(env_file);
@@ -318,7 +318,7 @@ async fn ops_rejects_agent_token_from_env_file_without_leaking_it() {
 #[tokio::test(flavor = "current_thread")]
 async fn ops_rejects_agent_token_from_process_env_without_leaking_it() {
     let _guard = env_test_guard();
-    let secret = "wc_agent_do_not_echo_ops_process_env_0123456789";
+    let secret = "cg_agent_do_not_echo_ops_process_env_0123456789";
     let _env = EnvGuard::new().set("CODEGPT_TOKEN", secret);
     let opts = ops_common_opts("http://127.0.0.1:1".to_string());
     let error = run_ops_command(OpsCommand::Status(opts)).await.unwrap_err();
@@ -990,7 +990,7 @@ fn ops_runners_maps_online_stale_and_jobs() {
 
 #[test]
 fn ops_runner_projects_only_exact_safe_runtime_identity() {
-    let secret = "wc_pat_projection_must_not_leak_0123456789";
+    let secret = "cg_pat_projection_must_not_leak_0123456789";
     let mut runtime = runner_runtime_status_fixture();
     runtime["credential_material"] = json!(secret);
     runtime["focus"]["credential_material"] = json!(secret);
@@ -1009,7 +1009,7 @@ fn ops_runner_projects_only_exact_safe_runtime_identity() {
 
 #[tokio::test]
 async fn ops_runner_queries_exact_client_id_without_echoing_token() {
-    let secret = "wc_pat_runner_query_secret_0123456789";
+    let secret = "cg_pat_runner_query_secret_0123456789";
     let (server_url, stop_tx, handle) = spawn_ops_route_server(vec![(
         "/api/runtime/status",
         json_http_response(

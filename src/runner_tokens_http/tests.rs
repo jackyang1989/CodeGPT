@@ -143,12 +143,12 @@ async fn http_runner_tokens_create_bootstrap_creates_for_anyone() {
     assert_eq!(body["success"], true);
     let token = body["token"].as_str().unwrap().to_string();
     assert!(
-        token.starts_with("wc_agent_"),
-        "agent token must use wc_agent_ prefix"
+        token.starts_with("cg_agent_"),
+        "agent token must use cg_agent_ prefix"
     );
-    assert!(token.len() > "wc_agent_".len() + 32);
+    assert!(token.len() > "cg_agent_".len() + 32);
     let prefix = body["token_prefix"].as_str().unwrap();
-    assert!(prefix.starts_with("wc_agent_"));
+    assert!(prefix.starts_with("cg_agent_"));
     assert_ne!(prefix, token);
     assert_eq!(body["kind"], "agent");
     assert_eq!(body["username"], "alice");
@@ -438,11 +438,11 @@ async fn http_runner_tokens_register_hash_validates_hash_prefix_scope_and_duplic
         ),
         (
             "plaintext token field",
-            json!({"username":"alice","client_id":"alice-laptop","token":"wc_agent_plaintext","token_hash":hash,"token_prefix":prefix,"scopes":["agent:register"]}),
+            json!({"username":"alice","client_id":"alice-laptop","token":"cg_agent_plaintext","token_hash":hash,"token_prefix":prefix,"scopes":["agent:register"]}),
         ),
         (
             "bad prefix",
-            json!({"username":"alice","client_id":"alice-laptop","token_hash":hash,"token_prefix":"wc_pat_bad","scopes":["agent:register"]}),
+            json!({"username":"alice","client_id":"alice-laptop","token_hash":hash,"token_prefix":"cg_pat_bad","scopes":["agent:register"]}),
         ),
         (
             "bad client_id",
@@ -493,7 +493,7 @@ async fn http_runner_tokens_register_hash_rejects_account_credential_hash_confli
             "username": "alice",
             "client_id": "alice-laptop",
             "token_hash": hash_token(&credential),
-            "token_prefix": "wc_agent_conf",
+            "token_prefix": "cg_agent_conf",
             "scopes": ["agent:register"],
         }))
         .send(&service)
@@ -842,7 +842,7 @@ fn agent_token_summary_never_includes_hash_or_plaintext() {
         id: "k-1".to_string(),
         user_id: "u-1".to_string(),
         name: "agent".to_string(),
-        key_prefix: "wc_agent_pre".to_string(),
+        key_prefix: "cg_agent_pre".to_string(),
         created_at: 1,
         last_used_at: None,
         revoked_at: None,

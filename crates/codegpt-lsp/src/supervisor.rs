@@ -1,5 +1,8 @@
 use super::language::{profile_for_kind, LanguageProfile};
 use super::protocol::{read_message, write_message, FramingError, MAX_LSP_MESSAGE_BYTES};
+#[cfg(windows)]
+use codegpt_process::resolve_program_in_path;
+use codegpt_process::{find_executable_in_path, is_executable_file};
 use serde_json::{json, Value};
 use sha2::{Digest, Sha256};
 use std::collections::{HashMap, VecDeque};
@@ -15,9 +18,6 @@ use std::sync::{mpsc, Arc, Condvar, Mutex, MutexGuard};
 use std::thread::{self, JoinHandle};
 use std::time::{Duration, Instant};
 use url::Url;
-#[cfg(windows)]
-use codegpt_process::resolve_program_in_path;
-use codegpt_process::{find_executable_in_path, is_executable_file};
 
 pub(crate) const DEFAULT_REQUEST_TIMEOUT: Duration = Duration::from_secs(10);
 pub(crate) const DEFAULT_INITIALIZE_TIMEOUT: Duration = Duration::from_secs(15);

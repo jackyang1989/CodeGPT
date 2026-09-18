@@ -101,7 +101,7 @@ test("Session liveness stays factual across working recent idle and attention st
 
 test("stale same-session detail response cannot overwrite newer snapshot", () => {
   const state = initialWorkflowSessionState();
-  const older = selectWorkflowSession(state, "wc_sess_same");
+  const older = selectWorkflowSession(state, "cg_sess_same");
   const newer = refreshWorkflowSessionDetail(state);
 
   assert.equal(adoptWorkflowSessionDetail(state, newer, { updated_at: 2 }), true);
@@ -111,11 +111,11 @@ test("stale same-session detail response cannot overwrite newer snapshot", () =>
 
 test("switching workflow sessions invalidates the previous detail snapshot", () => {
   const state = initialWorkflowSessionState();
-  const first = selectWorkflowSession(state, "wc_sess_first");
+  const first = selectWorkflowSession(state, "cg_sess_first");
   assert.equal(adoptWorkflowSessionDetail(state, first, { title: "first" }), true);
 
-  const second = selectWorkflowSession(state, "wc_sess_second");
-  assert.equal(state.selectedSessionId, "wc_sess_second");
+  const second = selectWorkflowSession(state, "cg_sess_second");
+  assert.equal(state.selectedSessionId, "cg_sess_second");
   assert.equal(state.snapshot, null);
   assert.equal(adoptWorkflowSessionDetail(state, first, { title: "late first" }), false);
   assert.equal(adoptWorkflowSessionDetail(state, second, { title: "second" }), true);
@@ -127,7 +127,7 @@ test("switching workflow sessions invalidates the previous detail snapshot", () 
 
 test("timeline follow stays enabled at bottom and manual upward scroll disables it", () => {
   const state = initialWorkflowSessionState();
-  selectWorkflowSession(state, "wc_sess_follow");
+  selectWorkflowSession(state, "cg_sess_follow");
   assert.equal(shouldFollowWorkflowSessionLatest(state), true);
 
   assert.equal(updateWorkflowSessionFollowFromScroll(state, 700, 300, 1000), true);
@@ -141,7 +141,7 @@ test("timeline follow stays enabled at bottom and manual upward scroll disables 
 
 test("jump restores follow and session switch resets follow state", () => {
   const state = initialWorkflowSessionState();
-  selectWorkflowSession(state, "wc_sess_first");
+  selectWorkflowSession(state, "cg_sess_first");
   updateWorkflowSessionFollowFromScroll(state, 100, 300, 1000);
   assert.equal(shouldFollowWorkflowSessionLatest(state), false);
 
@@ -149,7 +149,7 @@ test("jump restores follow and session switch resets follow state", () => {
   assert.equal(shouldFollowWorkflowSessionLatest(state), true);
 
   updateWorkflowSessionFollowFromScroll(state, 100, 300, 1000);
-  selectWorkflowSession(state, "wc_sess_second");
+  selectWorkflowSession(state, "cg_sess_second");
   assert.equal(shouldFollowWorkflowSessionLatest(state), true);
 
   updateWorkflowSessionFollowFromScroll(state, 100, 300, 1000);

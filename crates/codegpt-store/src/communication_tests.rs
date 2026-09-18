@@ -5,7 +5,7 @@ use std::sync::{Arc, Barrier};
 fn principal(kind: &str, hex: char) -> CommunicationPrincipal {
     CommunicationPrincipal {
         kind: kind.to_string(),
-        digest: format!("wc_commprincipal_{}", hex.to_string().repeat(64)),
+        digest: format!("cg_commprincipal_{}", hex.to_string().repeat(64)),
     }
 }
 
@@ -38,26 +38,26 @@ fn compact_identity_collision_retry_and_proof_strength() {
         7
     );
     for prefix in [
-        "wc_dagent_",
-        "wc_endpoint_",
-        "wc_agent_task_",
-        "wc_agent_task_attempt_",
-        "wc_wake_",
-        "wc_wake_attempt_",
-        "wc_agent_wait_",
-        "wc_goal_",
-        "wc_conv_",
-        "wc_participant_",
-        "wc_cmsg_",
-        "wc_delivery_",
-        "wc_attention_event_",
+        "cg_dagent_",
+        "cg_endpoint_",
+        "cg_agent_task_",
+        "cg_agent_task_attempt_",
+        "cg_wake_",
+        "cg_wake_attempt_",
+        "cg_agent_wait_",
+        "cg_goal_",
+        "cg_conv_",
+        "cg_participant_",
+        "cg_cmsg_",
+        "cg_delivery_",
+        "cg_attention_event_",
     ] {
         let id = allocate_identity(&transaction, prefix, query).unwrap();
         assert_eq!(id.len(), prefix.len() + 16);
         validate_id(&id, prefix, "invalid").unwrap();
         assert!(validate_id(&format!("{prefix}{}", "a".repeat(32)), prefix, "invalid").is_err());
     }
-    for prefix in ["wc_agent_task_fence_", "wc_wake_claim_", "wc_wake_consume_"] {
+    for prefix in ["cg_agent_task_fence_", "cg_wake_claim_", "cg_wake_consume_"] {
         let proof = new_proof(prefix);
         assert_eq!(proof.len(), prefix.len() + 22);
         validate_proof(&proof, prefix, "invalid").unwrap();
@@ -161,7 +161,7 @@ fn communication_schema_migrates_existing_endpoint_table_with_mcp_app_recovery_c
     for column in ["mcp_app_recovery_fingerprint", "mcp_app_client_window_key"] {
         db.conn_for_tests()
             .execute(
-                &format!("ALTER TABLE wc_agent_endpoints DROP COLUMN {column}"),
+                &format!("ALTER TABLE cg_agent_endpoints DROP COLUMN {column}"),
                 [],
             )
             .unwrap();
@@ -173,7 +173,7 @@ fn communication_schema_migrates_existing_endpoint_table_with_mcp_app_recovery_c
         let column_count: i64 = reopened
             .conn_for_tests()
             .query_row(
-                "SELECT COUNT(*) FROM pragma_table_info('wc_agent_endpoints') WHERE name = ?1",
+                "SELECT COUNT(*) FROM pragma_table_info('cg_agent_endpoints') WHERE name = ?1",
                 [column],
                 |row| row.get(0),
             )
@@ -405,7 +405,7 @@ fn corrupt_endpoint_lifecycle_fails_closed_in_authority_load_path() {
     conn.execute_batch("PRAGMA ignore_check_constraints = ON;")
         .unwrap();
     conn.execute(
-        "UPDATE wc_agent_endpoints SET lifecycle = 'future_state' WHERE endpoint_id = ?1",
+        "UPDATE cg_agent_endpoints SET lifecycle = 'future_state' WHERE endpoint_id = ?1",
         [&attached.endpoint_id],
     )
     .unwrap();
@@ -912,7 +912,7 @@ fn message_deliveries_and_wake_commit_atomically() {
     let idempotency_count_before: i64 = db
         .conn_for_tests()
         .query_row(
-            "SELECT COUNT(*) FROM wc_communication_idempotency",
+            "SELECT COUNT(*) FROM cg_communication_idempotency",
             [],
             |row| row.get(0),
         )
@@ -920,7 +920,7 @@ fn message_deliveries_and_wake_commit_atomically() {
     db.conn_for_tests()
         .execute_batch(
             "CREATE TRIGGER fail_wake_insert
-             BEFORE INSERT ON wc_agent_wakes
+             BEFORE INSERT ON cg_agent_wakes
              BEGIN SELECT RAISE(ABORT, 'forced wake failure'); END;",
         )
         .unwrap();
@@ -936,28 +936,28 @@ fn message_deliveries_and_wake_commit_atomically() {
     {
         let conn = db.conn_for_tests();
         let message_count: i64 = conn
-            .query_row("SELECT COUNT(*) FROM wc_conversation_messages", [], |row| {
+            .query_row("SELECT COUNT(*) FROM cg_conversation_messages", [], |row| {
                 row.get(0)
             })
             .unwrap();
         let delivery_count: i64 = conn
-            .query_row("SELECT COUNT(*) FROM wc_agent_deliveries", [], |row| {
+            .query_row("SELECT COUNT(*) FROM cg_agent_deliveries", [], |row| {
                 row.get(0)
             })
             .unwrap();
         let wake_count: i64 = conn
-            .query_row("SELECT COUNT(*) FROM wc_agent_wakes", [], |row| row.get(0))
+            .query_row("SELECT COUNT(*) FROM cg_agent_wakes", [], |row| row.get(0))
             .unwrap();
         let idempotency_count: i64 = conn
             .query_row(
-                "SELECT COUNT(*) FROM wc_communication_idempotency",
+                "SELECT COUNT(*) FROM cg_communication_idempotency",
                 [],
                 |row| row.get(0),
             )
             .unwrap();
         let next_seq: i64 = conn
             .query_row(
-                "SELECT next_seq FROM wc_conversations WHERE conversation_id = ?1",
+                "SELECT next_seq FROM cg_conversations WHERE conversation_id = ?1",
                 [&conversation_id],
                 |row| row.get(0),
             )
@@ -982,7 +982,7 @@ fn message_deliveries_and_wake_commit_atomically() {
     assert_eq!(retry.message.deliveries.len(), 1);
     let conn = db.conn_for_tests();
     let wake_count: i64 = conn
-        .query_row("SELECT COUNT(*) FROM wc_agent_wakes", [], |row| row.get(0))
+        .query_row("SELECT COUNT(*) FROM cg_agent_wakes", [], |row| row.get(0))
         .unwrap();
     assert_eq!(wake_count, 1);
 }
@@ -1004,7 +1004,7 @@ fn detach_expired_mcp_app_endpoint_revokes_recovery_before_and_after_materializa
         let window_key = "a".repeat(64);
         db.conn_for_tests()
             .execute(
-                "UPDATE wc_agent_endpoints
+                "UPDATE cg_agent_endpoints
                  SET mcp_app_client_window_key = ?2, lease_expires_at_unix_ms = 0,
                      lifecycle = ?3,
                      expired_at_unix_ms = CASE WHEN ?3 = 'expired' THEN 0 ELSE NULL END
@@ -1028,7 +1028,7 @@ fn detach_expired_mcp_app_endpoint_revokes_recovery_before_and_after_materializa
         let retained_window: Option<String> = db
             .conn_for_tests()
             .query_row(
-                "SELECT mcp_app_client_window_key FROM wc_agent_endpoints WHERE endpoint_id = ?1",
+                "SELECT mcp_app_client_window_key FROM cg_agent_endpoints WHERE endpoint_id = ?1",
                 [&endpoint.endpoint_id],
                 |row| row.get(0),
             )
@@ -1066,7 +1066,7 @@ fn mcp_app_endpoint_recovery_replay_respects_retired_window_continuity() {
         .endpoint;
     let window_key = "a".repeat(64);
     db.conn_for_tests().execute(
-        "UPDATE wc_agent_endpoints SET mcp_app_client_window_key = ?2, lease_expires_at_unix_ms = 0
+        "UPDATE cg_agent_endpoints SET mcp_app_client_window_key = ?2, lease_expires_at_unix_ms = 0
          WHERE endpoint_id = ?1",
         rusqlite::params![endpoint.endpoint_id, window_key],
     ).unwrap();
@@ -1146,7 +1146,7 @@ fn expired_mcp_app_endpoint_recovery_is_concurrent_idempotent_and_window_fenced(
     let window_key = "a".repeat(64);
     db.conn_for_tests()
         .execute(
-            "UPDATE wc_agent_endpoints
+            "UPDATE cg_agent_endpoints
              SET mcp_app_client_window_key = ?2, lease_expires_at_unix_ms = 0
              WHERE endpoint_id = ?1",
             rusqlite::params![endpoint.endpoint_id, window_key],
@@ -1211,7 +1211,7 @@ fn expired_mcp_app_endpoint_recovery_is_concurrent_idempotent_and_window_fenced(
     let endpoint_count: i64 = db
         .conn_for_tests()
         .query_row(
-            "SELECT COUNT(*) FROM wc_agent_endpoints WHERE agent_id = ?1",
+            "SELECT COUNT(*) FROM cg_agent_endpoints WHERE agent_id = ?1",
             [&agent.agent_id],
             |row| row.get(0),
         )
@@ -1220,7 +1220,7 @@ fn expired_mcp_app_endpoint_recovery_is_concurrent_idempotent_and_window_fenced(
     let generation: i64 = db
         .conn_for_tests()
         .query_row(
-            "SELECT current_controller_generation FROM wc_agent_identities WHERE agent_id = ?1",
+            "SELECT current_controller_generation FROM cg_agent_identities WHERE agent_id = ?1",
             [&agent.agent_id],
             |row| row.get(0),
         )
@@ -1247,7 +1247,7 @@ fn expired_mcp_app_endpoint_recovery_is_concurrent_idempotent_and_window_fenced(
     let retained_window_keys: i64 = db
         .conn_for_tests()
         .query_row(
-            "SELECT COUNT(*) FROM wc_agent_endpoints
+            "SELECT COUNT(*) FROM cg_agent_endpoints
              WHERE agent_id = ?1 AND mcp_app_client_window_key IS NOT NULL",
             [&agent.agent_id],
             |row| row.get(0),
@@ -1588,7 +1588,7 @@ fn foreign_exact_communication_resources_match_missing_ids() {
 
     db.conn_for_tests()
         .execute(
-            "UPDATE wc_conversations SET lifecycle = 'closed' WHERE conversation_id = ?1",
+            "UPDATE cg_conversations SET lifecycle = 'closed' WHERE conversation_id = ?1",
             [&bob_conversation],
         )
         .unwrap();

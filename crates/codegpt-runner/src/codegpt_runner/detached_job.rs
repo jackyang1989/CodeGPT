@@ -14,6 +14,15 @@ use std::io;
 use std::path::{Path, PathBuf};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
+use codegpt_core::runner_job_lifecycle::RunnerJobLifecycle;
+use codegpt_core::runner_protocol::{
+    validate_process_argv, ShellCommandExecutionState, ShellJobActivity, ShellJobActivityPhase,
+    ShellJobActivitySource, ShellJobActivityState, ShellJobContext, ShellJobSnapshot,
+    ShellJobStreamSnapshot, ShellProcessArgv, JOB_INVENTORY_MAX_JOBS,
+    JOB_SNAPSHOT_STREAM_MAX_BYTES, JOB_TERMINAL_RETENTION_SECS, PROCESS_CWD_MAX_BYTES,
+    PROCESS_STDIN_MAX_BYTES, STRUCTURED_EXECUTION_TIMEOUT_MAX_SECS,
+    STRUCTURED_EXECUTION_TIMEOUT_MIN_SECS,
+};
 #[cfg(any(unix, windows))]
 use std::fs::{File, OpenOptions};
 #[cfg(any(unix, windows))]
@@ -27,24 +36,15 @@ use std::sync::mpsc;
 #[cfg(any(unix, windows))]
 use std::time::Instant;
 use uuid::Uuid;
-use codegpt_core::runner_job_lifecycle::RunnerJobLifecycle;
-use codegpt_core::runner_protocol::{
-    validate_process_argv, ShellCommandExecutionState, ShellJobActivity, ShellJobActivityPhase,
-    ShellJobActivitySource, ShellJobActivityState, ShellJobContext, ShellJobSnapshot,
-    ShellJobStreamSnapshot, ShellProcessArgv, JOB_INVENTORY_MAX_JOBS,
-    JOB_SNAPSHOT_STREAM_MAX_BYTES, JOB_TERMINAL_RETENTION_SECS, PROCESS_CWD_MAX_BYTES,
-    PROCESS_STDIN_MAX_BYTES, STRUCTURED_EXECUTION_TIMEOUT_MAX_SECS,
-    STRUCTURED_EXECUTION_TIMEOUT_MIN_SECS,
-};
 
+#[cfg(any(unix, windows))]
+use codegpt_process::ManagedChild;
 #[cfg(unix)]
 use std::os::fd::AsRawFd;
 #[cfg(unix)]
 use std::os::unix::fs::{MetadataExt, OpenOptionsExt, PermissionsExt};
 #[cfg(unix)]
 use std::os::unix::process::CommandExt;
-#[cfg(any(unix, windows))]
-use codegpt_process::ManagedChild;
 
 #[cfg(windows)]
 use std::os::windows::ffi::OsStrExt;
@@ -3159,10 +3159,10 @@ fn internal_mode_command(mode: &str, args: &[String]) -> Result<Command, String>
     }
     #[cfg(not(test))]
     {
-        let mut command =
-            Command::new(std::env::current_exe().map_err(|error| {
-                format!("failed to locate codegpt-runner executable: {error}")
-            })?);
+        let mut command = Command::new(
+            std::env::current_exe()
+                .map_err(|error| format!("failed to locate codegpt-runner executable: {error}"))?,
+        );
         command.arg(mode).args(args).env_clear();
         Ok(command)
     }

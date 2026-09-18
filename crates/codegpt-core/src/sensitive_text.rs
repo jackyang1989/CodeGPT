@@ -2,14 +2,14 @@
 
 /// Stable non-secret token prefixes shared by redaction consumers.
 pub const CODEGPT_SECRET_PREFIXES: &[&str] = &[
-    "wc_pat_",
-    "wc_agent_",
-    "wc_acct_",
-    "wc_oat_",
-    "wc_ort_",
-    "wc_csec_",
-    "wc_pair_",
-    "wc_boot_",
+    "cg_pat_",
+    "cg_agent_",
+    "cg_acct_",
+    "cg_oat_",
+    "cg_ort_",
+    "cg_csec_",
+    "cg_pair_",
+    "cg_boot_",
 ];
 
 /// Conservative detector used before emitting command/process previews.
@@ -39,14 +39,14 @@ mod tests {
             "-----BEGIN PRIVATE KEY-----",
             "id_rsa",
             "id_ed25519",
-            "wc_pat_demo",
-            "wc_agent_demo",
-            "wc_acct_demo",
-            "wc_oat_demo",
-            "wc_ort_demo",
-            "wc_csec_demo",
-            "wc_pair_demo",
-            "wc_boot_demo",
+            "cg_pat_demo",
+            "cg_agent_demo",
+            "cg_acct_demo",
+            "cg_oat_demo",
+            "cg_ort_demo",
+            "cg_csec_demo",
+            "cg_pair_demo",
+            "cg_boot_demo",
         ] {
             assert!(secret_like_value(value), "{value}");
         }

@@ -469,7 +469,7 @@ fn runner_recovery_context_accepts_compact_session_base64url_alphabet() {
     let mut request = shell_job_request(temp.path(), "printf ok");
     let context = request.job_context.as_mut().unwrap();
     context.runtime_project_id = Some("agent:ws-client:demo".to_string());
-    context.workflow_session_id = Some("wc_sess_AAAAAAAA-AAAAAA_".to_string());
+    context.workflow_session_id = Some("cg_sess_AAAAAAAA-AAAAAA_".to_string());
     let context = context.clone();
 
     validate_runner_job_context(&context, &request, "ws-client").unwrap();
@@ -1480,10 +1480,7 @@ fn managed_git(root: &Path, args: &[&str]) -> String {
 fn seed_managed_worktree_repo(source: &Path) -> (String, String) {
     std::fs::create_dir_all(source).unwrap();
     managed_git(source, &["init"]);
-    managed_git(
-        source,
-        &["config", "user.email", "codegpt@example.invalid"],
-    );
+    managed_git(source, &["config", "user.email", "codegpt@example.invalid"]);
     managed_git(source, &["config", "user.name", "CodeGPT Test"]);
     std::fs::write(source.join("hello.txt"), "first\n").unwrap();
     managed_git(source, &["add", "hello.txt"]);
@@ -1659,7 +1656,7 @@ fn managed_worktree_bootstrap_is_detached_registered_and_same_operation_recovers
     assert!(first["lineage"]["source_root_fingerprint"]
         .as_str()
         .unwrap()
-        .starts_with("wc_projroot_"));
+        .starts_with("cg_projroot_"));
 
     let recovered = project_ok(handle_prepare_managed_worktree(
         &policy, &registry, &request,
@@ -1806,7 +1803,7 @@ fn managed_worktree_resume_fails_closed_when_persisted_source_lineage_changes() 
         Some("source")
     );
     managed_project.managed_source_root_fingerprint =
-        Some(format!("wc_projroot_{}", "f".repeat(64)));
+        Some(format!("cg_projroot_{}", "f".repeat(64)));
     std::fs::write(
         &managed_config_path,
         toml::to_string(&managed_project).unwrap(),
@@ -1841,7 +1838,7 @@ fn managed_worktree_resume_fails_closed_when_persisted_source_lineage_changes() 
 
 #[test]
 fn managed_project_explicit_lineage_cannot_self_associate() {
-    let root_fingerprint = format!("wc_projroot_{}", "1".repeat(64));
+    let root_fingerprint = format!("cg_projroot_{}", "1".repeat(64));
     let config = format!(
         "id = \"self\"\npath = \"/tmp/self\"\nmanaged_worktree = true\nmanaged_source = \"/tmp/source\"\nmanaged_source_project_id = \"self\"\nmanaged_source_root_fingerprint = \"{root_fingerprint}\"\nmanaged_base_sha = \"{}\"\nmanaged_operation_id = \"op\"\n",
         "a".repeat(40)

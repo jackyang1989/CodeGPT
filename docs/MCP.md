@@ -188,8 +188,8 @@ In Grok's **Custom Connector** form, use:
 | Field | Value |
 | --- | --- |
 | MCP server URL | `https://your-domain.example/mcp` |
-| Client ID | the returned `wc_client_*` value |
-| Client Secret | the returned one-time `wc_csec_*` value |
+| Client ID | the returned `cg_client_*` value |
+| Client Secret | the returned one-time `cg_csec_*` value |
 | Authorization Endpoint | `https://your-domain.example/oauth/authorize` |
 | Token Endpoint | `https://your-domain.example/oauth/token` |
 | Scopes | `runtime:read`, `project:read`, `project:write`, `job:run`, `offline_access` |
@@ -205,8 +205,8 @@ ceilings. General-purpose MCP clients can therefore omit `scope` and let CodeGPT
 default the authorization request to that client's registered `allowed_scopes`.
 
 When the CodeGPT authorization page opens, sign in with a current user PAT
-(`wc_pat_*`) for the user whose authority Grok should receive. A Runner token
-(`wc_agent_*`) is not a user login token. The resulting OAuth access token is
+(`cg_pat_*`) for the user whose authority Grok should receive. A Runner token
+(`cg_agent_*`) is not a user login token. The resulting OAuth access token is
 bound to that user and remains constrained by the registered/requested scopes.
 
 Common setup failures:

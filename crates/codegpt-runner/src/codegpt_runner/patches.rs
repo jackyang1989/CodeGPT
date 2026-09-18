@@ -1,12 +1,12 @@
 use super::config::RunnerPolicy;
 use super::files::{resolve_requested_path, sha256_hex_bytes};
 use super::output::{line_edit_stdout, CommandResult};
+use codegpt_core::runner_operation::RunnerFilePayload;
 use serde::Deserialize;
 use std::collections::HashSet;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::time::Instant;
-use codegpt_core::runner_operation::RunnerFilePayload;
 
 #[cfg(test)]
 pub(crate) fn is_structured_edit_request_kind(kind: &str) -> bool {

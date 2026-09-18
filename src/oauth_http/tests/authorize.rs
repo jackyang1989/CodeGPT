@@ -120,7 +120,7 @@ async fn authorize_accepts_user_pat_for_code_issuance() {
 
     let (_resp, _location, _parsed, code) = authorize_success(&service, &db, &url, &token).await;
 
-    assert!(code.starts_with("wc_oac_"));
+    assert!(code.starts_with("cg_oac_"));
     let record = auth_code_by_plaintext(&db, &code);
     assert_eq!(record.shared_key_hash, None);
 }
@@ -196,7 +196,7 @@ async fn authorize_rejects_unknown_client_without_redirect() {
     let service = Service::new(build_router(config, db.clone()));
     let url = authorize_url(&[
         ("response_type", "code"),
-        ("client_id", "wc_client_missing"),
+        ("client_id", "cg_client_missing"),
         ("redirect_uri", "https://example.com/callback"),
         ("code_challenge", "challenge-1"),
         ("code_challenge_method", "S256"),
@@ -625,7 +625,7 @@ async fn oauth_authorize_accepts_self_resource_mcp_endpoint() {
     let record = auth_code_by_plaintext(&db, &code);
 
     assert!(
-        location.contains("code=wc_oac_"),
+        location.contains("code=cg_oac_"),
         "ChatGPT MCP resource flow should return a code: {}",
         location
     );
@@ -783,7 +783,7 @@ async fn authorize_issues_code_and_redirects_with_state() {
     let (_resp, location, parsed, code) = authorize_success(&service, &db, &url, &token).await;
 
     assert_eq!(auth_code_count(&db), before + 1);
-    assert!(location.starts_with("https://example.com/callback?code=wc_oac_"));
+    assert!(location.starts_with("https://example.com/callback?code=cg_oac_"));
     assert_eq!(parsed.scheme(), "https");
     assert_eq!(parsed.host_str(), Some("example.com"));
     assert_eq!(parsed.path(), "/callback");
@@ -973,7 +973,7 @@ async fn authorize_success_redirect_appends_with_ampersand_when_redirect_uri_has
     assert_eq!(params.get("existing").map(String::as_str), Some("1"));
     assert_eq!(params.get("state").map(String::as_str), Some("state-1"));
     assert!(
-        location.contains("?existing=1&code=wc_oac_"),
+        location.contains("?existing=1&code=cg_oac_"),
         "Location should append with &: {}",
         location
     );
@@ -1080,11 +1080,11 @@ async fn authorize_success_code_can_be_exchanged_for_tokens() {
     assert!(json["access_token"]
         .as_str()
         .unwrap()
-        .starts_with("wc_oat_"));
+        .starts_with("cg_oat_"));
     assert!(json["refresh_token"]
         .as_str()
         .unwrap()
-        .starts_with("wc_ort_"));
+        .starts_with("cg_ort_"));
 
     let record = auth_code_by_plaintext(&db, &code);
     assert!(record.used_at.is_some(), "authorization code consumed");

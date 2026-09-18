@@ -21,9 +21,6 @@ use super::{
     RunnerTransport, MAX_RETIRED_INSTANCES_PER_RUNNER, RUNNER_ONLINE_WINDOW_SECS,
 };
 use crate::RunnerAccessGroup;
-use std::collections::{HashSet, VecDeque};
-use std::sync::Arc;
-use tokio::sync::{watch, Notify};
 use codegpt_core::coding_agent::{
     validate_coding_agent_run_snapshot, validate_provider_id as validate_coding_agent_provider_id,
     validate_provider_instance_id as validate_coding_agent_provider_instance_id,
@@ -35,6 +32,9 @@ use codegpt_core::mcp_gateway::validate_providers;
 use codegpt_core::runner_protocol::{
     RunnerRegisterRequest, RunnerView, RUNNER_JOB_CONCURRENCY_MAX, RUNNER_JOB_CONCURRENCY_MIN,
 };
+use std::collections::{HashSet, VecDeque};
+use std::sync::Arc;
+use tokio::sync::{watch, Notify};
 
 fn validate_coding_agent_registration(
     client_id: &str,

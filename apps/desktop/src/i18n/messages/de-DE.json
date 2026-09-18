@@ -335,7 +335,7 @@
   "error.projectTitle": "Projekt ist nicht bereit",
   "error.projectAction": "Projekt erneut aktivieren. Desktop wendet den genauen Zugriff erneut an und stellt das Projekt auf dem aktuellen Runner bereit.",
   "error.pairingTitle": "Einmaliger Anmeldecode ist ungültig",
-  "error.pairingAction": "Den vom vorhandenen Server ausgestellten wc_pair_…-Code eingeben.",
+  "error.pairingAction": "Den vom vorhandenen Server ausgestellten cg_pair_…-Code eingeben.",
   "error.enrollmentTitle": "Registrierung nicht abgeschlossen",
   "error.enrollmentAction": "Server und Registrierungsdaten prüfen und erneut versuchen.",
   "error.tunnelTitle": "Sicherer Tunnel ist nicht verfügbar",

@@ -1,7 +1,5 @@
 //! Audit-safe argument summaries for runtime tool calls.
 
-use serde_json::Value;
-use sha2::{Digest, Sha256};
 use codegpt_core::audit_preview::{command_preview, process_preview};
 use codegpt_core::runner_protocol::{normalize_cargo_value, normalize_rust_test_filter};
 use codegpt_core::workflow_session_contract::is_validation_like_execution_purpose;
@@ -14,6 +12,8 @@ use codegpt_tool_contracts::tool_call::{
 #[cfg(feature = "workspace-checkpoints")]
 use codegpt_tool_contracts::tool_inputs::{is_checkpoint_kind, is_checkpoint_validation_status};
 use codegpt_workflow_session::SessionExecutionContext;
+use serde_json::Value;
+use sha2::{Digest, Sha256};
 
 pub fn session_log_arguments_for_tool_request(tool_name: &str, arguments: &Value) -> Value {
     let Ok(call) = ToolCall::from_tool_name(tool_name, arguments.clone()) else {
@@ -1439,8 +1439,8 @@ fn insert_structured_validation_target(
     arguments: &serde_json::Map<String, Value>,
     out: &mut serde_json::Map<String, Value>,
 ) {
-    let identity_kind = codegpt_tool_contracts::runtime_tool_session_evidence_policy(tool_name)
-        .validation_identity;
+    let identity_kind =
+        codegpt_tool_contracts::runtime_tool_session_evidence_policy(tool_name).validation_identity;
     if let Some(identity) =
         structured_validation_target_identity(identity_kind, &Value::Object(arguments.clone()))
     {
@@ -1812,7 +1812,7 @@ mod computer_privacy_tests {
         const PROJECT_PATH: &str = "/private/native/project/root";
         const JOB_TOKEN: &str = "wjob-private-observation-token";
 
-        let plugin_binding = "wc_pbind_qqqqqqqqqqqqqqqqqqqqqg".to_string();
+        let plugin_binding = "cg_pbind_qqqqqqqqqqqqqqqqqqqqqg".to_string();
         let plugin = json!({
             "action": "call",
             "binding": plugin_binding,
@@ -1831,12 +1831,12 @@ mod computer_privacy_tests {
         let plugin_serialized = serde_json::to_string(&plugin_summary).unwrap();
         assert!(!plugin_serialized.contains(PLUGIN_SECRET));
         assert!(!plugin_serialized.contains("PRIVATE_PLUGIN_TOKEN"));
-        assert!(!plugin_serialized.contains("wc_pbind_"));
+        assert!(!plugin_serialized.contains("cg_pbind_"));
 
         let ssh = json!({
             "action": "register",
             "runner": "private-runner",
-            "binding": "wc_sbind_u7u7u7u7u7u7u7u7u7u7uw".to_string(),
+            "binding": "cg_sbind_u7u7u7u7u7u7u7u7u7u7uw".to_string(),
             "name": "private-ssh-name",
             "target": SSH_TARGET,
             "default_cwd": SSH_CWD
@@ -1858,7 +1858,7 @@ mod computer_privacy_tests {
             SSH_CWD,
             "private-runner",
             "private-ssh-name",
-            "wc_sbind_",
+            "cg_sbind_",
         ] {
             assert!(!ssh_serialized.contains(secret));
         }
@@ -1920,12 +1920,12 @@ mod computer_privacy_tests {
     #[test]
     fn agent_continuation_app_audit_omits_host_binding_and_resume_secrets() {
         let args = json!({
-            "agent_id": "wc_agent_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-            "endpoint_id": "wc_endpoint_u7u7u7u7u7u7u7u7",
+            "agent_id": "cg_agent_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "endpoint_id": "cg_endpoint_u7u7u7u7u7u7u7u7",
             "expected_controller_generation": 7,
-            "binding_id": "wc_host_binding_PRIVATE_BINDING",
-            "wake_id": "wc_wake_zMzMzMzMzMzMzMzM",
-            "attempt_id": "wc_wake_attempt_3d3d3d3d3d3d3d3d"
+            "binding_id": "cg_host_binding_PRIVATE_BINDING",
+            "wake_id": "cg_wake_zMzMzMzMzMzMzMzM",
+            "attempt_id": "cg_wake_attempt_3d3d3d3d3d3d3d3d"
         });
         let arguments =
             session_log_arguments_for_tool_request("agent_continuation_wake_prepare", &args);
@@ -1944,8 +1944,8 @@ mod computer_privacy_tests {
             "dispatch_observation": "dispatch_prepared",
             "state_changed": true,
             "app_protocol": {
-                "binding_id": "wc_host_binding_PRIVATE_BINDING",
-                "automatic_message": "consume_token=wc_wake_consume_PRIVATE_TOKEN\nPRIVATE MESSAGE BODY"
+                "binding_id": "cg_host_binding_PRIVATE_BINDING",
+                "automatic_message": "consume_token=cg_wake_consume_PRIVATE_TOKEN\nPRIVATE MESSAGE BODY"
             }
         });
         let projected = session_log_result_for_tool("agent_continuation_wake_prepare", &result);
@@ -2019,7 +2019,7 @@ mod computer_privacy_tests {
             "skill_list",
             &json!({
                 "project": "agent:test:demo",
-                "catalog_revision": "wc_skillcat_deadbeef",
+                "catalog_revision": "cg_skillcat_deadbeef",
                 "total_count": 1,
                 "returned_count": 1,
                 "truncated": false,
@@ -2037,7 +2037,7 @@ mod computer_privacy_tests {
             "skill_read_file",
             &json!({
                 "project": "agent:test:demo",
-                "skill_id": "wc_skill_ASNFZ4mrze8BI0VniavN7w",
+                "skill_id": "cg_skill_ASNFZ4mrze8BI0VniavN7w",
                 "definition_revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
                 "path": "SKILL.md",
                 "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
@@ -2067,7 +2067,7 @@ mod computer_privacy_tests {
                 "expected_artifact_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
                 "idempotency_key": "PRIVATE_IDEMPOTENCY_KEY",
                 "activate": true,
-                "expected_state_revision": "wc_skillstate_u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7s"
+                "expected_state_revision": "cg_skillstate_u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7s"
             }),
         );
         let args_serialized = serde_json::to_string(&args).unwrap();
@@ -2085,7 +2085,7 @@ mod computer_privacy_tests {
             idempotency_key: "PRIVATE_IDEMPOTENCY_KEY".to_string(),
             activate: Some(true),
             expected_state_revision: Some(
-                "wc_skillstate_u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7s".to_string(),
+                "cg_skillstate_u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7s".to_string(),
             ),
             session_id: None,
         }
@@ -2101,10 +2101,10 @@ mod computer_privacy_tests {
             "skill_versions",
             &json!({
                 "project": "agent:test:demo",
-                "skill_id": "wc_skill_ASNFZ4mrze8BI0VniavN7w",
+                "skill_id": "cg_skill_ASNFZ4mrze8BI0VniavN7w",
                 "skill_key": "demo",
-                "state_revision": "wc_skillstate_zMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMw",
-                "active_package_revision": "wc_skillpkg_3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d0",
+                "state_revision": "cg_skillstate_zMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMw",
+                "active_package_revision": "cg_skillpkg_3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d0",
                 "total_count": 1,
                 "offset": 0,
                 "next_offset": null,
@@ -2123,9 +2123,9 @@ mod computer_privacy_tests {
             "skill_install",
             &json!({
                 "project": "agent:test:demo",
-                "skill_id": "wc_skill_ASNFZ4mrze8BI0VniavN7w",
+                "skill_id": "cg_skill_ASNFZ4mrze8BI0VniavN7w",
                 "skill_key": "demo",
-                "package_revision": "wc_skillpkg_3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d0",
+                "package_revision": "cg_skillpkg_3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d3d0",
                 "definition_revision": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
                 "artifact_sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
                 "file_count": 2,
@@ -2133,7 +2133,7 @@ mod computer_privacy_tests {
                 "installed": true,
                 "activated": false,
                 "replayed": false,
-                "state_revision": "wc_skillstate_zMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMw",
+                "state_revision": "cg_skillstate_zMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMw",
                 "active_package_revision": null,
                 "raw_skill_body": "PRIVATE_SKILL_BODY",
                 "archive_bytes": "PRIVATE_ZIP_BYTES",
@@ -2187,12 +2187,12 @@ mod computer_privacy_tests {
         assert_eq!(create["idempotency_key_present"], true);
 
         let post = ToolCall::PostConversationMessage {
-            conversation_id: "wc_conv_iavN7wEjRWeJq83v".to_string(),
+            conversation_id: "cg_conv_iavN7wEjRWeJq83v".to_string(),
             body: PRIVATE_BODY.to_string(),
             author_agent_id: None,
             endpoint_id: None,
             expected_controller_generation: None,
-            recipient_agent_ids: Some(vec!["wc_dagent_iavN7wEjRWeJq83v".to_string()]),
+            recipient_agent_ids: Some(vec!["cg_dagent_iavN7wEjRWeJq83v".to_string()]),
             reply_to: None,
             idempotency_key: Some(PRIVATE_KEY.to_string()),
             wake_reply_id: None,
@@ -2209,11 +2209,11 @@ mod computer_privacy_tests {
             "post_conversation_message",
             &json!({
                 "message": {
-                    "message_id": "wc_cmsg_iavN7wEjRWeJq83v",
-                    "conversation_id": "wc_conv_iavN7wEjRWeJq83v",
+                    "message_id": "cg_cmsg_iavN7wEjRWeJq83v",
+                    "conversation_id": "cg_conv_iavN7wEjRWeJq83v",
                     "seq": 4,
                     "body": PRIVATE_BODY,
-                    "deliveries": [{"delivery_id": "wc_delivery_iavN7wEjRWeJq83v"}]
+                    "deliveries": [{"delivery_id": "cg_delivery_iavN7wEjRWeJq83v"}]
                 },
                 "replayed": false,
                 "state_changed": true
@@ -2227,21 +2227,21 @@ mod computer_privacy_tests {
             "bootstrap_agent_conversation",
             &json!({
                 "acting_agent": {
-                    "agent_id": "wc_dagent_iavN7wEjRWeJq83v",
+                    "agent_id": "cg_dagent_iavN7wEjRWeJq83v",
                     "description": PRIVATE_DESCRIPTION,
                     "specialty_labels": [PRIVATE_LABEL]
                 },
                 "endpoint": {
-                    "endpoint_id": "wc_endpoint_iavN7wEjRWeJq83v",
+                    "endpoint_id": "cg_endpoint_iavN7wEjRWeJq83v",
                     "controller_generation": 4,
                     "client_attachment_id": "PRIVATE_HOST_ATTACHMENT"
                 },
                 "selected_conversation": {
-                    "conversation_id": "wc_conv_iavN7wEjRWeJq83v"
+                    "conversation_id": "cg_conv_iavN7wEjRWeJq83v"
                 },
                 "inbox": {"queued_delivery_count": 2},
                 "wake": {
-                    "wake_id": "wc_wake_iavN7wEjRWeJq83v",
+                    "wake_id": "cg_wake_iavN7wEjRWeJq83v",
                     "state": "pending",
                     "consume_token": "PRIVATE_CONSUME_TOKEN",
                     "message_body": PRIVATE_BODY
@@ -2253,8 +2253,8 @@ mod computer_privacy_tests {
                     "callback_secret": "PRIVATE_CALLBACK_SECRET"
                 },
                 "wake_activation": {
-                    "wake_id": "wc_wake_iavN7wEjRWeJq83v",
-                    "attempt_id": "wc_wake_attempt_iavN7wEjRWeJq83v",
+                    "wake_id": "cg_wake_iavN7wEjRWeJq83v",
+                    "attempt_id": "cg_wake_attempt_iavN7wEjRWeJq83v",
                     "consume_token": "PRIVATE_ACTIVATION_CONSUME_TOKEN",
                     "adapter_kind": "explicit_activation"
                 }
@@ -2279,11 +2279,11 @@ mod computer_privacy_tests {
         assert_eq!(bootstrap["queued_delivery_count"], 2);
 
         let activation_request = ToolCall::BootstrapAgentConversation {
-            agent_id: "wc_dagent_iavN7wEjRWeJq83v".to_string(),
-            endpoint_id: "wc_endpoint_iavN7wEjRWeJq83v".to_string(),
+            agent_id: "cg_dagent_iavN7wEjRWeJq83v".to_string(),
+            endpoint_id: "cg_endpoint_iavN7wEjRWeJq83v".to_string(),
             expected_controller_generation: 4,
             conversation_id: None,
-            wake_id: Some("wc_wake_iavN7wEjRWeJq83v".to_string()),
+            wake_id: Some("cg_wake_iavN7wEjRWeJq83v".to_string()),
             activation_idempotency_key: Some(PRIVATE_KEY.to_string()),
         }
         .session_log_arguments();
@@ -2292,15 +2292,15 @@ mod computer_privacy_tests {
 
     #[test]
     fn agent_task_active_turn_heartbeat_audit_omits_raw_proof_and_attempt_fence() {
-        const PRIVATE_FENCE: &str = "wc_agent_task_fence_PRIVATE_FENCE_MUST_NOT_PERSIST";
-        const PRIVATE_WAKE: &str = "wc_wake_PRIVATE_WAKE_MUST_NOT_PERSIST";
-        const PRIVATE_TOKEN: &str = "wc_wake_consume_PRIVATE_TOKEN_MUST_NOT_PERSIST";
+        const PRIVATE_FENCE: &str = "cg_agent_task_fence_PRIVATE_FENCE_MUST_NOT_PERSIST";
+        const PRIVATE_WAKE: &str = "cg_wake_PRIVATE_WAKE_MUST_NOT_PERSIST";
+        const PRIVATE_TOKEN: &str = "cg_wake_consume_PRIVATE_TOKEN_MUST_NOT_PERSIST";
         let request = session_log_arguments_for_tool_request(
             "heartbeat_agent_task_attempt",
             &json!({
-                "task_id": "wc_agent_task_iavN7wEjRWeJq83v",
-                "attempt_id": "wc_agent_task_attempt_iavN7wEjRWeJq83v",
-                "assignee_agent_id": "wc_dagent_iavN7wEjRWeJq83v",
+                "task_id": "cg_agent_task_iavN7wEjRWeJq83v",
+                "attempt_id": "cg_agent_task_attempt_iavN7wEjRWeJq83v",
+                "assignee_agent_id": "cg_dagent_iavN7wEjRWeJq83v",
                 "attempt_fence": PRIVATE_FENCE,
                 "attempt_controller_generation": 9,
                 "active_turn_wake_id": PRIVATE_WAKE,
@@ -2319,9 +2319,9 @@ mod computer_privacy_tests {
         }
 
         let typed = ToolCall::HeartbeatAgentTaskAttempt {
-            task_id: "wc_agent_task_iavN7wEjRWeJq83v".to_string(),
-            attempt_id: "wc_agent_task_attempt_iavN7wEjRWeJq83v".to_string(),
-            assignee_agent_id: "wc_dagent_iavN7wEjRWeJq83v".to_string(),
+            task_id: "cg_agent_task_iavN7wEjRWeJq83v".to_string(),
+            attempt_id: "cg_agent_task_attempt_iavN7wEjRWeJq83v".to_string(),
+            assignee_agent_id: "cg_dagent_iavN7wEjRWeJq83v".to_string(),
             attempt_fence: PRIVATE_FENCE.to_string(),
             attempt_controller_generation: 9,
             active_turn_wake_id: Some(PRIVATE_WAKE.to_string()),
@@ -2340,7 +2340,7 @@ mod computer_privacy_tests {
 
     #[test]
     fn agent_wake_consume_audit_omits_raw_consume_token_and_payload_fields() {
-        const PRIVATE_TOKEN: &str = "wc_wake_consume_PRIVATE_TOKEN_MUST_NOT_PERSIST";
+        const PRIVATE_TOKEN: &str = "cg_wake_consume_PRIVATE_TOKEN_MUST_NOT_PERSIST";
         const PRIVATE_BODY: &str = "PRIVATE_WAKE_PAYLOAD_BODY";
         const PRIVATE_DESCRIPTION: &str = "PRIVATE_AGENT_DESCRIPTION";
         const PRIVATE_DIGEST: &str = "PRIVATE_PRINCIPAL_DIGEST";
@@ -2349,10 +2349,10 @@ mod computer_privacy_tests {
         let request = session_log_arguments_for_tool_request(
             "consume_agent_wake",
             &json!({
-                "agent_id": "wc_dagent_iavN7wEjRWeJq83v",
-                "endpoint_id": "wc_endpoint_iavN7wEjRWeJq83v",
+                "agent_id": "cg_dagent_iavN7wEjRWeJq83v",
+                "endpoint_id": "cg_endpoint_iavN7wEjRWeJq83v",
                 "expected_controller_generation": 7,
-                "wake_id": "wc_wake_iavN7wEjRWeJq83v",
+                "wake_id": "cg_wake_iavN7wEjRWeJq83v",
                 "consume_token": PRIVATE_TOKEN,
                 "body": PRIVATE_BODY,
                 "description": PRIVATE_DESCRIPTION,
@@ -2362,10 +2362,10 @@ mod computer_privacy_tests {
         );
         assert_eq!(request, json!({}));
         let typed_request = ToolCall::ConsumeAgentWake {
-            agent_id: "wc_dagent_iavN7wEjRWeJq83v".to_string(),
-            endpoint_id: "wc_endpoint_iavN7wEjRWeJq83v".to_string(),
+            agent_id: "cg_dagent_iavN7wEjRWeJq83v".to_string(),
+            endpoint_id: "cg_endpoint_iavN7wEjRWeJq83v".to_string(),
             expected_controller_generation: 7,
-            wake_id: "wc_wake_iavN7wEjRWeJq83v".to_string(),
+            wake_id: "cg_wake_iavN7wEjRWeJq83v".to_string(),
             consume_token: PRIVATE_TOKEN.to_string(),
         }
         .session_log_arguments();
@@ -2389,8 +2389,8 @@ mod computer_privacy_tests {
         let result = session_log_result_for_tool(
             "consume_agent_wake",
             &json!({
-                "wake_id": "wc_wake_iavN7wEjRWeJq83v",
-                "target_agent_id": "wc_dagent_iavN7wEjRWeJq83v",
+                "wake_id": "cg_wake_iavN7wEjRWeJq83v",
+                "target_agent_id": "cg_dagent_iavN7wEjRWeJq83v",
                 "state": "consumed",
                 "already_consumed": false,
                 "consumed_at_unix_ms": 123,
@@ -2425,8 +2425,8 @@ mod computer_privacy_tests {
         let private_summary = "PRIVATE_MEMORY_SUMMARY";
         let private_body = "PRIVATE_MEMORY_BODY";
         let private_tag = "PRIVATE_MEMORY_TAG";
-        let revision = format!("wc_memrev_{}", "a".repeat(64));
-        let memory_id = "wc_mem_iavN7wEjRWeJq83v";
+        let revision = format!("cg_memrev_{}", "a".repeat(64));
+        let memory_id = "cg_mem_iavN7wEjRWeJq83v";
 
         let search_args = session_log_arguments_for_tool_request(
             "memory_search",
@@ -2484,7 +2484,7 @@ mod computer_privacy_tests {
             "memory_search",
             &json!({
                 "project": "agent:test:demo",
-                "catalog_revision": format!("wc_memcat_{}", "b".repeat(64)),
+                "catalog_revision": format!("cg_memcat_{}", "b".repeat(64)),
                 "total_count": 1,
                 "returned_count": 1,
                 "truncated": false,
@@ -2553,10 +2553,10 @@ mod computer_privacy_tests {
                 "body": private_body
             }),
         );
-        let private_principal_digest = format!("wc_memprincipal_{}", "d".repeat(64));
+        let private_principal_digest = format!("cg_memprincipal_{}", "d".repeat(64));
         let private_native_root = "/PRIVATE/NATIVE/MEMORY/ROOT";
-        let scope_id = format!("wc_memscope_{}", "c".repeat(64));
-        let catalog_revision = format!("wc_memcat_{}", "e".repeat(64));
+        let scope_id = format!("cg_memscope_{}", "c".repeat(64));
+        let catalog_revision = format!("cg_memcat_{}", "e".repeat(64));
         let purge_args = session_log_arguments_for_tool_request(
             "memory_scope_purge",
             &json!({
@@ -3322,7 +3322,7 @@ mod computer_privacy_tests {
             "region": {"x": 111, "y": 222, "width": 333, "height": 444},
             "max_width": 800,
             "max_height": 600,
-            "session_id": "wc_sess_private"
+            "session_id": "cg_sess_private"
         });
         let request_summary =
             session_log_arguments_for_tool_request("computer_save_snapshot", &request);
@@ -3332,7 +3332,7 @@ mod computer_privacy_tests {
         assert_eq!(request_summary["region_present"], true);
         assert!(request_summary.get("region").is_none());
         assert!(request_summary.get("session_id").is_none());
-        for secret in ["111", "222", "333", "444", "wc_sess_private"] {
+        for secret in ["111", "222", "333", "444", "cg_sess_private"] {
             assert!(!request_serialized.contains(secret));
         }
 
@@ -3349,14 +3349,14 @@ mod computer_privacy_tests {
             }),
             max_width: Some(800),
             max_height: Some(600),
-            session_id: Some("wc_sess_private".to_string()),
+            session_id: Some("cg_sess_private".to_string()),
         }
         .session_log_arguments();
         let parsed_serialized = serde_json::to_string(&parsed_summary).unwrap();
         assert_eq!(parsed_summary["region_present"], true);
         assert!(parsed_summary.get("region").is_none());
         assert!(parsed_summary.get("session_id").is_none());
-        for secret in ["111", "222", "333", "444", "wc_sess_private"] {
+        for secret in ["111", "222", "333", "444", "cg_sess_private"] {
             assert!(!parsed_serialized.contains(secret));
         }
 
@@ -3405,7 +3405,7 @@ mod computer_privacy_tests {
             "instruction": PROMPT,
             "config": {"mode": "agent"},
             "timeout_secs": 60,
-            "recording_session_id": "wc_sess_safe"
+            "recording_session_id": "cg_sess_safe"
         });
         let request_summary =
             session_log_arguments_for_tool_request("coding_agent_start", &request);
@@ -3421,7 +3421,7 @@ mod computer_privacy_tests {
                 codegpt_core::coding_agent::CodingAgentConfigValue::String("agent".to_string()),
             )])),
             timeout_secs: Some(60),
-            recording_session_id: Some("wc_sess_safe".to_string()),
+            recording_session_id: Some("cg_sess_safe".to_string()),
         }
         .session_log_arguments();
         let request_serialized = serde_json::to_string(&typed_request).unwrap();
@@ -3432,10 +3432,10 @@ mod computer_privacy_tests {
         assert!(!request_serialized.contains(IDEMPOTENCY));
         assert!(!request_serialized.contains("agent\""));
         assert!(typed_request.get("recording_session_id").is_none());
-        assert!(!request_serialized.contains("wc_sess_safe"));
+        assert!(!request_serialized.contains("cg_sess_safe"));
 
         let observe_request = json!({
-            "run_id": "wc_agent_run_safe",
+            "run_id": "cg_agent_run_safe",
             "after_observation_token": TOKEN,
             "wait_secs": 3
         });
@@ -3446,7 +3446,7 @@ mod computer_privacy_tests {
         assert!(!observe_request_serialized.contains(TOKEN));
 
         let output = json!({
-            "run_id": "wc_agent_run_safe",
+            "run_id": "cg_agent_run_safe",
             "project": "agent:special:demo",
             "provider_id": "codex",
             "state": "running",

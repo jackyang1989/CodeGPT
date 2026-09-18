@@ -24,11 +24,6 @@ pub(crate) use auth::{
     enforce_runner_transport, requested_by_from_auth, require_runner_transport_scope,
     runner_access_from_auth,
 };
-pub use handlers::{
-    runner_job_update, runner_offline, runner_persistent_shell_result, runner_poll,
-    runner_register, runner_result,
-};
-pub(crate) use telemetry::tool_request_trace_telemetry;
 pub(crate) use codegpt_runner_registry::{
     command_preview, process_preview, recovery_timeout_sweep, script_preview, EnqueueLspError,
     EnqueueRunnerSkillError, RunnerFeature, RunnerFeatureSet, RunnerRegistry, RunnerSemanticView,
@@ -38,6 +33,11 @@ pub(crate) use codegpt_runner_registry::{
 };
 #[cfg(test)]
 pub(crate) use codegpt_runner_registry::{TRANSPORT_POLLING, TRANSPORT_WEBSOCKET};
+pub use handlers::{
+    runner_job_update, runner_offline, runner_persistent_shell_result, runner_poll,
+    runner_register, runner_result,
+};
+pub(crate) use telemetry::tool_request_trace_telemetry;
 
 fn sha256_hex(value: &str) -> String {
     use sha2::{Digest, Sha256};

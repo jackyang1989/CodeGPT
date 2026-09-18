@@ -1037,14 +1037,14 @@ async fn canonical_orchestration_host_rejects_server_owned_metadata_without_fron
 
     for (field, value) in [
         ("project", json!("agent:other:demo")),
-        ("session_id", json!("wc_sess_0000000000000000")),
-        ("recording_session_id", json!("wc_sess_0000000000000000")),
+        ("session_id", json!("cg_sess_0000000000000000")),
+        ("recording_session_id", json!("cg_sess_0000000000000000")),
         ("ack_session_context_revision", json!(1)),
         ("ack_session_message_ids", json!([])),
         ("context_request", json!(["codegpt.workflow"])),
         (
             "session_message_resolution",
-            json!({"message_id": "wc_msg_0000000000000000", "resolution": "handled"}),
+            json!({"message_id": "cg_msg_0000000000000000", "resolution": "handled"}),
         ),
         ("expected_failure", json!(true)),
         ("expected_failure_kind", json!("anything")),

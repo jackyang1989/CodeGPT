@@ -25,11 +25,11 @@ use super::sessions::{SessionDiscussionCounts, SessionDiscussionSummary, Session
 use super::tool_result::ToolResult;
 use super::ToolRuntime;
 use crate::auth::AuthContext;
-use serde_json::{json, Value};
-use std::collections::HashSet;
 use codegpt_tool_contracts::{
     runtime_tool_session_evidence_policy, ToolFailureEvidence, ToolReviewEvidence,
 };
+use serde_json::{json, Value};
+use std::collections::HashSet;
 
 pub(crate) use codegpt_workflow_session::closeout_work_projection;
 

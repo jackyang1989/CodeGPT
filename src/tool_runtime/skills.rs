@@ -11,13 +11,6 @@ use crate::auth::AuthContext;
 use crate::json_measurement::serialized_json_len;
 use crate::runner_http::{EnqueueRunnerSkillError, RunnerFeature};
 use crate::runner_protocol::{ShellFileOpRequest, ShellRunResponse};
-use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
-use sha2::{Digest, Sha256};
-use std::collections::BTreeMap;
-use std::path::Component;
-use std::time::{Duration, Instant};
-use unicase::UniCase;
 use codegpt_core::runner_skill::{
     RunnerSkillDescriptor, RunnerSkillExecutionRequest, RunnerSkillListResponse,
     RunnerSkillReadResponse, RunnerSkillRequest, RunnerSkillResolveResponse, RunnerSkillSource,
@@ -32,6 +25,13 @@ use codegpt_core::skill_store::{
     SkillStoreVersionsResponse, MAX_OPERATOR_REVISIONS_PER_SKILL, MAX_SKILL_STORE_FILE_COUNT,
     MAX_SKILL_STORE_TOTAL_BYTES, MAX_SKILL_STORE_VERSIONS_LIMIT, SKILL_STORE_RESPONSE_FORMAT,
 };
+use serde::{Deserialize, Serialize};
+use serde_json::{json, Value};
+use sha2::{Digest, Sha256};
+use std::collections::BTreeMap;
+use std::path::Component;
+use std::time::{Duration, Instant};
+use unicase::UniCase;
 
 pub(crate) const SKILL_ROOT: &str = ".agents/skills";
 pub(crate) const SKILL_DEFINITION_FILE: &str = "SKILL.md";
@@ -2500,7 +2500,7 @@ fn valid_package_name(name: &str) -> bool {
 
 fn valid_skill_id(value: &str) -> bool {
     value
-        .strip_prefix("wc_skill_")
+        .strip_prefix("cg_skill_")
         .and_then(codegpt_core::compact::decode::<16>)
         .is_some()
 }
@@ -2514,7 +2514,7 @@ fn is_lower_sha256(value: &str) -> bool {
 
 fn valid_catalog_revision(value: &str) -> bool {
     value
-        .strip_prefix("wc_skillcat_")
+        .strip_prefix("cg_skillcat_")
         .and_then(codegpt_core::compact::decode::<32>)
         .is_some()
 }
@@ -2528,7 +2528,7 @@ fn skill_id(project: &str, package_name: &str) -> String {
     hasher.update(b"/");
     hasher.update(package_name.as_bytes());
     format!(
-        "wc_skill_{}",
+        "cg_skill_{}",
         codegpt_core::compact::encode(&hasher.finalize()[..16])
     )
 }
@@ -2568,7 +2568,7 @@ fn catalog_revision(
     }
     hasher.update([u8::from(discovery_truncated)]);
     format!(
-        "wc_skillcat_{}",
+        "cg_skillcat_{}",
         codegpt_core::compact::encode(hasher.finalize())
     )
 }
@@ -2626,7 +2626,7 @@ mod tests {
     fn exact_name_selection_fails_closed_when_catalog_discovery_is_truncated() {
         let skills = vec![CatalogSkill {
             descriptor: SkillDescriptor {
-                skill_id: "wc_skill_AAAAAAAAAAAAAAAAAAAAAg".to_string(),
+                skill_id: "cg_skill_AAAAAAAAAAAAAAAAAAAAAg".to_string(),
                 name: "demo".to_string(),
                 description: "demo".to_string(),
                 definition_revision: "a".repeat(64),
@@ -2657,7 +2657,7 @@ mod tests {
             skills.push(CatalogSkill {
                 descriptor: SkillDescriptor {
                     skill_id: format!(
-                        "wc_skill_{}",
+                        "cg_skill_{}",
                         codegpt_core::compact::encode(&(index as u128).to_be_bytes()[0..])
                     ),
                     name: format!("skill-{index:02}"),

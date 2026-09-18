@@ -535,7 +535,7 @@ async fn http_audit_session_keeps_principal_attribution_out_of_event_details() {
         "private-attribution",
         Some("oauth2"),
         Some("user-private"),
-        Some("wc_client_public"),
+        Some("cg_client_public"),
     );
     let service = Service::new(build_audit_router(config, db));
 

@@ -4,8 +4,8 @@ use crate::job_terminal_attention::{
     fact_from_event, metric as attention_metric, principal_for_auth, source_from_snapshot,
     JobTerminalDeliveryAttempt,
 };
-use serde_json::json;
 use codegpt_store::{JobTerminalWaitRecord, JobTerminalWaitState, NewJobTerminalWait};
+use serde_json::json;
 
 #[cfg(test)]
 #[derive(Debug, Clone)]

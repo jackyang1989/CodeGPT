@@ -6,9 +6,9 @@ use crate::{
     SessionMessagePriority, SessionPathHint, SessionStore, SessionToolContract, SessionTransport,
     ToolCallRecorderMetadata, TEST_ONLY_PROJECT_SESSION_AUTHORITY_FINGERPRINT,
 };
+use codegpt_core::workflow_session_contract::SessionMode;
 use serde_json::{json, Value};
 use std::collections::HashSet;
-use codegpt_core::workflow_session_contract::SessionMode;
 
 const PROJECT: &str = "test-project";
 

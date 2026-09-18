@@ -335,7 +335,7 @@
   "error.projectTitle": "项目尚未就绪",
   "error.projectAction": "请点击“重新激活项目”；Desktop 会重新应用该项目的精确目录权限并在当前 Runner 上收敛项目状态。",
   "error.pairingTitle": "一次性登录码无效",
-  "error.pairingAction": "请输入现有 Server 签发的 wc_pair_… 登录码。",
+  "error.pairingAction": "请输入现有 Server 签发的 cg_pair_… 登录码。",
   "error.enrollmentTitle": "注册未完成",
   "error.enrollmentAction": "请检查 Server 和注册信息，然后重试。",
   "error.tunnelTitle": "安全隧道不可用",

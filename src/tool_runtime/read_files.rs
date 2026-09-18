@@ -4,12 +4,12 @@ use super::project_resolution::ResolvedProject;
 use super::read_revisions::ReadRevisionTarget;
 use super::{ReadFilesItem, SuggestedToolCall, ToolCall, ToolResult, ToolRuntime};
 use crate::json_measurement::serialized_json_len;
+use codegpt_core::runtime_contract::MODEL_INSPECTION_MAX_RESULT_BYTES as MAX_SERIALIZED_OUTPUT_BYTES;
+use codegpt_workspace::file_read_normalize::MODEL_RESULT_ENVELOPE_RESERVE_BYTES;
 use futures_util::{stream, StreamExt};
 use serde_json::{json, Value};
 use std::time::Duration;
 use tokio::time::Instant;
-use codegpt_core::runtime_contract::MODEL_INSPECTION_MAX_RESULT_BYTES as MAX_SERIALIZED_OUTPUT_BYTES;
-use codegpt_workspace::file_read_normalize::MODEL_RESULT_ENVELOPE_RESERVE_BYTES;
 
 pub(crate) const MAX_READ_FILES_ITEMS: usize = 8;
 // A max-size read batch may issue all eight independent read-only requests in
@@ -1067,7 +1067,7 @@ mod tests {
         } = &mut projection
         {
             items[1].expected_read_revision = Some(1234);
-            *session_id = Some("wc_sess_batch_recovery".to_string());
+            *session_id = Some("cg_sess_batch_recovery".to_string());
         }
         let output = apply_output_budget(
             "agent:oe:demo",
@@ -1090,7 +1090,7 @@ mod tests {
         assert_eq!(suggested["tool"], "read_files");
         assert_eq!(
             suggested["arguments"]["session_id"],
-            "wc_sess_batch_recovery"
+            "cg_sess_batch_recovery"
         );
         assert!(suggested["arguments"].get("next_index").is_none());
         assert_eq!(
@@ -1122,7 +1122,7 @@ mod tests {
                 max_result_bytes: Some(bytes),
                 ..
             } if bytes == legacy_budget
-                && next_session_id == "wc_sess_batch_recovery"
+                && next_session_id == "cg_sess_batch_recovery"
                 && items.iter().map(|item| item.path.as_str()).collect::<Vec<_>>()
                     == vec!["src/1.rs", "src/2.rs"]
         ));

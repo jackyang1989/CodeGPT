@@ -4,16 +4,6 @@ use crate::json_digest::update_sha256_with_json;
 use crate::runner_http::RunnerFeature;
 use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine as _};
 use chrono::Utc;
-use serde_json::{json, Value};
-use sha2::{Digest, Sha256};
-use std::collections::{BTreeMap, HashMap};
-use std::fs::{self, OpenOptions};
-use std::io::{ErrorKind, Read, Write};
-use std::path::Path;
-use std::sync::Arc;
-use std::time::Duration;
-use tokio::sync::Mutex;
-use uuid::Uuid;
 use codegpt_core::coding_agent::{
     merge_coding_agent_run_snapshot, validate_coding_agent_run_snapshot, CodingAgentCancelRequest,
     CodingAgentConfigValue, CodingAgentDispatchState, CodingAgentEvent, CodingAgentExecutionState,
@@ -24,6 +14,16 @@ use codegpt_core::coding_agent::{
     CODING_AGENT_MAX_INVENTORY_RUNS, CODING_AGENT_OBSERVE_WAIT_MAX_SECS,
     CODING_AGENT_TIMEOUT_MAX_SECS, CODING_AGENT_TIMEOUT_MIN_SECS,
 };
+use serde_json::{json, Value};
+use sha2::{Digest, Sha256};
+use std::collections::{BTreeMap, HashMap};
+use std::fs::{self, OpenOptions};
+use std::io::{ErrorKind, Read, Write};
+use std::path::Path;
+use std::sync::Arc;
+use std::time::Duration;
+use tokio::sync::Mutex;
+use uuid::Uuid;
 
 const IDEMPOTENCY_KEY_MAX_BYTES: usize = 256;
 const START_RESPONSE_WAIT_SECS: u64 = 32;
@@ -1316,7 +1316,7 @@ fn deterministic_run_id(principal: &str, key: &str) -> String {
     hasher.update(b"\0");
     hasher.update(key.as_bytes());
     format!(
-        "wc_agent_run_{}",
+        "cg_agent_run_{}",
         codegpt_core::compact::encode(hasher.finalize())
     )
 }
@@ -1846,7 +1846,7 @@ mod tests {
     async fn server_run_binding_rejects_out_of_order_and_conflicting_observations() {
         let state = CodingAgentServerState::default();
         let client = test_shell_client();
-        let run_id = "wc_agent_run_monotonic";
+        let run_id = "cg_agent_run_monotonic";
         let now = chrono::Utc::now().timestamp();
 
         let mut running =
@@ -1881,7 +1881,7 @@ mod tests {
             .bind(&client, terminal_regression, None)
             .await
             .is_err());
-        let lost_run_id = "wc_agent_run_lost_recovery";
+        let lost_run_id = "cg_agent_run_lost_recovery";
         let mut lost =
             test_server_binding(lost_run_id.to_string(), CodingAgentRunState::Running, now)
                 .snapshot;
@@ -1915,31 +1915,31 @@ mod tests {
         let now = 10_000;
         let mut runs = HashMap::new();
         runs.insert(
-            "wc_agent_run_active".to_string(),
+            "cg_agent_run_active".to_string(),
             test_server_binding(
-                "wc_agent_run_active".to_string(),
+                "cg_agent_run_active".to_string(),
                 CodingAgentRunState::Running,
                 1,
             ),
         );
         runs.insert(
-            "wc_agent_run_expired".to_string(),
+            "cg_agent_run_expired".to_string(),
             test_server_binding(
-                "wc_agent_run_expired".to_string(),
+                "cg_agent_run_expired".to_string(),
                 CodingAgentRunState::Completed,
                 now - SERVER_TERMINAL_RETENTION_SECS - 1,
             ),
         );
         for index in 0..SERVER_MAX_TERMINAL_RUNS + 2 {
-            let run_id = format!("wc_agent_run_recent_{index:03}");
+            let run_id = format!("cg_agent_run_recent_{index:03}");
             runs.insert(
                 run_id.clone(),
                 test_server_binding(run_id, CodingAgentRunState::Completed, now - index as i64),
             );
         }
         prune_server_runs_locked(&mut runs, now);
-        assert!(runs.contains_key("wc_agent_run_active"));
-        assert!(!runs.contains_key("wc_agent_run_expired"));
+        assert!(runs.contains_key("cg_agent_run_active"));
+        assert!(!runs.contains_key("cg_agent_run_expired"));
         assert_eq!(
             runs.values()
                 .filter(|binding| binding.snapshot.state.terminal())
@@ -1950,7 +1950,7 @@ mod tests {
 
     #[test]
     fn non_writable_project_is_a_hard_prestart_denial() {
-        let result = coding_agent_project_not_writable_result("wc_agent_run_readonly");
+        let result = coding_agent_project_not_writable_result("cg_agent_run_readonly");
         assert!(!result.success);
         assert_eq!(result.output["failure_kind"], "policy_rejected");
         assert_eq!(result.output["execution_state"], "not_started");
@@ -1965,7 +1965,7 @@ mod tests {
     #[test]
     fn bound_run_identity_rejects_provider_project_and_intent_retarget() {
         let binding = test_server_binding(
-            "wc_agent_run_identity_fence".to_string(),
+            "cg_agent_run_identity_fence".to_string(),
             CodingAgentRunState::Running,
             1,
         );
@@ -1991,7 +1991,7 @@ mod tests {
     #[test]
     fn terminal_not_started_run_does_not_advertise_retry_same() {
         let mut binding = test_server_binding(
-            "wc_agent_run_failed_not_started".to_string(),
+            "cg_agent_run_failed_not_started".to_string(),
             CodingAgentRunState::Failed,
             1,
         );
@@ -2054,7 +2054,7 @@ mod tests {
         let run = deterministic_run_id(principal, "same-key");
         let epoch = &[1_u8; PUBLIC_TOKEN_EPOCH_BYTES];
         let stale_epoch = &[2_u8; PUBLIC_TOKEN_EPOCH_BYTES];
-        assert!(run.starts_with("wc_agent_run_"));
+        assert!(run.starts_with("cg_agent_run_"));
         assert_ne!(authority_fingerprint(principal), run);
 
         let key = [0x5au8; OBSERVATION_MAC_KEY_BYTES];
@@ -2074,7 +2074,7 @@ mod tests {
             Err(TokenError::StaleEpoch)
         );
         assert_eq!(
-            parse_observation_token(&key, epoch, "wc_agent_run_other", &token),
+            parse_observation_token(&key, epoch, "cg_agent_run_other", &token),
             Err(TokenError::Invalid)
         );
 
@@ -2107,7 +2107,7 @@ mod tests {
     #[test]
     fn persistent_observation_mac_key_preserves_stale_epoch_across_server_restart() {
         let state_dir = tempfile::tempdir().unwrap();
-        let run = "wc_agent_run_restart";
+        let run = "cg_agent_run_restart";
         let first =
             CodingAgentServerState::with_persistent_observation_mac_key(state_dir.path()).unwrap();
         let first_epoch = first.epoch.clone();

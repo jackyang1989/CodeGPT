@@ -190,8 +190,8 @@ async fn changes_file_diff_call_requires_app_protocol_capability() {
         "name": "changes_file_diff",
         "arguments": {
             "project": "agent:missing:project",
-            "session_id": format!("wc_sess_{}", "1".repeat(32)),
-            "snapshot_id": format!("wc_changes_snapshot_{}", "2".repeat(32)),
+            "session_id": format!("cg_sess_{}", "1".repeat(32)),
+            "snapshot_id": format!("cg_changes_snapshot_{}", "2".repeat(32)),
             "path": "src/lib.rs"
         }
     });
@@ -243,7 +243,7 @@ async fn changes_file_diff_discards_unadvertised_recording_session_wrapper() {
                 "arguments": {
                     "project": project,
                     "session_id": session.session_id,
-                    "snapshot_id": format!("wc_changes_snapshot_{}", "3".repeat(32)),
+                    "snapshot_id": format!("cg_changes_snapshot_{}", "3".repeat(32)),
                     "path": "src/lib.rs",
                     "recording_session_id": session.session_id
                 }
@@ -270,7 +270,7 @@ fn final_changes_html_is_bounded_lazy_display_only_ui() {
         "changes_file_diff",
         "ui/notifications/tool-input",
         "ui/notifications/tool-result",
-        "wc_changes_snapshot_",
+        "cg_changes_snapshot_",
         "Frozen final workspace snapshot",
         "Show ${snapshot.files.length - visibleCount} more files",
         "ui/resource-teardown",

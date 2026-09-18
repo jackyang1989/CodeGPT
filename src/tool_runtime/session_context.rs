@@ -298,8 +298,8 @@ pub(crate) fn session_message_error_result(
 #[test]
 fn completion_persistence_uncertain_exposes_exact_retry_same_recovery() {
     let result = session_message_error_result(
-        "wc_sess_test",
-        Some("wc_msg_test"),
+        "cg_sess_test",
+        Some("cg_msg_test"),
         sessions::SessionMessageError::PersistenceUncertain,
     );
     assert!(!result.success);
@@ -317,7 +317,7 @@ fn completion_persistence_uncertain_exposes_exact_retry_same_recovery() {
 #[cfg(test)]
 #[test]
 fn context_recovery_suggested_call_remains_parser_ready_and_non_authoritative() {
-    let suggested = context_recovery_suggested_call("wc_sess_test");
+    let suggested = context_recovery_suggested_call("cg_sess_test");
     assert_eq!(suggested["tool"], "session_handoff_summary");
     assert_eq!(suggested.as_object().unwrap().len(), 2);
     assert!(suggested.get("authority").is_none());

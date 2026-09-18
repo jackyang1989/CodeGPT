@@ -1,15 +1,15 @@
 use super::*;
 use crate::codegpt_runner::config::{RunnerPolicy, SkillsConfig};
 use crate::codegpt_runner::skill_store::SkillStore;
+use codegpt_core::runner_skill::{
+    RunnerSkillDescriptor, RunnerSkillExecutionRequest, RunnerSkillSource,
+};
 use sha2::{Digest, Sha256};
 use std::fs;
 use std::io::{Cursor, Write};
 #[cfg(feature = "runner-real-process-tests")]
 use std::process::{Command, Stdio};
 use tempfile::TempDir;
-use codegpt_core::runner_skill::{
-    RunnerSkillDescriptor, RunnerSkillExecutionRequest, RunnerSkillSource,
-};
 use zip::write::SimpleFileOptions;
 
 const CONFIGURED_PYTHON_HELPER: &str = "VALUE = 'configured-helper'\n";
@@ -257,7 +257,7 @@ fn managed_only_runtime_resolve_read_and_explicit_revision_checks_are_preserved(
             "SKILL.md",
             1,
             20,
-            Some(&"wc_skillpkg___________________________________________8".to_string()),
+            Some(&"cg_skillpkg___________________________________________8".to_string()),
             None,
         )
         .unwrap_err(),
@@ -299,7 +299,7 @@ fn mixed_list_keeps_configured_and_managed_source_identity_explicit() {
     assert!(resolve_runner_skill(
         &config,
         &store,
-        &"wc_skill_AAAAAAAAAAAAAAAAAAAAAA".to_string()
+        &"cg_skill_AAAAAAAAAAAAAAAAAAAAAA".to_string()
     )
     .unwrap()
     .is_none());
@@ -307,7 +307,7 @@ fn mixed_list_keeps_configured_and_managed_source_identity_explicit() {
 
 #[test]
 fn duplicate_target_and_source_identity_change_fail_closed_without_priority() {
-    let duplicate_id = "wc_skill_qqqqqqqqqqqqqqqqqqqqqg".to_string();
+    let duplicate_id = "cg_skill_qqqqqqqqqqqqqqqqqqqqqg".to_string();
     let configured = RunnerSkillDescriptor::Configured {
         skill_id: duplicate_id.clone(),
         name: "configured".to_string(),
@@ -319,7 +319,7 @@ fn duplicate_target_and_source_identity_change_fail_closed_without_priority() {
         skill_key: "managed".to_string(),
         name: "managed".to_string(),
         description: "managed".to_string(),
-        package_revision: "wc_skillpkg_zMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMw".to_string(),
+        package_revision: "cg_skillpkg_zMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMw".to_string(),
         definition_revision: "d".repeat(64),
     };
 

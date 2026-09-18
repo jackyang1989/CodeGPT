@@ -7,8 +7,8 @@ use std::sync::mpsc;
 use std::thread;
 use std::time::{Duration, Instant};
 
-use sha2::{Digest, Sha256};
 use codegpt_process::{GracefulTermination, ManagedChild};
+use sha2::{Digest, Sha256};
 
 use super::super::config::{project_registry_dir, validate_shell_profile_name, RunnerConfig};
 use super::super::shell::canonicalize_existing;

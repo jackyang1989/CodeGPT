@@ -10,13 +10,13 @@ use super::state::{
 use super::validation::validate_id;
 use super::{job_recovery_grace_secs, RunnerRegistry};
 use crate::RunnerAccessGroup;
-use std::collections::HashSet;
 use codegpt_core::runner_protocol::{
     RunnerProjectSummary, ShellCommandExecutionState, ShellJobActivityPhase,
     ShellJobActivitySource, ShellJobInventory, ShellJobSnapshot, ShellJobStreamSnapshot,
     JOB_INVENTORY_MAX_ACTIVE_JOBS, JOB_INVENTORY_MAX_JOBS, JOB_INVENTORY_MAX_SERIALIZED_BYTES,
     JOB_INVENTORY_MAX_TERMINAL_JOBS, JOB_SNAPSHOT_STREAM_MAX_BYTES, JOB_TERMINAL_RETENTION_SECS,
 };
+use std::collections::HashSet;
 
 const MAX_CONTEXT_FIELD_CHARS: usize = 1_024;
 const MAX_SNAPSHOT_ERROR_CHARS: usize = 4_096;

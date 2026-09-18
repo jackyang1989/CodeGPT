@@ -31,7 +31,7 @@ pub(crate) fn hash_token(token: &str) -> String {
     format!("{:x}", hasher.finalize())
 }
 
-/// Generate a fresh personal API token. Format: `wc_pat_<random>` where
+/// Generate a fresh personal API token. Format: `cg_pat_<random>` where
 /// `<random>` is 256 bits of hex-encoded randomness. The plaintext token is
 /// returned **only** here (at creation time) and is never persisted; only its
 /// SHA-256 hash is stored.
@@ -41,11 +41,11 @@ pub(crate) fn generate_api_token() -> String {
         random.push_str(&uuid::Uuid::new_v4().simple().to_string());
     }
     random.truncate(TOKEN_RANDOM_HEX_LEN);
-    format!("wc_pat_{}", random)
+    format!("cg_pat_{}", random)
 }
 
-/// Generate a fresh Phase 3 agent token. Format: `wc_agent_<random>` where
-/// `<random>` is 256 bits of hex-encoded randomness. The distinct `wc_agent_`
+/// Generate a fresh Phase 3 agent token. Format: `cg_agent_<random>` where
+/// `<random>` is 256 bits of hex-encoded randomness. The distinct `cg_agent_`
 /// prefix makes an agent token immediately recognizable in `token_prefix`
 /// displays and logs so operators can tell it apart from a personal API token.
 /// The plaintext token is returned **only** here (at creation time) and is
@@ -56,24 +56,24 @@ pub(crate) fn generate_agent_token() -> String {
         random.push_str(&uuid::Uuid::new_v4().simple().to_string());
     }
     random.truncate(TOKEN_RANDOM_HEX_LEN);
-    format!("wc_agent_{}", random)
+    format!("cg_agent_{}", random)
 }
 
-/// Generate a fresh account credential. Format: `wc_acct_<random>`.
+/// Generate a fresh account credential. Format: `cg_acct_<random>`.
 pub(crate) fn generate_account_credential() -> String {
     let mut random = String::with_capacity(TOKEN_RANDOM_HEX_LEN);
     while random.len() < TOKEN_RANDOM_HEX_LEN {
         random.push_str(&uuid::Uuid::new_v4().simple().to_string());
     }
     random.truncate(TOKEN_RANDOM_HEX_LEN);
-    format!("wc_acct_{}", random)
+    format!("cg_acct_{}", random)
 }
 
 // ---------------------------------------------------------------------------
 // OAuth2 token generation — Phase 2a
 // ---------------------------------------------------------------------------
 
-/// Generate an OAuth2 client identifier. Format: `wc_client_<random>` where
+/// Generate an OAuth2 client identifier. Format: `cg_client_<random>` where
 /// `<random>` is 256 bits of hex-encoded randomness. This is the public
 /// identifier shown to the client; the secret is separate.
 pub(crate) fn generate_oauth_client_id() -> String {
@@ -82,10 +82,10 @@ pub(crate) fn generate_oauth_client_id() -> String {
         random.push_str(&uuid::Uuid::new_v4().simple().to_string());
     }
     random.truncate(TOKEN_RANDOM_HEX_LEN);
-    format!("wc_client_{}", random)
+    format!("cg_client_{}", random)
 }
 
-/// Generate an OAuth2 client secret. Format: `wc_csec_<random>` where
+/// Generate an OAuth2 client secret. Format: `cg_csec_<random>` where
 /// `<random>` is 256 bits of hex-encoded randomness. The plaintext secret is
 /// returned **only** here (at creation time) and is never persisted; only its
 /// SHA-256 hash is stored.
@@ -95,10 +95,10 @@ pub(crate) fn generate_oauth_client_secret() -> String {
         random.push_str(&uuid::Uuid::new_v4().simple().to_string());
     }
     random.truncate(TOKEN_RANDOM_HEX_LEN);
-    format!("wc_csec_{}", random)
+    format!("cg_csec_{}", random)
 }
 
-/// Generate an OAuth2 authorization code. Format: `wc_oac_<random>` where
+/// Generate an OAuth2 authorization code. Format: `cg_oac_<random>` where
 /// `<random>` is 256 bits of hex-encoded randomness. Short-lived and
 /// single-use; only the SHA-256 hash is stored.
 pub(crate) fn generate_oauth_authorization_code() -> String {
@@ -107,10 +107,10 @@ pub(crate) fn generate_oauth_authorization_code() -> String {
         random.push_str(&uuid::Uuid::new_v4().simple().to_string());
     }
     random.truncate(TOKEN_RANDOM_HEX_LEN);
-    format!("wc_oac_{}", random)
+    format!("cg_oac_{}", random)
 }
 
-/// Generate an OAuth2 access token. Format: `wc_oat_<random>` where
+/// Generate an OAuth2 access token. Format: `cg_oat_<random>` where
 /// `<random>` is 256 bits of hex-encoded randomness. The plaintext token is
 /// returned **only** here (at creation time) and is never persisted; only its
 /// SHA-256 hash is stored.
@@ -120,10 +120,10 @@ pub(crate) fn generate_oauth_access_token() -> String {
         random.push_str(&uuid::Uuid::new_v4().simple().to_string());
     }
     random.truncate(TOKEN_RANDOM_HEX_LEN);
-    format!("wc_oat_{}", random)
+    format!("cg_oat_{}", random)
 }
 
-/// Generate an OAuth2 refresh token. Format: `wc_ort_<random>` where
+/// Generate an OAuth2 refresh token. Format: `cg_ort_<random>` where
 /// `<random>` is 256 bits of hex-encoded randomness. The plaintext token is
 /// returned **only** here (at creation time) and is never persisted; only its
 /// SHA-256 hash is stored.
@@ -133,11 +133,11 @@ pub(crate) fn generate_oauth_refresh_token() -> String {
         random.push_str(&uuid::Uuid::new_v4().simple().to_string());
     }
     random.truncate(TOKEN_RANDOM_HEX_LEN);
-    format!("wc_ort_{}", random)
+    format!("cg_ort_{}", random)
 }
 
 /// Return a short, display-safe prefix of a token (the first 16 characters,
-/// including the `wc_pat_` / `wc_agent_` kind marker). Used for listing tokens
+/// including the `cg_pat_` / `cg_agent_` kind marker). Used for listing tokens
 /// without revealing the secret.
 pub(crate) fn token_prefix(token: &str) -> String {
     let end = token.len().min(16);
@@ -216,15 +216,23 @@ pub(crate) fn normalize_token_hash(value: &str) -> Result<String, String> {
     Ok(raw.to_ascii_lowercase())
 }
 
-/// Validate a token prefix against its expected leading tag (e.g. `wc_pat_`
-/// or `wc_agent_`): must start with `tag`, be longer than the tag, at most 32
-/// chars, and contain only `[A-Za-z0-9_]`.
+/// Validate a token prefix against its expected leading tag (e.g. `cg_pat_`
+/// or `cg_agent_`): must start with `tag` (or the legacy `wc_` equivalent),
+/// be longer than the tag, at most 32 chars, and contain only `[A-Za-z0-9_]`.
+///
+/// Legacy tokens carrying the `wc_` prefix are accepted for backward
+/// compatibility but newly generated tokens always use `cg_`.
 pub(crate) fn validate_token_prefix(value: &str, tag: &str) -> Result<String, String> {
     let value = value.trim();
-    if !value.starts_with(tag) {
+    let legacy_tag = tag.replacen("cg_", "wc_", 1);
+    let effective_tag = if value.starts_with(tag) {
+        tag
+    } else if value.starts_with(&legacy_tag) {
+        &legacy_tag
+    } else {
         return Err(format!("token_prefix must start with {tag}"));
-    }
-    if value.len() <= tag.len() || value.len() > 32 {
+    };
+    if value.len() <= effective_tag.len() || value.len() > 32 {
         return Err("token_prefix length is invalid".to_string());
     }
     if !value.chars().all(|c| c.is_ascii_alphanumeric() || c == '_') {
@@ -259,25 +267,25 @@ mod tests {
     use super::*;
 
     #[test]
-    fn generate_agent_token_uses_wc_agent_prefix() {
+    fn generate_agent_token_uses_cg_agent_prefix() {
         let token = generate_agent_token();
-        assert!(token.starts_with("wc_agent_"));
-        assert!(token.len() > "wc_agent_".len() + 32);
+        assert!(token.starts_with("cg_agent_"));
+        assert!(token.len() > "cg_agent_".len() + 32);
     }
 
     #[test]
-    fn generate_api_token_uses_wc_pat_prefix() {
+    fn generate_api_token_uses_cg_pat_prefix() {
         let token = generate_api_token();
-        assert!(token.starts_with("wc_pat_"));
-        assert!(token.len() > "wc_pat_".len() + 32);
+        assert!(token.starts_with("cg_pat_"));
+        assert!(token.len() > "cg_pat_".len() + 32);
     }
 
     #[test]
     fn generate_account_credential_uses_expected_format() {
         let token = generate_account_credential();
-        assert!(token.starts_with("wc_acct_"));
-        assert_eq!(token.len(), "wc_acct_".len() + 64);
-        assert!(token["wc_acct_".len()..]
+        assert!(token.starts_with("cg_acct_"));
+        assert_eq!(token.len(), "cg_acct_".len() + 64);
+        assert!(token["cg_acct_".len()..]
             .chars()
             .all(|c| c.is_ascii_hexdigit()));
     }
@@ -286,7 +294,7 @@ mod tests {
     fn token_prefix_for_agent_token_shows_prefix() {
         let token = generate_agent_token();
         let prefix = token_prefix(&token);
-        assert!(prefix.starts_with("wc_agent_"));
+        assert!(prefix.starts_with("cg_agent_"));
         assert_ne!(prefix, token);
         assert_eq!(prefix.len(), 16);
     }
@@ -361,47 +369,47 @@ mod tests {
     // -----------------------------------------------------------------------
 
     #[test]
-    fn generate_oauth_access_token_uses_wc_oat_prefix() {
+    fn generate_oauth_access_token_uses_cg_oat_prefix() {
         let token = generate_oauth_access_token();
-        assert!(token.starts_with("wc_oat_"));
-        assert_eq!(token.len(), "wc_oat_".len() + 64);
-        assert!(token["wc_oat_".len()..]
+        assert!(token.starts_with("cg_oat_"));
+        assert_eq!(token.len(), "cg_oat_".len() + 64);
+        assert!(token["cg_oat_".len()..]
             .chars()
             .all(|c| c.is_ascii_hexdigit()));
     }
 
     #[test]
-    fn generate_oauth_refresh_token_uses_wc_ort_prefix() {
+    fn generate_oauth_refresh_token_uses_cg_ort_prefix() {
         let token = generate_oauth_refresh_token();
-        assert!(token.starts_with("wc_ort_"));
-        assert_eq!(token.len(), "wc_ort_".len() + 64);
-        assert!(token["wc_ort_".len()..]
+        assert!(token.starts_with("cg_ort_"));
+        assert_eq!(token.len(), "cg_ort_".len() + 64);
+        assert!(token["cg_ort_".len()..]
             .chars()
             .all(|c| c.is_ascii_hexdigit()));
     }
 
     #[test]
-    fn generate_oauth_authorization_code_uses_wc_oac_prefix() {
+    fn generate_oauth_authorization_code_uses_cg_oac_prefix() {
         let token = generate_oauth_authorization_code();
-        assert!(token.starts_with("wc_oac_"));
-        assert_eq!(token.len(), "wc_oac_".len() + 64);
-        assert!(token["wc_oac_".len()..]
+        assert!(token.starts_with("cg_oac_"));
+        assert_eq!(token.len(), "cg_oac_".len() + 64);
+        assert!(token["cg_oac_".len()..]
             .chars()
             .all(|c| c.is_ascii_hexdigit()));
     }
 
     #[test]
-    fn generate_oauth_client_id_uses_wc_client_prefix() {
+    fn generate_oauth_client_id_uses_cg_client_prefix() {
         let id = generate_oauth_client_id();
-        assert!(id.starts_with("wc_client_"));
-        assert_eq!(id.len(), "wc_client_".len() + 64);
+        assert!(id.starts_with("cg_client_"));
+        assert_eq!(id.len(), "cg_client_".len() + 64);
     }
 
     #[test]
-    fn generate_oauth_client_secret_uses_wc_csec_prefix() {
+    fn generate_oauth_client_secret_uses_cg_csec_prefix() {
         let secret = generate_oauth_client_secret();
-        assert!(secret.starts_with("wc_csec_"));
-        assert_eq!(secret.len(), "wc_csec_".len() + 64);
+        assert!(secret.starts_with("cg_csec_"));
+        assert_eq!(secret.len(), "cg_csec_".len() + 64);
     }
 
     #[test]
@@ -427,5 +435,14 @@ mod tests {
         assert_eq!(h1, h2);
         assert_ne!(h1, token);
         assert_eq!(h1.len(), 64); // SHA-256 hex
+    }
+
+    #[test]
+    fn validate_token_prefix_accepts_both_cg_and_wc_legacy_prefixes() {
+        assert!(validate_token_prefix("cg_pat_123456", "cg_pat_").is_ok());
+        assert!(validate_token_prefix("wc_pat_123456", "cg_pat_").is_ok());
+        assert!(validate_token_prefix("cg_agent_abcdef", "cg_agent_").is_ok());
+        assert!(validate_token_prefix("wc_agent_abcdef", "cg_agent_").is_ok());
+        assert!(validate_token_prefix("invalid_123456", "cg_pat_").is_err());
     }
 }

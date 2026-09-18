@@ -162,7 +162,7 @@ async fn revoke_unknown_token_returns_200() {
 
     let service = Service::new(build_router(config, db.clone()));
     let body = form_body(&[
-        ("token", "wc_oat_nonexistent"),
+        ("token", "cg_oat_nonexistent"),
         ("client_id", &client.client_id),
         ("client_secret", &secret),
     ]);
@@ -267,8 +267,8 @@ async fn revoke_unknown_client_returns_invalid_client() {
 
     let service = Service::new(build_router(config, db));
     let body = form_body(&[
-        ("token", "wc_oat_dummy"),
-        ("client_id", "wc_client_nonexistent"),
+        ("token", "cg_oat_dummy"),
+        ("client_id", "cg_client_nonexistent"),
         ("client_secret", "some-secret"),
     ]);
     let mut resp = post_revoke("http://localhost/oauth/revoke", body)
@@ -291,7 +291,7 @@ async fn revoke_revoked_client_returns_invalid_client() {
 
     let service = Service::new(build_router(config, db));
     let body = form_body(&[
-        ("token", "wc_oat_dummy"),
+        ("token", "cg_oat_dummy"),
         ("client_id", &client.client_id),
         ("client_secret", &secret),
     ]);
@@ -332,7 +332,7 @@ async fn revoke_missing_client_id_returns_invalid_request() {
     let (_tmp, db) = test_db();
 
     let service = Service::new(build_router(config, db));
-    let body = form_body(&[("token", "wc_oat_dummy"), ("client_secret", "some-secret")]);
+    let body = form_body(&[("token", "cg_oat_dummy"), ("client_secret", "some-secret")]);
     let mut resp = post_revoke("http://localhost/oauth/revoke", body)
         .send(&service)
         .await;
@@ -350,7 +350,7 @@ async fn revoke_missing_client_secret_returns_invalid_client() {
     let (client, _secret) = seed_client(&db, &user, "Test App");
 
     let service = Service::new(build_router(config, db));
-    let body = form_body(&[("token", "wc_oat_dummy"), ("client_id", &client.client_id)]);
+    let body = form_body(&[("token", "cg_oat_dummy"), ("client_id", &client.client_id)]);
     let mut resp = post_revoke("http://localhost/oauth/revoke", body)
         .send(&service)
         .await;
@@ -366,7 +366,7 @@ async fn revoke_json_content_type_rejected() {
     let (_tmp, db) = test_db();
 
     let service = Service::new(build_router(config, db));
-    let body = form_body(&[("token", "wc_oat_dummy")]);
+    let body = form_body(&[("token", "cg_oat_dummy")]);
     let mut resp = TestClient::post("http://localhost/oauth/revoke")
         .add_header("content-type", "application/json", true)
         .body(body)
@@ -384,7 +384,7 @@ async fn revoke_missing_content_type_rejected() {
     let (_tmp, db) = test_db();
 
     let service = Service::new(build_router(config, db));
-    let body = form_body(&[("token", "wc_oat_dummy")]);
+    let body = form_body(&[("token", "cg_oat_dummy")]);
     let mut resp = TestClient::post("http://localhost/oauth/revoke")
         .body(body)
         .send(&service)
@@ -580,8 +580,8 @@ async fn revoke_error_has_no_store_headers() {
 
     let service = Service::new(build_router(config, db));
     let body = form_body(&[
-        ("token", "wc_oat_dummy"),
-        ("client_id", "wc_client_nonexistent"),
+        ("token", "cg_oat_dummy"),
+        ("client_id", "cg_client_nonexistent"),
         ("client_secret", "some-secret"),
     ]);
     let resp = post_revoke("http://localhost/oauth/revoke", body)

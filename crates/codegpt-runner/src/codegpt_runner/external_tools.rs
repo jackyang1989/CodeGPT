@@ -15,6 +15,7 @@ use crate::runner_protocol::{
     ClaudeCodeProviderStatus, ProviderCallSummary, ToolProvidersStatus,
     EXTERNAL_SEARCH_REQUEST_PREFIX,
 };
+use codegpt_core::runner_operation::RunnerShellOperation;
 use serde_json::{json, Value};
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 #[cfg(windows)]
@@ -27,7 +28,6 @@ use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
 use std::sync::{mpsc, Arc, Mutex};
 use std::thread::JoinHandle;
 use std::time::{Duration, Instant};
-use codegpt_core::runner_operation::RunnerShellOperation;
 
 use codegpt_process::{GracefulTermination, ManagedChild};
 
@@ -1006,8 +1006,7 @@ fn normalize_search_result(
     let root_prefix = format!("{}/", root.trim_end_matches('/'));
     let mut lines = Vec::new();
     lines.push(
-        json!({"codegpt_search":{"backend":"claude_code","feature_unavailable":false}})
-            .to_string(),
+        json!({"codegpt_search":{"backend":"claude_code","feature_unavailable":false}}).to_string(),
     );
     for line in raw.lines() {
         if line.is_empty() {

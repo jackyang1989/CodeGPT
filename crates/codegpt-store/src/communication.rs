@@ -11,15 +11,15 @@ use sha2::{Digest, Sha256};
 use std::collections::BTreeSet;
 use std::io::{self, Write};
 
-pub(crate) const DURABLE_AGENT_ID_PREFIX: &str = "wc_dagent_";
-pub(crate) const AGENT_ENDPOINT_ID_PREFIX: &str = "wc_endpoint_";
-pub(crate) const CONVERSATION_ID_PREFIX: &str = "wc_conv_";
-pub(crate) const CONVERSATION_PARTICIPANT_ID_PREFIX: &str = "wc_participant_";
-pub(crate) const CONVERSATION_MESSAGE_ID_PREFIX: &str = "wc_cmsg_";
-pub(crate) const AGENT_DELIVERY_ID_PREFIX: &str = "wc_delivery_";
+pub(crate) const DURABLE_AGENT_ID_PREFIX: &str = "cg_dagent_";
+pub(crate) const AGENT_ENDPOINT_ID_PREFIX: &str = "cg_endpoint_";
+pub(crate) const CONVERSATION_ID_PREFIX: &str = "cg_conv_";
+pub(crate) const CONVERSATION_PARTICIPANT_ID_PREFIX: &str = "cg_participant_";
+pub(crate) const CONVERSATION_MESSAGE_ID_PREFIX: &str = "cg_cmsg_";
+pub(crate) const AGENT_DELIVERY_ID_PREFIX: &str = "cg_delivery_";
 const MCP_APP_RECOVERY_FINGERPRINT_HEX_LEN: usize = 64;
 const MCP_APP_CLIENT_WINDOW_KEY_HEX_LEN: usize = 64;
-pub const COMMUNICATION_PRINCIPAL_DIGEST_PREFIX: &str = "wc_commprincipal_";
+pub const COMMUNICATION_PRINCIPAL_DIGEST_PREFIX: &str = "cg_commprincipal_";
 
 pub(crate) const MAX_AGENT_HANDLE_CHARS: usize = 64;
 pub(crate) const MAX_AGENT_DISPLAY_NAME_CHARS: usize = 128;
@@ -461,7 +461,7 @@ impl Database {
         let transaction = conn.transaction_with_behavior(TransactionBehavior::Immediate)?;
         transaction.execute_batch(
             "
-            CREATE TABLE IF NOT EXISTS wc_agent_identities (
+            CREATE TABLE IF NOT EXISTS cg_agent_identities (
                 agent_id TEXT PRIMARY KEY,
                 owner_principal_kind TEXT NOT NULL,
                 owner_principal_digest TEXT NOT NULL,
@@ -474,12 +474,12 @@ impl Database {
                 updated_at_unix_ms INTEGER NOT NULL,
                 current_controller_generation INTEGER NOT NULL DEFAULT 0 CHECK(current_controller_generation >= 0)
             );
-            CREATE INDEX IF NOT EXISTS idx_wc_agent_identities_updated
-                ON wc_agent_identities(updated_at_unix_ms DESC, agent_id);
-            CREATE INDEX IF NOT EXISTS idx_wc_agent_identities_owner
-                ON wc_agent_identities(owner_principal_digest, agent_id);
+            CREATE INDEX IF NOT EXISTS idx_cg_agent_identities_updated
+                ON cg_agent_identities(updated_at_unix_ms DESC, agent_id);
+            CREATE INDEX IF NOT EXISTS idx_cg_agent_identities_owner
+                ON cg_agent_identities(owner_principal_digest, agent_id);
 
-            CREATE TABLE IF NOT EXISTS wc_agent_endpoints (
+            CREATE TABLE IF NOT EXISTS cg_agent_endpoints (
                 endpoint_id TEXT PRIMARY KEY,
                 agent_id TEXT NOT NULL,
                 attachment_principal_kind TEXT NOT NULL,
@@ -503,16 +503,16 @@ impl Database {
                     OR (lifecycle = 'expired' AND expired_at_unix_ms IS NOT NULL)
                     OR (lifecycle = 'detached' AND detached_at_unix_ms IS NOT NULL)
                 ),
-                FOREIGN KEY(agent_id) REFERENCES wc_agent_identities(agent_id)
+                FOREIGN KEY(agent_id) REFERENCES cg_agent_identities(agent_id)
             );
-            CREATE INDEX IF NOT EXISTS idx_wc_agent_endpoints_agent_active
-                ON wc_agent_endpoints(agent_id, detached_at_unix_ms, attached_at_unix_ms DESC);
-            CREATE INDEX IF NOT EXISTS idx_wc_agent_endpoints_agent_generation
-                ON wc_agent_endpoints(agent_id, lifecycle, controller_generation DESC);
-            CREATE UNIQUE INDEX IF NOT EXISTS idx_wc_agent_endpoints_one_attached
-                ON wc_agent_endpoints(agent_id) WHERE lifecycle = 'attached';
+            CREATE INDEX IF NOT EXISTS idx_cg_agent_endpoints_agent_active
+                ON cg_agent_endpoints(agent_id, detached_at_unix_ms, attached_at_unix_ms DESC);
+            CREATE INDEX IF NOT EXISTS idx_cg_agent_endpoints_agent_generation
+                ON cg_agent_endpoints(agent_id, lifecycle, controller_generation DESC);
+            CREATE UNIQUE INDEX IF NOT EXISTS idx_cg_agent_endpoints_one_attached
+                ON cg_agent_endpoints(agent_id) WHERE lifecycle = 'attached';
 
-            CREATE TABLE IF NOT EXISTS wc_conversations (
+            CREATE TABLE IF NOT EXISTS cg_conversations (
                 conversation_id TEXT PRIMARY KEY,
                 title TEXT,
                 lifecycle TEXT NOT NULL CHECK(lifecycle IN ('open', 'closed')),
@@ -523,10 +523,10 @@ impl Database {
                 updated_at_unix_ms INTEGER NOT NULL,
                 closed_at_unix_ms INTEGER
             );
-            CREATE INDEX IF NOT EXISTS idx_wc_conversations_updated
-                ON wc_conversations(updated_at_unix_ms DESC, conversation_id);
+            CREATE INDEX IF NOT EXISTS idx_cg_conversations_updated
+                ON cg_conversations(updated_at_unix_ms DESC, conversation_id);
 
-            CREATE TABLE IF NOT EXISTS wc_conversation_participants (
+            CREATE TABLE IF NOT EXISTS cg_conversation_participants (
                 participant_id TEXT PRIMARY KEY,
                 conversation_id TEXT NOT NULL,
                 participant_kind TEXT NOT NULL CHECK(participant_kind IN ('human', 'agent')),
@@ -545,19 +545,19 @@ impl Database {
                         AND principal_kind IS NOT NULL
                         AND principal_digest IS NOT NULL)
                 ),
-                FOREIGN KEY(conversation_id) REFERENCES wc_conversations(conversation_id),
-                FOREIGN KEY(agent_id) REFERENCES wc_agent_identities(agent_id)
+                FOREIGN KEY(conversation_id) REFERENCES cg_conversations(conversation_id),
+                FOREIGN KEY(agent_id) REFERENCES cg_agent_identities(agent_id)
             );
-            CREATE UNIQUE INDEX IF NOT EXISTS idx_wc_conversation_participants_agent
-                ON wc_conversation_participants(conversation_id, agent_id)
+            CREATE UNIQUE INDEX IF NOT EXISTS idx_cg_conversation_participants_agent
+                ON cg_conversation_participants(conversation_id, agent_id)
                 WHERE participant_kind = 'agent';
-            CREATE UNIQUE INDEX IF NOT EXISTS idx_wc_conversation_participants_human
-                ON wc_conversation_participants(conversation_id, principal_digest)
+            CREATE UNIQUE INDEX IF NOT EXISTS idx_cg_conversation_participants_human
+                ON cg_conversation_participants(conversation_id, principal_digest)
                 WHERE participant_kind = 'human';
-            CREATE INDEX IF NOT EXISTS idx_wc_conversation_participants_lookup
-                ON wc_conversation_participants(conversation_id, participant_kind, participant_id);
+            CREATE INDEX IF NOT EXISTS idx_cg_conversation_participants_lookup
+                ON cg_conversation_participants(conversation_id, participant_kind, participant_id);
 
-            CREATE TABLE IF NOT EXISTS wc_conversation_messages (
+            CREATE TABLE IF NOT EXISTS cg_conversation_messages (
                 message_id TEXT PRIMARY KEY,
                 conversation_id TEXT NOT NULL,
                 seq INTEGER NOT NULL CHECK(seq >= 1),
@@ -567,15 +567,15 @@ impl Database {
                 created_at_unix_ms INTEGER NOT NULL,
                 UNIQUE(conversation_id, seq),
                 UNIQUE(conversation_id, message_id),
-                FOREIGN KEY(conversation_id) REFERENCES wc_conversations(conversation_id),
-                FOREIGN KEY(author_participant_id) REFERENCES wc_conversation_participants(participant_id),
+                FOREIGN KEY(conversation_id) REFERENCES cg_conversations(conversation_id),
+                FOREIGN KEY(author_participant_id) REFERENCES cg_conversation_participants(participant_id),
                 FOREIGN KEY(conversation_id, reply_to_message_id)
-                    REFERENCES wc_conversation_messages(conversation_id, message_id)
+                    REFERENCES cg_conversation_messages(conversation_id, message_id)
             );
-            CREATE INDEX IF NOT EXISTS idx_wc_conversation_messages_order
-                ON wc_conversation_messages(conversation_id, seq);
+            CREATE INDEX IF NOT EXISTS idx_cg_conversation_messages_order
+                ON cg_conversation_messages(conversation_id, seq);
 
-            CREATE TABLE IF NOT EXISTS wc_agent_deliveries (
+            CREATE TABLE IF NOT EXISTS cg_agent_deliveries (
                 delivery_order INTEGER PRIMARY KEY AUTOINCREMENT,
                 delivery_id TEXT NOT NULL UNIQUE,
                 message_id TEXT NOT NULL,
@@ -588,16 +588,16 @@ impl Database {
                 consumed_by_endpoint_id TEXT,
                 UNIQUE(message_id, recipient_agent_id),
                 FOREIGN KEY(conversation_id, message_id)
-                    REFERENCES wc_conversation_messages(conversation_id, message_id),
-                FOREIGN KEY(recipient_agent_id) REFERENCES wc_agent_identities(agent_id),
-                FOREIGN KEY(consumed_by_endpoint_id) REFERENCES wc_agent_endpoints(endpoint_id)
+                    REFERENCES cg_conversation_messages(conversation_id, message_id),
+                FOREIGN KEY(recipient_agent_id) REFERENCES cg_agent_identities(agent_id),
+                FOREIGN KEY(consumed_by_endpoint_id) REFERENCES cg_agent_endpoints(endpoint_id)
             );
-            CREATE INDEX IF NOT EXISTS idx_wc_agent_deliveries_inbox
-                ON wc_agent_deliveries(recipient_agent_id, state, delivery_order);
-            CREATE INDEX IF NOT EXISTS idx_wc_agent_deliveries_message
-                ON wc_agent_deliveries(message_id, recipient_agent_id);
+            CREATE INDEX IF NOT EXISTS idx_cg_agent_deliveries_inbox
+                ON cg_agent_deliveries(recipient_agent_id, state, delivery_order);
+            CREATE INDEX IF NOT EXISTS idx_cg_agent_deliveries_message
+                ON cg_agent_deliveries(message_id, recipient_agent_id);
 
-            CREATE TABLE IF NOT EXISTS wc_communication_idempotency (
+            CREATE TABLE IF NOT EXISTS cg_communication_idempotency (
                 principal_digest TEXT NOT NULL,
                 operation TEXT NOT NULL,
                 key_hash TEXT NOT NULL,
@@ -606,13 +606,13 @@ impl Database {
                 created_at_unix_ms INTEGER NOT NULL,
                 PRIMARY KEY(principal_digest, operation, key_hash)
             );
-            CREATE INDEX IF NOT EXISTS idx_wc_communication_idempotency_created
-                ON wc_communication_idempotency(created_at_unix_ms DESC);
+            CREATE INDEX IF NOT EXISTS idx_cg_communication_idempotency_created
+                ON cg_communication_idempotency(created_at_unix_ms DESC);
             ",
         )?;
         let has_recovery_fingerprint: i64 = transaction.query_row(
             "SELECT EXISTS(
-                SELECT 1 FROM pragma_table_info('wc_agent_endpoints')
+                SELECT 1 FROM pragma_table_info('cg_agent_endpoints')
                 WHERE name = 'mcp_app_recovery_fingerprint'
             )",
             [],
@@ -620,7 +620,7 @@ impl Database {
         )?;
         if has_recovery_fingerprint == 0 {
             transaction.execute(
-                "ALTER TABLE wc_agent_endpoints
+                "ALTER TABLE cg_agent_endpoints
                  ADD COLUMN mcp_app_recovery_fingerprint TEXT
                  CHECK(mcp_app_recovery_fingerprint IS NULL OR length(mcp_app_recovery_fingerprint) = 64)",
                 [],
@@ -628,7 +628,7 @@ impl Database {
         }
         let has_client_window_key: i64 = transaction.query_row(
             "SELECT EXISTS(
-                SELECT 1 FROM pragma_table_info('wc_agent_endpoints')
+                SELECT 1 FROM pragma_table_info('cg_agent_endpoints')
                 WHERE name = 'mcp_app_client_window_key'
             )",
             [],
@@ -636,7 +636,7 @@ impl Database {
         )?;
         if has_client_window_key == 0 {
             transaction.execute(
-                "ALTER TABLE wc_agent_endpoints
+                "ALTER TABLE cg_agent_endpoints
                  ADD COLUMN mcp_app_client_window_key TEXT
                  CHECK(mcp_app_client_window_key IS NULL OR length(mcp_app_client_window_key) = 64)",
                 [],
@@ -686,7 +686,7 @@ impl Database {
             });
         }
         let count: i64 = transaction
-            .query_row("SELECT COUNT(*) FROM wc_agent_identities", [], |row| {
+            .query_row("SELECT COUNT(*) FROM cg_agent_identities", [], |row| {
                 row.get(0)
             })
             .map_err(store_error)?;
@@ -699,11 +699,11 @@ impl Database {
         let agent_id = allocate_identity(
             &transaction,
             DURABLE_AGENT_ID_PREFIX,
-            "SELECT EXISTS(SELECT 1 FROM wc_agent_identities WHERE agent_id = ?1)",
+            "SELECT EXISTS(SELECT 1 FROM cg_agent_identities WHERE agent_id = ?1)",
         )?;
         transaction
             .execute(
-                "INSERT INTO wc_agent_identities (
+                "INSERT INTO cg_agent_identities (
                     agent_id, owner_principal_kind, owner_principal_digest,
                     handle, display_name, description, specialty_labels_json,
                     profile_revision, created_at_unix_ms, updated_at_unix_ms
@@ -755,7 +755,7 @@ impl Database {
             let owned: bool = conn
                 .query_row(
                     "SELECT EXISTS(
-                        SELECT 1 FROM wc_agent_identities
+                        SELECT 1 FROM cg_agent_identities
                         WHERE agent_id = ?1 AND owner_principal_kind = ?2
                           AND owner_principal_digest = ?3
                      )",
@@ -778,7 +778,7 @@ impl Database {
         }
         let total_count: i64 = conn
             .query_row(
-                "SELECT COUNT(*) FROM wc_agent_identities
+                "SELECT COUNT(*) FROM cg_agent_identities
                  WHERE owner_principal_kind = ?1 AND owner_principal_digest = ?2",
                 params![principal.kind, principal.digest],
                 |row| row.get(0),
@@ -789,21 +789,21 @@ impl Database {
                 "SELECT agent_id, handle, display_name, description, specialty_labels_json,
                         profile_revision, created_at_unix_ms, updated_at_unix_ms,
                         current_controller_generation,
-                        (SELECT COUNT(*) FROM wc_agent_endpoints e
+                        (SELECT COUNT(*) FROM cg_agent_endpoints e
                          WHERE e.agent_id = a.agent_id AND e.lifecycle = 'attached'
                            AND e.controller_generation = a.current_controller_generation
                            AND e.lease_expires_at_unix_ms > ?3),
-                        (SELECT COUNT(*) FROM wc_agent_deliveries d
+                        (SELECT COUNT(*) FROM cg_agent_deliveries d
                          WHERE d.recipient_agent_id = a.agent_id AND d.state = 'queued'),
-                        (SELECT COUNT(*) FROM wc_agent_wakes w
+                        (SELECT COUNT(*) FROM cg_agent_wakes w
                          WHERE w.target_agent_id = a.agent_id AND w.state NOT IN ('consumed', 'retired')),
-                        (SELECT w.wake_id FROM wc_agent_wakes w
+                        (SELECT w.wake_id FROM cg_agent_wakes w
                          WHERE w.target_agent_id = a.agent_id
                          ORDER BY w.created_at_unix_ms DESC, w.wake_id DESC LIMIT 1),
-                        (SELECT w.state FROM wc_agent_wakes w
+                        (SELECT w.state FROM cg_agent_wakes w
                          WHERE w.target_agent_id = a.agent_id
                          ORDER BY w.created_at_unix_ms DESC, w.wake_id DESC LIMIT 1)
-                 FROM wc_agent_identities a
+                 FROM cg_agent_identities a
                  WHERE owner_principal_kind = ?1 AND owner_principal_digest = ?2
                  ORDER BY updated_at_unix_ms DESC, agent_id
                  LIMIT ?4 OFFSET ?5",
@@ -905,7 +905,7 @@ impl Database {
         let now = now_unix_ms().max(current.updated_at_unix_ms.saturating_add(1));
         transaction
             .execute(
-                "UPDATE wc_agent_identities
+                "UPDATE cg_agent_identities
                  SET handle = ?2, display_name = ?3, description = ?4,
                      specialty_labels_json = ?5, profile_revision = ?6,
                      updated_at_unix_ms = ?7
@@ -988,7 +988,7 @@ impl Database {
         require_agent_owner(&transaction, principal, &input.agent_id)?;
         let current_controller_generation: i64 = transaction
             .query_row(
-                "SELECT current_controller_generation FROM wc_agent_identities WHERE agent_id = ?1",
+                "SELECT current_controller_generation FROM cg_agent_identities WHERE agent_id = ?1",
                 params![input.agent_id],
                 |row| row.get(0),
             )
@@ -1005,7 +1005,7 @@ impl Database {
         let previous_endpoints = {
             let mut statement = transaction
                 .prepare(
-                    "SELECT endpoint_id, controller_generation FROM wc_agent_endpoints
+                    "SELECT endpoint_id, controller_generation FROM cg_agent_endpoints
                      WHERE agent_id = ?1 AND lifecycle = 'attached'",
                 )
                 .map_err(store_error)?;
@@ -1030,7 +1030,7 @@ impl Database {
         }
         transaction
             .execute(
-                "UPDATE wc_agent_endpoints
+                "UPDATE cg_agent_endpoints
                  SET lifecycle = 'expired',
                      expired_at_unix_ms = COALESCE(expired_at_unix_ms, ?2),
                      last_seen_at_unix_ms = MAX(last_seen_at_unix_ms, ?2),
@@ -1047,7 +1047,7 @@ impl Database {
         // already reached natural expiry before this attach.
         transaction
             .execute(
-                "UPDATE wc_agent_endpoints
+                "UPDATE cg_agent_endpoints
                  SET mcp_app_recovery_fingerprint = NULL,
                      mcp_app_client_window_key = NULL
                  WHERE agent_id = ?1",
@@ -1056,7 +1056,7 @@ impl Database {
             .map_err(store_error)?;
         transaction
             .execute(
-                "UPDATE wc_agent_identities
+                "UPDATE cg_agent_identities
                  SET current_controller_generation = ?2
                  WHERE agent_id = ?1 AND current_controller_generation = ?3",
                 params![
@@ -1069,11 +1069,11 @@ impl Database {
         let endpoint_id = allocate_identity(
             &transaction,
             AGENT_ENDPOINT_ID_PREFIX,
-            "SELECT EXISTS(SELECT 1 FROM wc_agent_endpoints WHERE endpoint_id = ?1)",
+            "SELECT EXISTS(SELECT 1 FROM cg_agent_endpoints WHERE endpoint_id = ?1)",
         )?;
         transaction
             .execute(
-                "INSERT INTO wc_agent_endpoints (
+                "INSERT INTO cg_agent_endpoints (
                     endpoint_id, agent_id, attachment_principal_kind,
                     attachment_principal_digest, host, client_attachment_id,
                     wake_capable, controller_generation, lifecycle,
@@ -1177,7 +1177,7 @@ impl Database {
                 })?;
             let current_controller_generation: i64 = transaction
                 .query_row(
-                    "SELECT current_controller_generation FROM wc_agent_identities WHERE agent_id = ?1",
+                    "SELECT current_controller_generation FROM cg_agent_identities WHERE agent_id = ?1",
                     params![agent_id],
                     |row| row.get(0),
                 )
@@ -1194,7 +1194,7 @@ impl Database {
             }
             let successor_window: Option<String> = transaction
                 .query_row(
-                    "SELECT mcp_app_client_window_key FROM wc_agent_endpoints WHERE endpoint_id = ?1",
+                    "SELECT mcp_app_client_window_key FROM cg_agent_endpoints WHERE endpoint_id = ?1",
                     params![replacement_endpoint_id],
                     |row| row.get(0),
                 )
@@ -1242,7 +1242,7 @@ impl Database {
         }
         let persisted_window: Option<String> = transaction
             .query_row(
-                "SELECT mcp_app_client_window_key FROM wc_agent_endpoints WHERE endpoint_id = ?1",
+                "SELECT mcp_app_client_window_key FROM cg_agent_endpoints WHERE endpoint_id = ?1",
                 params![endpoint_id],
                 |row| row.get(0),
             )
@@ -1255,7 +1255,7 @@ impl Database {
         }
         let current_controller_generation: i64 = transaction
             .query_row(
-                "SELECT current_controller_generation FROM wc_agent_identities WHERE agent_id = ?1",
+                "SELECT current_controller_generation FROM cg_agent_identities WHERE agent_id = ?1",
                 params![agent_id],
                 |row| row.get(0),
             )
@@ -1289,7 +1289,7 @@ impl Database {
         )?;
         transaction
             .execute(
-                "UPDATE wc_agent_endpoints
+                "UPDATE cg_agent_endpoints
                  SET lifecycle = 'expired',
                      wake_capable = 0,
                      expired_at_unix_ms = COALESCE(expired_at_unix_ms, ?2),
@@ -1312,7 +1312,7 @@ impl Database {
                 })?;
         let updated = transaction
             .execute(
-                "UPDATE wc_agent_identities
+                "UPDATE cg_agent_identities
                  SET current_controller_generation = ?2
                  WHERE agent_id = ?1 AND current_controller_generation = ?3",
                 params![
@@ -1331,11 +1331,11 @@ impl Database {
         let replacement_endpoint_id = allocate_identity(
             &transaction,
             AGENT_ENDPOINT_ID_PREFIX,
-            "SELECT EXISTS(SELECT 1 FROM wc_agent_endpoints WHERE endpoint_id = ?1)",
+            "SELECT EXISTS(SELECT 1 FROM cg_agent_endpoints WHERE endpoint_id = ?1)",
         )?;
         transaction
             .execute(
-                "INSERT INTO wc_agent_endpoints (
+                "INSERT INTO cg_agent_endpoints (
                     endpoint_id, agent_id, attachment_principal_kind,
                     attachment_principal_digest, host, client_attachment_id,
                     wake_capable, mcp_app_recovery_fingerprint, mcp_app_client_window_key,
@@ -1418,7 +1418,7 @@ impl Database {
         )?;
         transaction
             .execute(
-                "UPDATE wc_agent_endpoints
+                "UPDATE cg_agent_endpoints
                  SET lifecycle = 'detached', detached_at_unix_ms = ?2, wake_capable = 0,
                      last_seen_at_unix_ms = ?2, lease_expires_at_unix_ms = ?2,
                      mcp_app_recovery_fingerprint = NULL,
@@ -1471,7 +1471,7 @@ impl Database {
         )?;
         transaction
             .execute(
-                "UPDATE wc_agent_endpoints
+                "UPDATE cg_agent_endpoints
                  SET last_seen_at_unix_ms = MAX(last_seen_at_unix_ms, ?2),
                      lease_expires_at_unix_ms = MAX(lease_expires_at_unix_ms, ?3)
                  WHERE endpoint_id = ?1 AND lifecycle = 'attached'",
@@ -1599,7 +1599,7 @@ impl Database {
         ) = transaction
             .query_row(
                 "SELECT mcp_app_recovery_fingerprint, mcp_app_client_window_key
-                 FROM wc_agent_endpoints WHERE endpoint_id = ?1",
+                 FROM cg_agent_endpoints WHERE endpoint_id = ?1",
                 params![endpoint_id],
                 |row| Ok((row.get(0)?, row.get(1)?)),
             )
@@ -1624,7 +1624,7 @@ impl Database {
         }
         transaction
             .execute(
-                "UPDATE wc_agent_endpoints
+                "UPDATE cg_agent_endpoints
                  SET wake_capable = ?2,
                      mcp_app_recovery_fingerprint = ?3,
                      mcp_app_client_window_key = ?4,
@@ -1675,7 +1675,7 @@ impl Database {
         let persisted: Option<String> = conn
             .query_row(
                 "SELECT mcp_app_recovery_fingerprint
-                 FROM wc_agent_endpoints WHERE endpoint_id = ?1",
+                 FROM cg_agent_endpoints WHERE endpoint_id = ?1",
                 params![endpoint_id],
                 |row| row.get(0),
             )
@@ -1712,7 +1712,7 @@ impl Database {
         let persisted: Option<String> = conn
             .query_row(
                 "SELECT mcp_app_client_window_key
-                 FROM wc_agent_endpoints WHERE endpoint_id = ?1",
+                 FROM cg_agent_endpoints WHERE endpoint_id = ?1",
                 params![endpoint_id],
                 |row| row.get(0),
             )
@@ -1747,7 +1747,7 @@ impl Database {
         let persisted: Option<String> = conn
             .query_row(
                 "SELECT mcp_app_client_window_key
-                 FROM wc_agent_endpoints WHERE endpoint_id = ?1",
+                 FROM cg_agent_endpoints WHERE endpoint_id = ?1",
                 params![endpoint_id],
                 |row| row.get(0),
             )
@@ -1792,7 +1792,7 @@ impl Database {
         let (persisted_fingerprint, persisted_window): (Option<String>, Option<String>) = conn
             .query_row(
                 "SELECT mcp_app_recovery_fingerprint, mcp_app_client_window_key
-                 FROM wc_agent_endpoints WHERE endpoint_id = ?1",
+                 FROM cg_agent_endpoints WHERE endpoint_id = ?1",
                 params![endpoint_id],
                 |row| Ok((row.get(0)?, row.get(1)?)),
             )
@@ -1848,7 +1848,7 @@ impl Database {
             });
         }
         let conversation_count: i64 = transaction
-            .query_row("SELECT COUNT(*) FROM wc_conversations", [], |row| {
+            .query_row("SELECT COUNT(*) FROM cg_conversations", [], |row| {
                 row.get(0)
             })
             .map_err(store_error)?;
@@ -1864,11 +1864,11 @@ impl Database {
         let conversation_id = allocate_identity(
             &transaction,
             CONVERSATION_ID_PREFIX,
-            "SELECT EXISTS(SELECT 1 FROM wc_conversations WHERE conversation_id = ?1)",
+            "SELECT EXISTS(SELECT 1 FROM cg_conversations WHERE conversation_id = ?1)",
         )?;
         transaction
             .execute(
-                "INSERT INTO wc_conversations (
+                "INSERT INTO cg_conversations (
                     conversation_id, title, lifecycle, next_seq,
                     created_by_principal_kind, created_by_principal_digest,
                     created_at_unix_ms, updated_at_unix_ms, closed_at_unix_ms
@@ -1884,7 +1884,7 @@ impl Database {
             .map_err(store_error)?;
         transaction
             .execute(
-                "INSERT INTO wc_conversation_participants (
+                "INSERT INTO cg_conversation_participants (
                     participant_id, conversation_id, participant_kind, agent_id,
                     principal_kind, principal_digest, joined_at_unix_ms
                  ) VALUES (?1, ?2, 'human', NULL, ?3, ?4, ?5)",
@@ -1892,7 +1892,7 @@ impl Database {
                     allocate_identity(
                         &transaction,
                         CONVERSATION_PARTICIPANT_ID_PREFIX,
-                        "SELECT EXISTS(SELECT 1 FROM wc_conversation_participants WHERE participant_id = ?1)",
+                        "SELECT EXISTS(SELECT 1 FROM cg_conversation_participants WHERE participant_id = ?1)",
                     )?,
                     conversation_id,
                     principal.kind,
@@ -1904,7 +1904,7 @@ impl Database {
         for agent_id in &agent_ids {
             transaction
                 .execute(
-                    "INSERT INTO wc_conversation_participants (
+                    "INSERT INTO cg_conversation_participants (
                         participant_id, conversation_id, participant_kind, agent_id,
                         principal_kind, principal_digest, joined_at_unix_ms
                      ) VALUES (?1, ?2, 'agent', ?3, NULL, NULL, ?4)",
@@ -1912,7 +1912,7 @@ impl Database {
                         allocate_identity(
                             &transaction,
                             CONVERSATION_PARTICIPANT_ID_PREFIX,
-                            "SELECT EXISTS(SELECT 1 FROM wc_conversation_participants WHERE participant_id = ?1)",
+                            "SELECT EXISTS(SELECT 1 FROM cg_conversation_participants WHERE participant_id = ?1)",
                         )?,
                         conversation_id,
                         agent_id,
@@ -1961,7 +1961,7 @@ impl Database {
         let (where_clause, identity) = match agent_id.as_deref() {
             Some(agent_id) => (
                 "EXISTS (
-                    SELECT 1 FROM wc_conversation_participants p
+                    SELECT 1 FROM cg_conversation_participants p
                     WHERE p.conversation_id = c.conversation_id
                       AND p.participant_kind = 'agent' AND p.agent_id = ?1
                  )",
@@ -1969,19 +1969,19 @@ impl Database {
             ),
             None => (
                 "EXISTS (
-                    SELECT 1 FROM wc_conversation_participants p
+                    SELECT 1 FROM cg_conversation_participants p
                     WHERE p.conversation_id = c.conversation_id
                       AND p.participant_kind = 'human' AND p.principal_digest = ?1
                  )",
                 principal.digest.as_str(),
             ),
         };
-        let count_sql = format!("SELECT COUNT(*) FROM wc_conversations c WHERE {where_clause}");
+        let count_sql = format!("SELECT COUNT(*) FROM cg_conversations c WHERE {where_clause}");
         let total_count: i64 = conn
             .query_row(&count_sql, params![identity], |row| row.get(0))
             .map_err(store_error)?;
         let queued_expression = if agent_id.is_some() {
-            "(SELECT COUNT(*) FROM wc_agent_deliveries d
+            "(SELECT COUNT(*) FROM cg_agent_deliveries d
                WHERE d.conversation_id = c.conversation_id
                  AND d.recipient_agent_id = ?1 AND d.state = 'queued')"
         } else {
@@ -1990,12 +1990,12 @@ impl Database {
         let sql = format!(
             "SELECT c.conversation_id, c.title, c.lifecycle,
                     c.created_at_unix_ms, c.updated_at_unix_ms,
-                    (SELECT COUNT(*) FROM wc_conversation_participants p2
+                    (SELECT COUNT(*) FROM cg_conversation_participants p2
                      WHERE p2.conversation_id = c.conversation_id),
                     c.next_seq - 1,
                     c.next_seq - 1,
                     {queued_expression}
-             FROM wc_conversations c
+             FROM cg_conversations c
              WHERE {where_clause}
              ORDER BY c.updated_at_unix_ms DESC, c.conversation_id
              LIMIT ?2 OFFSET ?3"
@@ -2208,7 +2208,7 @@ impl Database {
             let wake_binding: Option<(AgentWakeState, Option<String>, Option<i64>)> = transaction
                 .query_row(
                     "SELECT state, claimed_endpoint_id, claimed_controller_generation
-                     FROM wc_agent_wakes
+                     FROM cg_agent_wakes
                      WHERE wake_id = ?1 AND target_agent_id = ?2",
                     params![wake_id, agent_id],
                     |row| {
@@ -2263,7 +2263,7 @@ impl Database {
         }
         let lifecycle = transaction
             .query_row(
-                "SELECT lifecycle FROM wc_conversations WHERE conversation_id = ?1",
+                "SELECT lifecycle FROM cg_conversations WHERE conversation_id = ?1",
                 params![input.conversation_id],
                 |row| {
                     let lifecycle = row.get::<_, String>(0)?;
@@ -2281,7 +2281,7 @@ impl Database {
             ConversationAccess::Agent { agent_id, .. } => {
                 let participant_id: String = transaction
                     .query_row(
-                        "SELECT participant_id FROM wc_conversation_participants
+                        "SELECT participant_id FROM cg_conversation_participants
                          WHERE conversation_id = ?1 AND participant_kind = 'agent' AND agent_id = ?2",
                         params![input.conversation_id, agent_id],
                         |row| row.get(0),
@@ -2292,7 +2292,7 @@ impl Database {
             ConversationAccess::Human => {
                 let participant_id: String = transaction
                     .query_row(
-                        "SELECT participant_id FROM wc_conversation_participants
+                        "SELECT participant_id FROM cg_conversation_participants
                          WHERE conversation_id = ?1 AND participant_kind = 'human'
                            AND principal_kind = ?2 AND principal_digest = ?3",
                         params![input.conversation_id, principal.kind, principal.digest],
@@ -2306,7 +2306,7 @@ impl Database {
             let reply_exists: bool = transaction
                 .query_row(
                     "SELECT EXISTS(
-                        SELECT 1 FROM wc_conversation_messages
+                        SELECT 1 FROM cg_conversation_messages
                         WHERE message_id = ?1 AND conversation_id = ?2
                      )",
                     params![reply_to, input.conversation_id],
@@ -2325,7 +2325,7 @@ impl Database {
             None => {
                 let mut statement = transaction
                     .prepare(
-                        "SELECT agent_id FROM wc_conversation_participants
+                        "SELECT agent_id FROM cg_conversation_participants
                          WHERE conversation_id = ?1 AND participant_kind = 'agent'
                          ORDER BY agent_id",
                     )
@@ -2353,7 +2353,7 @@ impl Database {
             let participant: bool = transaction
                 .query_row(
                     "SELECT EXISTS(
-                        SELECT 1 FROM wc_conversation_participants
+                        SELECT 1 FROM cg_conversation_participants
                         WHERE conversation_id = ?1 AND participant_kind = 'agent' AND agent_id = ?2
                      )",
                     params![input.conversation_id, recipient_agent_id],
@@ -2371,7 +2371,7 @@ impl Database {
         }
         let next_seq: i64 = transaction
             .query_row(
-                "SELECT next_seq FROM wc_conversations WHERE conversation_id = ?1",
+                "SELECT next_seq FROM cg_conversations WHERE conversation_id = ?1",
                 params![input.conversation_id],
                 |row| row.get(0),
             )
@@ -2386,11 +2386,11 @@ impl Database {
         let message_id = allocate_identity(
             &transaction,
             CONVERSATION_MESSAGE_ID_PREFIX,
-            "SELECT EXISTS(SELECT 1 FROM wc_conversation_messages WHERE message_id = ?1)",
+            "SELECT EXISTS(SELECT 1 FROM cg_conversation_messages WHERE message_id = ?1)",
         )?;
         transaction
             .execute(
-                "INSERT INTO wc_conversation_messages (
+                "INSERT INTO cg_conversation_messages (
                     message_id, conversation_id, seq, author_participant_id,
                     body, reply_to_message_id, created_at_unix_ms
                  ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
@@ -2409,11 +2409,11 @@ impl Database {
             let delivery_id = allocate_identity(
                 &transaction,
                 AGENT_DELIVERY_ID_PREFIX,
-                "SELECT EXISTS(SELECT 1 FROM wc_agent_deliveries WHERE delivery_id = ?1)",
+                "SELECT EXISTS(SELECT 1 FROM cg_agent_deliveries WHERE delivery_id = ?1)",
             )?;
             transaction
                 .execute(
-                    "INSERT INTO wc_agent_deliveries (
+                    "INSERT INTO cg_agent_deliveries (
                         delivery_id, message_id, conversation_id, message_seq,
                         recipient_agent_id, state, created_at_unix_ms,
                         consumed_at_unix_ms, consumed_by_endpoint_id
@@ -2441,7 +2441,7 @@ impl Database {
         }
         transaction
             .execute(
-                "UPDATE wc_conversations
+                "UPDATE cg_conversations
                  SET next_seq = next_seq + 1, updated_at_unix_ms = ?2
                  WHERE conversation_id = ?1",
                 params![input.conversation_id, now],
@@ -2452,7 +2452,7 @@ impl Database {
         {
             transaction
                 .execute(
-                    "UPDATE wc_agent_endpoints SET last_seen_at_unix_ms = MAX(last_seen_at_unix_ms, ?3)
+                    "UPDATE cg_agent_endpoints SET last_seen_at_unix_ms = MAX(last_seen_at_unix_ms, ?3)
                      WHERE endpoint_id = ?1 AND agent_id = ?2 AND lifecycle = 'attached'",
                     params![endpoint_id, agent_id, now],
                 )
@@ -2504,7 +2504,7 @@ impl Database {
         )?;
         let total_queued_count: i64 = conn
             .query_row(
-                "SELECT COUNT(*) FROM wc_agent_deliveries
+                "SELECT COUNT(*) FROM cg_agent_deliveries
                  WHERE recipient_agent_id = ?1 AND state = 'queued'",
                 params![agent_id],
                 |row| row.get(0),
@@ -2513,9 +2513,9 @@ impl Database {
         let mut statement = conn
             .prepare(
                 "SELECT delivery_order, delivery_id, message_id, conversation_id,
-                        (SELECT title FROM wc_conversations c
+                        (SELECT title FROM cg_conversations c
                          WHERE c.conversation_id = d.conversation_id)
-                 FROM wc_agent_deliveries d
+                 FROM cg_agent_deliveries d
                  WHERE recipient_agent_id = ?1 AND state = 'queued' AND delivery_order > ?2
                  ORDER BY delivery_order
                  LIMIT ?3",
@@ -2599,7 +2599,7 @@ impl Database {
         for delivery_id in &delivery_ids {
             let state = transaction
                 .query_row(
-                    "SELECT state FROM wc_agent_deliveries
+                    "SELECT state FROM cg_agent_deliveries
                      WHERE delivery_id = ?1 AND recipient_agent_id = ?2",
                     params![delivery_id, agent_id],
                     |row| {
@@ -2621,7 +2621,7 @@ impl Database {
             }
             transaction
                 .execute(
-                    "UPDATE wc_agent_deliveries
+                    "UPDATE cg_agent_deliveries
                      SET state = 'consumed', consumed_at_unix_ms = ?3,
                          consumed_by_endpoint_id = ?4
                      WHERE delivery_id = ?1 AND recipient_agent_id = ?2 AND state = 'queued'",
@@ -2632,7 +2632,7 @@ impl Database {
         }
         transaction
             .execute(
-                "UPDATE wc_agent_endpoints SET last_seen_at_unix_ms = MAX(last_seen_at_unix_ms, ?2)
+                "UPDATE cg_agent_endpoints SET last_seen_at_unix_ms = MAX(last_seen_at_unix_ms, ?2)
                  WHERE endpoint_id = ?1 AND lifecycle = 'attached'",
                 params![endpoint_id, now],
             )
@@ -2682,7 +2682,7 @@ pub(super) fn authorize_conversation_access(
         ConversationAccess::Human => conn
             .query_row(
                 "SELECT EXISTS(
-                    SELECT 1 FROM wc_conversation_participants
+                    SELECT 1 FROM cg_conversation_participants
                     WHERE conversation_id = ?1 AND participant_kind = 'human'
                       AND principal_kind = ?2 AND principal_digest = ?3
                  )",
@@ -2704,7 +2704,7 @@ pub(super) fn authorize_conversation_access(
             )?;
             conn.query_row(
                 "SELECT EXISTS(
-                    SELECT 1 FROM wc_conversation_participants
+                    SELECT 1 FROM cg_conversation_participants
                     WHERE conversation_id = ?1 AND participant_kind = 'agent' AND agent_id = ?2
                  )",
                 params![conversation_id, agent_id],
@@ -2735,18 +2735,18 @@ pub(super) fn read_conversation_in_connection(
 ) -> Result<ConversationDetailRecord, CommunicationStoreError> {
     let access_agent_id = authorize_conversation_access(conn, principal, access, conversation_id)?;
     let queued_expression = "CASE WHEN ?2 IS NULL THEN NULL ELSE
-        (SELECT COUNT(*) FROM wc_agent_deliveries d
+        (SELECT COUNT(*) FROM cg_agent_deliveries d
          WHERE d.conversation_id = c.conversation_id
            AND d.recipient_agent_id = ?2 AND d.state = 'queued') END";
     let summary_sql = format!(
         "SELECT c.conversation_id, c.title, c.lifecycle,
                 c.created_at_unix_ms, c.updated_at_unix_ms,
-                (SELECT COUNT(*) FROM wc_conversation_participants p
+                (SELECT COUNT(*) FROM cg_conversation_participants p
                  WHERE p.conversation_id = c.conversation_id),
                 c.next_seq - 1,
                 c.next_seq - 1,
                 {queued_expression}
-         FROM wc_conversations c WHERE c.conversation_id = ?1"
+         FROM cg_conversations c WHERE c.conversation_id = ?1"
     );
     let summary = conn
         .query_row(
@@ -2759,8 +2759,8 @@ pub(super) fn read_conversation_in_connection(
         .prepare(
             "SELECT p.participant_id, p.participant_kind, p.agent_id,
                     a.handle, a.display_name, p.principal_kind, p.joined_at_unix_ms
-             FROM wc_conversation_participants p
-             LEFT JOIN wc_agent_identities a ON a.agent_id = p.agent_id
+             FROM cg_conversation_participants p
+             LEFT JOIN cg_agent_identities a ON a.agent_id = p.agent_id
              WHERE p.conversation_id = ?1
              ORDER BY CASE p.participant_kind WHEN 'human' THEN 0 ELSE 1 END,
                       COALESCE(a.handle, p.principal_kind), p.participant_id",
@@ -2783,7 +2783,7 @@ pub(super) fn read_conversation_in_connection(
         .map_err(store_error)?;
     let mut message_statement = conn
         .prepare(
-            "SELECT message_id FROM wc_conversation_messages
+            "SELECT message_id FROM cg_conversation_messages
              WHERE conversation_id = ?1 AND seq > ?2
              ORDER BY seq
              LIMIT ?3",
@@ -2828,7 +2828,7 @@ pub(super) fn require_agent_owner(
     let owned: bool = conn
         .query_row(
             "SELECT EXISTS(
-                SELECT 1 FROM wc_agent_identities
+                SELECT 1 FROM cg_agent_identities
                 WHERE agent_id = ?1
                   AND owner_principal_kind = ?2
                   AND owner_principal_digest = ?3
@@ -2893,7 +2893,7 @@ pub(super) fn require_current_endpoint(
     }
     let current_controller_generation: i64 = conn
         .query_row(
-            "SELECT current_controller_generation FROM wc_agent_identities WHERE agent_id = ?1",
+            "SELECT current_controller_generation FROM cg_agent_identities WHERE agent_id = ?1",
             params![agent_id],
             |row| row.get(0),
         )
@@ -2918,21 +2918,21 @@ pub(super) fn load_agent(
         "SELECT agent_id, handle, display_name, description, specialty_labels_json,
                 profile_revision, created_at_unix_ms, updated_at_unix_ms,
                 current_controller_generation,
-                (SELECT COUNT(*) FROM wc_agent_endpoints e
+                (SELECT COUNT(*) FROM cg_agent_endpoints e
                  WHERE e.agent_id = a.agent_id AND e.lifecycle = 'attached'
                    AND e.controller_generation = a.current_controller_generation
                    AND e.lease_expires_at_unix_ms > ?2),
-                (SELECT COUNT(*) FROM wc_agent_deliveries d
+                (SELECT COUNT(*) FROM cg_agent_deliveries d
                  WHERE d.recipient_agent_id = a.agent_id AND d.state = 'queued'),
-                (SELECT COUNT(*) FROM wc_agent_wakes w
+                (SELECT COUNT(*) FROM cg_agent_wakes w
                  WHERE w.target_agent_id = a.agent_id AND w.state NOT IN ('consumed', 'retired')),
-                (SELECT w.wake_id FROM wc_agent_wakes w
+                (SELECT w.wake_id FROM cg_agent_wakes w
                  WHERE w.target_agent_id = a.agent_id
                  ORDER BY w.created_at_unix_ms DESC, w.wake_id DESC LIMIT 1),
-                (SELECT w.state FROM wc_agent_wakes w
+                (SELECT w.state FROM cg_agent_wakes w
                  WHERE w.target_agent_id = a.agent_id
                  ORDER BY w.created_at_unix_ms DESC, w.wake_id DESC LIMIT 1)
-         FROM wc_agent_identities a WHERE agent_id = ?1",
+         FROM cg_agent_identities a WHERE agent_id = ?1",
         params![agent_id, now_unix_ms()],
         row_to_agent,
     )
@@ -2972,7 +2972,7 @@ pub(super) fn load_endpoint(
                 controller_generation, lifecycle, attached_at_unix_ms,
                 last_seen_at_unix_ms, lease_expires_at_unix_ms,
                 expired_at_unix_ms, detached_at_unix_ms
-         FROM wc_agent_endpoints WHERE endpoint_id = ?1",
+         FROM cg_agent_endpoints WHERE endpoint_id = ?1",
         params![endpoint_id],
         row_to_endpoint,
     )
@@ -2990,7 +2990,7 @@ fn load_endpoint_for_principal(
                 controller_generation, lifecycle, attached_at_unix_ms,
                 last_seen_at_unix_ms, lease_expires_at_unix_ms,
                 expired_at_unix_ms, detached_at_unix_ms
-         FROM wc_agent_endpoints
+         FROM cg_agent_endpoints
          WHERE endpoint_id = ?1
            AND attachment_principal_kind = ?2
            AND attachment_principal_digest = ?3",
@@ -3056,10 +3056,10 @@ fn load_message(
                     p.participant_kind, p.agent_id, a.handle, a.display_name,
                     p.principal_kind, m.body, m.reply_to_message_id,
                     m.created_at_unix_ms
-             FROM wc_conversation_messages m
-             JOIN wc_conversation_participants p
+             FROM cg_conversation_messages m
+             JOIN cg_conversation_participants p
                ON p.participant_id = m.author_participant_id
-             LEFT JOIN wc_agent_identities a ON a.agent_id = p.agent_id
+             LEFT JOIN cg_agent_identities a ON a.agent_id = p.agent_id
              WHERE m.message_id = ?1",
             params![message_id],
             |row| {
@@ -3100,7 +3100,7 @@ fn load_message(
         .prepare(
             "SELECT delivery_order, delivery_id, recipient_agent_id, state,
                     created_at_unix_ms, consumed_at_unix_ms
-             FROM wc_agent_deliveries
+             FROM cg_agent_deliveries
              WHERE message_id = ?1
              ORDER BY recipient_agent_id, delivery_id",
         )
@@ -3147,7 +3147,7 @@ pub(super) fn lookup_idempotent_resource(
     let key_hash = digest_text("codegpt.communication.idempotency-key.v1", idempotency_key);
     let existing: Option<(String, String)> = transaction
         .query_row(
-            "SELECT request_hash, resource_id FROM wc_communication_idempotency
+            "SELECT request_hash, resource_id FROM cg_communication_idempotency
              WHERE principal_digest = ?1 AND operation = ?2 AND key_hash = ?3",
             params![principal.digest, operation, key_hash],
             |row| Ok((row.get(0)?, row.get(1)?)),
@@ -3178,7 +3178,7 @@ pub(super) fn record_idempotent_resource(
     let key_hash = digest_text("codegpt.communication.idempotency-key.v1", idempotency_key);
     transaction
         .execute(
-            "INSERT INTO wc_communication_idempotency (
+            "INSERT INTO cg_communication_idempotency (
                 principal_digest, operation, key_hash, request_hash,
                 resource_id, created_at_unix_ms
              ) VALUES (?1, ?2, ?3, ?4, ?5, ?6)",

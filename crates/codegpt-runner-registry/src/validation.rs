@@ -1,4 +1,3 @@
-use sha2::{Digest, Sha256};
 use codegpt_core::runner_protocol::{
     validate_process_argv, validate_raw_shell_wire_command, validate_script_request,
     ProviderCallSummary, RunnerConfigErrorCode, RunnerConfigErrorField, RunnerConfigErrorReason,
@@ -8,6 +7,7 @@ use codegpt_core::runner_protocol::{
     PROJECT_INVENTORY_SNAPSHOT_MAX_SERIALIZED_BYTES, PROJECT_ROOT_FINGERPRINT_PREFIX,
     RUNNER_CONFIG_RESTART_REQUIRED_FIELDS, STRUCTURED_EXECUTION_DIRECT_SYNC_TIMEOUT_MAX_SECS,
 };
+use sha2::{Digest, Sha256};
 
 const MAX_CLIENT_ID_LEN: usize = 80;
 const MAX_RUNNER_FIELD_LEN: usize = 200;
@@ -799,8 +799,8 @@ fn validate_sha256(value: &Option<String>) -> Result<(), String> {
 #[cfg(test)]
 mod provider_status_tests {
     use super::*;
-    use std::collections::BTreeMap;
     use codegpt_core::runner_protocol::ClaudeCodeProviderStatus;
+    use std::collections::BTreeMap;
 
     fn provider_status() -> ToolProvidersStatus {
         ToolProvidersStatus {

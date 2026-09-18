@@ -274,7 +274,7 @@ async fn runner_supports_reflects_registered_capabilities() {
 #[tokio::test]
 async fn coding_agent_run_lookup_is_exact_when_bound_and_ambiguous_when_unbound() {
     let registry = RunnerRegistry::default();
-    let run_id = "wc_agent_run_duplicate_123";
+    let run_id = "cg_agent_run_duplicate_123";
     for client_id in ["a", "b"] {
         let provider_instance_id = format!("provider_{client_id}");
         registry
@@ -290,25 +290,23 @@ async fn coding_agent_run_lookup_is_exact_when_bound_and_ambiguous_when_unbound(
                         name: "Codex".to_string(),
                     },
                 ]),
-                coding_agent_inventory: Some(
-                    codegpt_core::coding_agent::CodingAgentRunInventory {
-                        runs: vec![codegpt_core::coding_agent::CodingAgentRunSnapshot {
-                            run_id: run_id.to_string(),
-                            intent_fingerprint: "fingerprint".to_string(),
-                            authority_fingerprint: "auth_test".to_string(),
-                            runtime_project_id: format!("agent:{client_id}:demo"),
-                            provider_id: "codex".to_string(),
-                            provider_instance_id,
-                            state: codegpt_core::coding_agent::CodingAgentRunState::Running,
-                            execution_state:
-                                codegpt_core::coding_agent::CodingAgentExecutionState::Started,
-                            observation_revision: 1,
-                            created_at: 1,
-                            updated_at: 1,
-                            terminal: None,
-                        }],
-                    },
-                ),
+                coding_agent_inventory: Some(codegpt_core::coding_agent::CodingAgentRunInventory {
+                    runs: vec![codegpt_core::coding_agent::CodingAgentRunSnapshot {
+                        run_id: run_id.to_string(),
+                        intent_fingerprint: "fingerprint".to_string(),
+                        authority_fingerprint: "auth_test".to_string(),
+                        runtime_project_id: format!("agent:{client_id}:demo"),
+                        provider_id: "codex".to_string(),
+                        provider_instance_id,
+                        state: codegpt_core::coding_agent::CodingAgentRunState::Running,
+                        execution_state:
+                            codegpt_core::coding_agent::CodingAgentExecutionState::Started,
+                        observation_revision: 1,
+                        created_at: 1,
+                        updated_at: 1,
+                        terminal: None,
+                    }],
+                }),
                 client_id: client_id.to_string(),
                 runner_instance_id: format!("inst_{client_id}"),
                 runner_protocol_generation: crate::runner_protocol::RUNNER_PROTOCOL_GENERATION_V2,
@@ -371,7 +369,7 @@ async fn coding_agent_registration_rejects_semantically_contradictory_snapshot()
             policy: None,
         };
     let base = codegpt_core::coding_agent::CodingAgentRunSnapshot {
-        run_id: "wc_agent_run_registration_semantic".to_string(),
+        run_id: "cg_agent_run_registration_semantic".to_string(),
         intent_fingerprint: "fingerprint".to_string(),
         authority_fingerprint: "auth_test".to_string(),
         runtime_project_id: "agent:test:demo".to_string(),
@@ -387,7 +385,7 @@ async fn coding_agent_registration_rejects_semantically_contradictory_snapshot()
     registry.register(register(base.clone())).await.unwrap();
 
     let mut completed_with_refusal = base.clone();
-    completed_with_refusal.run_id = "wc_agent_run_registration_bad1".to_string();
+    completed_with_refusal.run_id = "cg_agent_run_registration_bad1".to_string();
     completed_with_refusal.state = codegpt_core::coding_agent::CodingAgentRunState::Completed;
     completed_with_refusal.execution_state =
         codegpt_core::coding_agent::CodingAgentExecutionState::Completed;
@@ -407,10 +405,9 @@ async fn coding_agent_registration_rejects_semantically_contradictory_snapshot()
     );
 
     let mut unknown_stop = base;
-    unknown_stop.run_id = "wc_agent_run_registration_bad2".to_string();
+    unknown_stop.run_id = "cg_agent_run_registration_bad2".to_string();
     unknown_stop.state = codegpt_core::coding_agent::CodingAgentRunState::Failed;
-    unknown_stop.execution_state =
-        codegpt_core::coding_agent::CodingAgentExecutionState::Completed;
+    unknown_stop.execution_state = codegpt_core::coding_agent::CodingAgentExecutionState::Completed;
     unknown_stop.terminal = Some(codegpt_core::coding_agent::CodingAgentTerminal {
         stop_reason: Some("future_stop_reason".to_string()),
         error_code: Some("future_stop_reason".to_string()),

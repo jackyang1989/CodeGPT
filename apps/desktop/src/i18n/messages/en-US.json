@@ -335,7 +335,7 @@
   "error.projectTitle": "Project is not ready",
   "error.projectAction": "Use Activate project. Desktop will reapply exact project access and converge the project on the current Runner.",
   "error.pairingTitle": "One-time login code is invalid",
-  "error.pairingAction": "Enter the wc_pair_… code issued by the existing Server.",
+  "error.pairingAction": "Enter the cg_pair_… code issued by the existing Server.",
   "error.enrollmentTitle": "Enrollment did not complete",
   "error.enrollmentAction": "Check the Server and enrollment details, then retry.",
   "error.tunnelTitle": "Secure tunnel is unavailable",

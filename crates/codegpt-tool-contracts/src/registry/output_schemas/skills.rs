@@ -10,13 +10,13 @@ fn descriptor_schema() -> Value {
     json!({
         "type": "object",
         "properties": {
-            "skill_id": {"type": "string", "pattern": "^wc_skill_[A-Za-z0-9_-]{21}[AQgw]$"},
+            "skill_id": {"type": "string", "pattern": "^cg_skill_[A-Za-z0-9_-]{21}[AQgw]$"},
             "name": {"type": "string", "maxLength": MAX_SKILL_NAME_CHARS},
             "description": {"type": "string", "maxLength": MAX_SKILL_DESCRIPTION_CHARS},
             "definition_revision": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
             "source_scope": {"type": "string", "enum": ["project", "runner"]},
             "trust": {"type": "string", "enum": ["project_content", "operator_configured_guidance", "operator_installed_guidance"]},
-            "package_revision": {"anyOf": [{"type":"string","pattern":"^wc_skillpkg_[A-Za-z0-9_-]{43}$"},{"type":"null"}]},
+            "package_revision": {"anyOf": [{"type":"string","pattern":"^cg_skillpkg_[A-Za-z0-9_-]{43}$"},{"type":"null"}]},
             "name_conflict": {"type": "boolean"}
         },
         "required": ["skill_id", "name", "description", "definition_revision", "source_scope", "trust", "package_revision", "name_conflict"],
@@ -28,11 +28,11 @@ fn skill_load_candidate_schema() -> Value {
     json!({
         "type": "object",
         "properties": {
-            "skill_id": {"type": "string", "pattern": "^wc_skill_[A-Za-z0-9_-]{21}[AQgw]$"},
+            "skill_id": {"type": "string", "pattern": "^cg_skill_[A-Za-z0-9_-]{21}[AQgw]$"},
             "name": {"type": "string", "maxLength": MAX_SKILL_NAME_CHARS},
             "source_scope": {"type": "string", "enum": ["project", "runner"]},
             "trust": {"type": "string", "enum": ["project_content", "operator_configured_guidance", "operator_installed_guidance"]},
-            "package_revision": {"anyOf": [{"type":"string","pattern":"^wc_skillpkg_[A-Za-z0-9_-]{43}$"},{"type":"null"}]},
+            "package_revision": {"anyOf": [{"type":"string","pattern":"^cg_skillpkg_[A-Za-z0-9_-]{43}$"},{"type":"null"}]},
             "definition_revision": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
         },
         "required": ["skill_id", "name", "source_scope", "trust", "package_revision", "definition_revision"],

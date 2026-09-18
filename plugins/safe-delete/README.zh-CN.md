@@ -60,7 +60,7 @@ plugin_tool(action="check", runner="my-runner", plugin="safe-delete")
 -> plugin_tool(action="reload", runner="my-runner")
 -> plugin_tool(action="list", runner="my-runner", plugin="safe-delete")
 -> plugin_tool(action="describe", runner="my-runner", plugin="safe-delete", tool="safe_delete")
--> plugin_tool(action="call", binding="wc_pbind_...", arguments={"path":"build/old-output.bin"})
+-> plugin_tool(action="call", binding="cg_pbind_...", arguments={"path":"build/old-output.bin"})
 ```
 
 成功 reload 后不需要重启 Runner 才能发现/调用 Plugin。`safe_delete` 始终是

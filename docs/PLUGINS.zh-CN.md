@@ -89,7 +89,7 @@ operation，因此直接传它自己的 business arguments：
 
 ```json
 {"action":"describe","runner":"my-runner","plugin":"repo-tools","tool":"safe_delete"}
-{"action":"call","binding":"wc_pbind_...","arguments":{"path":"build/old.bin"}}
+{"action":"call","binding":"cg_pbind_...","arguments":{"path":"build/old.bin"}}
 ```
 
 独立的 `call_runtime_tool` operation 只用于 manifest route 为 `gateway` 的 Adaptive
@@ -118,8 +118,8 @@ plugin_tool(action="check", runner="my-runner", plugin="repo-tools")
 plugin_tool(action="reload", runner="my-runner")
     -> reread runner.toml，admit candidates，原子替换 committed provider set
 plugin_tool(action="describe", runner="my-runner", plugin="repo-tools", tool="search_symbol")
-    -> { ..., "binding": "wc_pbind_..." }
-plugin_tool(action="call", binding="wc_pbind_...", arguments={"query":"foo"})
+    -> { ..., "binding": "cg_pbind_..." }
+plugin_tool(action="call", binding="cg_pbind_...", arguments={"query":"foo"})
 ```
 
 identity 层级固定为：

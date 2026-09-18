@@ -335,7 +335,7 @@
   "error.projectTitle": "Le projet n’est pas prêt",
   "error.projectAction": "Réactivez le projet. Desktop réapplique l’accès exact et prépare le projet sur le Runner actuel.",
   "error.pairingTitle": "Le code de connexion à usage unique est invalide",
-  "error.pairingAction": "Saisissez le code wc_pair_… fourni par le Server existant.",
+  "error.pairingAction": "Saisissez le code cg_pair_… fourni par le Server existant.",
   "error.enrollmentTitle": "L’enregistrement n’a pas abouti",
   "error.enrollmentAction": "Vérifiez le Server et les informations d’enregistrement, puis réessayez.",
   "error.tunnelTitle": "Le tunnel sécurisé est indisponible",

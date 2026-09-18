@@ -5,15 +5,6 @@ use super::kernel::{
 use super::ToolRuntime;
 use crate::auth::AuthContext;
 use crate::json_measurement::serialized_json_len;
-use serde::Serialize;
-use serde_json::Value;
-use std::collections::BTreeMap;
-use std::sync::{Arc, Mutex, Weak};
-#[cfg(test)]
-use tokio::sync::Semaphore;
-use tokio::sync::{
-    Mutex as AsyncMutex, OwnedMutexGuard, RwLock, RwLockReadGuard, RwLockWriteGuard,
-};
 use codegpt_core::workflow_session_contract::{
     TOOL_ACCEPTED_EXIT_CODES_FIELD, TOOL_ASSERTION_NAME_FIELD,
     TOOL_CALL_ACK_SESSION_CONTEXT_REVISION_FIELD, TOOL_CALL_ACK_SESSION_MESSAGE_IDS_FIELD,
@@ -23,6 +14,15 @@ use codegpt_core::workflow_session_contract::{
 use codegpt_tool_contracts::{
     runtime_tool_composition_policy, runtime_tool_execution_contract, runtime_tool_metadata,
     ToolCompositionPolicy, ToolEffect, ToolExecutionContinuation,
+};
+use serde::Serialize;
+use serde_json::Value;
+use std::collections::BTreeMap;
+use std::sync::{Arc, Mutex, Weak};
+#[cfg(test)]
+use tokio::sync::Semaphore;
+use tokio::sync::{
+    Mutex as AsyncMutex, OwnedMutexGuard, RwLock, RwLockReadGuard, RwLockWriteGuard,
 };
 
 /// Process-local serialization for orchestration-originated Project mutation.

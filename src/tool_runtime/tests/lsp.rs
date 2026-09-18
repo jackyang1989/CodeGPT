@@ -90,7 +90,7 @@ fn typed_lsp_session_audit_keeps_paths_but_never_symbol_queries() {
         line: 4,
         column: 8,
         limit: Some(20),
-        session_id: Some("wc_sess_test".to_string()),
+        session_id: Some("cg_sess_test".to_string()),
     }
     .session_log_arguments();
     assert_eq!(definition["path"], "src/caller.rs");
@@ -101,7 +101,7 @@ fn typed_lsp_session_audit_keeps_paths_but_never_symbol_queries() {
         project: "agent:test:demo".to_string(),
         query: "PRIVATE_SYMBOL_QUERY".to_string(),
         limit: Some(10),
-        session_id: Some("wc_sess_test".to_string()),
+        session_id: Some("cg_sess_test".to_string()),
     }
     .session_log_arguments();
     assert_eq!(symbols["query_present"], true);
@@ -249,7 +249,7 @@ fn document_diagnostics_tool_call_parser_produces_only_typed_fields() {
             "project": "agent:oe:demo",
             "path": "src/main.rs",
             "limit": 25,
-            "session_id": "wc_sess_demo"
+            "session_id": "cg_sess_demo"
         }),
     )
     .unwrap();
@@ -262,7 +262,7 @@ fn document_diagnostics_tool_call_parser_produces_only_typed_fields() {
             session_id: Some(session_id),
         } if project == "agent:oe:demo"
             && path == "src/main.rs"
-            && session_id == "wc_sess_demo"
+            && session_id == "cg_sess_demo"
     ));
     let error = ToolCall::from_tool_name(
         "document_diagnostics",

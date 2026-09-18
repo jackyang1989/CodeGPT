@@ -21,10 +21,10 @@ use rusqlite::{
 };
 use serde::Serialize;
 
-pub const AGENT_WAKE_ID_PREFIX: &str = "wc_wake_";
-pub(crate) const AGENT_WAKE_ATTEMPT_ID_PREFIX: &str = "wc_wake_attempt_";
-pub(crate) const AGENT_WAKE_CLAIM_FENCE_PREFIX: &str = "wc_wake_claim_";
-pub const AGENT_WAKE_CONSUME_TOKEN_PREFIX: &str = "wc_wake_consume_";
+pub const AGENT_WAKE_ID_PREFIX: &str = "cg_wake_";
+pub(crate) const AGENT_WAKE_ATTEMPT_ID_PREFIX: &str = "cg_wake_attempt_";
+pub(crate) const AGENT_WAKE_CLAIM_FENCE_PREFIX: &str = "cg_wake_claim_";
+pub const AGENT_WAKE_CONSUME_TOKEN_PREFIX: &str = "cg_wake_consume_";
 
 const DEFAULT_WAKE_CLAIM_LEASE_MS: i64 = 30_000;
 const MAX_ADAPTER_KIND_CHARS: usize = 64;
@@ -240,12 +240,12 @@ impl Database {
     pub(super) fn ensure_agent_wake_schema(conn: &mut Connection) -> anyhow::Result<()> {
         let transaction = conn.transaction_with_behavior(TransactionBehavior::Immediate)?;
         let wake_table_exists: bool = transaction.query_row(
-            "SELECT EXISTS(SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'wc_agent_wakes')",
+            "SELECT EXISTS(SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'cg_agent_wakes')",
             [],
             |row| row.get(0),
         )?;
         let attempt_table_exists: bool = transaction.query_row(
-            "SELECT EXISTS(SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'wc_agent_wake_attempts')",
+            "SELECT EXISTS(SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'cg_agent_wake_attempts')",
             [],
             |row| row.get(0),
         )?;
@@ -256,7 +256,7 @@ impl Database {
         }
         if !wake_table_exists {
             let existing_deliveries: i64 =
-                transaction.query_row("SELECT COUNT(*) FROM wc_agent_deliveries", [], |row| {
+                transaction.query_row("SELECT COUNT(*) FROM cg_agent_deliveries", [], |row| {
                     row.get(0)
                 })?;
             if existing_deliveries != 0 {
@@ -267,7 +267,7 @@ impl Database {
         }
         let has_task_source: bool = if wake_table_exists {
             transaction.query_row(
-                "SELECT EXISTS(SELECT 1 FROM pragma_table_info('wc_agent_wakes') WHERE name = 'source_task_attempt_id')",
+                "SELECT EXISTS(SELECT 1 FROM pragma_table_info('cg_agent_wakes') WHERE name = 'source_task_attempt_id')",
                 [],
                 |row| row.get(0),
             )?
@@ -277,14 +277,14 @@ impl Database {
         if wake_table_exists && !has_task_source {
             transaction.execute_batch(
                 "
-                ALTER TABLE wc_agent_wake_attempts RENAME TO wc_agent_wake_attempts_pre_a4b;
-                ALTER TABLE wc_agent_wakes RENAME TO wc_agent_wakes_pre_a4b;
-                DROP INDEX IF EXISTS idx_wc_agent_wakes_target_state;
-                DROP INDEX IF EXISTS idx_wc_agent_wakes_one_queueable;
-                DROP INDEX IF EXISTS idx_wc_agent_wakes_one_dispatched;
-                DROP INDEX IF EXISTS idx_wc_agent_wake_attempts_wake;
-                DROP INDEX IF EXISTS idx_wc_agent_wake_attempts_endpoint;
-                CREATE TABLE wc_agent_wakes (
+                ALTER TABLE cg_agent_wake_attempts RENAME TO cg_agent_wake_attempts_pre_a4b;
+                ALTER TABLE cg_agent_wakes RENAME TO cg_agent_wakes_pre_a4b;
+                DROP INDEX IF EXISTS idx_cg_agent_wakes_target_state;
+                DROP INDEX IF EXISTS idx_cg_agent_wakes_one_queueable;
+                DROP INDEX IF EXISTS idx_cg_agent_wakes_one_dispatched;
+                DROP INDEX IF EXISTS idx_cg_agent_wake_attempts_wake;
+                DROP INDEX IF EXISTS idx_cg_agent_wake_attempts_endpoint;
+                CREATE TABLE cg_agent_wakes (
                     wake_id TEXT PRIMARY KEY,
                     target_agent_id TEXT NOT NULL,
                     trigger_kind TEXT NOT NULL CHECK(trigger_kind IN ('inbox_changed', 'agent_task_attempt')),
@@ -309,15 +309,15 @@ impl Database {
                     consumed_at_unix_ms INTEGER,
                     consumed_by_endpoint_id TEXT,
                     consumed_controller_generation INTEGER,
-                    FOREIGN KEY(target_agent_id) REFERENCES wc_agent_identities(agent_id),
-                    FOREIGN KEY(first_triggering_delivery_id) REFERENCES wc_agent_deliveries(delivery_id),
-                    FOREIGN KEY(latest_triggering_delivery_id) REFERENCES wc_agent_deliveries(delivery_id),
-                    FOREIGN KEY(latest_conversation_id) REFERENCES wc_conversations(conversation_id),
-                    FOREIGN KEY(latest_message_id) REFERENCES wc_conversation_messages(message_id),
-                    FOREIGN KEY(source_task_id) REFERENCES wc_agent_tasks(task_id),
-                    FOREIGN KEY(source_task_attempt_id) REFERENCES wc_agent_task_attempts(attempt_id),
-                    FOREIGN KEY(claimed_endpoint_id) REFERENCES wc_agent_endpoints(endpoint_id),
-                    FOREIGN KEY(consumed_by_endpoint_id) REFERENCES wc_agent_endpoints(endpoint_id),
+                    FOREIGN KEY(target_agent_id) REFERENCES cg_agent_identities(agent_id),
+                    FOREIGN KEY(first_triggering_delivery_id) REFERENCES cg_agent_deliveries(delivery_id),
+                    FOREIGN KEY(latest_triggering_delivery_id) REFERENCES cg_agent_deliveries(delivery_id),
+                    FOREIGN KEY(latest_conversation_id) REFERENCES cg_conversations(conversation_id),
+                    FOREIGN KEY(latest_message_id) REFERENCES cg_conversation_messages(message_id),
+                    FOREIGN KEY(source_task_id) REFERENCES cg_agent_tasks(task_id),
+                    FOREIGN KEY(source_task_attempt_id) REFERENCES cg_agent_task_attempts(attempt_id),
+                    FOREIGN KEY(claimed_endpoint_id) REFERENCES cg_agent_endpoints(endpoint_id),
+                    FOREIGN KEY(consumed_by_endpoint_id) REFERENCES cg_agent_endpoints(endpoint_id),
                     CHECK(
                         (trigger_kind = 'inbox_changed'
                             AND first_triggering_delivery_id IS NOT NULL
@@ -353,7 +353,7 @@ impl Database {
                             AND consumed_controller_generation IS NOT NULL)
                     )
                 );
-                INSERT INTO wc_agent_wakes (
+                INSERT INTO cg_agent_wakes (
                     wake_id, target_agent_id, trigger_kind,
                     first_triggering_delivery_id, latest_triggering_delivery_id,
                     latest_conversation_id, latest_message_id,
@@ -375,8 +375,8 @@ impl Database {
                        claimed_controller_generation, claim_lease_expires_at_unix_ms,
                        consumed_at_unix_ms, consumed_by_endpoint_id,
                        consumed_controller_generation
-                FROM wc_agent_wakes_pre_a4b;
-                CREATE TABLE wc_agent_wake_attempts (
+                FROM cg_agent_wakes_pre_a4b;
+                CREATE TABLE cg_agent_wake_attempts (
                     attempt_id TEXT PRIMARY KEY,
                     wake_id TEXT NOT NULL,
                     endpoint_id TEXT NOT NULL,
@@ -394,18 +394,18 @@ impl Database {
                     delivery_unknown_at_unix_ms INTEGER,
                     revoked_at_unix_ms INTEGER,
                     consumed_at_unix_ms INTEGER,
-                    FOREIGN KEY(wake_id) REFERENCES wc_agent_wakes(wake_id),
-                    FOREIGN KEY(endpoint_id) REFERENCES wc_agent_endpoints(endpoint_id)
+                    FOREIGN KEY(wake_id) REFERENCES cg_agent_wakes(wake_id),
+                    FOREIGN KEY(endpoint_id) REFERENCES cg_agent_endpoints(endpoint_id)
                 );
-                INSERT INTO wc_agent_wake_attempts SELECT * FROM wc_agent_wake_attempts_pre_a4b;
-                DROP TABLE wc_agent_wake_attempts_pre_a4b;
-                DROP TABLE wc_agent_wakes_pre_a4b;
+                INSERT INTO cg_agent_wake_attempts SELECT * FROM cg_agent_wake_attempts_pre_a4b;
+                DROP TABLE cg_agent_wake_attempts_pre_a4b;
+                DROP TABLE cg_agent_wakes_pre_a4b;
                 ",
             )?;
         }
         let has_event_source: bool = if wake_table_exists {
             transaction.query_row(
-                "SELECT EXISTS(SELECT 1 FROM pragma_table_info('wc_agent_wakes') WHERE name = 'source_event_id')",
+                "SELECT EXISTS(SELECT 1 FROM pragma_table_info('cg_agent_wakes') WHERE name = 'source_event_id')",
                 [],
                 |row| row.get(0),
             )?
@@ -414,27 +414,27 @@ impl Database {
         };
         if wake_table_exists && !has_event_source {
             let endpoint_execution_table_exists: bool = transaction.query_row(
-                "SELECT EXISTS(SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'wc_agent_task_endpoint_executions')",
+                "SELECT EXISTS(SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'cg_agent_task_endpoint_executions')",
                 [],
                 |row| row.get(0),
             )?;
             if endpoint_execution_table_exists {
                 transaction.execute_batch(
-                    "ALTER TABLE wc_agent_task_endpoint_executions RENAME TO wc_agent_task_endpoint_executions_pre_attention;
-                     DROP INDEX IF EXISTS idx_wc_agent_task_endpoint_executions_task;",
+                    "ALTER TABLE cg_agent_task_endpoint_executions RENAME TO cg_agent_task_endpoint_executions_pre_attention;
+                     DROP INDEX IF EXISTS idx_cg_agent_task_endpoint_executions_task;",
                 )?;
             }
             transaction.execute_batch(
                 "
-                ALTER TABLE wc_agent_wake_attempts RENAME TO wc_agent_wake_attempts_pre_attention;
-                ALTER TABLE wc_agent_wakes RENAME TO wc_agent_wakes_pre_attention;
-                DROP INDEX IF EXISTS idx_wc_agent_wakes_target_state;
-                DROP INDEX IF EXISTS idx_wc_agent_wakes_one_queueable_inbox;
-                DROP INDEX IF EXISTS idx_wc_agent_wakes_task_attempt;
-                DROP INDEX IF EXISTS idx_wc_agent_wakes_one_dispatched;
-                DROP INDEX IF EXISTS idx_wc_agent_wake_attempts_wake;
-                DROP INDEX IF EXISTS idx_wc_agent_wake_attempts_endpoint;
-                CREATE TABLE wc_agent_wakes (
+                ALTER TABLE cg_agent_wake_attempts RENAME TO cg_agent_wake_attempts_pre_attention;
+                ALTER TABLE cg_agent_wakes RENAME TO cg_agent_wakes_pre_attention;
+                DROP INDEX IF EXISTS idx_cg_agent_wakes_target_state;
+                DROP INDEX IF EXISTS idx_cg_agent_wakes_one_queueable_inbox;
+                DROP INDEX IF EXISTS idx_cg_agent_wakes_task_attempt;
+                DROP INDEX IF EXISTS idx_cg_agent_wakes_one_dispatched;
+                DROP INDEX IF EXISTS idx_cg_agent_wake_attempts_wake;
+                DROP INDEX IF EXISTS idx_cg_agent_wake_attempts_endpoint;
+                CREATE TABLE cg_agent_wakes (
                     wake_id TEXT PRIMARY KEY,
                     target_agent_id TEXT NOT NULL,
                     trigger_kind TEXT NOT NULL CHECK(trigger_kind IN ('inbox_changed', 'agent_task_attempt', 'attention_event')),
@@ -460,15 +460,15 @@ impl Database {
                     consumed_at_unix_ms INTEGER,
                     consumed_by_endpoint_id TEXT,
                     consumed_controller_generation INTEGER,
-                    FOREIGN KEY(target_agent_id) REFERENCES wc_agent_identities(agent_id),
-                    FOREIGN KEY(first_triggering_delivery_id) REFERENCES wc_agent_deliveries(delivery_id),
-                    FOREIGN KEY(latest_triggering_delivery_id) REFERENCES wc_agent_deliveries(delivery_id),
-                    FOREIGN KEY(latest_conversation_id) REFERENCES wc_conversations(conversation_id),
-                    FOREIGN KEY(latest_message_id) REFERENCES wc_conversation_messages(message_id),
-                    FOREIGN KEY(source_task_id) REFERENCES wc_agent_tasks(task_id),
-                    FOREIGN KEY(source_task_attempt_id) REFERENCES wc_agent_task_attempts(attempt_id),
-                    FOREIGN KEY(claimed_endpoint_id) REFERENCES wc_agent_endpoints(endpoint_id),
-                    FOREIGN KEY(consumed_by_endpoint_id) REFERENCES wc_agent_endpoints(endpoint_id),
+                    FOREIGN KEY(target_agent_id) REFERENCES cg_agent_identities(agent_id),
+                    FOREIGN KEY(first_triggering_delivery_id) REFERENCES cg_agent_deliveries(delivery_id),
+                    FOREIGN KEY(latest_triggering_delivery_id) REFERENCES cg_agent_deliveries(delivery_id),
+                    FOREIGN KEY(latest_conversation_id) REFERENCES cg_conversations(conversation_id),
+                    FOREIGN KEY(latest_message_id) REFERENCES cg_conversation_messages(message_id),
+                    FOREIGN KEY(source_task_id) REFERENCES cg_agent_tasks(task_id),
+                    FOREIGN KEY(source_task_attempt_id) REFERENCES cg_agent_task_attempts(attempt_id),
+                    FOREIGN KEY(claimed_endpoint_id) REFERENCES cg_agent_endpoints(endpoint_id),
+                    FOREIGN KEY(consumed_by_endpoint_id) REFERENCES cg_agent_endpoints(endpoint_id),
                     CHECK(
                         (trigger_kind = 'inbox_changed'
                             AND first_triggering_delivery_id IS NOT NULL
@@ -516,7 +516,7 @@ impl Database {
                             AND consumed_controller_generation IS NOT NULL)
                     )
                 );
-                INSERT INTO wc_agent_wakes (
+                INSERT INTO cg_agent_wakes (
                     wake_id, target_agent_id, trigger_kind,
                     first_triggering_delivery_id, latest_triggering_delivery_id,
                     latest_conversation_id, latest_message_id,
@@ -538,8 +538,8 @@ impl Database {
                        claimed_controller_generation, claim_lease_expires_at_unix_ms,
                        consumed_at_unix_ms, consumed_by_endpoint_id,
                        consumed_controller_generation
-                FROM wc_agent_wakes_pre_attention;
-                CREATE TABLE wc_agent_wake_attempts (
+                FROM cg_agent_wakes_pre_attention;
+                CREATE TABLE cg_agent_wake_attempts (
                     attempt_id TEXT PRIMARY KEY,
                     wake_id TEXT NOT NULL,
                     endpoint_id TEXT NOT NULL,
@@ -557,15 +557,15 @@ impl Database {
                     delivery_unknown_at_unix_ms INTEGER,
                     revoked_at_unix_ms INTEGER,
                     consumed_at_unix_ms INTEGER,
-                    FOREIGN KEY(wake_id) REFERENCES wc_agent_wakes(wake_id),
-                    FOREIGN KEY(endpoint_id) REFERENCES wc_agent_endpoints(endpoint_id)
+                    FOREIGN KEY(wake_id) REFERENCES cg_agent_wakes(wake_id),
+                    FOREIGN KEY(endpoint_id) REFERENCES cg_agent_endpoints(endpoint_id)
                 );
-                INSERT INTO wc_agent_wake_attempts SELECT * FROM wc_agent_wake_attempts_pre_attention;
+                INSERT INTO cg_agent_wake_attempts SELECT * FROM cg_agent_wake_attempts_pre_attention;
                 ",
             )?;
             if endpoint_execution_table_exists {
                 transaction.execute_batch(
-                    "CREATE TABLE wc_agent_task_endpoint_executions (
+                    "CREATE TABLE cg_agent_task_endpoint_executions (
                         task_id TEXT NOT NULL,
                         attempt_id TEXT NOT NULL UNIQUE,
                         wake_id TEXT NOT NULL UNIQUE,
@@ -579,26 +579,26 @@ impl Database {
                             (endpoint_id IS NULL AND endpoint_controller_generation IS NULL)
                             OR (endpoint_id IS NOT NULL AND endpoint_controller_generation >= 1)
                         ),
-                        FOREIGN KEY(task_id) REFERENCES wc_agent_tasks(task_id),
-                        FOREIGN KEY(attempt_id) REFERENCES wc_agent_task_attempts(attempt_id),
-                        FOREIGN KEY(wake_id) REFERENCES wc_agent_wakes(wake_id),
-                        FOREIGN KEY(endpoint_id) REFERENCES wc_agent_endpoints(endpoint_id)
+                        FOREIGN KEY(task_id) REFERENCES cg_agent_tasks(task_id),
+                        FOREIGN KEY(attempt_id) REFERENCES cg_agent_task_attempts(attempt_id),
+                        FOREIGN KEY(wake_id) REFERENCES cg_agent_wakes(wake_id),
+                        FOREIGN KEY(endpoint_id) REFERENCES cg_agent_endpoints(endpoint_id)
                      );
-                     INSERT INTO wc_agent_task_endpoint_executions
-                         SELECT * FROM wc_agent_task_endpoint_executions_pre_attention;
-                     DROP TABLE wc_agent_task_endpoint_executions_pre_attention;
-                     CREATE INDEX idx_wc_agent_task_endpoint_executions_task
-                         ON wc_agent_task_endpoint_executions(task_id, updated_at_unix_ms DESC);",
+                     INSERT INTO cg_agent_task_endpoint_executions
+                         SELECT * FROM cg_agent_task_endpoint_executions_pre_attention;
+                     DROP TABLE cg_agent_task_endpoint_executions_pre_attention;
+                     CREATE INDEX idx_cg_agent_task_endpoint_executions_task
+                         ON cg_agent_task_endpoint_executions(task_id, updated_at_unix_ms DESC);",
                 )?;
             }
             transaction.execute_batch(
-                "DROP TABLE wc_agent_wake_attempts_pre_attention;
-                 DROP TABLE wc_agent_wakes_pre_attention;",
+                "DROP TABLE cg_agent_wake_attempts_pre_attention;
+                 DROP TABLE cg_agent_wakes_pre_attention;",
             )?;
         }
         let has_wait_source: bool = if wake_table_exists {
             transaction.query_row(
-                "SELECT EXISTS(SELECT 1 FROM pragma_table_info('wc_agent_wakes') WHERE name = 'source_wait_id')",
+                "SELECT EXISTS(SELECT 1 FROM pragma_table_info('cg_agent_wakes') WHERE name = 'source_wait_id')",
                 [],
                 |row| row.get(0),
             )?
@@ -607,28 +607,28 @@ impl Database {
         };
         if wake_table_exists && !has_wait_source {
             let endpoint_execution_table_exists: bool = transaction.query_row(
-                "SELECT EXISTS(SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'wc_agent_task_endpoint_executions')",
+                "SELECT EXISTS(SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'cg_agent_task_endpoint_executions')",
                 [],
                 |row| row.get(0),
             )?;
             if endpoint_execution_table_exists {
                 transaction.execute_batch(
-                    "ALTER TABLE wc_agent_task_endpoint_executions RENAME TO wc_agent_task_endpoint_executions_pre_wait;
-                     DROP INDEX IF EXISTS idx_wc_agent_task_endpoint_executions_task;",
+                    "ALTER TABLE cg_agent_task_endpoint_executions RENAME TO cg_agent_task_endpoint_executions_pre_wait;
+                     DROP INDEX IF EXISTS idx_cg_agent_task_endpoint_executions_task;",
                 )?;
             }
             transaction.execute_batch(
                 "
-                ALTER TABLE wc_agent_wake_attempts RENAME TO wc_agent_wake_attempts_pre_wait;
-                ALTER TABLE wc_agent_wakes RENAME TO wc_agent_wakes_pre_wait;
-                DROP INDEX IF EXISTS idx_wc_agent_wakes_target_state;
-                DROP INDEX IF EXISTS idx_wc_agent_wakes_one_queueable_inbox;
-                DROP INDEX IF EXISTS idx_wc_agent_wakes_task_attempt;
-                DROP INDEX IF EXISTS idx_wc_agent_wakes_attention_event;
-                DROP INDEX IF EXISTS idx_wc_agent_wakes_one_dispatched;
-                DROP INDEX IF EXISTS idx_wc_agent_wake_attempts_wake;
-                DROP INDEX IF EXISTS idx_wc_agent_wake_attempts_endpoint;
-                CREATE TABLE wc_agent_wakes (
+                ALTER TABLE cg_agent_wake_attempts RENAME TO cg_agent_wake_attempts_pre_wait;
+                ALTER TABLE cg_agent_wakes RENAME TO cg_agent_wakes_pre_wait;
+                DROP INDEX IF EXISTS idx_cg_agent_wakes_target_state;
+                DROP INDEX IF EXISTS idx_cg_agent_wakes_one_queueable_inbox;
+                DROP INDEX IF EXISTS idx_cg_agent_wakes_task_attempt;
+                DROP INDEX IF EXISTS idx_cg_agent_wakes_attention_event;
+                DROP INDEX IF EXISTS idx_cg_agent_wakes_one_dispatched;
+                DROP INDEX IF EXISTS idx_cg_agent_wake_attempts_wake;
+                DROP INDEX IF EXISTS idx_cg_agent_wake_attempts_endpoint;
+                CREATE TABLE cg_agent_wakes (
                     wake_id TEXT PRIMARY KEY,
                     target_agent_id TEXT NOT NULL,
                     trigger_kind TEXT NOT NULL CHECK(trigger_kind IN ('inbox_changed', 'agent_task_attempt', 'attention_event', 'agent_wait_events')),
@@ -657,16 +657,16 @@ impl Database {
                     consumed_at_unix_ms INTEGER,
                     consumed_by_endpoint_id TEXT,
                     consumed_controller_generation INTEGER,
-                    FOREIGN KEY(target_agent_id) REFERENCES wc_agent_identities(agent_id),
-                    FOREIGN KEY(first_triggering_delivery_id) REFERENCES wc_agent_deliveries(delivery_id),
-                    FOREIGN KEY(latest_triggering_delivery_id) REFERENCES wc_agent_deliveries(delivery_id),
-                    FOREIGN KEY(latest_conversation_id) REFERENCES wc_conversations(conversation_id),
-                    FOREIGN KEY(latest_message_id) REFERENCES wc_conversation_messages(message_id),
-                    FOREIGN KEY(source_task_id) REFERENCES wc_agent_tasks(task_id),
-                    FOREIGN KEY(source_task_attempt_id) REFERENCES wc_agent_task_attempts(attempt_id),
-                    FOREIGN KEY(source_wait_id) REFERENCES wc_agent_waits(wait_id),
-                    FOREIGN KEY(claimed_endpoint_id) REFERENCES wc_agent_endpoints(endpoint_id),
-                    FOREIGN KEY(consumed_by_endpoint_id) REFERENCES wc_agent_endpoints(endpoint_id),
+                    FOREIGN KEY(target_agent_id) REFERENCES cg_agent_identities(agent_id),
+                    FOREIGN KEY(first_triggering_delivery_id) REFERENCES cg_agent_deliveries(delivery_id),
+                    FOREIGN KEY(latest_triggering_delivery_id) REFERENCES cg_agent_deliveries(delivery_id),
+                    FOREIGN KEY(latest_conversation_id) REFERENCES cg_conversations(conversation_id),
+                    FOREIGN KEY(latest_message_id) REFERENCES cg_conversation_messages(message_id),
+                    FOREIGN KEY(source_task_id) REFERENCES cg_agent_tasks(task_id),
+                    FOREIGN KEY(source_task_attempt_id) REFERENCES cg_agent_task_attempts(attempt_id),
+                    FOREIGN KEY(source_wait_id) REFERENCES cg_agent_waits(wait_id),
+                    FOREIGN KEY(claimed_endpoint_id) REFERENCES cg_agent_endpoints(endpoint_id),
+                    FOREIGN KEY(consumed_by_endpoint_id) REFERENCES cg_agent_endpoints(endpoint_id),
                     CHECK(
                         (trigger_kind = 'inbox_changed'
                             AND first_triggering_delivery_id IS NOT NULL
@@ -709,7 +709,7 @@ impl Database {
                     CHECK(state != 'consumed' OR (consumed_at_unix_ms IS NOT NULL
                         AND consumed_by_endpoint_id IS NOT NULL AND consumed_controller_generation IS NOT NULL))
                 );
-                INSERT INTO wc_agent_wakes (
+                INSERT INTO cg_agent_wakes (
                     wake_id, target_agent_id, trigger_kind,
                     first_triggering_delivery_id, latest_triggering_delivery_id,
                     latest_conversation_id, latest_message_id,
@@ -731,8 +731,8 @@ impl Database {
                        claimed_attempt_id, claimed_endpoint_id, claimed_controller_generation,
                        claim_lease_expires_at_unix_ms, consumed_at_unix_ms,
                        consumed_by_endpoint_id, consumed_controller_generation
-                FROM wc_agent_wakes_pre_wait;
-                CREATE TABLE wc_agent_wake_attempts (
+                FROM cg_agent_wakes_pre_wait;
+                CREATE TABLE cg_agent_wake_attempts (
                     attempt_id TEXT PRIMARY KEY,
                     wake_id TEXT NOT NULL,
                     endpoint_id TEXT NOT NULL,
@@ -748,15 +748,15 @@ impl Database {
                     delivery_unknown_at_unix_ms INTEGER,
                     revoked_at_unix_ms INTEGER,
                     consumed_at_unix_ms INTEGER,
-                    FOREIGN KEY(wake_id) REFERENCES wc_agent_wakes(wake_id),
-                    FOREIGN KEY(endpoint_id) REFERENCES wc_agent_endpoints(endpoint_id)
+                    FOREIGN KEY(wake_id) REFERENCES cg_agent_wakes(wake_id),
+                    FOREIGN KEY(endpoint_id) REFERENCES cg_agent_endpoints(endpoint_id)
                 );
-                INSERT INTO wc_agent_wake_attempts SELECT * FROM wc_agent_wake_attempts_pre_wait;
+                INSERT INTO cg_agent_wake_attempts SELECT * FROM cg_agent_wake_attempts_pre_wait;
                 ",
             )?;
             if endpoint_execution_table_exists {
                 transaction.execute_batch(
-                    "CREATE TABLE wc_agent_task_endpoint_executions (
+                    "CREATE TABLE cg_agent_task_endpoint_executions (
                         task_id TEXT NOT NULL,
                         attempt_id TEXT NOT NULL UNIQUE,
                         wake_id TEXT NOT NULL UNIQUE,
@@ -768,26 +768,26 @@ impl Database {
                         PRIMARY KEY(task_id, attempt_id),
                         CHECK((endpoint_id IS NULL AND endpoint_controller_generation IS NULL)
                            OR (endpoint_id IS NOT NULL AND endpoint_controller_generation >= 1)),
-                        FOREIGN KEY(task_id) REFERENCES wc_agent_tasks(task_id),
-                        FOREIGN KEY(attempt_id) REFERENCES wc_agent_task_attempts(attempt_id),
-                        FOREIGN KEY(wake_id) REFERENCES wc_agent_wakes(wake_id),
-                        FOREIGN KEY(endpoint_id) REFERENCES wc_agent_endpoints(endpoint_id)
+                        FOREIGN KEY(task_id) REFERENCES cg_agent_tasks(task_id),
+                        FOREIGN KEY(attempt_id) REFERENCES cg_agent_task_attempts(attempt_id),
+                        FOREIGN KEY(wake_id) REFERENCES cg_agent_wakes(wake_id),
+                        FOREIGN KEY(endpoint_id) REFERENCES cg_agent_endpoints(endpoint_id)
                      );
-                     INSERT INTO wc_agent_task_endpoint_executions
-                         SELECT * FROM wc_agent_task_endpoint_executions_pre_wait;
-                     DROP TABLE wc_agent_task_endpoint_executions_pre_wait;
-                     CREATE INDEX idx_wc_agent_task_endpoint_executions_task
-                         ON wc_agent_task_endpoint_executions(task_id, updated_at_unix_ms DESC);",
+                     INSERT INTO cg_agent_task_endpoint_executions
+                         SELECT * FROM cg_agent_task_endpoint_executions_pre_wait;
+                     DROP TABLE cg_agent_task_endpoint_executions_pre_wait;
+                     CREATE INDEX idx_cg_agent_task_endpoint_executions_task
+                         ON cg_agent_task_endpoint_executions(task_id, updated_at_unix_ms DESC);",
                 )?;
             }
             transaction.execute_batch(
-                "DROP TABLE wc_agent_wake_attempts_pre_wait;
-                 DROP TABLE wc_agent_wakes_pre_wait;",
+                "DROP TABLE cg_agent_wake_attempts_pre_wait;
+                 DROP TABLE cg_agent_wakes_pre_wait;",
             )?;
         }
         transaction.execute_batch(
             "
-            CREATE TABLE IF NOT EXISTS wc_agent_wakes (
+            CREATE TABLE IF NOT EXISTS cg_agent_wakes (
                 wake_id TEXT PRIMARY KEY,
                 target_agent_id TEXT NOT NULL,
                 trigger_kind TEXT NOT NULL CHECK(trigger_kind IN ('inbox_changed', 'agent_task_attempt', 'attention_event', 'agent_wait_events')),
@@ -816,16 +816,16 @@ impl Database {
                 consumed_at_unix_ms INTEGER,
                 consumed_by_endpoint_id TEXT,
                 consumed_controller_generation INTEGER,
-                FOREIGN KEY(target_agent_id) REFERENCES wc_agent_identities(agent_id),
-                FOREIGN KEY(first_triggering_delivery_id) REFERENCES wc_agent_deliveries(delivery_id),
-                FOREIGN KEY(latest_triggering_delivery_id) REFERENCES wc_agent_deliveries(delivery_id),
-                FOREIGN KEY(latest_conversation_id) REFERENCES wc_conversations(conversation_id),
-                FOREIGN KEY(latest_message_id) REFERENCES wc_conversation_messages(message_id),
-                FOREIGN KEY(source_task_id) REFERENCES wc_agent_tasks(task_id),
-                FOREIGN KEY(source_task_attempt_id) REFERENCES wc_agent_task_attempts(attempt_id),
-                FOREIGN KEY(source_wait_id) REFERENCES wc_agent_waits(wait_id),
-                FOREIGN KEY(claimed_endpoint_id) REFERENCES wc_agent_endpoints(endpoint_id),
-                FOREIGN KEY(consumed_by_endpoint_id) REFERENCES wc_agent_endpoints(endpoint_id),
+                FOREIGN KEY(target_agent_id) REFERENCES cg_agent_identities(agent_id),
+                FOREIGN KEY(first_triggering_delivery_id) REFERENCES cg_agent_deliveries(delivery_id),
+                FOREIGN KEY(latest_triggering_delivery_id) REFERENCES cg_agent_deliveries(delivery_id),
+                FOREIGN KEY(latest_conversation_id) REFERENCES cg_conversations(conversation_id),
+                FOREIGN KEY(latest_message_id) REFERENCES cg_conversation_messages(message_id),
+                FOREIGN KEY(source_task_id) REFERENCES cg_agent_tasks(task_id),
+                FOREIGN KEY(source_task_attempt_id) REFERENCES cg_agent_task_attempts(attempt_id),
+                FOREIGN KEY(source_wait_id) REFERENCES cg_agent_waits(wait_id),
+                FOREIGN KEY(claimed_endpoint_id) REFERENCES cg_agent_endpoints(endpoint_id),
+                FOREIGN KEY(consumed_by_endpoint_id) REFERENCES cg_agent_endpoints(endpoint_id),
                 CHECK(
                     (trigger_kind = 'inbox_changed'
                         AND first_triggering_delivery_id IS NOT NULL AND latest_triggering_delivery_id IS NOT NULL
@@ -865,25 +865,25 @@ impl Database {
                 CHECK(state != 'consumed' OR (consumed_at_unix_ms IS NOT NULL
                     AND consumed_by_endpoint_id IS NOT NULL AND consumed_controller_generation IS NOT NULL))
             );
-            CREATE INDEX IF NOT EXISTS idx_wc_agent_wakes_target_state
-                ON wc_agent_wakes(target_agent_id, state, created_at_unix_ms, wake_id);
-            CREATE UNIQUE INDEX IF NOT EXISTS idx_wc_agent_wakes_one_queueable_inbox
-                ON wc_agent_wakes(target_agent_id)
+            CREATE INDEX IF NOT EXISTS idx_cg_agent_wakes_target_state
+                ON cg_agent_wakes(target_agent_id, state, created_at_unix_ms, wake_id);
+            CREATE UNIQUE INDEX IF NOT EXISTS idx_cg_agent_wakes_one_queueable_inbox
+                ON cg_agent_wakes(target_agent_id)
                 WHERE trigger_kind = 'inbox_changed' AND state IN ('pending', 'claimed');
-            CREATE UNIQUE INDEX IF NOT EXISTS idx_wc_agent_wakes_task_attempt
-                ON wc_agent_wakes(source_task_attempt_id)
+            CREATE UNIQUE INDEX IF NOT EXISTS idx_cg_agent_wakes_task_attempt
+                ON cg_agent_wakes(source_task_attempt_id)
                 WHERE trigger_kind = 'agent_task_attempt';
-            CREATE UNIQUE INDEX IF NOT EXISTS idx_wc_agent_wakes_attention_event
-                ON wc_agent_wakes(source_event_id)
+            CREATE UNIQUE INDEX IF NOT EXISTS idx_cg_agent_wakes_attention_event
+                ON cg_agent_wakes(source_event_id)
                 WHERE trigger_kind = 'attention_event';
-            CREATE UNIQUE INDEX IF NOT EXISTS idx_wc_agent_wakes_agent_wait
-                ON wc_agent_wakes(source_wait_id)
+            CREATE UNIQUE INDEX IF NOT EXISTS idx_cg_agent_wakes_agent_wait
+                ON cg_agent_wakes(source_wait_id)
                 WHERE trigger_kind = 'agent_wait_events';
-            CREATE UNIQUE INDEX IF NOT EXISTS idx_wc_agent_wakes_one_dispatched
-                ON wc_agent_wakes(target_agent_id)
+            CREATE UNIQUE INDEX IF NOT EXISTS idx_cg_agent_wakes_one_dispatched
+                ON cg_agent_wakes(target_agent_id)
                 WHERE state IN ('prepared', 'delivered', 'delivery_unknown');
 
-            CREATE TABLE IF NOT EXISTS wc_agent_wake_attempts (
+            CREATE TABLE IF NOT EXISTS cg_agent_wake_attempts (
                 attempt_id TEXT PRIMARY KEY,
                 wake_id TEXT NOT NULL,
                 endpoint_id TEXT NOT NULL,
@@ -901,13 +901,13 @@ impl Database {
                 delivery_unknown_at_unix_ms INTEGER,
                 revoked_at_unix_ms INTEGER,
                 consumed_at_unix_ms INTEGER,
-                FOREIGN KEY(wake_id) REFERENCES wc_agent_wakes(wake_id),
-                FOREIGN KEY(endpoint_id) REFERENCES wc_agent_endpoints(endpoint_id)
+                FOREIGN KEY(wake_id) REFERENCES cg_agent_wakes(wake_id),
+                FOREIGN KEY(endpoint_id) REFERENCES cg_agent_endpoints(endpoint_id)
             );
-            CREATE INDEX IF NOT EXISTS idx_wc_agent_wake_attempts_wake
-                ON wc_agent_wake_attempts(wake_id, claimed_at_unix_ms, attempt_id);
-            CREATE INDEX IF NOT EXISTS idx_wc_agent_wake_attempts_endpoint
-                ON wc_agent_wake_attempts(endpoint_id, controller_generation, state);
+            CREATE INDEX IF NOT EXISTS idx_cg_agent_wake_attempts_wake
+                ON cg_agent_wake_attempts(wake_id, claimed_at_unix_ms, attempt_id);
+            CREATE INDEX IF NOT EXISTS idx_cg_agent_wake_attempts_endpoint
+                ON cg_agent_wake_attempts(endpoint_id, controller_generation, state);
             ",
         )?;
         transaction.commit()?;
@@ -939,7 +939,7 @@ impl Database {
         // the lost process-local binding.
         transaction
             .execute(
-                "UPDATE wc_agent_endpoints
+                "UPDATE cg_agent_endpoints
                  SET wake_capable = 0
                  WHERE lifecycle = 'attached' AND wake_capable != 0",
                 [],
@@ -948,11 +948,11 @@ impl Database {
 
         transaction
             .execute(
-                "UPDATE wc_agent_task_endpoint_executions
+                "UPDATE cg_agent_task_endpoint_executions
                  SET endpoint_id = NULL, endpoint_controller_generation = NULL,
                      updated_at_unix_ms = MAX(updated_at_unix_ms, ?1)
                  WHERE wake_id IN (
-                     SELECT wake_id FROM wc_agent_wakes
+                     SELECT wake_id FROM cg_agent_wakes
                      WHERE trigger_kind = 'agent_task_attempt' AND state = 'claimed'
                  )",
                 params![now],
@@ -960,7 +960,7 @@ impl Database {
             .map_err(store_error)?;
         transaction
             .execute(
-                "UPDATE wc_agent_wake_attempts
+                "UPDATE cg_agent_wake_attempts
                  SET state = 'revoked', revoked_at_unix_ms = COALESCE(revoked_at_unix_ms, ?1)
                  WHERE state = 'claimed'",
                 params![now],
@@ -968,7 +968,7 @@ impl Database {
             .map_err(store_error)?;
         transaction
             .execute(
-                "UPDATE wc_agent_wakes
+                "UPDATE cg_agent_wakes
                  SET state = 'pending', revision = revision + 1,
                      updated_at_unix_ms = MAX(updated_at_unix_ms, ?1),
                      claimed_attempt_id = NULL, claimed_endpoint_id = NULL,
@@ -980,7 +980,7 @@ impl Database {
             .map_err(store_error)?;
         transaction
             .execute(
-                "UPDATE wc_agent_wake_attempts
+                "UPDATE cg_agent_wake_attempts
                  SET state = 'delivery_unknown',
                      delivery_unknown_at_unix_ms = COALESCE(delivery_unknown_at_unix_ms, ?1)
                  WHERE state = 'prepared'",
@@ -989,7 +989,7 @@ impl Database {
             .map_err(store_error)?;
         transaction
             .execute(
-                "UPDATE wc_agent_wakes
+                "UPDATE cg_agent_wakes
                  SET state = 'delivery_unknown', revision = revision + 1,
                      updated_at_unix_ms = MAX(updated_at_unix_ms, ?1),
                      claim_lease_expires_at_unix_ms = NULL
@@ -1036,7 +1036,7 @@ impl Database {
         let blocked: bool = transaction
             .query_row(
                 "SELECT EXISTS(
-                    SELECT 1 FROM wc_agent_wakes
+                    SELECT 1 FROM cg_agent_wakes
                     WHERE target_agent_id = ?1
                       AND state IN ('prepared', 'delivered', 'delivery_unknown')
                  )",
@@ -1050,7 +1050,7 @@ impl Database {
         }
         let wake_id: Option<String> = transaction
             .query_row(
-                "SELECT wake_id FROM wc_agent_wakes
+                "SELECT wake_id FROM cg_agent_wakes
                  WHERE target_agent_id = ?1 AND state = 'pending'
                  ORDER BY created_at_unix_ms, wake_id LIMIT 1",
                 params![agent_id],
@@ -1094,17 +1094,16 @@ impl Database {
         let attempt_id = allocate_identity(
             &transaction,
             AGENT_WAKE_ATTEMPT_ID_PREFIX,
-            "SELECT EXISTS(SELECT 1 FROM wc_agent_wake_attempts WHERE attempt_id = ?1)",
+            "SELECT EXISTS(SELECT 1 FROM cg_agent_wake_attempts WHERE attempt_id = ?1)",
         )?;
         let claim_fence = new_proof(AGENT_WAKE_CLAIM_FENCE_PREFIX);
         let consume_token = new_proof(AGENT_WAKE_CONSUME_TOKEN_PREFIX);
         let claim_fence_hash = digest_text("codegpt.agent-wake.claim-fence.v1", &claim_fence);
-        let consume_token_hash =
-            digest_text("codegpt.agent-wake.consume-token.v1", &consume_token);
+        let consume_token_hash = digest_text("codegpt.agent-wake.consume-token.v1", &consume_token);
         let claim_lease_expires_at_unix_ms = now.saturating_add(DEFAULT_WAKE_CLAIM_LEASE_MS);
         transaction
             .execute(
-                "INSERT INTO wc_agent_wake_attempts (
+                "INSERT INTO cg_agent_wake_attempts (
                     attempt_id, wake_id, endpoint_id, controller_generation,
                     adapter_kind, state, claim_fence_hash, consume_token_hash,
                     claimed_at_unix_ms, claim_lease_expires_at_unix_ms,
@@ -1128,7 +1127,7 @@ impl Database {
             .map_err(store_error)?;
         let changed = transaction
             .execute(
-                "UPDATE wc_agent_wakes
+                "UPDATE cg_agent_wakes
                  SET state = 'claimed', revision = revision + 1,
                      updated_at_unix_ms = ?2, claimed_attempt_id = ?3,
                      claimed_endpoint_id = ?4, claimed_controller_generation = ?5,
@@ -1204,7 +1203,7 @@ impl Database {
         }
         transaction
             .execute(
-                "UPDATE wc_agent_wake_attempts
+                "UPDATE cg_agent_wake_attempts
                  SET state = 'revoked', revoked_at_unix_ms = ?2
                  WHERE attempt_id = ?1 AND state = 'claimed'",
                 params![attempt_id, now],
@@ -1212,7 +1211,7 @@ impl Database {
             .map_err(store_error)?;
         transaction
             .execute(
-                "UPDATE wc_agent_wakes
+                "UPDATE cg_agent_wakes
                  SET state = 'pending', revision = revision + 1,
                      updated_at_unix_ms = ?2, claimed_attempt_id = NULL,
                      claimed_endpoint_id = NULL, claimed_controller_generation = NULL,
@@ -1324,7 +1323,7 @@ impl Database {
         }
         transaction
             .execute(
-                "UPDATE wc_agent_wake_attempts
+                "UPDATE cg_agent_wake_attempts
                  SET state = 'prepared', prepared_at_unix_ms = ?2
                  WHERE attempt_id = ?1 AND state = 'claimed'",
                 params![attempt_id, now],
@@ -1332,7 +1331,7 @@ impl Database {
             .map_err(store_error)?;
         transaction
             .execute(
-                "UPDATE wc_agent_wakes
+                "UPDATE cg_agent_wakes
                  SET state = 'prepared', revision = revision + 1,
                      updated_at_unix_ms = ?2, claim_lease_expires_at_unix_ms = NULL
                  WHERE wake_id = ?1 AND state = 'claimed'",
@@ -1552,7 +1551,7 @@ impl Database {
             )
         };
         let attempt_sql = format!(
-            "UPDATE wc_agent_wake_attempts
+            "UPDATE cg_agent_wake_attempts
              SET state = ?2, {timestamp_column} = COALESCE({timestamp_column}, ?3)
              WHERE attempt_id = ?1"
         );
@@ -1561,7 +1560,7 @@ impl Database {
             .map_err(store_error)?;
         transaction
             .execute(
-                "UPDATE wc_agent_wakes
+                "UPDATE cg_agent_wakes
                  SET state = ?2, revision = revision + 1,
                      updated_at_unix_ms = MAX(updated_at_unix_ms, ?3),
                      claim_lease_expires_at_unix_ms = NULL
@@ -1674,7 +1673,7 @@ impl Database {
         })?;
         let (expected_token_hash, adapter_kind): (String, String) = transaction
             .query_row(
-                "SELECT consume_token_hash, adapter_kind FROM wc_agent_wake_attempts WHERE attempt_id = ?1",
+                "SELECT consume_token_hash, adapter_kind FROM cg_agent_wake_attempts WHERE attempt_id = ?1",
                 params![wake_attempt_id],
                 |row| Ok((row.get(0)?, row.get(1)?)),
             )
@@ -1761,15 +1760,15 @@ impl Database {
                     now.saturating_add(AGENT_TASK_ENDPOINT_TAKEOVER_LEASE_MS);
                 let promoted = transaction
                     .execute(
-                        "UPDATE wc_agent_task_attempts
+                        "UPDATE cg_agent_task_attempts
                          SET lease_expires_at_unix_ms = MAX(lease_expires_at_unix_ms, ?4)
                          WHERE attempt_id = ?1 AND task_id = ?2
                            AND assignee_agent_id = ?3 AND state = 'active'
                            AND lease_expires_at_unix_ms > ?5
                            AND EXISTS (
                                SELECT 1
-                               FROM wc_agent_tasks t
-                               JOIN wc_agent_task_endpoint_executions e
+                               FROM cg_agent_tasks t
+                               JOIN cg_agent_task_endpoint_executions e
                                  ON e.task_id = t.task_id AND e.attempt_id = ?1
                                WHERE t.task_id = ?2
                                  AND t.owner_principal_kind = ?6
@@ -1798,7 +1797,7 @@ impl Database {
                 if promoted == 1 {
                     transaction
                         .execute(
-                            "UPDATE wc_agent_tasks
+                            "UPDATE cg_agent_tasks
                              SET updated_at_unix_ms = MAX(updated_at_unix_ms, ?2)
                              WHERE task_id = ?1",
                             params![task_id, now],
@@ -1820,7 +1819,7 @@ impl Database {
 
         transaction
             .execute(
-                "UPDATE wc_agent_wake_attempts
+                "UPDATE cg_agent_wake_attempts
                  SET state = 'consumed', consumed_at_unix_ms = COALESCE(consumed_at_unix_ms, ?2)
                  WHERE attempt_id = ?1",
                 params![wake_attempt_id, now],
@@ -1828,7 +1827,7 @@ impl Database {
             .map_err(store_error)?;
         transaction
             .execute(
-                "UPDATE wc_agent_wakes
+                "UPDATE cg_agent_wakes
                  SET state = 'consumed', revision = revision + 1,
                      updated_at_unix_ms = MAX(updated_at_unix_ms, ?2),
                      consumed_at_unix_ms = ?2, consumed_by_endpoint_id = ?3,
@@ -1840,7 +1839,7 @@ impl Database {
             .map_err(store_error)?;
         transaction
             .execute(
-                "UPDATE wc_agent_endpoints
+                "UPDATE cg_agent_endpoints
                  SET last_seen_at_unix_ms = MAX(last_seen_at_unix_ms, ?2)
                  WHERE endpoint_id = ?1",
                 params![endpoint_id, now],
@@ -1909,7 +1908,7 @@ impl Database {
         } else {
             let selected_wake_id: Option<String> = conn
                 .query_row(
-                    "SELECT wake_id FROM wc_agent_wakes
+                    "SELECT wake_id FROM cg_agent_wakes
                      WHERE target_agent_id = ?1 AND state NOT IN ('consumed', 'retired')
                      ORDER BY CASE
                          WHEN state IN ('prepared', 'delivered', 'delivery_unknown') THEN 0
@@ -1955,7 +1954,7 @@ impl Database {
         let (queued_delivery_count, inbox_high_watermark): (i64, i64) = conn
             .query_row(
                 "SELECT COUNT(*), COALESCE(MAX(delivery_order), 0)
-                 FROM wc_agent_deliveries
+                 FROM cg_agent_deliveries
                  WHERE recipient_agent_id = ?1 AND state = 'queued'",
                 params![agent_id],
                 |row| Ok((row.get(0)?, row.get(1)?)),
@@ -2083,7 +2082,7 @@ impl Database {
             })?;
             let expected_hash: String = transaction
                 .query_row(
-                    "SELECT consume_token_hash FROM wc_agent_wake_attempts WHERE attempt_id = ?1",
+                    "SELECT consume_token_hash FROM cg_agent_wake_attempts WHERE attempt_id = ?1",
                     [&attempt_id],
                     |row| row.get(0),
                 )
@@ -2150,7 +2149,7 @@ impl Database {
         let dispatched_exists: bool = transaction
             .query_row(
                 "SELECT EXISTS(
-                    SELECT 1 FROM wc_agent_wakes
+                    SELECT 1 FROM cg_agent_wakes
                     WHERE target_agent_id = ?1
                       AND state IN ('prepared', 'delivered', 'delivery_unknown')
                  )",
@@ -2167,16 +2166,15 @@ impl Database {
         let attempt_id = allocate_identity(
             &transaction,
             AGENT_WAKE_ATTEMPT_ID_PREFIX,
-            "SELECT EXISTS(SELECT 1 FROM wc_agent_wake_attempts WHERE attempt_id = ?1)",
+            "SELECT EXISTS(SELECT 1 FROM cg_agent_wake_attempts WHERE attempt_id = ?1)",
         )?;
         let consume_token = new_proof(AGENT_WAKE_CONSUME_TOKEN_PREFIX);
         let claim_fence = new_proof(AGENT_WAKE_CLAIM_FENCE_PREFIX);
         let claim_fence_hash = digest_text("codegpt.agent-wake.claim-fence.v1", &claim_fence);
-        let consume_token_hash =
-            digest_text("codegpt.agent-wake.consume-token.v1", &consume_token);
+        let consume_token_hash = digest_text("codegpt.agent-wake.consume-token.v1", &consume_token);
         transaction
             .execute(
-                "INSERT INTO wc_agent_wake_attempts (
+                "INSERT INTO cg_agent_wake_attempts (
                     attempt_id, wake_id, endpoint_id, controller_generation,
                     adapter_kind, state, claim_fence_hash, consume_token_hash,
                     claimed_at_unix_ms, claim_lease_expires_at_unix_ms,
@@ -2198,7 +2196,7 @@ impl Database {
             .map_err(store_error)?;
         let changed = transaction
             .execute(
-                "UPDATE wc_agent_wakes
+                "UPDATE cg_agent_wakes
                  SET state = 'delivered', revision = revision + 1,
                      updated_at_unix_ms = ?2, claimed_attempt_id = ?3,
                      claimed_endpoint_id = ?4, claimed_controller_generation = ?5,
@@ -2267,7 +2265,7 @@ impl Database {
                         claim_lease_expires_at_unix_ms, prepared_at_unix_ms,
                         delivered_at_unix_ms, delivery_unknown_at_unix_ms,
                         revoked_at_unix_ms, consumed_at_unix_ms
-                 FROM wc_agent_wake_attempts WHERE wake_id = ?1
+                 FROM cg_agent_wake_attempts WHERE wake_id = ?1
                  ORDER BY claimed_at_unix_ms, attempt_id",
             )
             .map_err(store_error)?;
@@ -2291,7 +2289,7 @@ pub(super) fn coalesce_agent_wake_for_delivery(
 ) -> Result<String, CommunicationStoreError> {
     let queued_delivery_count: i64 = transaction
         .query_row(
-            "SELECT COUNT(*) FROM wc_agent_deliveries
+            "SELECT COUNT(*) FROM cg_agent_deliveries
              WHERE recipient_agent_id = ?1 AND state = 'queued'",
             params![target_agent_id],
             |row| row.get(0),
@@ -2299,7 +2297,7 @@ pub(super) fn coalesce_agent_wake_for_delivery(
         .map_err(store_error)?;
     let existing: Option<String> = transaction
         .query_row(
-            "SELECT wake_id FROM wc_agent_wakes
+            "SELECT wake_id FROM cg_agent_wakes
              WHERE target_agent_id = ?1 AND trigger_kind = 'inbox_changed'
                AND state IN ('pending', 'claimed')
              ORDER BY created_at_unix_ms, wake_id LIMIT 1",
@@ -2311,7 +2309,7 @@ pub(super) fn coalesce_agent_wake_for_delivery(
     if let Some(wake_id) = existing {
         transaction
             .execute(
-                "UPDATE wc_agent_wakes
+                "UPDATE cg_agent_wakes
                  SET latest_triggering_delivery_id = ?2,
                      latest_conversation_id = ?3, latest_message_id = ?4,
                      inbox_high_watermark = MAX(inbox_high_watermark, ?5),
@@ -2335,11 +2333,11 @@ pub(super) fn coalesce_agent_wake_for_delivery(
     let wake_id = allocate_identity(
         &transaction,
         AGENT_WAKE_ID_PREFIX,
-        "SELECT EXISTS(SELECT 1 FROM wc_agent_wakes WHERE wake_id = ?1)",
+        "SELECT EXISTS(SELECT 1 FROM cg_agent_wakes WHERE wake_id = ?1)",
     )?;
     transaction
         .execute(
-            "INSERT INTO wc_agent_wakes (
+            "INSERT INTO cg_agent_wakes (
                 wake_id, target_agent_id, trigger_kind,
                 first_triggering_delivery_id, latest_triggering_delivery_id,
                 latest_conversation_id, latest_message_id,
@@ -2375,7 +2373,7 @@ fn clear_agent_task_wake_carrier(
 ) -> Result<(), CommunicationStoreError> {
     transaction
         .execute(
-            "UPDATE wc_agent_task_endpoint_executions
+            "UPDATE cg_agent_task_endpoint_executions
              SET endpoint_id = NULL, endpoint_controller_generation = NULL,
                  updated_at_unix_ms = MAX(updated_at_unix_ms, ?2)
              WHERE wake_id = ?1",
@@ -2398,7 +2396,7 @@ fn materialize_agent_task_wake_expiry(
     };
     transaction
         .execute(
-            "UPDATE wc_agent_task_attempts
+            "UPDATE cg_agent_task_attempts
              SET state = 'expired', terminal_at_unix_ms = COALESCE(terminal_at_unix_ms, ?2)
              WHERE attempt_id = ?1 AND state = 'active' AND lease_expires_at_unix_ms <= ?2",
             params![task_attempt_id, now],
@@ -2406,15 +2404,15 @@ fn materialize_agent_task_wake_expiry(
         .map_err(store_error)?;
     transaction
         .execute(
-            "UPDATE wc_agent_tasks
+            "UPDATE cg_agent_tasks
              SET state = 'ready', updated_at_unix_ms = MAX(updated_at_unix_ms, ?2)
              WHERE task_id = ?1 AND state = 'active' AND latest_attempt_id = ?3
                AND EXISTS (
-                   SELECT 1 FROM wc_agent_task_attempts a
+                   SELECT 1 FROM cg_agent_task_attempts a
                    WHERE a.attempt_id = ?3 AND a.state = 'expired'
                )
                AND NOT EXISTS (
-                   SELECT 1 FROM wc_agent_task_coding_runs r
+                   SELECT 1 FROM cg_agent_task_coding_runs r
                    WHERE r.attempt_id = ?3 AND r.dispatch_state IN ('outcome_unknown', 'bound')
                )",
             params![task_id, now, task_attempt_id],
@@ -2437,7 +2435,7 @@ fn retire_agent_task_wake_pre_dispatch(
     materialize_agent_task_wake_expiry(transaction, &wake, now)?;
     transaction
         .execute(
-            "UPDATE wc_agent_wake_attempts
+            "UPDATE cg_agent_wake_attempts
              SET state = 'revoked', revoked_at_unix_ms = COALESCE(revoked_at_unix_ms, ?2)
              WHERE wake_id = ?1 AND state = 'claimed'",
             params![wake_id, now],
@@ -2446,7 +2444,7 @@ fn retire_agent_task_wake_pre_dispatch(
     clear_agent_task_wake_carrier(transaction, wake_id, now)?;
     transaction
         .execute(
-            "UPDATE wc_agent_wakes
+            "UPDATE cg_agent_wakes
              SET state = 'retired', revision = revision + 1,
                  updated_at_unix_ms = MAX(updated_at_unix_ms, ?2),
                  claimed_attempt_id = NULL, claimed_endpoint_id = NULL,
@@ -2468,14 +2466,14 @@ fn retire_stale_agent_task_wakes_for_agent(
         let mut statement = transaction
             .prepare(
                 "SELECT w.wake_id
-                 FROM wc_agent_wakes w
+                 FROM cg_agent_wakes w
                  WHERE w.target_agent_id = ?1
                    AND w.trigger_kind = 'agent_task_attempt'
                    AND w.state IN ('pending', 'claimed')
                    AND NOT EXISTS (
                        SELECT 1
-                       FROM wc_agent_tasks t
-                       JOIN wc_agent_task_attempts a ON a.attempt_id = w.source_task_attempt_id
+                       FROM cg_agent_tasks t
+                       JOIN cg_agent_task_attempts a ON a.attempt_id = w.source_task_attempt_id
                        WHERE t.task_id = w.source_task_id
                          AND t.latest_attempt_id = a.attempt_id
                          AND t.assignee_agent_id = w.target_agent_id
@@ -2522,7 +2520,7 @@ fn bind_agent_task_wake_carrier(
     let (attempt_fence, attempt_controller_generation): (String, i64) = transaction
         .query_row(
             "SELECT attempt_fence, attempt_controller_generation
-             FROM wc_agent_task_attempts WHERE attempt_id = ?1 AND task_id = ?2",
+             FROM cg_agent_task_attempts WHERE attempt_id = ?1 AND task_id = ?2",
             params![task_attempt_id, task_id],
             |row| Ok((row.get(0)?, row.get(1)?)),
         )
@@ -2539,7 +2537,7 @@ fn bind_agent_task_wake_carrier(
     )?;
     let changed = transaction
         .execute(
-            "UPDATE wc_agent_task_endpoint_executions
+            "UPDATE cg_agent_task_endpoint_executions
              SET endpoint_id = ?4, endpoint_controller_generation = ?5,
                  updated_at_unix_ms = MAX(updated_at_unix_ms, ?6)
              WHERE task_id = ?1 AND attempt_id = ?2 AND wake_id = ?3",
@@ -2577,9 +2575,9 @@ fn agent_task_wake_is_dispatchable(
         .query_row(
             "SELECT EXISTS(
                 SELECT 1
-                FROM wc_agent_tasks t
-                JOIN wc_agent_task_attempts a ON a.task_id = t.task_id
-                JOIN wc_agent_task_endpoint_executions e
+                FROM cg_agent_tasks t
+                JOIN cg_agent_task_attempts a ON a.task_id = t.task_id
+                JOIN cg_agent_task_endpoint_executions e
                   ON e.task_id = t.task_id AND e.attempt_id = a.attempt_id
                 WHERE t.task_id = ?1 AND a.attempt_id = ?2
                   AND t.owner_principal_kind = ?3 AND t.owner_principal_digest = ?4
@@ -2620,10 +2618,10 @@ fn fence_agent_task_controllers_for_endpoint_loss(
                 "SELECT t.owner_principal_kind, t.owner_principal_digest,
                         e.task_id, e.attempt_id, a.assignee_agent_id,
                         a.attempt_fence, a.attempt_controller_generation
-                 FROM wc_agent_task_endpoint_executions e
-                 JOIN wc_agent_wakes w ON w.wake_id = e.wake_id
-                 JOIN wc_agent_tasks t ON t.task_id = e.task_id
-                 JOIN wc_agent_task_attempts a
+                 FROM cg_agent_task_endpoint_executions e
+                 JOIN cg_agent_wakes w ON w.wake_id = e.wake_id
+                 JOIN cg_agent_tasks t ON t.task_id = e.task_id
+                 JOIN cg_agent_task_attempts a
                    ON a.task_id = e.task_id AND a.attempt_id = e.attempt_id
                  WHERE e.endpoint_id = ?1 AND e.endpoint_controller_generation = ?2
                    AND w.target_agent_id = ?3 AND w.trigger_kind = 'agent_task_attempt'
@@ -2700,12 +2698,12 @@ pub(super) fn reconcile_wakes_for_endpoint_loss(
     }
     transaction
         .execute(
-            "UPDATE wc_agent_task_endpoint_executions
+            "UPDATE cg_agent_task_endpoint_executions
              SET endpoint_id = NULL, endpoint_controller_generation = NULL,
                  updated_at_unix_ms = MAX(updated_at_unix_ms, ?4)
              WHERE endpoint_id = ?1 AND endpoint_controller_generation = ?2
                AND wake_id IN (
-                   SELECT wake_id FROM wc_agent_wakes
+                   SELECT wake_id FROM cg_agent_wakes
                    WHERE target_agent_id = ?3 AND trigger_kind = 'agent_task_attempt'
                )",
             params![endpoint_id, controller_generation, agent_id, now],
@@ -2713,16 +2711,16 @@ pub(super) fn reconcile_wakes_for_endpoint_loss(
         .map_err(store_error)?;
     transaction
         .execute(
-            "UPDATE wc_agent_wake_attempts
+            "UPDATE cg_agent_wake_attempts
              SET state = 'revoked', revoked_at_unix_ms = COALESCE(revoked_at_unix_ms, ?4)
              WHERE endpoint_id = ?1 AND controller_generation = ?2 AND state = 'claimed'
-               AND wake_id IN (SELECT wake_id FROM wc_agent_wakes WHERE target_agent_id = ?3)",
+               AND wake_id IN (SELECT wake_id FROM cg_agent_wakes WHERE target_agent_id = ?3)",
             params![endpoint_id, controller_generation, agent_id, now],
         )
         .map_err(store_error)?;
     transaction
         .execute(
-            "UPDATE wc_agent_wakes
+            "UPDATE cg_agent_wakes
              SET state = 'pending', revision = revision + 1,
                  updated_at_unix_ms = MAX(updated_at_unix_ms, ?4),
                  claimed_attempt_id = NULL, claimed_endpoint_id = NULL,
@@ -2735,18 +2733,18 @@ pub(super) fn reconcile_wakes_for_endpoint_loss(
         .map_err(store_error)?;
     transaction
         .execute(
-            "UPDATE wc_agent_wake_attempts
+            "UPDATE cg_agent_wake_attempts
              SET state = 'delivery_unknown',
                  delivery_unknown_at_unix_ms = COALESCE(delivery_unknown_at_unix_ms, ?4)
              WHERE endpoint_id = ?1 AND controller_generation = ?2
                AND state IN ('prepared', 'delivered')
-               AND wake_id IN (SELECT wake_id FROM wc_agent_wakes WHERE target_agent_id = ?3)",
+               AND wake_id IN (SELECT wake_id FROM cg_agent_wakes WHERE target_agent_id = ?3)",
             params![endpoint_id, controller_generation, agent_id, now],
         )
         .map_err(store_error)?;
     transaction
         .execute(
-            "UPDATE wc_agent_wakes
+            "UPDATE cg_agent_wakes
              SET state = 'delivery_unknown', revision = revision + 1,
                  updated_at_unix_ms = MAX(updated_at_unix_ms, ?4),
                  claim_lease_expires_at_unix_ms = NULL
@@ -2766,7 +2764,7 @@ fn expire_stale_endpoints(
         let mut statement = transaction
             .prepare(
                 "SELECT endpoint_id, agent_id, controller_generation
-                 FROM wc_agent_endpoints
+                 FROM cg_agent_endpoints
                  WHERE lifecycle = 'attached' AND lease_expires_at_unix_ms <= ?1",
             )
             .map_err(store_error)?;
@@ -2786,7 +2784,7 @@ fn expire_stale_endpoints(
     for (endpoint_id, agent_id, generation) in endpoints {
         transaction
             .execute(
-                "UPDATE wc_agent_endpoints
+                "UPDATE cg_agent_endpoints
                  SET lifecycle = 'expired', expired_at_unix_ms = COALESCE(expired_at_unix_ms, ?2),
                      wake_capable = 0,
                      mcp_app_recovery_fingerprint = NULL
@@ -2813,11 +2811,11 @@ fn release_expired_claims_for_agent(
 ) -> Result<(), CommunicationStoreError> {
     transaction
         .execute(
-            "UPDATE wc_agent_task_endpoint_executions
+            "UPDATE cg_agent_task_endpoint_executions
              SET endpoint_id = NULL, endpoint_controller_generation = NULL,
                  updated_at_unix_ms = MAX(updated_at_unix_ms, ?2)
              WHERE wake_id IN (
-                 SELECT wake_id FROM wc_agent_wakes
+                 SELECT wake_id FROM cg_agent_wakes
                  WHERE target_agent_id = ?1 AND state = 'claimed'
                    AND claim_lease_expires_at_unix_ms <= ?2
                    AND trigger_kind = 'agent_task_attempt'
@@ -2827,19 +2825,19 @@ fn release_expired_claims_for_agent(
         .map_err(store_error)?;
     transaction
         .execute(
-            "UPDATE wc_agent_wake_attempts
+            "UPDATE cg_agent_wake_attempts
              SET state = 'revoked', revoked_at_unix_ms = COALESCE(revoked_at_unix_ms, ?2)
              WHERE state = 'claimed'
                AND claim_lease_expires_at_unix_ms <= ?2
                AND wake_id IN (
-                   SELECT wake_id FROM wc_agent_wakes WHERE target_agent_id = ?1
+                   SELECT wake_id FROM cg_agent_wakes WHERE target_agent_id = ?1
                )",
             params![agent_id, now],
         )
         .map_err(store_error)?;
     transaction
         .execute(
-            "UPDATE wc_agent_wakes
+            "UPDATE cg_agent_wakes
              SET state = 'pending', revision = revision + 1,
                  updated_at_unix_ms = MAX(updated_at_unix_ms, ?2),
                  claimed_attempt_id = NULL, claimed_endpoint_id = NULL,
@@ -2890,7 +2888,7 @@ fn require_exact_claim(
     let hashes: Option<(String, String)> = transaction
         .query_row(
             "SELECT claim_fence_hash, consume_token_hash
-             FROM wc_agent_wake_attempts
+             FROM cg_agent_wake_attempts
              WHERE attempt_id = ?1 AND wake_id = ?2 AND endpoint_id = ?3
                AND controller_generation = ?4",
             params![attempt_id, wake_id, endpoint_id, controller_generation],
@@ -2949,7 +2947,7 @@ fn wake_envelope(
         let (attempt_fence, attempt_controller_generation): (String, i64) = transaction
             .query_row(
                 "SELECT attempt_fence, attempt_controller_generation
-                     FROM wc_agent_task_attempts
+                     FROM cg_agent_task_attempts
                      WHERE task_id = ?1 AND attempt_id = ?2",
                 params![task_id, task_attempt_id],
                 |row| Ok((row.get(0)?, row.get(1)?)),
@@ -3073,7 +3071,7 @@ fn load_wake(
                 claimed_controller_generation, claim_lease_expires_at_unix_ms,
                 consumed_at_unix_ms, consumed_by_endpoint_id,
                 consumed_controller_generation
-         FROM wc_agent_wakes WHERE wake_id = ?1",
+         FROM cg_agent_wakes WHERE wake_id = ?1",
         params![wake_id],
         row_to_wake,
     )
@@ -3123,7 +3121,7 @@ fn load_attempt(
                 claim_lease_expires_at_unix_ms, prepared_at_unix_ms,
                 delivered_at_unix_ms, delivery_unknown_at_unix_ms,
                 revoked_at_unix_ms, consumed_at_unix_ms
-         FROM wc_agent_wake_attempts WHERE attempt_id = ?1",
+         FROM cg_agent_wake_attempts WHERE attempt_id = ?1",
         params![attempt_id],
         row_to_attempt,
     )

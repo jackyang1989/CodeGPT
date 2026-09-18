@@ -209,7 +209,7 @@ async fn complete_import_artifact_uploads(
             continue;
         }
 
-        let upload_id = format!("wc_upload_import_fixture_{index}");
+        let upload_id = format!("cg_upload_import_fixture_{index}");
         registry
             .complete(RunnerResultRequest {
                 client_id: "importer".to_string(),

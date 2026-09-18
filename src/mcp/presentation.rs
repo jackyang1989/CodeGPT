@@ -1,6 +1,6 @@
-use serde_json::{json, Map, Value};
 use codegpt_core::runner_job_lifecycle::RunnerJobLifecycle;
 use codegpt_validation::validation_kind_for_tool;
+use serde_json::{json, Map, Value};
 
 pub(super) const MCP_PRESENTATION_META_KEY: &str = "codegpt/presentation";
 pub(super) const MCP_PRESENTATION_VERSION: u64 = 1;

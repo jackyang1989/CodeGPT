@@ -194,7 +194,7 @@ pub(crate) fn read_protected_secret(path: &Path) -> Result<String, String> {
 }
 
 fn validate_grant_id(value: &str) -> Result<(), String> {
-    let suffix = value.strip_prefix("wc_pgrant_").unwrap_or_default();
+    let suffix = value.strip_prefix("cg_pgrant_").unwrap_or_default();
     if suffix.len() < 16
         || !suffix
             .bytes()
@@ -219,7 +219,10 @@ pub(crate) fn validate_credential(value: &str) -> Result<(), String> {
 
 pub(crate) fn validate_agent_token(value: &str) -> Result<(), String> {
     let value = value.trim();
-    let suffix = value.strip_prefix("wc_agent_").unwrap_or_default();
+    let suffix = value
+        .strip_prefix("cg_agent_")
+        .or_else(|| value.strip_prefix("wc_agent_"))
+        .unwrap_or_default();
     if suffix.len() != 64
         || !suffix
             .bytes()

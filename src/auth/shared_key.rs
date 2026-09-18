@@ -20,7 +20,7 @@ pub(crate) fn allow_anonymous_enabled() -> bool {
 
 /// Read the shared-key quick-start flag from the environment. When true,
 /// unknown bearer tokens that do not look like CodeGPT managed credentials
-/// (`wc_*`) are accepted as lightweight shared keys instead of being rejected.
+/// (`cg_*`) are accepted as lightweight shared keys instead of being rejected.
 /// Default false — the server rejects unknown tokens unless the operator
 /// explicitly enables quick-start mode (e.g. via `server init`).
 pub(crate) fn shared_key_enabled() -> bool {
@@ -31,7 +31,7 @@ pub(crate) fn shared_key_enabled() -> bool {
 /// these prefixes that fail verifier-chain validation are rejected outright
 /// rather than falling back to shared-key mode.
 pub(crate) fn is_managed_token_prefix(token: &str) -> bool {
-    token.starts_with("wc_")
+    token.starts_with("cg_") || token.starts_with("wc_")
 }
 
 /// SHA-256 hex of a shared key, used for lightweight group isolation. Two

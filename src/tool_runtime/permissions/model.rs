@@ -93,7 +93,7 @@ pub(crate) fn new_permission_decision(
     PermissionDecision {
         required: true,
         policy: policy.into(),
-        request_id: format!("wc_perm_{}", codegpt_core::compact::random_suffix::<12>()),
+        request_id: format!("cg_perm_{}", codegpt_core::compact::random_suffix::<12>()),
         status: outcome.as_str().to_string(),
         reason: reason.into(),
         risk: risk.into(),

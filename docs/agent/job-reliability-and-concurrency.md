@@ -61,7 +61,7 @@ A command that finishes while the Server is down is also recoverable when its
 terminal snapshot is still in the Runner's bounded retained inventory.
 
 The production Server also hydrates accepted public ordinary terminal receipts
-from `wc_job_receipts` before accepting traffic. Receipt writes happen after the
+from `cg_job_receipts` before accepting traffic. Receipt writes happen after the
 registry lock is released and cannot change a terminal verdict. The receipt
 reuses the safe Job snapshot, excludes executable validation metadata, and fixes
 `terminal_observed_at` / `expires_at` at the first accepted terminal observation.

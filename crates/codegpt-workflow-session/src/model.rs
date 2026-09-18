@@ -1,9 +1,4 @@
 //! Session data model: IDs, records, events, messages, and summary types.
-use serde::{Deserialize, Serialize};
-use serde_json::{value::RawValue, Value};
-use std::collections::{BTreeMap, VecDeque};
-use std::sync::Arc;
-use std::time::Instant;
 use codegpt_core::project_instructions::{
     ProjectInstructionsSnapshot, ProjectInstructionsSummarySnapshot,
 };
@@ -20,10 +15,15 @@ pub use codegpt_core::workflow_session_contract::{
     TOOL_CALL_RECORDING_SESSION_ID_FIELD, TOOL_CALL_SESSION_MESSAGE_RESOLUTION_FIELD,
     TOOL_EXPECTED_FAILURE_FIELD, TOOL_EXPECTED_FAILURE_KIND_FIELD, TOOL_RESULT_EXPECTATION_FIELD,
 };
+use serde::{Deserialize, Serialize};
+use serde_json::{value::RawValue, Value};
+use std::collections::{BTreeMap, VecDeque};
+use std::sync::Arc;
+use std::time::Instant;
 
 pub const EVENT_ID_PREFIX: &str = "evt_";
-pub const CALL_ID_PREFIX: &str = "wc_call_";
-pub const LOGICAL_INVOCATION_ID_PREFIX: &str = "wc_inv_";
+pub const CALL_ID_PREFIX: &str = "cg_call_";
+pub const LOGICAL_INVOCATION_ID_PREFIX: &str = "cg_inv_";
 pub const LOGICAL_INVOCATION_ROLE_RECORDER: &str = "recorder";
 pub const LOGICAL_INVOCATION_ROLE_BUSINESS: &str = "business";
 pub const DEFAULT_MAX_SESSIONS: usize = 100;
@@ -47,7 +47,7 @@ pub const MAX_INPUT_OBJECT_KEYS: usize = 16;
 pub const MAX_INPUT_ARRAY_ITEMS: usize = 8;
 pub const MAX_VALIDATION_EXCERPT_CHARS: usize = 800;
 pub const SESSION_LEDGER_VERSION: u32 = 2;
-pub const MESSAGE_ID_PREFIX: &str = "wc_msg_";
+pub const MESSAGE_ID_PREFIX: &str = "cg_msg_";
 pub const DEFAULT_MAX_MESSAGES_PER_SESSION: usize = 200;
 pub const MAX_CODING_INSTRUCTION_CHARS: usize = 4000;
 pub const DEFAULT_MESSAGE_LIST_LIMIT: usize = 50;

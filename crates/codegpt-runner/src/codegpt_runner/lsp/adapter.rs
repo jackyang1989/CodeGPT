@@ -15,10 +15,10 @@ use crate::lsp_bridge::{
 };
 #[cfg(test)]
 use crate::runner_protocol::RunnerRequest;
+use codegpt_lsp::{execute_lsp_operation, LspSupervisor};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
-use codegpt_lsp::{execute_lsp_operation, LspSupervisor};
 
 #[cfg(test)]
 pub(crate) fn is_lsp_request_kind(kind: &str) -> bool {

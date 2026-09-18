@@ -1,11 +1,11 @@
 use super::*;
+use codegpt_core::plugin::PluginGatewayResponsePayload;
 use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::{Arc, Mutex, OnceLock, Weak};
 use tempfile::TempDir;
-use codegpt_core::plugin::PluginGatewayResponsePayload;
 
 static FAKE_PLUGIN_CHECK: OnceLock<Mutex<Weak<FakeBinary>>> = OnceLock::new();
 

@@ -312,7 +312,7 @@ export function FirstRun({ state, onState, chooseModeFirst = false, onComplete }
                 type="password"
                 value={pairingCode}
                 onChange={(event) => setPairingCode(event.target.value)}
-                placeholder="wc_pair_…"
+                placeholder="cg_pair_…"
                 autoComplete="off"
                 spellCheck={false}
                 disabled={mutationBusy}

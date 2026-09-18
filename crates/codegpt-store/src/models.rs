@@ -340,7 +340,7 @@ impl ApiKeyRecord {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OAuthClientRecord {
     pub id: String,
-    /// Opaque public identifier (e.g. `wc_client_<random>`).
+    /// Opaque public identifier (e.g. `cg_client_<random>`).
     pub client_id: String,
     /// SHA-256 hash of the client secret. The plaintext is never stored.
     pub client_secret_hash: String,

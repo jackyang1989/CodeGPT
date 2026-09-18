@@ -78,7 +78,7 @@ async fn project_share_authorize_rejects_managed_or_wrong_project_clients() {
     );
     let (wrong_project, _secret) = seed_project_share_client(
         &db,
-        "wc_pgrant_222222222222222222222222",
+        "cg_pgrant_222222222222222222222222",
         "https://client.example/callback",
     );
     let service = Service::new(build_router(config, db));

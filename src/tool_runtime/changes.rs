@@ -268,7 +268,7 @@ exit 0
             return changes_unavailable("final_workspace_matches_baseline");
         }
 
-        let snapshot_id = format!("wc_changes_snapshot_{}", uuid::Uuid::new_v4().simple());
+        let snapshot_id = format!("cg_changes_snapshot_{}", uuid::Uuid::new_v4().simple());
         let snapshot = ChangesSnapshot {
             snapshot_id: snapshot_id.clone(),
             caller_fingerprint,

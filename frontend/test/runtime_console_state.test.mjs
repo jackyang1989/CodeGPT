@@ -49,7 +49,7 @@ test("window activity presentation is hashed-id safe and CodeGPT-specific", () =
 
 test("Workflow Session summary revision changes only for detail-relevant list state", () => {
   const base = {
-    session_id: "wc_sess_a",
+    session_id: "cg_sess_a",
     title: "Work",
     lifecycle: "active",
     mode: "normal",
@@ -214,7 +214,7 @@ test("runtime workflow detail identity includes project plus session id", () => 
   const state = initialRuntimeConsoleState();
   beginRuntimeCredential(state);
   selectRuntimeProject(state, "device-a", "agent:a:project");
-  const detailA = selectRuntimeWorkflowSession(state, "wc_sess_same");
+  const detailA = selectRuntimeWorkflowSession(state, "cg_sess_same");
   assert.equal(isCurrentRuntimeWorkflowSessionRequest(state, detailA), true);
   assert.equal(adoptRuntimeWorkflowSessionDetail(state, detailA, { title: "A" }), true);
   assert.equal(state.workflow.snapshot.title, "A");
@@ -222,7 +222,7 @@ test("runtime workflow detail identity includes project plus session id", () => 
   selectRuntimeProject(state, "device-b", "agent:b:project");
   assert.equal(state.workflow.snapshot, null);
   assert.equal(isCurrentRuntimeWorkflowSessionRequest(state, detailA), false);
-  const detailB = selectRuntimeWorkflowSession(state, "wc_sess_same");
+  const detailB = selectRuntimeWorkflowSession(state, "cg_sess_same");
   assert.equal(detailB.project, "agent:b:project");
   assert.equal(isCurrentRuntimeWorkflowSessionRequest(state, detailB), true);
   assert.equal(adoptRuntimeWorkflowSessionDetail(state, detailA, { title: "late A" }), false);
@@ -234,7 +234,7 @@ test("Recent Session navigation atomically establishes Runner Project and Sessio
   const state = initialRuntimeConsoleState();
   beginRuntimeCredential(state);
   selectRuntimeProject(state, "runner-a", "agent:runner-a:project-a");
-  selectRuntimeWorkflowSession(state, "wc_sess_a");
+  selectRuntimeWorkflowSession(state, "cg_sess_a");
   const oldDetail = refreshRuntimeWorkflowSession(state);
   const oldCollaboration = runtimeCollaborationRequest(state);
 
@@ -242,25 +242,25 @@ test("Recent Session navigation atomically establishes Runner Project and Sessio
     state,
     "runner-b",
     "agent:runner-b:project-b",
-    "wc_sess_b"
+    "cg_sess_b"
   );
   assert.equal(state.selectedDevice, "runner-b");
   assert.equal(state.selectedProject, "agent:runner-b:project-b");
-  assert.equal(state.workflow.selectedSessionId, "wc_sess_b");
+  assert.equal(state.workflow.selectedSessionId, "cg_sess_b");
   assert.equal(isCurrentRuntimeSessionListRequest(state, location.sessionListRequest), true);
   assert.equal(isCurrentRuntimeWorkflowSessionRequest(state, location.detailRequest), true);
   assert.equal(isCurrentRuntimeWorkflowSessionRequest(state, oldDetail), false);
   assert.equal(isCurrentRuntimeCollaborationRequest(state, oldCollaboration), false);
   const currentCollaboration = runtimeCollaborationRequest(state);
   assert.equal(currentCollaboration.project, "agent:runner-b:project-b");
-  assert.equal(currentCollaboration.sessionId, "wc_sess_b");
+  assert.equal(currentCollaboration.sessionId, "cg_sess_b");
 });
 
 test("removed Project clears stale detail while preserving a still-valid Runner filter", () => {
   const state = initialRuntimeConsoleState();
   beginRuntimeCredential(state);
   selectRuntimeProject(state, "runner", "agent:runner:gone");
-  const detail = selectRuntimeWorkflowSession(state, "wc_sess_gone");
+  const detail = selectRuntimeWorkflowSession(state, "cg_sess_gone");
   const remaining = [{ id: "agent:runner:remaining", client_id: "runner", name: "Remaining" }];
   const selection = preferredRuntimeProjectSelection(remaining, state.selectedDevice, state.selectedProject);
   assert.deepEqual(selection, { device: "runner", project: "" });
@@ -275,10 +275,10 @@ test("session switch invalidates old collaboration responses", () => {
   const state = initialRuntimeConsoleState();
   beginRuntimeCredential(state);
   selectRuntimeProject(state, "runner", "agent:runner:project");
-  selectRuntimeWorkflowSession(state, "wc_sess_a");
+  selectRuntimeWorkflowSession(state, "cg_sess_a");
   const requestA = runtimeCollaborationRequest(state);
   assert.equal(isCurrentRuntimeCollaborationRequest(state, requestA), true);
-  selectRuntimeWorkflowSession(state, "wc_sess_b");
+  selectRuntimeWorkflowSession(state, "cg_sess_b");
   const requestB = runtimeCollaborationRequest(state);
   assert.equal(isCurrentRuntimeCollaborationRequest(state, requestA), false);
   assert.equal(isCurrentRuntimeCollaborationRequest(state, requestB), true);

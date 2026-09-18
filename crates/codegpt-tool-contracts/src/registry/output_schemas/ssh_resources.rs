@@ -1,5 +1,5 @@
-use serde_json::{json, Value};
 use codegpt_core::ssh_resource::{MANAGED_SSH_RESOURCE_MAX_COUNT, SSH_RESOURCE_NAME_MAX_BYTES};
+use serde_json::{json, Value};
 
 use super::common::{schema_type, wrapped_output_schema};
 
@@ -43,7 +43,7 @@ pub(super) fn output_schema_for_tool(name: &str) -> Option<Value> {
             "binding",
             json!({
                 "type": "string",
-                "pattern": "^wc_sbind_[A-Za-z0-9_-]{21}[AQgw]$",
+                "pattern": "^cg_sbind_[A-Za-z0-9_-]{21}[AQgw]$",
                 "description": "Opaque caller + exact Runner instance + registry revision observation used to fence register/remove."
             }),
         ),

@@ -17,7 +17,7 @@ Custom GPT 需要通过 Server 的 OpenAPI 兼容集成调用 CodeGPT 时使用 
 https://your-domain.example/openapi.json
 ```
 
-ChatGPT 需要公网 HTTPS。API-key 认证配置为 HTTP Bearer，使用生成的 user token（`wc_pat_*`）。Runner token（`wc_agent_*`）只用于 Runner transport，不能放进 GPT。
+ChatGPT 需要公网 HTTPS。API-key 认证配置为 HTTP Bearer，使用生成的 user token（`cg_pat_*`）。Runner token（`cg_agent_*`）只用于 Runner transport，不能放进 GPT。
 
 如果 Server 以前使用过旧 generic GPT Actions schema，升级后请**重新导入 `/openapi.json`**。新的 generic operation 名称直接使用 CodeGPT canonical runtime tool 的 snake_case 名称，不再使用旧 camelCase Action vocabulary。
 

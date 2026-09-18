@@ -1,8 +1,8 @@
 //! Recorder-metadata integration tests around the canonical ToolCall parser.
 
 use crate::recorder_metadata::parse_tool_call_with_recorder_metadata;
-use serde_json::json;
 use codegpt_tool_contracts::ToolCall;
+use serde_json::json;
 
 #[test]
 fn from_tool_name_records_and_strips_testing_metadata_before_parsing() {

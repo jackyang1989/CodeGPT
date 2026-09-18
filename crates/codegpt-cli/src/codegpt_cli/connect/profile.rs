@@ -1,3 +1,4 @@
+use codegpt_admin::ServerHttpOptions;
 use fs2::FileExt;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -6,7 +7,6 @@ use std::fs::{File, OpenOptions};
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use toml::{Table, Value as TomlValue};
-use codegpt_admin::ServerHttpOptions;
 
 use super::super::connections::{canonical_server_url, ensure_real_directory_tree};
 use super::super::profiles::{client_output_dir_for_profile, validate_client_profile};
@@ -138,9 +138,9 @@ fn normalize_shared_key(value: &str) -> Result<String, String> {
     if key.is_empty() {
         return Err("shared key cannot be empty".to_string());
     }
-    if key.starts_with("wc_") {
+    if key.starts_with("cg_") || key.starts_with("wc_") {
         return Err(
-            "wc_* values are managed CodeGPT credentials, not hosted shared keys; use a different random value for `codegpt connect`, or use `codegpt login` for the managed flow"
+            "cg_* and wc_* values are managed CodeGPT credentials, not hosted shared keys; use a different random value for `codegpt connect`, or use `codegpt login` for the managed flow"
                 .to_string(),
         );
     }
@@ -725,7 +725,7 @@ mod tests {
     fn generated_key_is_strong_and_not_managed() {
         let key = generate_shared_key();
         assert!(key.starts_with("wck_"));
-        assert!(!key.starts_with("wc_"));
+        assert!(!key.starts_with("cg_"));
         assert!(key.len() >= 4 + 96);
     }
 
@@ -736,7 +736,7 @@ mod tests {
             "shared-key"
         );
         assert!(normalize_shared_key("  ").unwrap_err().contains("empty"));
-        for managed in ["wc_pat_example", "wc_agent_example", "wc_acct_example"] {
+        for managed in ["cg_pat_example", "cg_agent_example", "cg_acct_example"] {
             let error = normalize_shared_key(managed).unwrap_err();
             assert!(error.contains("managed CodeGPT credentials"));
             assert!(!error.contains(managed));

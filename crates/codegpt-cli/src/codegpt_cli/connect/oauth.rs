@@ -1,8 +1,8 @@
+use codegpt_admin::build_server_http_client;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use sha2::{Digest, Sha256};
 use std::path::{Path, PathBuf};
-use codegpt_admin::build_server_http_client;
 
 use super::super::connections::{connections_for_server, ensure_real_directory_tree, Connection};
 use super::super::http::{post_json_authed, ApiCall};
@@ -143,7 +143,7 @@ fn read_managed_identity(
         .trim()
         .to_string();
     validate_user_api_token(&user_token)?;
-    if !user_token.starts_with("wc_pat_") {
+    if !user_token.starts_with("cg_pat_") && !user_token.starts_with("wc_pat_") {
         return Err(
             "the selected login does not contain a managed user PAT; log in again before OAuth connect"
                 .to_string(),
@@ -235,8 +235,10 @@ fn read_oauth_profile(path: &Path) -> Result<Option<OAuthConnectProfile>, String
         )
     })?;
     if profile.version != OAUTH_PROFILE_VERSION
-        || !profile.oauth_client_id.starts_with("wc_client_")
-        || !profile.oauth_client_secret.starts_with("wc_csec_")
+        || (!profile.oauth_client_id.starts_with("cg_client_")
+            && !profile.oauth_client_id.starts_with("wc_client_"))
+        || (!profile.oauth_client_secret.starts_with("cg_csec_")
+            && !profile.oauth_client_secret.starts_with("wc_csec_"))
         || profile.agent_token_id.trim().is_empty()
         || profile.allowed_scopes.is_empty()
     {
@@ -265,7 +267,9 @@ fn validate_existing_oauth_runner(
     if stored.url != server_url {
         return Err("selected OAuth hosted profile belongs to a different Server".to_string());
     }
-    if !config.token.trim().starts_with("wc_agent_") {
+    if !config.token.trim().starts_with("cg_agent_")
+        && !config.token.trim().starts_with("wc_agent_")
+    {
         return Err(
             "OAuth hosted profile Runner credential is not a Runner transport token".to_string(),
         );
@@ -929,7 +933,7 @@ pub(super) fn observer_token_for_disconnect(
         .trim()
         .to_string();
     validate_user_api_token(&token)?;
-    if !token.starts_with("wc_pat_") {
+    if !token.starts_with("cg_pat_") && !token.starts_with("wc_pat_") {
         return Err("OAuth hosted profile managed login no longer contains a user PAT".to_string());
     }
     Ok(Some(token))
@@ -938,11 +942,11 @@ pub(super) fn observer_token_for_disconnect(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use codegpt_admin::ServerHttpOptions;
     use std::io::{Read, Write};
     use std::net::TcpListener;
     use std::path::PathBuf;
     use std::thread;
-    use codegpt_admin::ServerHttpOptions;
 
     fn options(server_url: String) -> ConnectOptions {
         ConnectOptions {
@@ -1102,7 +1106,7 @@ mod tests {
     fn persisted_oauth_secret_remains_pending_after_later_connect_failure() {
         let tmp = tempfile::tempdir().unwrap();
         let profile_dir = tmp.path();
-        let oauth = test_oauth_profile("wc_client_created", "wc_csec_created");
+        let oauth = test_oauth_profile("cg_client_created", "cg_csec_created");
 
         // The credential profile is committed before Runner startup/wait. A
         // later connect failure produces no stdout and therefore no disclosure
@@ -1113,7 +1117,7 @@ mod tests {
         )
         .unwrap();
         let retry = test_oauth_result(profile_dir, &oauth);
-        assert!(retry.output.contains("Client secret: wc_csec_created"));
+        assert!(retry.output.contains("Client secret: cg_csec_created"));
         let marker = oauth_secret_disclosure_marker(profile_dir, &oauth.oauth_client_id);
         assert_eq!(retry.disclosure_markers, vec![marker.clone()]);
         assert!(!marker.exists());
@@ -1127,10 +1131,10 @@ mod tests {
         ] {
             let tmp = tempfile::tempdir().unwrap();
             let profile_dir = tmp.path();
-            let oauth = test_oauth_profile("wc_client_pending", "wc_csec_pending");
+            let oauth = test_oauth_profile("cg_client_pending", "cg_csec_pending");
             let marker = oauth_secret_disclosure_marker(profile_dir, &oauth.oauth_client_id);
             let result = test_oauth_result(profile_dir, &oauth);
-            assert!(result.output.contains("Client secret: wc_csec_pending"));
+            assert!(result.output.contains("Client secret: cg_csec_pending"));
 
             let error = super::super::write_connect_result(result, &mut stdout, &mut Vec::new())
                 .unwrap_err();
@@ -1138,7 +1142,7 @@ mod tests {
             assert!(!marker.exists());
 
             let retry = test_oauth_result(profile_dir, &oauth);
-            assert!(retry.output.contains("Client secret: wc_csec_pending"));
+            assert!(retry.output.contains("Client secret: cg_csec_pending"));
             assert_eq!(retry.disclosure_markers.len(), 1);
         }
     }
@@ -1147,10 +1151,10 @@ mod tests {
     fn successful_oauth_secret_disclosure_hides_secret_on_reconnect() {
         let tmp = tempfile::tempdir().unwrap();
         let profile_dir = tmp.path();
-        let oauth = test_oauth_profile("wc_client_disclosed", "wc_csec_disclosed");
+        let oauth = test_oauth_profile("cg_client_disclosed", "cg_csec_disclosed");
         let marker = oauth_secret_disclosure_marker(profile_dir, &oauth.oauth_client_id);
         let result = test_oauth_result(profile_dir, &oauth);
-        assert!(result.output.contains("Client secret: wc_csec_disclosed"));
+        assert!(result.output.contains("Client secret: cg_csec_disclosed"));
 
         super::super::write_connect_result(result, &mut Vec::new(), &mut Vec::new()).unwrap();
         assert_eq!(
@@ -1159,10 +1163,10 @@ mod tests {
         );
         assert!(!std::fs::read_to_string(&marker)
             .unwrap()
-            .contains("wc_csec_disclosed"));
+            .contains("cg_csec_disclosed"));
 
         let reconnect = test_oauth_result(profile_dir, &oauth);
-        assert!(!reconnect.output.contains("wc_csec_disclosed"));
+        assert!(!reconnect.output.contains("cg_csec_disclosed"));
         assert!(!reconnect.output.contains("Client secret:"));
         assert!(reconnect.disclosure_markers.is_empty());
     }
@@ -1171,7 +1175,7 @@ mod tests {
     fn oauth_client_rotation_invalidates_previous_disclosure_state() {
         let tmp = tempfile::tempdir().unwrap();
         let profile_dir = tmp.path();
-        let old = test_oauth_profile("wc_client_old", "wc_csec_old");
+        let old = test_oauth_profile("cg_client_old", "cg_csec_old");
         let old_marker = oauth_secret_disclosure_marker(profile_dir, &old.oauth_client_id);
         super::super::write_connect_result(
             test_oauth_result(profile_dir, &old),
@@ -1181,12 +1185,12 @@ mod tests {
         .unwrap();
         assert!(old_marker.is_file());
 
-        let rotated = test_oauth_profile("wc_client_rotated", "wc_csec_rotated");
+        let rotated = test_oauth_profile("cg_client_rotated", "cg_csec_rotated");
         let new_marker = oauth_secret_disclosure_marker(profile_dir, &rotated.oauth_client_id);
         assert_ne!(old_marker, new_marker);
         assert!(!new_marker.exists());
         let result = test_oauth_result(profile_dir, &rotated);
-        assert!(result.output.contains("Client secret: wc_csec_rotated"));
+        assert!(result.output.contains("Client secret: cg_csec_rotated"));
         assert_eq!(result.disclosure_markers, vec![new_marker]);
     }
 
@@ -1260,13 +1264,13 @@ mod tests {
                 ),
             )
             .unwrap();
-            std::fs::write(dir.join("codegpt-user-token"), format!("wc_pat_{user}\n")).unwrap();
+            std::fs::write(dir.join("codegpt-user-token"), format!("cg_pat_{user}\n")).unwrap();
         }
         let error = read_managed_identity(base, &server.url, None).unwrap_err();
         assert!(error.contains("more than one logged-in user"), "{error}");
         let alice = read_managed_identity(base, &server.url, Some("alice")).unwrap();
         assert_eq!(alice.connection.username, "alice");
-        assert_eq!(alice.user_token, "wc_pat_alice");
+        assert_eq!(alice.user_token, "cg_pat_alice");
     }
 
     #[test]
@@ -1289,13 +1293,13 @@ mod tests {
             ),
         )
         .unwrap();
-        std::fs::write(login_dir.join("codegpt-user-token"), "wc_pat_managed\n").unwrap();
+        std::fs::write(login_dir.join("codegpt-user-token"), "cg_pat_managed\n").unwrap();
         let oauth = OAuthConnectProfile {
             version: OAUTH_PROFILE_VERSION,
             server_url: server.url.clone(),
             username: "alice".to_string(),
-            oauth_client_id: "wc_client_existing".to_string(),
-            oauth_client_secret: "wc_csec_existing".to_string(),
+            oauth_client_id: "cg_client_existing".to_string(),
+            oauth_client_secret: "cg_csec_existing".to_string(),
             oauth_redirect_uri: "https://client.example/callback".to_string(),
             allowed_scopes: vec!["runtime:read".to_string()],
             agent_token_id: "agent-token-id".to_string(),
@@ -1307,14 +1311,14 @@ mod tests {
         .unwrap();
         let config = ExistingRunnerConfig {
             server_url: server.url,
-            token: "wc_agent_runner-only".to_string(),
+            token: "cg_agent_runner-only".to_string(),
             client_id: "runner".to_string(),
         };
         assert_eq!(
             observer_token_for_disconnect(&profile_dir, &base, &config)
                 .unwrap()
                 .as_deref(),
-            Some("wc_pat_managed")
+            Some("cg_pat_managed")
         );
     }
 
@@ -1324,7 +1328,7 @@ mod tests {
             json!({
                 "success": true,
                 "clients": [{
-                    "client_id": "wc_client_revoked",
+                    "client_id": "cg_client_revoked",
                     "name": "Revoked",
                     "redirect_uris": ["https://client.example/callback"],
                     "allowed_scopes": ["runtime:read"],
@@ -1334,8 +1338,8 @@ mod tests {
             }),
             json!({
                 "success": true,
-                "client": {"client_id": "wc_client_rotated"},
-                "client_secret": "wc_csec_rotated"
+                "client": {"client_id": "cg_client_rotated"},
+                "client_secret": "cg_csec_rotated"
             }),
         ]);
         let opts = options(server.clone());
@@ -1343,18 +1347,18 @@ mod tests {
             version: OAUTH_PROFILE_VERSION,
             server_url: server.clone(),
             username: "alice".to_string(),
-            oauth_client_id: "wc_client_revoked".to_string(),
-            oauth_client_secret: "wc_csec_old".to_string(),
+            oauth_client_id: "cg_client_revoked".to_string(),
+            oauth_client_secret: "cg_csec_old".to_string(),
             oauth_redirect_uri: "https://client.example/callback".to_string(),
             allowed_scopes: vec!["runtime:read".to_string()],
             agent_token_id: "agent-token-id".to_string(),
         };
-        let created = ensure_oauth_client(&server, &opts, "wc_pat_alice", "profile", &mut profile)
+        let created = ensure_oauth_client(&server, &opts, "cg_pat_alice", "profile", &mut profile)
             .await
             .unwrap();
         assert!(created);
-        assert_eq!(profile.oauth_client_id, "wc_client_rotated");
-        assert_eq!(profile.oauth_client_secret, "wc_csec_rotated");
+        assert_eq!(profile.oauth_client_id, "cg_client_rotated");
+        assert_eq!(profile.oauth_client_secret, "cg_csec_rotated");
         assert_eq!(profile.allowed_scopes, vec!["runtime:read"]);
         handle.join().unwrap();
     }
@@ -1364,7 +1368,7 @@ mod tests {
         let (server, handle) = one_json_response(json!({
             "success": true,
             "clients": [{
-                "client_id": "wc_client_existing",
+                "client_id": "cg_client_existing",
                 "name": "Existing",
                 "redirect_uris": ["https://client.example/callback"],
                 "allowed_scopes": ["runtime:read"],
@@ -1377,13 +1381,13 @@ mod tests {
             version: OAUTH_PROFILE_VERSION,
             server_url: server.clone(),
             username: "alice".to_string(),
-            oauth_client_id: "wc_client_existing".to_string(),
-            oauth_client_secret: "wc_csec_existing".to_string(),
+            oauth_client_id: "cg_client_existing".to_string(),
+            oauth_client_secret: "cg_csec_existing".to_string(),
             oauth_redirect_uri: "https://client.example/callback".to_string(),
             allowed_scopes: vec!["runtime:read".to_string()],
             agent_token_id: "agent-token-id".to_string(),
         };
-        let created = ensure_oauth_client(&server, &opts, "wc_pat_alice", "profile", &mut profile)
+        let created = ensure_oauth_client(&server, &opts, "cg_pat_alice", "profile", &mut profile)
             .await
             .unwrap();
         assert!(!created);
@@ -1397,8 +1401,8 @@ mod tests {
             version: OAUTH_PROFILE_VERSION,
             server_url: "https://example.test".to_string(),
             username: "alice".to_string(),
-            oauth_client_id: "wc_client_existing".to_string(),
-            oauth_client_secret: "wc_csec_existing".to_string(),
+            oauth_client_id: "cg_client_existing".to_string(),
+            oauth_client_secret: "cg_csec_existing".to_string(),
             oauth_redirect_uri: "https://client.example/callback".to_string(),
             allowed_scopes: vec!["runtime:read".to_string()],
             agent_token_id: "agent-token-id".to_string(),
@@ -1421,7 +1425,7 @@ mod tests {
             &metadata,
             false,
         );
-        assert!(!reused.contains("wc_csec_existing"));
+        assert!(!reused.contains("cg_csec_existing"));
         assert!(!reused.contains("Client secret:"));
         assert!(reused.starts_with("CodeGPT connected\n\nWhat to do next"));
         assert!(reused.find("MCP URL:").unwrap() < reused.find("Details").unwrap());
@@ -1441,8 +1445,8 @@ mod tests {
             &metadata,
             true,
         );
-        assert!(created.contains("Client secret: wc_csec_existing"));
-        assert_eq!(created.matches("wc_csec_existing").count(), 1);
+        assert!(created.contains("Client secret: cg_csec_existing"));
+        assert_eq!(created.matches("cg_csec_existing").count(), 1);
         assert!(created.find("Client secret:").unwrap() < created.find("Details").unwrap());
     }
 }

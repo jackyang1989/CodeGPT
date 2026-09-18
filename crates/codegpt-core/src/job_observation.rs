@@ -291,12 +291,12 @@ mod tests {
     #[test]
     fn compact_cursor_binding_and_length() {
         let token =
-            JobObservationToken::new("wc_job_abcdefghijklmnop", "registry", 42, 101, 21).unwrap();
+            JobObservationToken::new("cg_job_abcdefghijklmnop", "registry", 42, 101, 21).unwrap();
         assert_eq!(token.encode().len(), 28);
         assert_eq!(JobObservationToken::parse(&token.encode()).unwrap(), token);
-        assert!(token.matches_parent("wc_job_abcdefghijklmnop", "registry"));
-        assert!(!token.matches_parent("wc_job_other_parent_id", "registry"));
-        assert!(!token.matches_parent("wc_job_abcdefghijklmnop", "restart"));
+        assert!(token.matches_parent("cg_job_abcdefghijklmnop", "registry"));
+        assert!(!token.matches_parent("cg_job_other_parent_id", "registry"));
+        assert!(!token.matches_parent("cg_job_abcdefghijklmnop", "restart"));
         assert_eq!(token.stdout_cursor, Some(101));
         assert_eq!(token.stderr_cursor, Some(21));
         let max = JobObservationToken::new("job", "epoch", u64::MAX, u64::MAX, u64::MAX).unwrap();

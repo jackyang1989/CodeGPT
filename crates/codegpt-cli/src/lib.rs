@@ -27,10 +27,6 @@ use codegpt_runner_config as runner_config;
 use admin_cli::{
     parse_admin_cli, run_admin_command, AdminCliCommand, AdminOptions, ServerHttpOptions,
 };
-use runner_config::{
-    run_runner_init, RunnerInitOptions, DEFAULT_INIT_PROJECT_REGISTRY_DIR,
-    DEFAULT_POLL_INTERVAL_MS, TRANSPORT_WEBSOCKET,
-};
 use codegpt_cli::ops::ops_exit_code;
 use codegpt_cli::{
     base_dir_or_default, client_profile_project_registry_dir, client_profile_runner_config,
@@ -59,6 +55,10 @@ use codegpt_cli::{
     PluginInitOptions, ProjectActivateOptions, ProjectRegisterOptions, ServerStatusOptions,
     ServiceControl, StatusOptions, DEFAULT_LOG_LINES, RUNNER_SERVICE_UNIT, SERVER_SERVICE_FILE,
     SERVER_SERVICE_UNIT,
+};
+use runner_config::{
+    run_runner_init, RunnerInitOptions, DEFAULT_INIT_PROJECT_REGISTRY_DIR,
+    DEFAULT_POLL_INTERVAL_MS, TRANSPORT_WEBSOCKET,
 };
 const SETUP_GPT_SCOPES: &[&str] = &[
     "runtime:read",
@@ -899,7 +899,7 @@ fn parse_login(args: &[String]) -> CliAction {
     }
     let Some(server_url) = server_url else {
         return cli_parse_error(
-            "login needs a server URL, e.g. `codegpt login https://example.com --code wc_pair_...`"
+            "login needs a server URL, e.g. `codegpt login https://example.com --code cg_pair_...`"
                 .to_string(),
         );
     };
@@ -1842,9 +1842,9 @@ fn parse_runner_run(args: &[String]) -> Result<InternalRunOptions, String> {
         Some(config) => config,
         None => match profile.as_deref() {
             Some(profile) => client_profile_runner_config(profile)?,
-            None => codegpt_runner_config::paths::resolve_runner_config_path(Path::new(
-                "/etc/codegpt",
-            ))?,
+            None => {
+                codegpt_runner_config::paths::resolve_runner_config_path(Path::new("/etc/codegpt"))?
+            }
         },
     };
     let bin = discover_internal_binary("codegpt-runner").ok_or_else(|| {

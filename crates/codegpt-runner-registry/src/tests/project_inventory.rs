@@ -93,11 +93,11 @@ async fn inventory_preserves_explicit_managed_lineage_and_rejects_malformed_iden
         .await
         .unwrap();
 
-    let source_fingerprint = format!("wc_projroot_{}", "1".repeat(64));
+    let source_fingerprint = format!("cg_projroot_{}", "1".repeat(64));
     let mut source = project_summary("source", "/tmp/source");
     source.root_fingerprint = Some(source_fingerprint.clone());
     let mut managed = project_summary("managed", "/tmp/managed");
-    managed.root_fingerprint = Some(format!("wc_projroot_{}", "2".repeat(64)));
+    managed.root_fingerprint = Some(format!("cg_projroot_{}", "2".repeat(64)));
     managed.lineage = Some(RunnerProjectLineage::ManagedWorktreeSource {
         source_project_id: "source".to_string(),
         source_root_fingerprint: source_fingerprint.clone(),

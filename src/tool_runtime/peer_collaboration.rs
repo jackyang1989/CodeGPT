@@ -79,7 +79,7 @@ impl ToolRuntime {
         let Some(target_prefix) = peer_window_key_prefix(&peer_id) else {
             return peer_error(
                 "invalid_peer_id",
-                "peer_id must be a canonical wc_peer_* window identity",
+                "peer_id must be a canonical cg_peer_* window identity",
             );
         };
         let Some(window_db) = self.window_activity_db.as_ref() else {

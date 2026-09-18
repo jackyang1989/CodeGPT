@@ -17,7 +17,7 @@ struct RecoveryFixture {
 fn principal(hex: char) -> CommunicationPrincipal {
     CommunicationPrincipal {
         kind: "user".to_string(),
-        digest: format!("wc_commprincipal_{}", hex.to_string().repeat(64)),
+        digest: format!("cg_commprincipal_{}", hex.to_string().repeat(64)),
     }
 }
 
@@ -121,8 +121,8 @@ fn pre_wake_delivery_state_is_rejected_instead_of_backfilled() {
     {
         let conn = rusqlite::Connection::open(&path).unwrap();
         conn.execute_batch(
-            "DROP TABLE wc_agent_wake_attempts;
-             DROP TABLE wc_agent_wakes;",
+            "DROP TABLE cg_agent_wake_attempts;
+             DROP TABLE cg_agent_wakes;",
         )
         .unwrap();
     }
@@ -139,7 +139,7 @@ fn pre_wake_delivery_state_is_rejected_instead_of_backfilled() {
     let wake_tables: i64 = conn
         .query_row(
             "SELECT COUNT(*) FROM sqlite_master
-             WHERE type = 'table' AND name IN ('wc_agent_wakes', 'wc_agent_wake_attempts')",
+             WHERE type = 'table' AND name IN ('cg_agent_wakes', 'cg_agent_wake_attempts')",
             [],
             |row| row.get(0),
         )
@@ -172,7 +172,7 @@ fn generic_database_open_does_not_take_over_claimed_or_prepared_wakes() {
         .conn_for_tests()
         .query_row(
             "SELECT w.state, a.claim_fence_hash, a.endpoint_id, a.controller_generation
-             FROM wc_agent_wakes w JOIN wc_agent_wake_attempts a
+             FROM cg_agent_wakes w JOIN cg_agent_wake_attempts a
                ON a.attempt_id = w.claimed_attempt_id
              WHERE w.wake_id = ?1",
             [claim.wake.wake_id.as_str()],
@@ -193,7 +193,7 @@ fn generic_database_open_does_not_take_over_claimed_or_prepared_wakes() {
         .conn_for_tests()
         .query_row(
             "SELECT w.state, a.claim_fence_hash, a.endpoint_id, a.controller_generation
-             FROM wc_agent_wakes w JOIN wc_agent_wake_attempts a
+             FROM cg_agent_wakes w JOIN cg_agent_wake_attempts a
                ON a.attempt_id = w.claimed_attempt_id
              WHERE w.wake_id = ?1",
             [claim.wake.wake_id.as_str()],
@@ -274,7 +274,7 @@ fn explicit_server_takeover_recovers_once_after_new_owner_acquires_state() {
     let queued_before: i64 = db
         .conn_for_tests()
         .query_row(
-            "SELECT COUNT(*) FROM wc_agent_deliveries WHERE state = 'queued'",
+            "SELECT COUNT(*) FROM cg_agent_deliveries WHERE state = 'queued'",
             [],
             |row| row.get(0),
         )
@@ -282,7 +282,7 @@ fn explicit_server_takeover_recovers_once_after_new_owner_acquires_state() {
     let generations_before: i64 = db
         .conn_for_tests()
         .query_row(
-            "SELECT SUM(current_controller_generation) FROM wc_agent_identities",
+            "SELECT SUM(current_controller_generation) FROM cg_agent_identities",
             [],
             |row| row.get(0),
         )
@@ -356,7 +356,7 @@ fn explicit_server_takeover_recovers_once_after_new_owner_acquires_state() {
         successor
             .conn_for_tests()
             .query_row(
-                "SELECT COUNT(*) FROM wc_agent_deliveries WHERE state = 'queued'",
+                "SELECT COUNT(*) FROM cg_agent_deliveries WHERE state = 'queued'",
                 [],
                 |row| row.get::<_, i64>(0)
             )
@@ -367,7 +367,7 @@ fn explicit_server_takeover_recovers_once_after_new_owner_acquires_state() {
         successor
             .conn_for_tests()
             .query_row(
-                "SELECT SUM(current_controller_generation) FROM wc_agent_identities",
+                "SELECT SUM(current_controller_generation) FROM cg_agent_identities",
                 [],
                 |row| row.get::<_, i64>(0)
             )
@@ -439,7 +439,7 @@ fn expired_endpoint_fails_closed_then_replacement_lazily_materializes_recovery()
         .unwrap();
     db.conn_for_tests()
         .execute(
-            "UPDATE wc_agent_endpoints SET lease_expires_at_unix_ms = 0 WHERE endpoint_id = ?1",
+            "UPDATE cg_agent_endpoints SET lease_expires_at_unix_ms = 0 WHERE endpoint_id = ?1",
             params![endpoint.endpoint_id],
         )
         .unwrap();
@@ -462,7 +462,7 @@ fn expired_endpoint_fails_closed_then_replacement_lazily_materializes_recovery()
     let lifecycle_before: String = db
         .conn_for_tests()
         .query_row(
-            "SELECT lifecycle FROM wc_agent_endpoints WHERE endpoint_id = ?1",
+            "SELECT lifecycle FROM cg_agent_endpoints WHERE endpoint_id = ?1",
             [endpoint.endpoint_id.as_str()],
             |row| row.get(0),
         )
@@ -481,7 +481,7 @@ fn expired_endpoint_fails_closed_then_replacement_lazily_materializes_recovery()
     let lifecycle_after: String = db
         .conn_for_tests()
         .query_row(
-            "SELECT lifecycle FROM wc_agent_endpoints WHERE endpoint_id = ?1",
+            "SELECT lifecycle FROM cg_agent_endpoints WHERE endpoint_id = ?1",
             [endpoint.endpoint_id.as_str()],
             |row| row.get(0),
         )

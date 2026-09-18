@@ -649,11 +649,11 @@ assert_session_created() {
     LAST_SESSION_ID=""
     assert_success "${tool_name} succeeds" "$body"
     session_id="$(json_get "$body" "$session_path")"
-    if [[ "$session_id" == wc_sess_* ]]; then
+    if [[ "$session_id" == cg_sess_* ]]; then
         case_ok "${tool_name} returned session_id"
         LAST_SESSION_ID="$session_id"
     else
-        case_fail "${tool_name} did not return a wc_sess_* session id"
+        case_fail "${tool_name} did not return a cg_sess_* session id"
     fi
 }
 
@@ -702,7 +702,7 @@ ok = (
     data.get("success") is True
     and isinstance(cur, dict)
     and isinstance(cur.get("session_id"), str)
-    and cur.get("session_id").startswith("wc_sess_")
+    and cur.get("session_id").startswith("cg_sess_")
 )
 sys.exit(0 if ok else 1)
 PY

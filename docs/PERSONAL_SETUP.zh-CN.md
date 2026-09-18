@@ -91,7 +91,7 @@ codegpt pairing create \
   --ttl-secs 600
 ```
 
-只需要把输出的 `wc_pair_...` 一次性登录码带到 Runner 机器。不要复制 Server 的管理员 token 或整个 env 文件。
+只需要把输出的 `cg_pair_...` 一次性登录码带到 Runner 机器。不要复制 Server 的管理员 token 或整个 env 文件。
 
 如果 Server 和 Runner 是同一台机器，也仍然建议走这条登录流程：日常开发权限与 Server 管理权限会保持分离。
 
@@ -103,7 +103,7 @@ codegpt pairing create \
 
 ```bash
 codegpt login <server-url> \
-  --code <wc_pair_...> \
+  --code <cg_pair_...> \
   --allowed-root /path/to/your/projects \
   --project /path/to/your/projects/my-repo \
   --print-mcp-config
@@ -113,7 +113,7 @@ Windows PowerShell 示例：
 
 ```powershell
 codegpt login <server-url> `
-  --code <wc_pair_...> `
+  --code <cg_pair_...> `
   --allowed-root E:\git `
   --project E:\git\my-repo `
   --print-mcp-config

@@ -222,7 +222,7 @@ async fn work_result_state_call_requires_app_protocol_capability() {
         "name": "work_result_state",
         "arguments": {
             "project": "agent:missing:project",
-            "session_id": format!("wc_sess_{}", "1".repeat(32))
+            "session_id": format!("cg_sess_{}", "1".repeat(32))
         }
     });
     let app = handle_with_server_apps_enabled(

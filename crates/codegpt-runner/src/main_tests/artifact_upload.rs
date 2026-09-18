@@ -139,7 +139,7 @@ fn file_artifact_upload_chunks_finish_and_abort() {
         ),
     ));
     let upload_id = begin["upload_id"].as_str().unwrap().to_string();
-    assert!(upload_id.starts_with("wc_upload_"));
+    assert!(upload_id.starts_with("cg_upload_"));
     assert_eq!(begin["received_bytes"], 0);
     assert!(!tmp.path().join(path).exists());
     assert_upload_temp_files_exist(tmp.path(), path, &upload_id);
@@ -916,7 +916,7 @@ fn file_artifact_upload_abort_rejects_wrong_ids_and_cleans_only_temp() {
             tmp.path(),
             "file_artifact_upload_abort",
             path,
-            serde_json::json!({"path": path, "upload_id": "wc_upload_missing"}),
+            serde_json::json!({"path": path, "upload_id": "cg_upload_missing"}),
         ),
     ));
     assert!(missing["error"]

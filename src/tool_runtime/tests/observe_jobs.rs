@@ -1454,7 +1454,7 @@ async fn ordinary_receipts_production_sqlite_dual_restart_observe_and_list_filte
         (Some("completed".into()), Some(project.clone()), None, 1),
         (Some("running".into()), Some(project.clone()), None, 0),
         (None, Some("agent:other:project".into()), None, 0),
-        (None, None, Some("wc_sess_other".into()), 0),
+        (None, None, Some("cg_sess_other".into()), 0),
     ] {
         let listed = runtime
             .dispatch_with_auth(

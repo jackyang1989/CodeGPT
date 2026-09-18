@@ -2,6 +2,7 @@ use crate::types::{
     clip_bytes, BrowserError, BrowserKey, BrowserResult, LAUNCH_TIMEOUT, MAX_NODE_TEXT_BYTES,
     MAX_PAGES_PER_BROWSER, MAX_SNAPSHOT_BYTES, MAX_SNAPSHOT_NODES, REQUEST_TIMEOUT,
 };
+use codegpt_process::ManagedChild;
 use serde_json::{json, Value};
 use std::io::Read;
 use std::net::{Ipv4Addr, SocketAddr, TcpStream};
@@ -11,7 +12,6 @@ use std::time::{Duration, Instant};
 use tempfile::TempDir;
 use tungstenite::{client::client_with_config, protocol::WebSocketConfig, Message, WebSocket};
 use url::Url;
-use codegpt_process::ManagedChild;
 
 const MAX_CDP_MESSAGE_BYTES: usize = 4 * 1024 * 1024;
 const MAX_CDP_LIST_BYTES: usize = 256 * 1024;
