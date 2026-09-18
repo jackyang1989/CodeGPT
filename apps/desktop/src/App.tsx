@@ -369,7 +369,7 @@ function AppContent() {
         <div className="splash-brand"><span className="splash-title">CodeGPT</span></div>
         {error ? (
           <section className="startup-error" aria-label="CodeGPT">
-            <AppError error={error} />
+            <AppError error={error} onDismiss={() => setError(null)} />
             <button
               className="primary-button"
               type="button"
@@ -570,7 +570,7 @@ function AppError({
   onDismiss,
 }: {
   error: DesktopError;
-  onDismiss: () => void;
+  onDismiss?: () => void;
 }) {
   const { t } = useLocale();
   const presentation = desktopErrorPresentation(error, t);
@@ -581,17 +581,19 @@ function AppError({
           <strong>{presentation.title}</strong>
           <span className="error-action-text">{presentation.action}</span>
         </div>
-        <button
-          type="button"
-          className="error-dismiss-btn"
-          onClick={onDismiss}
-          title="关闭"
-          aria-label="关闭"
-        >
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" width="14" height="14" aria-hidden="true">
-            <path d="M4 4l8 8M12 4l-8 8" />
-          </svg>
-        </button>
+        {onDismiss && (
+          <button
+            type="button"
+            className="error-dismiss-btn"
+            onClick={onDismiss}
+            title="关闭"
+            aria-label="关闭"
+          >
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" width="14" height="14" aria-hidden="true">
+              <path d="M4 4l8 8M12 4l-8 8" />
+            </svg>
+          </button>
+        )}
       </div>
       <details className="error-details">
         <summary>{t("common.details")}</summary>
