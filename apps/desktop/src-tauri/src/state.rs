@@ -51,6 +51,8 @@ type SharedSupervisor = Arc<Mutex<ProcessSupervisor>>;
 struct ChatGptActivityProbe {
     identity: ProjectRuntimeIdentity,
     codegpt: PathBuf,
+    server_env_file: Option<PathBuf>,
+    candidate_project_ids: Vec<String>,
 }
 
 pub struct AppState {
@@ -160,6 +162,8 @@ impl AppState {
         let observation = CodeGPTAdapter::chatgpt_activity_with_binary(
             &probe.codegpt,
             &probe.identity,
+            probe.server_env_file.as_deref(),
+            &probe.candidate_project_ids,
             &cancellation,
         )
         .await;
@@ -264,19 +268,24 @@ impl AppState {
         project_id: &str,
         enabled: bool,
     ) -> DesktopResult<DesktopStateSnapshot> {
+        let cancellation =
+            CancellationContext::new(CancellationSignal::new(), self.shutdown_signal.clone());
         let mut slot = self.core.lock().await;
         let Some(core) = slot.as_mut() else {
             return Ok(self.get_state());
         };
-        core.toggle_project_enabled(project_id, enabled).await
+        core.toggle_project_enabled(project_id, enabled, &cancellation)
+            .await
     }
 
     pub async fn remove_project(&self, project_id: &str) -> DesktopResult<DesktopStateSnapshot> {
+        let cancellation =
+            CancellationContext::new(CancellationSignal::new(), self.shutdown_signal.clone());
         let mut slot = self.core.lock().await;
         let Some(core) = slot.as_mut() else {
             return Ok(self.get_state());
         };
-        core.remove_project(project_id).await
+        core.remove_project(project_id, &cancellation).await
     }
 
     pub async fn configure_remote_setup(
@@ -665,7 +674,23 @@ impl DesktopCore {
         }
         let identity = identity_from_config(&self.config)?;
         let codegpt = self.adapter.binaries().ok()?.codegpt.clone();
-        Some(ChatGptActivityProbe { identity, codegpt })
+        let server_env_file = self
+            .config
+            .runtime
+            .as_ref()
+            .and_then(|runtime| runtime.server_env_file.clone())
+            .filter(|path| path.is_file());
+        let candidate_project_ids = collect_candidate_project_ids(
+            &self.data_dir,
+            &self.config,
+            Some(&identity.runtime_project_id),
+        );
+        Some(ChatGptActivityProbe {
+            identity,
+            codegpt,
+            server_env_file,
+            candidate_project_ids,
+        })
     }
 
     fn apply_chatgpt_activity_observation(
@@ -785,7 +810,27 @@ impl DesktopCore {
         cancellation.check()?;
         self.snapshot.chatgpt_activity =
             if server == ServerReadiness::Ready && project == ProjectReadiness::Ready {
-                match self.adapter.chatgpt_activity(&identity, cancellation).await {
+                let server_env_file = self
+                    .config
+                    .runtime
+                    .as_ref()
+                    .and_then(|r| r.server_env_file.as_deref())
+                    .filter(|p| p.is_file());
+                let candidate_project_ids = collect_candidate_project_ids(
+                    &self.data_dir,
+                    &self.config,
+                    Some(&identity.runtime_project_id),
+                );
+                match self
+                    .adapter
+                    .chatgpt_activity(
+                        &identity,
+                        server_env_file,
+                        &candidate_project_ids,
+                        cancellation,
+                    )
+                    .await
+                {
                     Ok(last_meaningful_activity_at_ms) => Some(ChatGptActivitySnapshot {
                         observed: last_meaningful_activity_at_ms.is_some(),
                         last_meaningful_activity_at_ms,
@@ -1092,13 +1137,48 @@ impl DesktopCore {
         self.get_state().await
     }
 
+    async fn sync_project_registry_changes(
+        &mut self,
+        cancellation: &CancellationContext,
+    ) -> DesktopResult<()> {
+        let runner_active = self
+            .process_snapshot(ProcessKind::LocalRunner)
+            .await
+            .is_some_and(|p| matches!(p.phase, ProcessPhase::Starting | ProcessPhase::Running));
+        if !runner_active {
+            return Ok(());
+        }
+
+        let runner_deadline = Deadline::after(RUNNER_READY_TIMEOUT);
+        self.stop_process_until(ProcessKind::LocalRunner, runner_deadline)
+            .await;
+        cancellation.check()?;
+
+        let Some(identity) = identity_from_config(&self.config) else {
+            self.snapshot.readiness.runner = RunnerReadiness::Stopped;
+            let _ = self.refresh_runtime_status(cancellation).await;
+            return Ok(());
+        };
+
+        let command = self.adapter.local_runner_command(&identity.runner_config)?;
+        self.spawn_owned(ProcessKind::LocalRunner, command, false, cancellation)
+            .await?;
+        self.wait_for_runner(&identity, cancellation, runner_deadline, true)
+            .await?;
+        self.snapshot.readiness.runner = RunnerReadiness::Ready;
+        let _ = self.refresh_runtime_status(cancellation).await;
+        Ok(())
+    }
+
     pub async fn toggle_project_enabled(
         &mut self,
         project_id: &str,
         enabled: bool,
+        cancellation: &CancellationContext,
     ) -> DesktopResult<DesktopStateSnapshot> {
         let candidate_dirs = collect_project_registry_dirs(&self.data_dir, &self.config);
         let mut updated = false;
+        let mut target_path: Option<String> = None;
         for dir in candidate_dirs {
             let entries = match std::fs::read_dir(&dir) {
                 Ok(entries) => entries,
@@ -1121,6 +1201,9 @@ impl DesktopCore {
                 let matches_id = table.get("id").and_then(|v| v.as_str()) == Some(project_id)
                     || file.file_stem().and_then(|s| s.to_str()) == Some(project_id);
                 if matches_id {
+                    if let Some(p) = table.get("path").and_then(|v| v.as_str()) {
+                        target_path = Some(p.to_string());
+                    }
                     table.insert("disabled".to_string(), toml::Value::Boolean(!enabled));
                     if let Ok(new_content) = toml::to_string_pretty(&val) {
                         let _ = std::fs::write(&file, new_content);
@@ -1133,6 +1216,69 @@ impl DesktopCore {
                 break;
             }
         }
+
+        if !enabled {
+            if let Some(ref current) = self.config.project {
+                let is_current = target_path
+                    .as_ref()
+                    .is_some_and(|p| same_project_path(&current.path, p))
+                    || current.runtime_project_id.as_deref() == Some(project_id);
+                if is_current {
+                    let all_projects = load_desktop_projects(&self.data_dir, &self.config);
+                    let next_enabled = all_projects.into_iter().find(|p| !p.disabled);
+                    if let Some(next) = next_enabled {
+                        self.config.project = Some(ProjectSelection {
+                            path: next.path.clone(),
+                            allowed_root: next.allowed_root.clone(),
+                            is_git_repository: next.is_git_repository,
+                            runtime_project_id: Some(next.id.clone()),
+                        });
+                        if let Some(runtime) = self.config.runtime.as_mut() {
+                            runtime.project_id = Some(next.id.clone());
+                            runtime.runtime_project_id = Some(next.id.clone());
+                        }
+                    }
+                    self.snapshot.project = self.config.project.clone();
+                    self.snapshot.chatgpt_activity = None;
+                    let _ = self.save_config().await;
+                }
+            }
+        } else {
+            let current_disabled = self.config.project.as_ref().map_or(true, |cp| {
+                let all_projects = load_desktop_projects(&self.data_dir, &self.config);
+                all_projects
+                    .iter()
+                    .find(|p| same_project_path(&p.path, &cp.path))
+                    .map_or(false, |p| p.disabled)
+            });
+            if current_disabled {
+                let all_projects = load_desktop_projects(&self.data_dir, &self.config);
+                if let Some(p) = all_projects.into_iter().find(|p| {
+                    !p.disabled
+                        && (p.id == project_id
+                            || target_path
+                                .as_ref()
+                                .is_some_and(|tp| same_project_path(&p.path, tp)))
+                }) {
+                    self.config.project = Some(ProjectSelection {
+                        path: p.path.clone(),
+                        allowed_root: p.allowed_root.clone(),
+                        is_git_repository: p.is_git_repository,
+                        runtime_project_id: Some(p.id.clone()),
+                    });
+                    if let Some(runtime) = self.config.runtime.as_mut() {
+                        runtime.project_id = Some(p.id.clone());
+                        runtime.runtime_project_id = Some(p.id.clone());
+                    }
+                    self.snapshot.project = self.config.project.clone();
+                    self.snapshot.chatgpt_activity = None;
+                    let _ = self.save_config().await;
+                }
+            }
+        }
+
+        let _ = self.sync_project_registry_changes(cancellation).await;
+
         self.activity.push(
             ActivityEventKind::ProjectActivated,
             "desktop",
@@ -1148,6 +1294,7 @@ impl DesktopCore {
     pub async fn remove_project(
         &mut self,
         project_id: &str,
+        cancellation: &CancellationContext,
     ) -> DesktopResult<DesktopStateSnapshot> {
         let candidate_dirs = collect_project_registry_dirs(&self.data_dir, &self.config);
         let mut removed_path: Option<String> = None;
@@ -1195,7 +1342,7 @@ impl DesktopCore {
                 let remaining = load_desktop_projects(&self.data_dir, &self.config);
                 let next_candidate = remaining
                     .into_iter()
-                    .find(|e| !same_project_path(&e.path, removed_p));
+                    .find(|e| !e.disabled && !same_project_path(&e.path, removed_p));
                 if let Some(next) = next_candidate {
                     self.config.project = Some(ProjectSelection {
                         path: next.path.clone(),
@@ -1203,13 +1350,20 @@ impl DesktopCore {
                         is_git_repository: next.is_git_repository,
                         runtime_project_id: Some(next.id.clone()),
                     });
+                    if let Some(runtime) = self.config.runtime.as_mut() {
+                        runtime.project_id = Some(next.id.clone());
+                        runtime.runtime_project_id = Some(next.id.clone());
+                    }
                 } else {
                     self.config.project = None;
                     self.snapshot.project = None;
                 }
+                self.snapshot.chatgpt_activity = None;
                 let _ = self.save_config().await;
             }
         }
+
+        let _ = self.sync_project_registry_changes(cancellation).await;
 
         self.activity.push(
             ActivityEventKind::ProjectActivated,
@@ -2962,6 +3116,36 @@ fn stored_runner_client_id(config: &StoredDesktopConfig) -> Option<String> {
         .map(str::to_string)
 }
 
+fn collect_candidate_project_ids(
+    data_dir: &Path,
+    config: &StoredDesktopConfig,
+    active_runtime_project_id: Option<&str>,
+) -> Vec<String> {
+    let runner_client_id = stored_runner_client_id(config);
+    let mut candidate_ids = Vec::new();
+    if let Some(id) = active_runtime_project_id {
+        let trimmed = id.trim();
+        if !trimmed.is_empty() {
+            candidate_ids.push(trimmed.to_string());
+        }
+    }
+    for project in load_desktop_projects(data_dir, config) {
+        if project.disabled {
+            continue;
+        }
+        if let Some(ref client_id) = runner_client_id {
+            let canonical = format!("agent:{client_id}:{}", project.id);
+            if !candidate_ids.contains(&canonical) {
+                candidate_ids.push(canonical);
+            }
+        }
+        if !candidate_ids.contains(&project.id) {
+            candidate_ids.push(project.id);
+        }
+    }
+    candidate_ids
+}
+
 fn identity_from_config(config: &StoredDesktopConfig) -> Option<ProjectRuntimeIdentity> {
     let runtime = config.runtime.as_ref()?;
     let project = config.project.as_ref()?;
@@ -3621,6 +3805,111 @@ mod tests {
 
         assert_eq!(core.snapshot.project, Some(project));
         assert!(core.snapshot.chatgpt_activity.is_none());
+        std::fs::remove_dir_all(data_dir).unwrap();
+    }
+
+    #[test]
+    fn collect_candidate_project_ids_filters_disabled_and_formats_canonical_ids() {
+        let data_dir = unique_state_dir("candidate-project-ids");
+        let registry_dir = data_dir
+            .join("runtime")
+            .join("local")
+            .join("project-registry");
+        std::fs::create_dir_all(&registry_dir).unwrap();
+
+        let p1 = registry_dir.join("project-a.toml");
+        std::fs::write(
+            &p1,
+            "id = \"project-a\"\npath = \"/path/to/a\"\ndisabled = false\n",
+        )
+        .unwrap();
+
+        let p2 = registry_dir.join("project-b.toml");
+        std::fs::write(
+            &p2,
+            "id = \"project-b\"\npath = \"/path/to/b\"\ndisabled = true\n",
+        )
+        .unwrap();
+
+        let mut config = test_stored_config("candidate-test");
+        config.runtime = Some(StoredRuntime {
+            server_url: "http://127.0.0.1:8080".to_string(),
+            server_env_file: None,
+            runner_config: None,
+            user_token_file: None,
+            runner_client_id: Some("device-123".to_string()),
+            project_id: Some("project-a".to_string()),
+            runtime_project_id: Some("agent:device-123:project-a".to_string()),
+        });
+
+        let candidates =
+            collect_candidate_project_ids(&data_dir, &config, Some("agent:device-123:project-a"));
+
+        // Should include active project and formatted canonical ID for enabled project-a
+        assert!(candidates.contains(&"agent:device-123:project-a".to_string()));
+        assert!(candidates.contains(&"project-a".to_string()));
+        // Must NOT contain disabled project-b
+        assert!(!candidates.contains(&"agent:device-123:project-b".to_string()));
+        assert!(!candidates.contains(&"project-b".to_string()));
+
+        std::fs::remove_dir_all(data_dir).unwrap();
+    }
+
+    #[tokio::test]
+    async fn toggle_project_enabled_switches_active_project_and_updates_disk() {
+        let data_dir = unique_state_dir("toggle-project-switch");
+        let resource_dir = data_dir.join("resources");
+        let registry_dir = data_dir
+            .join("runtime")
+            .join("local")
+            .join("project-registry");
+        std::fs::create_dir_all(&resource_dir).unwrap();
+        std::fs::create_dir_all(&registry_dir).unwrap();
+
+        let p1 = registry_dir.join("project-1.toml");
+        std::fs::write(
+            &p1,
+            "id = \"project-1\"\npath = \"/path/to/p1\"\ndisabled = false\n",
+        )
+        .unwrap();
+
+        let p2 = registry_dir.join("project-2.toml");
+        std::fs::write(
+            &p2,
+            "id = \"project-2\"\npath = \"/path/to/p2\"\ndisabled = false\n",
+        )
+        .unwrap();
+
+        let mut core = DesktopCore::new(data_dir.clone(), resource_dir).unwrap();
+        core.config.project = Some(ProjectSelection {
+            path: "/path/to/p1".to_string(),
+            allowed_root: "/path/to/p1".to_string(),
+            is_git_repository: false,
+            runtime_project_id: Some("project-1".to_string()),
+        });
+
+        let cancellation =
+            CancellationContext::new(CancellationSignal::new(), CancellationSignal::new());
+        // Toggle project-1 to disabled: false -> true
+        let snapshot = core
+            .toggle_project_enabled("project-1", false, &cancellation)
+            .await
+            .unwrap();
+
+        // Check disk was updated: disabled = true
+        let disk_content = std::fs::read_to_string(&p1).unwrap();
+        assert!(disk_content.contains("disabled = true"));
+
+        // Active project should automatically switch to project-2 (which is still enabled)
+        assert_eq!(
+            core.config.project.as_ref().map(|p| p.path.as_str()),
+            Some("/path/to/p2")
+        );
+        assert_eq!(
+            snapshot.project.as_ref().map(|p| p.path.as_str()),
+            Some("/path/to/p2")
+        );
+
         std::fs::remove_dir_all(data_dir).unwrap();
     }
 

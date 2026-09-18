@@ -576,35 +576,81 @@ impl CodeGPTAdapter {
     pub async fn chatgpt_activity(
         &mut self,
         identity: &ProjectRuntimeIdentity,
+        server_env_file: Option<&Path>,
+        candidate_project_ids: &[String],
         cancellation: &CancellationContext,
     ) -> DesktopResult<Option<i64>> {
         let codegpt = self.ensure_binaries(cancellation).await?.codegpt.clone();
-        Self::chatgpt_activity_with_binary(&codegpt, identity, cancellation).await
+        Self::chatgpt_activity_with_binary(
+            &codegpt,
+            identity,
+            server_env_file,
+            candidate_project_ids,
+            cancellation,
+        )
+        .await
     }
 
     pub async fn chatgpt_activity_with_binary(
         codegpt: &Path,
         identity: &ProjectRuntimeIdentity,
+        server_env_file: Option<&Path>,
+        candidate_project_ids: &[String],
         cancellation: &CancellationContext,
     ) -> DesktopResult<Option<i64>> {
-        let mut args = vec![
-            "ops".into(),
-            "windows".into(),
-            "--server-url".into(),
-            identity.server_url.clone(),
-            "--token-file".into(),
-            identity.user_token_file.to_string_lossy().to_string(),
-            "--project".into(),
-            identity.runtime_project_id.clone(),
-            "--limit".into(),
-            "64".into(),
-            "--json".into(),
-        ];
-        if server_url_is_loopback(&identity.server_url) {
-            args.push("--no-system-proxy".into());
+        let mut candidate_ids: Vec<String> = Vec::new();
+        if !identity.runtime_project_id.trim().is_empty() {
+            candidate_ids.push(identity.runtime_project_id.clone());
         }
-        let output: OpsWindowsOutput = run_json(codegpt, &args, None, false, cancellation).await?;
-        Ok(latest_chatgpt_activity(&output))
+        for id in candidate_project_ids {
+            let trimmed = id.trim();
+            if !trimmed.is_empty() && !candidate_ids.iter().any(|c| c == trimmed) {
+                candidate_ids.push(trimmed.to_string());
+            }
+        }
+        if candidate_ids.is_empty() {
+            return Ok(None);
+        }
+
+        let mut latest_activity: Option<i64> = None;
+
+        for project_id in candidate_ids {
+            cancellation.check()?;
+            let mut args = vec![
+                "ops".into(),
+                "windows".into(),
+                "--server-url".into(),
+                identity.server_url.clone(),
+            ];
+            if let Some(env_file) = server_env_file.filter(|p| p.is_file()) {
+                args.extend(["--env-file".into(), env_file.to_string_lossy().to_string()]);
+            } else {
+                args.extend([
+                    "--token-file".into(),
+                    identity.user_token_file.to_string_lossy().to_string(),
+                ]);
+            }
+            args.extend([
+                "--project".into(),
+                project_id,
+                "--limit".into(),
+                "64".into(),
+                "--json".into(),
+            ]);
+            if server_url_is_loopback(&identity.server_url) {
+                args.push("--no-system-proxy".into());
+            }
+            match run_json::<OpsWindowsOutput>(codegpt, &args, None, false, cancellation).await {
+                Ok(output) => {
+                    if let Some(ts) = latest_chatgpt_activity(&output) {
+                        latest_activity = Some(latest_activity.map_or(ts, |curr| curr.max(ts)));
+                    }
+                }
+                Err(err) if err.code == "cancelled" => return Err(err),
+                Err(_) => {}
+            }
+        }
+        Ok(latest_activity)
     }
 
     pub async fn project_ready(
