@@ -84,6 +84,29 @@ export function activityMessage(entry: ActivityEntry, t: Translate) {
     const kind = entry.message.split(": ")[1];
     if (Object.hasOwn(operationKeys, kind)) return `${t("activity.operationStarted")} · ${operationLabel(kind as DesktopOperationKind, t)}`;
   }
+  if (entry.event_kind === "operation_failed") {
+    const raw = entry.message.split(": ")[1];
+    if (raw) {
+      const match = raw.match(/^([a-z_]+)(?:\s*\(([^)]+)\))?/);
+      if (match) {
+        const kind = match[1] as DesktopOperationKind;
+        const errCode = match[2];
+        const opName = Object.hasOwn(operationKeys, kind) ? operationLabel(kind, t) : kind;
+        if (errCode) {
+          const errPres = desktopErrorPresentation({ code: errCode, message: "", next_action: "" }, t);
+          const errDetail = errPres.title && errPres.title !== t("error.fallbackTitle") ? errPres.title : errCode;
+          return `${t("activity.operationFailed")} · ${opName} (${errDetail})`;
+        }
+        return `${t("activity.operationFailed")} · ${opName}`;
+      }
+    }
+  }
+  if (entry.event_kind === "operation_cancelled") {
+    const kind = entry.message.split(": ")[1];
+    if (kind && Object.hasOwn(operationKeys, kind)) {
+      return `${t("activity.operationCancelled")} · ${operationLabel(kind as DesktopOperationKind, t)}`;
+    }
+  }
   return activityKeys[entry.event_kind] ? t(activityKeys[entry.event_kind]) : entry.message;
 }
 
@@ -108,6 +131,7 @@ const binaryErrors = new Set([
   "binary_version_mismatch",
   "binary_version_unverifiable",
   "binary_probe_failed",
+  "bundled_runtime_missing",
 ]);
 const serverErrors = new Set([
   "server_unreachable",

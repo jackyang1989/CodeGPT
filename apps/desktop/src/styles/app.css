@@ -2183,20 +2183,54 @@ button:disabled {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 16px;
+  padding: 10px 16px;
   background: var(--bg-card);
   border: 1px solid var(--border-card);
   border-radius: 8px;
+  min-height: 44px;
 }
 
-.activity-row strong {
+.activity-row .activity-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+
+.activity-row strong,
+.activity-row .activity-message {
   font-size: 13px;
+  font-weight: 500;
   color: var(--text-primary);
+  line-height: 1.4;
+  word-break: break-word;
 }
 
-.activity-row span {
-  font-size: 12px;
+.activity-row .activity-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.activity-row .activity-source-badge {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: var(--bg-surface-secondary, rgba(255, 255, 255, 0.06));
   color: var(--text-secondary);
+  border: 1px solid var(--border-card);
+  letter-spacing: 0.02em;
+}
+
+.activity-row time,
+.activity-row .activity-time {
+  font-size: 12px;
+  color: var(--text-tertiary, #888);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .settings-section {

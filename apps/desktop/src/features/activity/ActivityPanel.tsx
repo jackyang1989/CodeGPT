@@ -39,9 +39,14 @@ export function ActivityPanel({ activity }: { activity: ActivityEntry[] }) {
         {visible.map((entry) => (
           <article className="activity-row" key={entry.sequence}>
             <i className={`status-dot ${entry.level === "error" ? "error" : entry.level === "warning" ? "pending" : "unknown"}`} aria-hidden="true" />
-            <div>
-              <strong>{activityMessage(entry, t)}</strong>
-              <span>{activitySource(entry.source, t)} · {formatTime(entry.timestamp_ms)}</span>
+            <div className="activity-main">
+              <strong className="activity-message">{activityMessage(entry, t)}</strong>
+            </div>
+            <div className="activity-meta">
+              {entry.source && entry.source !== "desktop" && (
+                <span className="activity-source-badge">{activitySource(entry.source, t)}</span>
+              )}
+              <time className="activity-time">{formatTime(entry.timestamp_ms)}</time>
             </div>
           </article>
         ))}
