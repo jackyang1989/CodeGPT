@@ -1090,6 +1090,18 @@ button:disabled {
   margin-top: 4px;
 }
 
+.prompt-helper-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.prompt-helper-actions .btn-mini {
+  margin-top: 0;
+}
+
 /* ======================================================== */
 /* SETUP WIZARD & FIRST RUN ONBOARDING FLOW                 */
 /* ======================================================== */
@@ -1607,6 +1619,95 @@ button:disabled {
   line-height: 1.5;
   color: var(--text-secondary);
   margin: 0;
+}
+
+.verify-step-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.verify-guide-text {
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.verify-prompt-chip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  padding: 6px 8px 6px 10px;
+}
+
+.chip-prompt-text {
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+}
+
+.prompt-copy-btn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 4px;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-well);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.prompt-copy-btn:hover {
+  background: var(--bg-surface);
+  border-color: var(--border-focus);
+}
+
+.copied-indicator {
+  color: #10b981;
+  font-weight: 600;
+}
+
+.verify-multi-hint {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--text-muted, #64748b);
+  margin-top: 2px;
+}
+
+.text-copy-link {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--accent-indigo, #6366f1);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  display: inline;
+}
+
+.text-copy-link:hover {
+  color: var(--accent-primary, #4f46e5);
 }
 
 /* Status Grid & Cards */

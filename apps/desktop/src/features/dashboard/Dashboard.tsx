@@ -1,3 +1,5 @@
+import { useState } from "react";
+import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import type { DesktopState } from "../../models/topology";
 import { useLocale } from "../../i18n/locale";
 import {
@@ -50,6 +52,37 @@ export function Dashboard({
     state.readiness.next_action,
     t,
   );
+
+  const [copiedPrompt, setCopiedPrompt] = useState<string | null>(null);
+
+  const handleCopyPrompt = async (text: string) => {
+    try {
+      await writeText(text);
+      setCopiedPrompt(text);
+    } catch {
+      try {
+        if (navigator.clipboard) {
+          await navigator.clipboard.writeText(text);
+          setCopiedPrompt(text);
+        }
+      } catch {
+        // best-effort
+      }
+    }
+    window.setTimeout(() => {
+      setCopiedPrompt((prev) => (prev === text ? null : prev));
+    }, 2000);
+  };
+
+  const projectName = state.project?.path.split(/[\\/]/).filter(Boolean).pop() ?? null;
+  const projects = state.projects ?? [];
+  const enabledProjectsCount = projects.filter((p) => !p.disabled).length;
+  const hasMultipleProjects = enabledProjectsCount > 1;
+
+  const targetPrompt = projectName
+    ? t("workspace.verifyPromptTemplate", { project: projectName })
+    : t("workspace.verifyPromptTemplate", { project: "MyProject" });
+  const listPrompt = t("workspace.verifyListPromptTemplate");
   return (
     <section
       className="page-section dashboard-page"
@@ -147,7 +180,49 @@ export function Dashboard({
             <li className={connectionVerified ? "complete" : ""}>
               <span className="step-number" aria-hidden="true">03</span>
               <strong>{t("workspace.verify")}</strong>
-              <p>{!state.readiness.runtime_ready ? t("workspace.afterStart") : connectionVerified ? t("home.connectionObserved") : t("workspace.verifyHint")}</p>
+              {!state.readiness.runtime_ready ? (
+                <p>{t("workspace.afterStart")}</p>
+              ) : connectionVerified ? (
+                <p>{t("home.connectionObserved")}</p>
+              ) : (
+                <div className="verify-step-content">
+                  <p className="verify-guide-text">
+                    {projectName
+                      ? t("workspace.verifyPromptGuide")
+                      : t("workspace.verifyPromptGuideGeneric")}
+                  </p>
+                  <div className="verify-prompt-chip">
+                    <span className="chip-prompt-text" title={targetPrompt}>
+                      "{targetPrompt}"
+                    </span>
+                    <button
+                      type="button"
+                      className="prompt-copy-btn"
+                      onClick={() => void handleCopyPrompt(targetPrompt)}
+                      title={t("workspace.copyPrompt")}
+                    >
+                      {copiedPrompt === targetPrompt ? (
+                        <span className="copied-indicator">✓ {t("workspace.promptCopied")}</span>
+                      ) : (
+                        <span>{t("workspace.copyPrompt")}</span>
+                      )}
+                    </button>
+                  </div>
+                  {hasMultipleProjects && (
+                    <div className="verify-multi-hint">
+                      <span>{t("workspace.verifyMultiHint")}</span>
+                      <button
+                        type="button"
+                        className="text-copy-link"
+                        onClick={() => void handleCopyPrompt(listPrompt)}
+                        title={listPrompt}
+                      >
+                        {copiedPrompt === listPrompt ? `✓ ${t("workspace.promptCopied")}` : `“${listPrompt}”`}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
             </li>
           </ol>
         </details>

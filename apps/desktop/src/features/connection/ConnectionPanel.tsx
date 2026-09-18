@@ -26,6 +26,7 @@ export function ConnectionPanel({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<DesktopError | null>(null);
   const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "failed">("idle");
+  const [promptCopiedKey, setPromptCopiedKey] = useState<"primary" | "list" | null>(null);
   const tunnelId = state.openai_tunnel_config.effective_tunnel_id ?? state.openai_tunnel_config.saved_tunnel_id;
   useEffect(() => {
     if (copyStatus !== "copied") return;
@@ -38,6 +39,36 @@ export function ConnectionPanel({
     try { await writeText(tunnelId); setCopyStatus("copied"); }
     catch { setCopyStatus("failed"); }
   };
+
+  const copyPromptText = async (text: string, key: "primary" | "list") => {
+    try {
+      await writeText(text);
+      setPromptCopiedKey(key);
+    } catch {
+      try {
+        if (navigator.clipboard) {
+          await navigator.clipboard.writeText(text);
+          setPromptCopiedKey(key);
+        }
+      } catch {
+        // best effort
+      }
+    }
+    window.setTimeout(() => {
+      setPromptCopiedKey((prev) => (prev === key ? null : prev));
+    }, 2000);
+  };
+
+  const projectName = state.project?.path.split(/[\\/]/).filter(Boolean).pop() ?? null;
+  const projects = state.projects ?? [];
+  const enabledProjectsCount = projects.filter((p) => !p.disabled).length;
+  const hasMultipleProjects = enabledProjectsCount > 1;
+
+  const promptText = projectName
+    ? t("workspace.verifyPromptTemplate", { project: projectName })
+    : t("workspace.verifyPromptTemplate", { project: "MyProject" });
+  const listPrompt = t("workspace.verifyListPromptTemplate");
+
   const topology = state.topology;
   const mutationBusy = busy || Boolean(state.current_operation);
 
@@ -268,23 +299,32 @@ export function ConnectionPanel({
                 <span className="step-badge">03</span>
                 <div className="step-body">
                   <strong>在会话中发起验证</strong>
-                  <p>{t("workspace.verifyHint")}</p>
+                  <p>{projectName ? t("workspace.verifyPromptGuide") : t("workspace.verifyPromptGuideGeneric")}</p>
                 </div>
               </div>
             </div>
             <div className="chatgpt-prompt-helper">
               <span className="helper-title">💡 ChatGPT 验证指令模板</span>
-              <p className="helper-text">"请列出当前工作区的目录结构，并读取 README.md 的概要内容。"</p>
-              <button
-                className="secondary-button btn-mini"
-                type="button"
-                onClick={() => {
-                  void writeText("请列出当前工作区的目录结构，并读取 README.md 的概要内容。");
-                  setCopyStatus("copied");
-                }}
-              >
-                复制指令
-              </button>
+              <p className="helper-text">"{promptText}"</p>
+              <div className="prompt-helper-actions">
+                <button
+                  className="secondary-button btn-mini"
+                  type="button"
+                  onClick={() => void copyPromptText(promptText, "primary")}
+                >
+                  {promptCopiedKey === "primary" ? `✓ ${t("workspace.promptCopied")}` : t("workspace.copyPrompt")}
+                </button>
+                {hasMultipleProjects && (
+                  <button
+                    className="secondary-button btn-mini"
+                    type="button"
+                    onClick={() => void copyPromptText(listPrompt, "list")}
+                    title={listPrompt}
+                  >
+                    {promptCopiedKey === "list" ? `✓ ${t("workspace.promptCopied")}` : `${t("workspace.copyListPrompt")}：“${listPrompt}”`}
+                  </button>
+                )}
+              </div>
             </div>
           </article>
         </div>

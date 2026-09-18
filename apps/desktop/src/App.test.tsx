@@ -261,13 +261,32 @@ describe("semantic Desktop UI", () => {
     ]);
     renderApp();
     await screen.findByRole("heading", { name: "CodeGPT", level: 1 });
-    expect(screen.getByText(/分析当前项目的目录结构/)).toBeInTheDocument();
+    expect(screen.getByText(/分析项目 repo 的目录结构/)).toBeInTheDocument();
     expect(screen.queryByText(/读取.*README/)).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "活动" }));
     await screen.findByText("已切换到 sample-project");
     expect(screen.getAllByRole("article")[0]).toHaveTextContent("已切换到 sample-project");
     expect(screen.getAllByRole("article")).toHaveLength(2);
     expect(screen.getAllByRole("article")[1]).toHaveTextContent("正在激活项目");
+  });
+
+  it("provides dynamic project prompt and multi-project discovery option", async () => {
+    api.getState.mockResolvedValue({
+      ...readyState,
+      projects: [
+        { id: "p1", name: "repo", path: "C:\\fixture\\repo", allowed_root: "C:\\fixture", is_git_repository: true, is_active: true, disabled: false },
+        { id: "p2", name: "extra", path: "C:\\fixture\\extra", allowed_root: "C:\\fixture", is_git_repository: true, is_active: false, disabled: false },
+      ],
+    });
+    renderApp();
+    await screen.findByRole("heading", { name: "CodeGPT", level: 1 });
+    expect(screen.getByText(/分析项目 repo 的目录结构/)).toBeInTheDocument();
+    expect(screen.getByText(/若有多个项目/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /“请列出 CodeGPT 可访问的所有项目。”/ })).toBeInTheDocument();
+
+    const copyBtn = screen.getByRole("button", { name: "复制指令" });
+    fireEvent.click(copyBtn);
+    expect(clipboard.writeText).toHaveBeenCalledWith("请分析项目 repo 的目录结构并总结核心逻辑。");
   });
 
   it("starts a tunnel only after explicit action and allows retry after failure", async () => {
