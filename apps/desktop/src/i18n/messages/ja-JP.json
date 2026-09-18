@@ -333,7 +333,7 @@
   "error.runnerTitle": "Runner を利用できません",
   "error.runnerAction": "Runner と Server の接続を確認して再試行してください。",
   "error.projectTitle": "プロジェクトの準備ができていません",
-  "error.projectAction": "「起動」をクリックして CodeGPT サービスを開始してください。サービス準備完了後にプロジェクトが自動的に有効化されます。",
+  "error.projectAction": "下の「起動」をクリックして CodeGPT サービスを開始してください。サービス準備完了後にプロジェクトが自動的に有効化されます。",
   "error.pairingTitle": "ワンタイムログインコードが無効です",
   "error.pairingAction": "既存の Server が発行した cg_pair_… コードを入力してください。",
   "error.enrollmentTitle": "登録が完了しませんでした",

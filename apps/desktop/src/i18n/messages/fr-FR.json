@@ -333,7 +333,7 @@
   "error.runnerTitle": "Le Runner est indisponible",
   "error.runnerAction": "Vérifiez la connexion du Runner au Server, puis réessayez.",
   "error.projectTitle": "Le projet n’est pas prêt",
-  "error.projectAction": "Veuillez cliquer sur « Démarrer » pour lancer le service CodeGPT ; le projet sera activé automatiquement une fois le service prêt.",
+  "error.projectAction": "Veuillez cliquer sur « Démarrer » ci-dessous pour lancer le service CodeGPT ; le projet sera activé automatiquement une fois le service prêt.",
   "error.pairingTitle": "Le code de connexion à usage unique est invalide",
   "error.pairingAction": "Saisissez le code cg_pair_… fourni par le Server existant.",
   "error.enrollmentTitle": "L’enregistrement n’a pas abouti",

@@ -2479,31 +2479,6 @@ details.settings-section summary:hover {
   color: #fca5a5;
 }
 
-.error-header-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-}
-
-.error-action-btn {
-  background: var(--accent-indigo, #6366f1);
-  color: #ffffff;
-  border: 1px solid #4338ca;
-  border-radius: 6px;
-  padding: 4px 12px;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  line-height: 1.4;
-  transition: opacity 0.15s ease, background 0.15s ease;
-  white-space: nowrap;
-}
-
-.error-action-btn:hover {
-  background: var(--accent-indigo-hover, #4f46e5);
-}
-
 .error-dismiss-btn {
   background: transparent;
   border: 0;

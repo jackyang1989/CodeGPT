@@ -333,7 +333,7 @@
   "error.runnerTitle": "Runner 不可用",
   "error.runnerAction": "请检查 Runner 与 Server 的连接，然后重试。",
   "error.projectTitle": "项目尚未就绪",
-  "error.projectAction": "请点击“启动”运行 CodeGPT 服务；服务就绪后系统将自动激活该项目。",
+  "error.projectAction": "请点击下方的“启动”运行 CodeGPT 服务；服务就绪后系统将自动激活该项目。",
   "error.pairingTitle": "一次性登录码无效",
   "error.pairingAction": "请输入现有 Server 签发的 cg_pair_… 登录码。",
   "error.enrollmentTitle": "注册未完成",

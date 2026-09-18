@@ -333,7 +333,7 @@
   "error.runnerTitle": "Runner is unavailable",
   "error.runnerAction": "Check the Runner connection to the Server, then retry.",
   "error.projectTitle": "Project is not ready",
-  "error.projectAction": "Please click \"Start\" to run the CodeGPT service; the project will be activated automatically once the service is ready.",
+  "error.projectAction": "Please click \"Start\" below to run the CodeGPT service; the project will be activated automatically once the service is ready.",
   "error.pairingTitle": "One-time login code is invalid",
   "error.pairingAction": "Enter the cg_pair_… code issued by the existing Server.",
   "error.enrollmentTitle": "Enrollment did not complete",
