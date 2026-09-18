@@ -268,11 +268,6 @@ export function ProjectsPanel({
                           {project.is_git_repository && (
                             <span className="pill-badge pill-git">Git</span>
                           )}
-                          {isDisabled && (
-                            <span className="pill-badge pill-muted">
-                              {t("common.stopped")}
-                            </span>
-                          )}
                         </div>
                       </div>
                       <span className="project-id-hint">ID: {project.id}</span>
@@ -356,24 +351,28 @@ export function ProjectsPanel({
                   </div>
 
                   {project.is_active && state.project && (
-                    <dl className="detail-list project-card-details">
-                      <div>
-                        <dt>{t("project.status")}</dt>
-                        <dd>{projectReadinessLabel(state.readiness.project, t)}</dd>
+                    <div className="project-card-details">
+                      <div className="detail-row">
+                        <span className="detail-label">{t("project.status")}</span>
+                        <span className="detail-val">{projectReadinessLabel(state.readiness.project, t)}</span>
                       </div>
-                      <div>
-                        <dt>{t("project.git")}</dt>
-                        <dd>
+                      <div className="detail-row">
+                        <span className="detail-label">{t("project.git")}</span>
+                        <span className="detail-val">
                           {state.project.is_git_repository
                             ? t("project.gitDetected")
                             : t("project.gitNotRequired")}
-                        </dd>
+                        </span>
                       </div>
-                      <div className="project-detail-full">
-                        <dt>{t("project.allowedRoot")}</dt>
-                        <dd title={state.project.allowed_root}>{state.project.allowed_root}</dd>
-                      </div>
-                    </dl>
+                      {state.project.allowed_root && state.project.allowed_root !== project.path && (
+                        <div className="detail-row">
+                          <span className="detail-label">{t("project.allowedRoot")}</span>
+                          <span className="detail-val" title={state.project.allowed_root}>
+                            {state.project.allowed_root}
+                          </span>
+                        </div>
+                      )}
+                    </div>
                   )}
 
                   {/* Card Bottom Actions */}

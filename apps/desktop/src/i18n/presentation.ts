@@ -172,7 +172,9 @@ export function desktopErrorPresentation(error: DesktopError, t: Translate): Err
   if (serverErrors.has(error.code) || error.code === "server_url_invalid") return { title: t("error.serverTitle"), action: t("error.serverAction") };
   if (error.code === "runtime_not_ready") return { title: t("error.runtimeTitle"), action: t("error.runtimeAction") };
   if (runnerErrors.has(error.code)) return { title: t("error.runnerTitle"), action: t("error.runnerAction") };
-  if (projectErrors.has(error.code)) return { title: t("error.projectTitle"), action: t("error.projectAction") };
+  if (projectErrors.has(error.code) || (error.code === "codegpt_command_failed" && error.message.toLowerCase().includes("activate"))) {
+    return { title: t("error.projectTitle"), action: t("error.projectAction") };
+  }
   if (error.code === "pairing_code_invalid") return { title: t("error.pairingTitle"), action: t("error.pairingAction") };
   if (enrollmentErrors.has(error.code)) return { title: t("error.enrollmentTitle"), action: t("error.enrollmentAction") };
   if (tunnelErrors.has(error.code)) return { title: t("error.tunnelTitle"), action: t("error.tunnelAction") };

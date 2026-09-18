@@ -509,7 +509,7 @@ function AppContent() {
             )}
           </section>
         )}
-        {error && <AppError error={error} />}
+        {error && <AppError error={error} onDismiss={() => setError(null)} />}
         {navigation === "home" && (needsSetup ? (
           <FirstRun
             state={state}
@@ -565,14 +565,35 @@ function shouldStartPreferredTunnel(state: DesktopState) {
     !state.regular_tunnel;
 }
 
-function AppError({ error }: { error: DesktopError }) {
+function AppError({
+  error,
+  onDismiss,
+}: {
+  error: DesktopError;
+  onDismiss: () => void;
+}) {
   const { t } = useLocale();
   const presentation = desktopErrorPresentation(error, t);
   return (
     <div className="error-card app-error" role="alert">
-      <strong>{presentation.title}</strong>
-      <span>{presentation.action}</span>
-      <details>
+      <div className="error-header">
+        <div className="error-titles">
+          <strong>{presentation.title}</strong>
+          <span className="error-action-text">{presentation.action}</span>
+        </div>
+        <button
+          type="button"
+          className="error-dismiss-btn"
+          onClick={onDismiss}
+          title="关闭"
+          aria-label="关闭"
+        >
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" width="14" height="14" aria-hidden="true">
+            <path d="M4 4l8 8M12 4l-8 8" />
+          </svg>
+        </button>
+      </div>
+      <details className="error-details">
         <summary>{t("common.details")}</summary>
         <code>{error.code}</code>
         <p>{error.message}</p>
