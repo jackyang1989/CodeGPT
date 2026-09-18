@@ -217,12 +217,12 @@ export function runnerReadinessLabel(value: RunnerReadiness, t: Translate) {
   return t("common.unknown");
 }
 
-export function projectReadinessLabel(value: ProjectReadiness, t: Translate) {
+export function projectReadinessLabel(value: ProjectReadiness, t: Translate, hasProject = false) {
   if (value === "ready") return t("common.ready");
   if (value === "configured") return t("common.configured");
   if (value === "reload_required") return t("readiness.projectNotReady");
   if (value === "error") return t("common.error");
-  if (value === "none") return t("project.none");
+  if (value === "none") return hasProject ? t("common.configured") : t("project.none");
   return t("common.unknown");
 }
 

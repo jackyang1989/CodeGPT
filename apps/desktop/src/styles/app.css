@@ -1811,9 +1811,15 @@ button:disabled {
 .project-title-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   flex-wrap: wrap;
   margin-bottom: 4px;
+}
+
+.badge-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .project-name {

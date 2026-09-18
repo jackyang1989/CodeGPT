@@ -354,7 +354,7 @@ export function ProjectsPanel({
                     <div className="project-card-details">
                       <div className="detail-row">
                         <span className="detail-label">{t("project.status")}</span>
-                        <span className="detail-val">{projectReadinessLabel(state.readiness.project, t)}</span>
+                        <span className="detail-val">{projectReadinessLabel(state.readiness.project, t, Boolean(state.project))}</span>
                       </div>
                       <div className="detail-row">
                         <span className="detail-label">{t("project.git")}</span>

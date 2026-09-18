@@ -583,17 +583,20 @@ impl DesktopCore {
         let mut snapshot = DesktopStateSnapshot::default();
         snapshot.topology = config.topology.clone();
         snapshot.project = project_snapshot(&config);
+        let initial_project_readiness = if config.project.is_some() {
+            ProjectReadiness::Configured
+        } else {
+            ProjectReadiness::None
+        };
         if config.topology.is_some() && config.runtime_autostart == Some(false) {
             snapshot.readiness = aggregate_readiness(
                 ServerReadiness::Stopped,
                 RunnerReadiness::Stopped,
                 ExposureReadiness::Disabled,
-                if config.project.is_some() {
-                    ProjectReadiness::Configured
-                } else {
-                    ProjectReadiness::None
-                },
+                initial_project_readiness,
             );
+        } else {
+            snapshot.readiness.project = initial_project_readiness;
         }
         apply_openai_tunnel_configuration(&mut snapshot, &tunnel_config);
         snapshot.regular_tunnel_available = true;

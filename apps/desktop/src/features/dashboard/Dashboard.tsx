@@ -170,7 +170,7 @@ export function Dashboard({
           />
           <StatusCard
             title={t("home.projects")}
-            value={state.readiness.project === "ready" ? t("home.projectReady") : projectReadinessLabel(state.readiness.project, t)}
+            value={state.readiness.project === "ready" ? t("home.projectReady") : projectReadinessLabel(state.readiness.project, t, Boolean(state.project))}
             state={state.readiness.project}
             explanation={state.project?.path ?? t("home.noProject")}
           />
