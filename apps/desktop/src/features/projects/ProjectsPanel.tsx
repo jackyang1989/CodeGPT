@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import type { DesktopProjectEntry, DesktopState } from "../../models/topology";
 import { useLocale } from "../../i18n/locale";
 import { projectReadinessLabel } from "../../i18n/presentation";
@@ -18,11 +19,30 @@ export function ProjectsPanel({
   const { t } = useLocale();
   const [searchQuery, setSearchQuery] = useState("");
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [copiedTarget, setCopiedTarget] = useState<string | null>(null);
   const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
 
   const operationBusy = Boolean(state.current_operation);
+
+  const handleCopyText = async (text: string, targetKey: string) => {
+    try {
+      await writeText(text);
+    } catch {
+      try {
+        if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+          await navigator.clipboard.writeText(text);
+        }
+      } catch {
+        // best effort
+      }
+    }
+    setCopiedTarget(targetKey);
+    setTimeout(() => {
+      setCopiedTarget((prev) => (prev === targetKey ? null : prev));
+    }, 2000);
+  };
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -50,6 +70,8 @@ export function ProjectsPanel({
         is_git_repository: state.project.is_git_repository,
         is_active: true,
         disabled: false,
+        client_id: state.runner_client_id,
+        runtime_project_id: state.project.runtime_project_id,
       },
     ];
   }
@@ -113,8 +135,18 @@ export function ProjectsPanel({
     }
   };
 
-  const handleCopyPath = (entry: DesktopProjectEntry) => {
-    void navigator.clipboard.writeText(entry.path);
+  const handleCopyPath = async (entry: DesktopProjectEntry) => {
+    try {
+      await writeText(entry.path);
+    } catch {
+      try {
+        if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+          await navigator.clipboard.writeText(entry.path);
+        }
+      } catch {
+        // best effort
+      }
+    }
     setCopiedId(entry.id);
     setTimeout(() => {
       setCopiedId((prev) => (prev === entry.id ? null : prev));
@@ -270,7 +302,74 @@ export function ProjectsPanel({
                           )}
                         </div>
                       </div>
-                      <span className="project-id-hint">ID: {project.id}</span>
+                      <div className="project-id-chips">
+                        <button
+                          type="button"
+                          className={`project-id-chip ${copiedTarget === `id-${project.id}` ? "copied" : ""}`}
+                          onClick={() => handleCopyText(project.id, `id-${project.id}`)}
+                          title={t("project.copyId")}
+                          aria-label={`${t("project.copyId")}: ${project.id}`}
+                        >
+                          <span className="chip-label">ID:</span>
+                          <code className="chip-code">{project.id}</code>
+                          <span className="chip-icon-wrap">
+                            {copiedTarget === `id-${project.id}` ? (
+                              <span className="chip-copied-text">✓ {t("project.copied")}</span>
+                            ) : (
+                              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" className="chip-copy-icon">
+                                <rect x="5" y="5" width="8" height="8" rx="1.5" />
+                                <path d="M3 11V3a1 1 0 0 1 1-1h8" />
+                              </svg>
+                            )}
+                          </span>
+                        </button>
+
+                        {(project.client_id ?? state.runner_client_id) && (
+                          <button
+                            type="button"
+                            className={`project-id-chip ${copiedTarget === `cid-${project.id}` ? "copied" : ""}`}
+                            onClick={() => handleCopyText((project.client_id ?? state.runner_client_id)!, `cid-${project.id}`)}
+                            title={t("project.copyClientId")}
+                            aria-label={`${t("project.copyClientId")}: ${project.client_id ?? state.runner_client_id}`}
+                          >
+                            <span className="chip-label">Client ID:</span>
+                            <code className="chip-code">{project.client_id ?? state.runner_client_id}</code>
+                            <span className="chip-icon-wrap">
+                              {copiedTarget === `cid-${project.id}` ? (
+                                <span className="chip-copied-text">✓ {t("project.copied")}</span>
+                              ) : (
+                                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" className="chip-copy-icon">
+                                  <rect x="5" y="5" width="8" height="8" rx="1.5" />
+                                  <path d="M3 11V3a1 1 0 0 1 1-1h8" />
+                                </svg>
+                              )}
+                            </span>
+                          </button>
+                        )}
+
+                        {project.runtime_project_id && (
+                          <button
+                            type="button"
+                            className={`project-id-chip canonical-chip ${copiedTarget === `canon-${project.id}` ? "copied" : ""}`}
+                            onClick={() => handleCopyText(project.runtime_project_id!, `canon-${project.id}`)}
+                            title={t("project.copyCanonicalId")}
+                            aria-label={`${t("project.copyCanonicalId")}: ${project.runtime_project_id}`}
+                          >
+                            <span className="chip-label">{t("project.canonicalId")}:</span>
+                            <code className="chip-code">{project.runtime_project_id}</code>
+                            <span className="chip-icon-wrap">
+                              {copiedTarget === `canon-${project.id}` ? (
+                                <span className="chip-copied-text">✓ {t("project.copied")}</span>
+                              ) : (
+                                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" className="chip-copy-icon">
+                                  <rect x="5" y="5" width="8" height="8" rx="1.5" />
+                                  <path d="M3 11V3a1 1 0 0 1 1-1h8" />
+                                </svg>
+                              )}
+                            </span>
+                          </button>
+                        )}
+                      </div>
                     </div>
 
                     {/* ChatGPT Access Toggle Switch */}

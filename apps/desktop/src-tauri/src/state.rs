@@ -879,6 +879,7 @@ impl DesktopCore {
         apply_openai_tunnel_configuration(&mut self.snapshot, &self.tunnel_config);
         self.snapshot.regular_tunnel_available = true;
         self.snapshot.powershell_runtime = crate::platform::powershell_runtime_snapshot();
+        self.snapshot.runner_client_id = stored_runner_client_id(&self.config);
         apply_config_projection(&mut self.snapshot, &self.config);
         let snapshot = self.snapshot.clone();
         *self
@@ -2987,6 +2988,22 @@ fn load_desktop_projects(
     data_dir: &Path,
     config: &StoredDesktopConfig,
 ) -> Vec<DesktopProjectEntry> {
+    let mut runner_client_id = stored_runner_client_id(config);
+    if runner_client_id.is_none() {
+        let runner_toml = data_dir.join("runner.toml");
+        if runner_toml.is_file() {
+            if let Ok(content) = std::fs::read_to_string(&runner_toml) {
+                if let Ok(parsed) = toml::from_str::<serde_json::Value>(&content) {
+                    if let Some(cid) = parsed.get("client_id").and_then(|v| v.as_str()) {
+                        let trimmed = cid.trim();
+                        if !trimmed.is_empty() {
+                            runner_client_id = Some(trimmed.to_string());
+                        }
+                    }
+                }
+            }
+        }
+    }
     let dirs = collect_project_registry_dirs(data_dir, config);
     let mut projects = Vec::new();
     let mut seen_ids = std::collections::HashSet::new();
@@ -3036,6 +3053,9 @@ fn load_desktop_projects(
             } else {
                 parsed.path.clone()
             };
+            let runtime_project_id = runner_client_id
+                .as_deref()
+                .map(|cid| format!("agent:{cid}:{}", parsed.id));
             projects.push(DesktopProjectEntry {
                 id: parsed.id,
                 name,
@@ -3044,6 +3064,8 @@ fn load_desktop_projects(
                 is_git_repository: is_git,
                 is_active,
                 disabled: parsed.disabled,
+                client_id: runner_client_id.clone(),
+                runtime_project_id,
             });
         }
     }
@@ -3061,6 +3083,11 @@ fn load_desktop_projects(
                 .runtime_project_id
                 .clone()
                 .unwrap_or_else(|| "current".to_string());
+            let runtime_project_id = current.runtime_project_id.clone().or_else(|| {
+                runner_client_id
+                    .as_deref()
+                    .map(|cid| format!("agent:{cid}:{id}"))
+            });
             projects.push(DesktopProjectEntry {
                 id,
                 name,
@@ -3069,6 +3096,8 @@ fn load_desktop_projects(
                 is_git_repository: current.is_git_repository,
                 is_active: true,
                 disabled: false,
+                client_id: runner_client_id.clone(),
+                runtime_project_id,
             });
         }
     }
@@ -3102,18 +3131,39 @@ fn stored_runner_client_id(config: &StoredDesktopConfig) -> Option<String> {
     // Pre-migration Desktop state did not persist client_id separately. Recover
     // it from the exact runtime Project identity instead of accepting whatever
     // client_id happens to be present in runner.toml during the first upgrade.
-    let project_id = runtime.project_id.as_deref()?.trim();
-    let runtime_project_id = runtime.runtime_project_id.as_deref()?.trim();
-    if project_id.is_empty() || runtime_project_id.is_empty() {
-        return None;
+    if let (Some(project_id), Some(runtime_project_id)) = (
+        runtime.project_id.as_deref(),
+        runtime.runtime_project_id.as_deref(),
+    ) {
+        let project_id = project_id.trim();
+        let runtime_project_id = runtime_project_id.trim();
+        if !project_id.is_empty() && !runtime_project_id.is_empty() {
+            let suffix = format!(":{project_id}");
+            if let Some(client_id) = runtime_project_id
+                .strip_prefix("agent:")
+                .and_then(|s| s.strip_suffix(&suffix))
+                .map(str::trim)
+                .filter(|client_id| !client_id.is_empty())
+            {
+                return Some(client_id.to_string());
+            }
+        }
     }
-    let suffix = format!(":{project_id}");
-    runtime_project_id
-        .strip_prefix("agent:")?
-        .strip_suffix(&suffix)
-        .map(str::trim)
-        .filter(|client_id| !client_id.is_empty())
-        .map(str::to_string)
+    if let Some(runner_config_path) = runtime.runner_config.as_deref() {
+        if runner_config_path.is_file() {
+            if let Ok(content) = std::fs::read_to_string(runner_config_path) {
+                if let Ok(parsed) = toml::from_str::<serde_json::Value>(&content) {
+                    if let Some(cid) = parsed.get("client_id").and_then(|v| v.as_str()) {
+                        let trimmed = cid.trim();
+                        if !trimmed.is_empty() {
+                            return Some(trimmed.to_string());
+                        }
+                    }
+                }
+            }
+        }
+    }
+    None
 }
 
 fn collect_candidate_project_ids(

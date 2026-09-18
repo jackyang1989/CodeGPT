@@ -243,6 +243,10 @@ pub struct DesktopProjectEntry {
     pub is_git_repository: bool,
     pub is_active: bool,
     pub disabled: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub client_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub runtime_project_id: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -426,6 +430,8 @@ pub struct DesktopStateSnapshot {
     pub runtime_autostart: bool,
     pub preferred_connection: RegularConnectionPreference,
     pub tunnel_proxy: TunnelProxySnapshot,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub runner_client_id: Option<String>,
     #[serde(default)]
     pub projects: Vec<DesktopProjectEntry>,
 }
@@ -436,6 +442,7 @@ impl Default for DesktopStateSnapshot {
             topology: None,
             readiness: ReadinessSnapshot::default(),
             project: None,
+            runner_client_id: None,
             projects: Vec::new(),
             binaries: None,
             powershell_runtime: None,

@@ -289,6 +289,50 @@ describe("semantic Desktop UI", () => {
     expect(clipboard.writeText).toHaveBeenCalledWith("请分析项目 repo 的目录结构并总结核心逻辑。");
   });
 
+  it("displays project ID and client ID chips with click-to-copy in projects panel", async () => {
+    api.getState.mockResolvedValue({
+      ...readyState,
+      projects: [
+        {
+          id: "mock-project",
+          name: "MockProject",
+          path: "/workspace/MockProject",
+          allowed_root: "/workspace",
+          is_git_repository: true,
+          is_active: true,
+          disabled: false,
+          client_id: "device-test-client-id",
+          runtime_project_id: "agent:device-test-client-id:mock-project",
+        },
+      ],
+    });
+
+    renderApp();
+    fireEvent.click(await screen.findByRole("button", { name: "项目" }));
+    expect(screen.getByRole("heading", { level: 1, name: "此电脑上的项目" })).toBeInTheDocument();
+
+    const idBtn = screen.getByRole("button", { name: /复制项目 ID: mock-project/ });
+    expect(idBtn).toBeInTheDocument();
+    expect(idBtn).toHaveTextContent("mock-project");
+
+    const clientBtn = screen.getByRole("button", { name: /复制 Client ID: device-test-client-id/ });
+    expect(clientBtn).toBeInTheDocument();
+    expect(clientBtn).toHaveTextContent("device-test-client-id");
+
+    const canonBtn = screen.getByRole("button", { name: /复制完整规范 ID: agent:device-test-client-id:mock-project/ });
+    expect(canonBtn).toBeInTheDocument();
+    expect(canonBtn).toHaveTextContent("agent:device-test-client-id:mock-project");
+
+    fireEvent.click(idBtn);
+    expect(clipboard.writeText).toHaveBeenCalledWith("mock-project");
+
+    fireEvent.click(clientBtn);
+    expect(clipboard.writeText).toHaveBeenCalledWith("device-test-client-id");
+
+    fireEvent.click(canonBtn);
+    expect(clipboard.writeText).toHaveBeenCalledWith("agent:device-test-client-id:mock-project");
+  });
+
   it("starts a tunnel only after explicit action and allows retry after failure", async () => {
     api.getState.mockResolvedValue(readyState);
     api.startRegularTunnel.mockRejectedValueOnce({ code: "tunnel_unavailable", message: "Tunnel failed", next_action: "Retry." });

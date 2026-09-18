@@ -182,12 +182,15 @@ export interface DesktopProjectEntry {
   is_git_repository: boolean;
   is_active: boolean;
   disabled: boolean;
+  client_id?: string | null;
+  runtime_project_id?: string | null;
 }
 
 export interface DesktopState {
   topology?: RuntimeTopology | null;
   readiness: ReadinessSnapshot;
   project?: ProjectSelection | null;
+  runner_client_id?: string | null;
   projects?: DesktopProjectEntry[];
   binaries?: BinaryInfo | null;
   powershell_runtime?: PowerShellRuntimeSnapshot | null;

@@ -1966,6 +1966,88 @@ button:disabled {
   border: 1px solid var(--border-subtle);
 }
 
+.project-id-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 5px;
+}
+
+.project-id-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--bg-well, rgba(0, 0, 0, 0.04));
+  border: 1px solid var(--border-subtle, rgba(0, 0, 0, 0.08));
+  border-radius: 6px;
+  padding: 2px 7px;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.project-id-chip:hover {
+  background: var(--bg-card, #ffffff);
+  border-color: var(--brand-primary, #6366f1);
+  color: var(--text-primary);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.project-id-chip .chip-label {
+  font-weight: 600;
+  color: var(--text-muted);
+  font-size: 10px;
+  letter-spacing: 0.2px;
+}
+
+.project-id-chip .chip-code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 10.5px;
+  color: var(--text-primary);
+  max-width: 175px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.project-id-chip.canonical-chip .chip-code {
+  max-width: 220px;
+}
+
+.project-id-chip .chip-icon-wrap {
+  display: inline-flex;
+  align-items: center;
+}
+
+.project-id-chip .chip-copy-icon {
+  width: 11px;
+  height: 11px;
+  opacity: 0.6;
+  flex-shrink: 0;
+  transition: opacity 0.15s ease, color 0.15s ease;
+}
+
+.project-id-chip:hover .chip-copy-icon {
+  opacity: 1;
+  color: var(--brand-primary, #6366f1);
+}
+
+.project-id-chip.copied {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.35);
+  color: #10b981;
+}
+
+.project-id-chip .chip-copied-text {
+  font-size: 10px;
+  font-weight: 650;
+  color: #10b981;
+}
+
 .project-id-hint {
   font-size: 11px;
   color: var(--text-muted);

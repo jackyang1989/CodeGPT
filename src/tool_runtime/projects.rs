@@ -116,6 +116,9 @@ fn project_candidates(
             continue;
         }
         for (project_index, project) in view.projects.iter().enumerate() {
+            if project.disabled {
+                continue;
+            }
             let runtime_id = runner_project_runtime_id(&view.client_id, &project.id);
             if options
                 .project
