@@ -106,16 +106,26 @@ export function Dashboard({
       </div>
 
       <div
-        className={`readiness-banner ${state.readiness.ready_for_chatgpt ? "ready" : "pending"}`}
+        className={`readiness-banner ${state.readiness.ready_for_chatgpt || connectionVerified ? "ready" : "pending"}`}
         role="status"
         aria-live="polite"
         aria-atomic="true"
       >
         <div className="readiness-info">
           <span className="section-kicker">{t("home.overall")}</span>
-          <strong>{state.readiness.ready_for_chatgpt ? t("home.readyToUse") : summary}</strong>
-          {nextAction && !canResumeRuntime && !canConnectChatGpt && (
-            <p className="readiness-hint">{nextAction}</p>
+          <strong>
+            {connectionVerified
+              ? t("home.connectionObservedLabel")
+              : state.readiness.ready_for_chatgpt
+                ? t("home.readyToUse")
+                : summary}
+          </strong>
+          {connectionVerified ? (
+            <p className="readiness-hint">{t("home.connectionObserved")}</p>
+          ) : (
+            nextAction && !canResumeRuntime && !canConnectChatGpt && (
+              <p className="readiness-hint">{nextAction}</p>
+            )
           )}
         </div>
         <div className="readiness-actions">

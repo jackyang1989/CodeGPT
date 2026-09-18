@@ -660,6 +660,11 @@ describe("semantic Desktop UI", () => {
       });
 
       expect(api.observeChatgptActivity).toHaveBeenCalledTimes(2);
+      const readyStatus = screen.getByRole("status");
+      expect(readyStatus).toHaveClass("ready");
+      expect(readyStatus).toHaveTextContent("已验证 ChatGPT 使用");
+      expect(readyStatus).toHaveTextContent("已观察到 ChatGPT 对当前项目的真实 CodeGPT 调用。");
+      expect(readyStatus).not.toHaveTextContent("等待 ChatGPT 连接");
       const connectionCard = screen.getByText("ChatGPT 连接").closest("article");
       expect(connectionCard).not.toBeNull();
       expect(within(connectionCard!).getByText("已验证 ChatGPT 使用")).toBeInTheDocument();
