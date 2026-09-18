@@ -362,16 +362,16 @@ export function ProjectsPanel({
                         <dd>{projectReadinessLabel(state.readiness.project, t)}</dd>
                       </div>
                       <div>
-                        <dt>{t("project.allowedRoot")}</dt>
-                        <dd>{state.project.allowed_root}</dd>
-                      </div>
-                      <div>
                         <dt>{t("project.git")}</dt>
                         <dd>
                           {state.project.is_git_repository
                             ? t("project.gitDetected")
                             : t("project.gitNotRequired")}
                         </dd>
+                      </div>
+                      <div className="project-detail-full">
+                        <dt>{t("project.allowedRoot")}</dt>
+                        <dd title={state.project.allowed_root}>{state.project.allowed_root}</dd>
                       </div>
                     </dl>
                   )}

@@ -78,9 +78,12 @@ export function Dashboard({
         aria-live="polite"
         aria-atomic="true"
       >
-        <div>
+        <div className="readiness-info">
           <span className="section-kicker">{t("home.overall")}</span>
           <strong>{state.readiness.ready_for_chatgpt ? t("home.readyToUse") : summary}</strong>
+          {nextAction && !canResumeRuntime && !canConnectChatGpt && (
+            <p className="readiness-hint">{nextAction}</p>
+          )}
         </div>
         <div className="readiness-actions">
           {canResumeRuntime && (
@@ -96,12 +99,15 @@ export function Dashboard({
           {state.readiness.runtime_ready && !canConnectChatGpt && !connectionVerified && (
             <button className="primary-button" onClick={() => onNavigate("connection")}>{t("workspace.connectionSettings")}</button>
           )}
-          {nextAction && !canResumeRuntime && !canConnectChatGpt && <span>{nextAction}</span>}
         </div>
       </div>
 
       <article className="workspace-project">
-        <div className="project-emblem" aria-hidden="true"><span className="nav-icon nav-projects" /></div>
+        <div className="project-emblem" aria-hidden="true">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" width="22" height="22">
+            <path d="M3 5a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5z" />
+          </svg>
+        </div>
         <div className="workspace-project-copy">
           <span className="section-kicker">{t("workspace.currentProject")}</span>
           <h2>{state.project?.path.split(/[\\/]/).filter(Boolean).pop() ?? t("home.noProject")}</h2>

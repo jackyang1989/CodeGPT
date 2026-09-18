@@ -261,7 +261,7 @@ describe("semantic Desktop UI", () => {
     ]);
     renderApp();
     await screen.findByRole("heading", { name: "CodeGPT", level: 1 });
-    expect(screen.getByText(/如果目录为空/)).toBeInTheDocument();
+    expect(screen.getByText(/分析当前项目的目录结构/)).toBeInTheDocument();
     expect(screen.queryByText(/读取.*README/)).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "活动" }));
     await screen.findByText("已切换到 sample-project");

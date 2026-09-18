@@ -608,6 +608,30 @@ button:disabled {
   color: #ffffff;
 }
 
+[data-theme="light"] .subtle-btn.action-primary-tint {
+  color: var(--accent-indigo);
+  background: rgba(79, 70, 229, 0.08);
+  border-color: rgba(79, 70, 229, 0.25);
+}
+
+[data-theme="light"] .subtle-btn.action-primary-tint:hover:not(:disabled) {
+  background: rgba(79, 70, 229, 0.16);
+  border-color: rgba(79, 70, 229, 0.4);
+  color: #3730a3;
+}
+
+[data-theme="light"] .subtle-btn.btn-danger-tint {
+  color: #dc2626;
+  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.25);
+}
+
+[data-theme="light"] .subtle-btn.btn-danger-tint:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.16);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #991b1b;
+}
+
 .back-button {
   background: transparent;
   border: 0;
@@ -1452,6 +1476,13 @@ button:disabled {
   border-color: rgba(245, 158, 11, 0.3);
 }
 
+.readiness-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
 .readiness-banner strong {
   display: block;
   font-size: 16px;
@@ -1459,10 +1490,18 @@ button:disabled {
   margin-top: 2px;
 }
 
+.readiness-hint {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 4px 0 0;
+  line-height: 1.4;
+}
+
 .readiness-actions {
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-shrink: 0;
 }
 
 /* Workspace Project Card */
@@ -1769,7 +1808,7 @@ button:disabled {
 .project-name {
   font-size: 15px;
   font-weight: 650;
-  color: #f8fafc;
+  color: var(--text-primary);
 }
 
 .pill-badge {
@@ -1785,10 +1824,22 @@ button:disabled {
   border: 1px solid rgba(16, 185, 129, 0.3);
 }
 
+[data-theme="light"] .pill-active {
+  background: rgba(16, 185, 129, 0.12);
+  color: #059669;
+  border-color: rgba(16, 185, 129, 0.25);
+}
+
 .pill-git {
   background: rgba(99, 102, 241, 0.15);
   color: #a5b4fc;
   border: 1px solid rgba(99, 102, 241, 0.3);
+}
+
+[data-theme="light"] .pill-git {
+  background: rgba(99, 102, 241, 0.1);
+  color: #4f46e5;
+  border-color: rgba(99, 102, 241, 0.25);
 }
 
 .pill-muted {
@@ -2001,8 +2052,17 @@ button:disabled {
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  padding: 4px;
+  gap: 5px;
+  padding: 4px 8px;
   border-radius: 4px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  font-size: 11.5px;
+  font-weight: 500;
+}
+
+[data-theme="light"] .path-copy-btn {
+  color: var(--accent-indigo);
 }
 
 .path-copy-btn:hover {
@@ -2012,6 +2072,7 @@ button:disabled {
 .path-copy-btn svg {
   width: 14px !important;
   height: 14px !important;
+  flex-shrink: 0;
 }
 
 .path-text {
@@ -2021,6 +2082,32 @@ button:disabled {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+}
+
+.project-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: auto;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.card-actions-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.card-actions-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
 }
 
 /* Empty Project State */
@@ -2641,10 +2728,33 @@ details.settings-section summary:hover {
   align-items: center;
   font-size: 12.5px;
   padding: 4px 0;
+  min-width: 0;
+  gap: 8px;
 }
 
-.detail-list dt { color: var(--text-secondary); }
-.detail-list dd { margin: 0; font-weight: 600; color: var(--text-primary); }
+.detail-list dt {
+  color: var(--text-secondary);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.detail-list dd {
+  margin: 0;
+  font-weight: 600;
+  color: var(--text-primary);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.project-detail-full {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
 
 .tunnel-config-guidance {
   font-size: 12px;
