@@ -341,7 +341,7 @@ describe("semantic Desktop UI", () => {
     api.updateTunnelConfig.mockResolvedValue(readyState);
     fireEvent.click(screen.getByRole("button", { name: "清除已保存配置，改用环境变量" }));
     await waitFor(() => expect(api.updateTunnelConfig).toHaveBeenLastCalledWith({ action: "use_environment" }));
-    expect(await screen.findByText("当前来源：Desktop 进程的环境变量")).toBeInTheDocument();
+    expect(await screen.findByText("当前来源：应用环境变量")).toBeInTheDocument();
   });
 
   it("clears submitted keys on save failure and never submits runtime setup from a credential input", async () => {
@@ -554,8 +554,8 @@ describe("semantic Desktop UI", () => {
     fireEvent.click(screen.getByRole("button", { name: "连接" }));
     expect(await screen.findByRole("heading", { level: 1, name: "ChatGPT 连接" })).toBeInTheDocument();
     expect(screen.getByText("已验证 ChatGPT 使用")).toBeInTheDocument();
-    expect(screen.getByText(/连接方式与 Desktop 管理的 Tunnel 状态分开显示/)).toBeInTheDocument();
-    expect(screen.getByRole("radio", { name: /不由 Desktop 管理连接/ })).toBeChecked();
+    expect(screen.getByText(/连接方式与安全隧道状态分开显示/)).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: /仅保留本地运行环境/ })).toBeChecked();
   });
 
   it("does not equate an unmanaged Desktop tunnel with ChatGPT being disconnected", async () => {
@@ -566,7 +566,7 @@ describe("semantic Desktop UI", () => {
     await screen.findByRole("heading", { level: 1, name: "CodeGPT" });
     const connectionCard = screen.getByText("ChatGPT 连接").closest("article");
     expect(connectionCard).not.toBeNull();
-    expect(connectionCard).toHaveTextContent("不由 Desktop 管理连接");
+    expect(connectionCard).toHaveTextContent("仅保留本地运行环境");
     expect(connectionCard).toHaveTextContent("这不代表 ChatGPT 一定不可用");
     expect(connectionCard).not.toHaveTextContent("暂不连接 ChatGPT");
   });
@@ -702,7 +702,7 @@ describe("semantic Desktop UI", () => {
     act(() => {
       tauriEvents.handler?.({ payload: "settings" });
     });
-    expect(await screen.findByRole("heading", { level: 1, name: "Desktop 设置" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { level: 1, name: "CodeGPT 设置" })).toBeInTheDocument();
 
     act(() => {
       tauriEvents.handler?.({ payload: "activity" });
@@ -1042,7 +1042,7 @@ describe("semantic Desktop UI", () => {
         await vi.advanceTimersByTimeAsync(1_500);
       });
 
-      const operationStatus = screen.getByRole("status", { name: "当前 Desktop 操作" });
+      const operationStatus = screen.getByRole("status", { name: "当前操作" });
       expect(operationStatus).toHaveTextContent("正在配置本机 CodeGPT");
       expect(operationStatus).toHaveTextContent("停止当前操作不会自动重复执行尚未确认的步骤");
 
@@ -1060,7 +1060,7 @@ describe("semantic Desktop UI", () => {
         await Promise.resolve();
         await Promise.resolve();
       });
-      expect(screen.queryByRole("status", { name: "当前 Desktop 操作" })).not.toBeInTheDocument();
+      expect(screen.queryByRole("status", { name: "当前操作" })).not.toBeInTheDocument();
       view.unmount();
     } finally {
       vi.useRealTimers();
@@ -1080,7 +1080,7 @@ describe("semantic Desktop UI", () => {
     await waitFor(() => {
       expect(api.cancelOperation).toHaveBeenCalledWith("desktop-operation-a");
     });
-    const cancellingStatus = screen.getByRole("status", { name: "当前 Desktop 操作" });
+    const cancellingStatus = screen.getByRole("status", { name: "当前操作" });
     expect(cancellingStatus).toHaveTextContent("正在停止当前操作…");
     const disabledCancel = screen.getByRole("button", { name: "正在停止当前操作…" });
     expect(disabledCancel).toBeDisabled();
@@ -1105,7 +1105,7 @@ describe("semantic Desktop UI", () => {
         await Promise.resolve();
         await Promise.resolve();
       });
-      expect(screen.getByRole("status", { name: "当前 Desktop 操作" })).toBeInTheDocument();
+      expect(screen.getByRole("status", { name: "当前操作" })).toBeInTheDocument();
 
       await act(async () => {
         await vi.advanceTimersByTimeAsync(1_000);
@@ -1117,14 +1117,14 @@ describe("semantic Desktop UI", () => {
         await Promise.resolve();
         await Promise.resolve();
       });
-      expect(screen.queryByRole("status", { name: "当前 Desktop 操作" })).not.toBeInTheDocument();
+      expect(screen.queryByRole("status", { name: "当前操作" })).not.toBeInTheDocument();
 
       stalePoll.resolve(running);
       await act(async () => {
         await Promise.resolve();
         await Promise.resolve();
       });
-      expect(screen.queryByRole("status", { name: "当前 Desktop 操作" })).not.toBeInTheDocument();
+      expect(screen.queryByRole("status", { name: "当前操作" })).not.toBeInTheDocument();
       view.unmount();
     } finally {
       vi.useRealTimers();
