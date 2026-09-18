@@ -289,7 +289,7 @@ describe("semantic Desktop UI", () => {
     expect(clipboard.writeText).toHaveBeenCalledWith("请分析项目 repo 的目录结构并总结核心逻辑。");
   });
 
-  it("displays project ID and client ID chips with click-to-copy in projects panel", async () => {
+  it("displays canonical project ID chip with click-to-copy in projects panel", async () => {
     api.getState.mockResolvedValue({
       ...readyState,
       projects: [
@@ -311,26 +311,18 @@ describe("semantic Desktop UI", () => {
     fireEvent.click(await screen.findByRole("button", { name: "项目" }));
     expect(screen.getByRole("heading", { level: 1, name: "此电脑上的项目" })).toBeInTheDocument();
 
-    const idBtn = screen.getByRole("button", { name: /复制项目 ID: mock-project/ });
+    const idBtn = screen.getByRole("button", { name: /复制项目 ID: agent:device-test-client-id:mock-project/ });
     expect(idBtn).toBeInTheDocument();
-    expect(idBtn).toHaveTextContent("mock-project");
-
-    const clientBtn = screen.getByRole("button", { name: /复制 Client ID: device-test-client-id/ });
-    expect(clientBtn).toBeInTheDocument();
-    expect(clientBtn).toHaveTextContent("device-test-client-id");
-
-    const canonBtn = screen.getByRole("button", { name: /复制完整规范 ID: agent:device-test-client-id:mock-project/ });
-    expect(canonBtn).toBeInTheDocument();
-    expect(canonBtn).toHaveTextContent("agent:device-test-client-id:mock-project");
+    expect(idBtn).toHaveTextContent("agent:device-test-client-id:mock-project");
 
     fireEvent.click(idBtn);
-    expect(clipboard.writeText).toHaveBeenCalledWith("mock-project");
-
-    fireEvent.click(clientBtn);
-    expect(clipboard.writeText).toHaveBeenCalledWith("device-test-client-id");
-
-    fireEvent.click(canonBtn);
     expect(clipboard.writeText).toHaveBeenCalledWith("agent:device-test-client-id:mock-project");
+
+    const copyPathBtn = screen.getByRole("button", { name: "复制路径" });
+    fireEvent.click(copyPathBtn);
+    expect(clipboard.writeText).toHaveBeenCalledWith(
+      "/workspace/MockProject (ID: agent:device-test-client-id:mock-project)",
+    );
   });
 
   it("starts a tunnel only after explicit action and allows retry after failure", async () => {

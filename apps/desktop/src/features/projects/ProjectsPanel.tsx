@@ -135,13 +135,26 @@ export function ProjectsPanel({
     }
   };
 
+  const resolveProjectDisplayId = (project: DesktopProjectEntry): string => {
+    return (
+      project.runtime_project_id ??
+      (project.client_id
+        ? `agent:${project.client_id}:${project.id}`
+        : state.runner_client_id
+          ? `agent:${state.runner_client_id}:${project.id}`
+          : project.id)
+    );
+  };
+
   const handleCopyPath = async (entry: DesktopProjectEntry) => {
+    const displayId = resolveProjectDisplayId(entry);
+    const textToCopy = displayId ? `${entry.path} (ID: ${displayId})` : entry.path;
     try {
-      await writeText(entry.path);
+      await writeText(textToCopy);
     } catch {
       try {
         if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
-          await navigator.clipboard.writeText(entry.path);
+          await navigator.clipboard.writeText(textToCopy);
         }
       } catch {
         // best effort
@@ -303,72 +316,31 @@ export function ProjectsPanel({
                         </div>
                       </div>
                       <div className="project-id-chips">
-                        <button
-                          type="button"
-                          className={`project-id-chip ${copiedTarget === `id-${project.id}` ? "copied" : ""}`}
-                          onClick={() => handleCopyText(project.id, `id-${project.id}`)}
-                          title={t("project.copyId")}
-                          aria-label={`${t("project.copyId")}: ${project.id}`}
-                        >
-                          <span className="chip-label">ID:</span>
-                          <code className="chip-code">{project.id}</code>
-                          <span className="chip-icon-wrap">
-                            {copiedTarget === `id-${project.id}` ? (
-                              <span className="chip-copied-text">✓ {t("project.copied")}</span>
-                            ) : (
-                              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" className="chip-copy-icon">
-                                <rect x="5" y="5" width="8" height="8" rx="1.5" />
-                                <path d="M3 11V3a1 1 0 0 1 1-1h8" />
-                              </svg>
-                            )}
-                          </span>
-                        </button>
-
-                        {(project.client_id ?? state.runner_client_id) && (
-                          <button
-                            type="button"
-                            className={`project-id-chip ${copiedTarget === `cid-${project.id}` ? "copied" : ""}`}
-                            onClick={() => handleCopyText((project.client_id ?? state.runner_client_id)!, `cid-${project.id}`)}
-                            title={t("project.copyClientId")}
-                            aria-label={`${t("project.copyClientId")}: ${project.client_id ?? state.runner_client_id}`}
-                          >
-                            <span className="chip-label">Client ID:</span>
-                            <code className="chip-code">{project.client_id ?? state.runner_client_id}</code>
-                            <span className="chip-icon-wrap">
-                              {copiedTarget === `cid-${project.id}` ? (
-                                <span className="chip-copied-text">✓ {t("project.copied")}</span>
-                              ) : (
-                                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" className="chip-copy-icon">
-                                  <rect x="5" y="5" width="8" height="8" rx="1.5" />
-                                  <path d="M3 11V3a1 1 0 0 1 1-1h8" />
-                                </svg>
-                              )}
-                            </span>
-                          </button>
-                        )}
-
-                        {project.runtime_project_id && (
-                          <button
-                            type="button"
-                            className={`project-id-chip canonical-chip ${copiedTarget === `canon-${project.id}` ? "copied" : ""}`}
-                            onClick={() => handleCopyText(project.runtime_project_id!, `canon-${project.id}`)}
-                            title={t("project.copyCanonicalId")}
-                            aria-label={`${t("project.copyCanonicalId")}: ${project.runtime_project_id}`}
-                          >
-                            <span className="chip-label">{t("project.canonicalId")}:</span>
-                            <code className="chip-code">{project.runtime_project_id}</code>
-                            <span className="chip-icon-wrap">
-                              {copiedTarget === `canon-${project.id}` ? (
-                                <span className="chip-copied-text">✓ {t("project.copied")}</span>
-                              ) : (
-                                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" className="chip-copy-icon">
-                                  <rect x="5" y="5" width="8" height="8" rx="1.5" />
-                                  <path d="M3 11V3a1 1 0 0 1 1-1h8" />
-                                </svg>
-                              )}
-                            </span>
-                          </button>
-                        )}
+                        {(() => {
+                          const displayId = resolveProjectDisplayId(project);
+                          return (
+                            <button
+                              type="button"
+                              className={`project-id-chip ${copiedTarget === `id-${project.id}` ? "copied" : ""}`}
+                              onClick={() => handleCopyText(displayId, `id-${project.id}`)}
+                              title={t("project.copyId")}
+                              aria-label={`${t("project.copyId")}: ${displayId}`}
+                            >
+                              <span className="chip-label">ID:</span>
+                              <code className="chip-code">{displayId}</code>
+                              <span className="chip-icon-wrap">
+                                {copiedTarget === `id-${project.id}` ? (
+                                  <span className="chip-copied-text">✓ {t("project.copied")}</span>
+                                ) : (
+                                  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" className="chip-copy-icon">
+                                    <rect x="5" y="5" width="8" height="8" rx="1.5" />
+                                    <path d="M3 11V3a1 1 0 0 1 1-1h8" />
+                                  </svg>
+                                )}
+                              </span>
+                            </button>
+                          );
+                        })()}
                       </div>
                     </div>
 

@@ -2008,14 +2008,10 @@ button:disabled {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 10.5px;
   color: var(--text-primary);
-  max-width: 175px;
+  max-width: 420px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.project-id-chip.canonical-chip .chip-code {
-  max-width: 220px;
 }
 
 .project-id-chip .chip-icon-wrap {
